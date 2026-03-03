@@ -57,6 +57,7 @@ fun SettingsScreen(
     onNavigateToProfiles: (() -> Unit)? = null,
     onNavigateToSplitTunnelingMain: (() -> Unit)? = null,
     onNavigateToProtocol: (() -> Unit)? = null,
+    onNavigateToKillSwitch: (() -> Unit)? = null,
     onNavigateToAbout: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -92,12 +93,12 @@ fun SettingsScreen(
 
             SettingsContent(
                 state = uiState,
-                onKillSwitchChange = viewModel::setKillSwitch,
                 onAutoConnectChange = viewModel::setAutoConnect,
                 onNotificationsChange = viewModel::setNotifications,
                 onPortChange = viewModel::setVpnPort,
                 onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
                 onNavigateToProtocol = onNavigateToProtocol,
+                onNavigateToKillSwitch = onNavigateToKillSwitch,
                 onNavigateToAbout = onNavigateToAbout,
                 modifier = Modifier
                     .fillMaxSize()
@@ -128,12 +129,12 @@ fun SettingsScreen(
 @Composable
 fun SettingsContent(
     state: SettingsUiState,
-    onKillSwitchChange: (Boolean) -> Unit,
     onAutoConnectChange: (Boolean) -> Unit,
     onNotificationsChange: (Boolean) -> Unit,
     onPortChange: (Int) -> Unit,
     onNavigateToSplitTunnelingMain: (() -> Unit)? = null,
     onNavigateToProtocol: (() -> Unit)? = null,
+    onNavigateToKillSwitch: (() -> Unit)? = null,
     onNavigateToAbout: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
@@ -200,12 +201,11 @@ fun SettingsContent(
         // Privacy & Notifications
         item {
             Category(title = stringResource(R.string.settings_privacy)) {
-                SettingToggleRow(
+                SettingRowWithIcon(
                     icon = Icons.Rounded.GppMaybe,
                     title = stringResource(R.string.settings_kill_switch),
                     subtitle = stringResource(R.string.settings_kill_switch_desc),
-                    checked = state.killSwitchEnabled,
-                    onCheckedChange = onKillSwitchChange
+                    onClick = onNavigateToKillSwitch
                 )
                 SettingToggleRow(
                     icon = Icons.Rounded.Notifications,

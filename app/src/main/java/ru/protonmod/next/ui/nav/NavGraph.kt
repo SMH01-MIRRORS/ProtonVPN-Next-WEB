@@ -47,6 +47,7 @@ sealed class Screen(val route: String) {
     // Connection Screens
     data object Protocol : Screen("protocol")
     data object ObfuscationSettings : Screen("obfuscation_settings")
+    data object KillSwitch : Screen("kill_switch")
 
     data object AboutApp : Screen("about_app")
     data object Licenses : Screen("licenses")
@@ -96,6 +97,9 @@ fun NavGraphBuilder.appNavGraph(
             onNavigateToProtocol = {
                 navController.navigate(Screen.Protocol.route)
             },
+            onNavigateToKillSwitch = {
+                navController.navigate(Screen.KillSwitch.route)
+            },
             onNavigateToAbout = {
                 navController.navigate(Screen.AboutApp.route)
             }
@@ -111,6 +115,12 @@ fun NavGraphBuilder.appNavGraph(
 
     composable(Screen.ObfuscationSettings.route) {
         ObfuscationSettingsScreen(
+            onBack = { navController.popBackStack() }
+        )
+    }
+
+    composable(Screen.KillSwitch.route) {
+        KillSwitchScreen(
             onBack = { navController.popBackStack() }
         )
     }

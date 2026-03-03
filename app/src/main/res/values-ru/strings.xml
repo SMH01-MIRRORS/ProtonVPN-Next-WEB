@@ -78,7 +78,7 @@
     <string name="settings_title">Настройки</string>
     <string name="settings_connection">Настройки подключения</string>
     <string name="settings_kill_switch">Kill Switch</string>
-    <string name="settings_kill_switch_desc">Отключать интернет при разрыве VPN-соединения</string>
+    <string name="settings_kill_switch_desc">Kill Switch</string>
     <string name="settings_auto_connect">Автоподключение</string>
     <string name="settings_auto_connect_desc">Подключаться к VPN при запуске</string>
     <string name="settings_split_tunneling">Раздельное туннелирование</string>
@@ -101,6 +101,15 @@
     <string name="settings_obfuscation">Обфускация (AmneziaWG)</string>
     <string name="settings_obfuscation_desc">Изменение заголовков пакетов для обхода DPI</string>
     <string name="settings_reset_obfuscation">Сбросить до стандартного ProtonVPN-Next</string>
+
+    <!-- Kill Switch Screen -->
+    <string name="kill_switch_title">Kill Switch</string>
+    <string name="kill_switch_subtitle">Kill Switch</string>
+    <string name="kill_switch_desc">Чтобы ваш трафик всегда был защищен, используйте Kill Switch, предоставляемый Android. Это предотвращает утечку данных при разрыве VPN-соединения.</string>
+    <string name="kill_switch_step_1">1. Нажмите кнопку ниже, чтобы открыть настройки VPN.</string>
+    <string name="kill_switch_step_2">2. Нажмите на иконку настроек рядом с Proton VPN-Next.</string>
+    <string name="kill_switch_step_3">3. Включите \"Постоянный VPN\" и \"Блокировать соединения без VPN\".</string>
+    <string name="kill_switch_button">Открыть настройки VPN</string>
 
     <!-- Obfuscation Params -->
     <string name="obfuscation_jc">Количество мусорных пакетов (Jc)</string>
@@ -179,6 +188,16 @@
         <item quantity="many">%1$d IP выбрано</item>
         <item quantity="other">%1$d IP выбрано</item>
     </plurals>
+
+    <string name="st_search_apps_hint">Поиск приложений</string>
+    <string name="st_selected_apps_header">Выбранные приложения (%1$d)</string>
+    <string name="st_available_apps_header">Доступные приложения (%1$d)</string>
+    <string name="st_ip_hint">например, 192.168.1.0/24</string>
+    <string name="st_add_ip_desc">Добавить IP</string>
+    <string name="st_invalid_ip_error">Неверный формат IP-адреса</string>
+    <string name="st_excluded_ips_header">Исключенные IP (%1$d)</string>
+    <string name="st_no_ips_added">IP-адреса еще не добавлены</string>
+    <string name="st_remove_ip_desc">Удалить IP</string>
 
     <!-- Notification -->
     <string name="notification_channel_name">Статус VPN</string>

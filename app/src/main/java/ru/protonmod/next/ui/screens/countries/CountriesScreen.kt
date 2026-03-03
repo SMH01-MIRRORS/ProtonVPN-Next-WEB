@@ -108,7 +108,7 @@ fun CountriesScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack, 
+                            Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.desc_back_button),
                             tint = colors.textNorm
                         )
@@ -598,11 +598,7 @@ fun ServerItemCard(
                     fontWeight = FontWeight.Bold,
                     color = colors.textNorm
                 )
-                Text(
-                    text = server.servers.firstOrNull()?.exitIp ?: "",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colors.textWeak
-                )
+                // Removed the exitIp Text to avoid confusion since these are entry IPs
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {

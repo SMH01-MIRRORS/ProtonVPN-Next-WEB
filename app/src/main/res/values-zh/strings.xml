@@ -77,8 +77,8 @@
     <!-- Settings Screen -->
     <string name="settings_title">设置</string>
     <string name="settings_connection">连接设置</string>
-    <string name="settings_kill_switch">终止开关 (Kill Switch)</string>
-    <string name="settings_kill_switch_desc">如果 VPN 连接断开，则断开网络连接</string>
+    <string name="settings_kill_switch">Kill Switch</string>
+    <string name="settings_kill_switch_desc">Kill Switch</string>
     <string name="settings_auto_connect">自动连接</string>
     <string name="settings_auto_connect_desc">启动时连接到 VPN</string>
     <string name="settings_split_tunneling">分流隧道 (Split Tunneling)</string>
@@ -101,6 +101,15 @@
     <string name="settings_obfuscation">混淆 (AmneziaWG)</string>
     <string name="settings_obfuscation_desc">修改数据包头以绕过 DPI</string>
     <string name="settings_reset_obfuscation">重置为标准 ProtonVPN-Next</string>
+
+    <!-- Kill Switch Screen -->
+    <string name="kill_switch_title">Kill Switch</string>
+    <string name="kill_switch_subtitle">Kill Switch</string>
+    <string name="kill_switch_desc">为了确保您的流量始终受到保护，请使用 Android 提供的 Kill Switch。这可以防止在 VPN 连接断开时发生数据泄漏。</string>
+    <string name="kill_switch_step_1">1. 点击下方按钮打开 VPN 设置。</string>
+    <string name="kill_switch_step_2">2. 点击 Proton VPN-Next 旁边的设置图标。</string>
+    <string name="kill_switch_step_3">3. 启用“始终开启的 VPN”和“禁止非 VPN 连接”。</string>
+    <string name="kill_switch_button">打开 VPN 设置</string>
 
     <!-- Obfuscation Params -->
     <string name="obfuscation_jc">垃圾包数量 (Jc)</string>
@@ -167,6 +176,16 @@
     <plurals name="settings_ips_excluded_count">
         <item quantity="other">%1$d 个 IP 地址已排除</item>
     </plurals>
+
+    <string name="st_search_apps_hint">搜索应用</string>
+    <string name="st_selected_apps_header">已选择的应用 (%1$d)</string>
+    <string name="st_available_apps_header">可用应用 (%1$d)</string>
+    <string name="st_ip_hint">例如 192.168.1.0/24</string>
+    <string name="st_add_ip_desc">添加 IP</string>
+    <string name="st_invalid_ip_error">无效的 IP 地址格式</string>
+    <string name="st_excluded_ips_header">已排除的 IP (%1$d)</string>
+    <string name="st_no_ips_added">尚未添加 IP 地址</string>
+    <string name="st_remove_ip_desc">移除 IP</string>
 
     <!-- Notification -->
     <string name="notification_channel_name">VPN 状态</string>

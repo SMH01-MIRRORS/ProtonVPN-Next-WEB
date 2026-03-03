@@ -78,7 +78,7 @@
     <string name="settings_title">Settings</string>
     <string name="settings_connection">Connection Settings</string>
     <string name="settings_kill_switch">Kill Switch</string>
-    <string name="settings_kill_switch_desc">Disconnect if VPN connection drops</string>
+    <string name="settings_kill_switch_desc">Kill Switch</string>
     <string name="settings_auto_connect">Auto Connect</string>
     <string name="settings_auto_connect_desc">Connect to VPN on startup</string>
     <string name="settings_split_tunneling">Split Tunneling</string>
@@ -101,6 +101,15 @@
     <string name="settings_obfuscation">Obfuscation (AmneziaWG)</string>
     <string name="settings_obfuscation_desc">Modify packet headers to bypass DPI</string>
     <string name="settings_reset_obfuscation">Reset to Standard ProtonVPN-Next</string>
+
+    <!-- Kill Switch Screen -->
+    <string name="kill_switch_title">Kill Switch</string>
+    <string name="kill_switch_subtitle">Kill Switch</string>
+    <string name="kill_switch_desc">To ensure your traffic is always protected, use the Kill Switch provided by Android. This prevents data leaks if the VPN connection drops.</string>
+    <string name="kill_switch_step_1">1. Tap the button below to open VPN settings.</string>
+    <string name="kill_switch_step_2">2. Tap the settings icon next to Proton VPN-Next.</string>
+    <string name="kill_switch_step_3">3. Enable \"Always-on VPN\" and \"Block connections without VPN\".</string>
+    <string name="kill_switch_button">Open VPN Settings</string>
 
     <!-- Obfuscation Params -->
     <string name="obfuscation_jc">Junk Packet Count (Jc)</string>
@@ -171,6 +180,16 @@
         <item quantity="one">%1$d IP excluded</item>
         <item quantity="other">%1$d IPs excluded</item>
     </plurals>
+
+    <string name="st_search_apps_hint">Search apps</string>
+    <string name="st_selected_apps_header">Selected Apps (%1$d)</string>
+    <string name="st_available_apps_header">Available Apps (%1$d)</string>
+    <string name="st_ip_hint">e.g., 192.168.1.0/24</string>
+    <string name="st_add_ip_desc">Add IP</string>
+    <string name="st_invalid_ip_error">Invalid IP address format</string>
+    <string name="st_excluded_ips_header">Excluded IPs (%1$d)</string>
+    <string name="st_no_ips_added">No IP addresses added yet</string>
+    <string name="st_remove_ip_desc">Remove IP</string>
 
     <!-- Notification -->
     <string name="notification_channel_name">VPN Status</string>

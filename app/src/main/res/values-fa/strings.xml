@@ -78,7 +78,7 @@
     <string name="settings_title">تنظیمات</string>
     <string name="settings_connection">تنظیمات اتصال</string>
     <string name="settings_kill_switch">Kill Switch</string>
-    <string name="settings_kill_switch_desc">در صورت قطع اتصال VPN، اینترنت را قطع کن</string>
+    <string name="settings_kill_switch_desc">Kill Switch</string>
     <string name="settings_auto_connect">اتصال خودکار</string>
     <string name="settings_auto_connect_desc">اتصال به VPN هنگام راه‎‌اندازی</string>
     <string name="settings_split_tunneling">Split Tunneling</string>
@@ -101,6 +101,15 @@
     <string name="settings_obfuscation">مبهم‌سازی (AmneziaWG)</string>
     <string name="settings_obfuscation_desc">تغییر هدر بسته‌ها برای دور زدن DPI</string>
     <string name="settings_reset_obfuscation">بازنشانی به استاندارد ProtonVPN-Next</string>
+
+    <!-- Kill Switch Screen -->
+    <string name="kill_switch_title">Kill Switch</string>
+    <string name="kill_switch_subtitle">Kill Switch</string>
+    <string name="kill_switch_desc">برای اطمینان از اینکه ترافیک شما همیشه محافظت می‌شود، از Kill Switch ارائه شده توسط اندروید استفاده کنید. این کار از نشت داده‌ها در صورت قطع اتصال VPN جلوگیری می‌کند.</string>
+    <string name="kill_switch_step_1">۱. برای باز کردن تنظیمات VPN، روی دکمه زیر ضربه بزنید.</string>
+    <string name="kill_switch_step_2">۲. روی نماد تنظیمات در کنار Proton VPN-Next ضربه بزنید.</string>
+    <string name="kill_switch_step_3">۳. \"VPN همیشه روشن\" و \"مسدود کردن اتصالات بدون VPN\" را فعال کنید.</string>
+    <string name="kill_switch_button">باز کردن تنظیمات VPN</string>
 
     <!-- Obfuscation Params -->
     <string name="obfuscation_jc">تعداد بسته‌های زباله (Jc)</string>
@@ -171,6 +180,16 @@
         <item quantity="one">%1$d آدرس IP مستثنی شده است</item>
         <item quantity="other">%1$d آدرس IP مستثنی شده است</item>
     </plurals>
+
+    <string name="st_search_apps_hint">جستجوی برنامه‌ها</string>
+    <string name="st_selected_apps_header">برنامه‌های انتخابی (%1$d)</string>
+    <string name="st_available_apps_header">برنامه‌های موجود (%1$d)</string>
+    <string name="st_ip_hint">مثلاً 192.168.1.0/24</string>
+    <string name="st_add_ip_desc">افزودن IP</string>
+    <string name="st_invalid_ip_error">فرمت آدرس IP نامعتبر است</string>
+    <string name="st_excluded_ips_header">IPهای مستثنی شده (%1$d)</string>
+    <string name="st_no_ips_added">هنوز هیچ آدرس IP اضافه نشده است</string>
+    <string name="st_remove_ip_desc">حذف IP</string>
 
     <!-- Notification -->
     <string name="notification_channel_name">وضعیت VPN</string>

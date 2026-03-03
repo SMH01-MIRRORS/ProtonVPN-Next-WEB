@@ -110,7 +110,8 @@ fun ProfilesScreen(
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .windowInsetsPadding(WindowInsets.navigationBars)
-                    .padding(bottom = 80.dp) // Offset above BottomBar
+                    // Added more padding to lift the FAB well above the BottomBar
+                    .padding(bottom = 130.dp)
             ) {
                 Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.desc_create_profile))
             }
@@ -145,7 +146,8 @@ fun ProfilesScreen(
                     start = 16.dp,
                     end = 16.dp,
                     top = 16.dp,
-                    bottom = 120.dp
+                    // Increased bottom padding so the last item scrolls above the higher FAB
+                    bottom = 140.dp
                 ),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -160,7 +162,16 @@ fun ProfilesScreen(
 
                 if (profiles.isEmpty()) {
                     item {
-                        EmptyProfilesState(modifier = Modifier.fillParentMaxSize(0.6f))
+                        // Fixed centering: fillMaxWidth ensures it's horizontally centered,
+                        // fillParentMaxHeight(0.75f) takes 75% of height to account for the title above
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .fillParentMaxHeight(0.75f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            EmptyProfilesState()
+                        }
                     }
                 } else {
                     items(profiles, key = { it.id }) { profile ->

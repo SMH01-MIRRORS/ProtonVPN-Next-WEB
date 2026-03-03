@@ -20,13 +20,13 @@
     <!-- Welcome Screen -->
     <string name="welcome_title">Сардэчна запрашаем у Proton VPN-Next</string>
     <string name="welcome_subtitle">Кіруйце сваім лічбавым жыццём з дапамогай бяспечнага, прыватнага і хуткага VPN. Без логаў і сачэння.</string>
-    <string name="btn_create_account">Стварыць акаўнт</string>
+    <string name="btn_create_account">Стварыць акаунт</string>
     <string name="btn_login">Увайсці</string>
     <string name="btn_continue_guest">Працягнуць як госць</string>
 
     <!-- Login Screen -->
     <string name="login_title">З вяртаннем</string>
-    <string name="login_subtitle">Увайдзіце ў свой акаўнт Proton</string>
+    <string name="login_subtitle">Увайдзіце ў свой акаунт Proton</string>
     <string name="hint_username">Email або імя карыстальніка</string>
     <string name="hint_password">Пароль</string>
     <string name="forgot_password">Забыліся на пароль?</string>
@@ -37,7 +37,7 @@
     <string name="title_security_check">Праверка бяспекі</string>
     <string name="title_2fa">Двухфактарная аўтэнтыфікацыя</string>
     <string name="msg_2fa_instruction">Увядзіце 6-значны код TOTP з вашай праграмы-аўтэнтыфікатара.</string>
-    <string name="hint_2fa_code">6-значны код</string>
+    <string name="hint_2fa_code">6-значный код</string>
     <string name="btn_verify">Праверыць</string>
 
     <!-- Dashboard Screen -->
@@ -78,7 +78,7 @@
     <string name="settings_title">Налады</string>
     <string name="settings_connection">Налады падключэння</string>
     <string name="settings_kill_switch">Kill Switch</string>
-    <string name="settings_kill_switch_desc">Адключаць інтэрнэт пры разрыве VPN-злучэння</string>
+    <string name="settings_kill_switch_desc">Kill Switch</string>
     <string name="settings_auto_connect">Аўтападключэнне</string>
     <string name="settings_auto_connect_desc">Падключацца да VPN пры запуску</string>
     <string name="settings_split_tunneling">Раздзельнае тунэляванне</string>
@@ -96,11 +96,20 @@
     <string name="settings_off">Выкл</string>
     <string name="settings_connection_protocol">Пратакол</string>
     <string name="settings_port">Порт</string>
-    <string name="settings_port_desc">Выбар порта падключэння</string>
+    <string name="settings_port_desc">Выбар порта падключення</string>
     <string name="settings_port_auto">Аўта</string>
     <string name="settings_obfuscation">Абфускацыя (AmneziaWG)</string>
     <string name="settings_obfuscation_desc">Змена загалоўкаў пакетаў для абыходу DPI</string>
-    <string name="settings_reset_obfuscation">Скінуць да стандартнага ProtonVPN-Next</string>
+    <string name="settings_reset_obfuscation">Скінуць да стандартного ProtonVPN-Next</string>
+
+    <!-- Kill Switch Screen -->
+    <string name="kill_switch_title">Kill Switch</string>
+    <string name="kill_switch_subtitle">Kill Switch</string>
+    <string name="kill_switch_desc">Каб ваш трафік заўсёды быў абаронены, выкарыстоўвайце Kill Switch, які забяспечваецца Android. Гэта прадухіляе ўцечку даных пры разрыве VPN-злучэння.</string>
+    <string name="kill_switch_step_1">1. Націсніце кнопку ніжэй, каб адкрыць налады VPN.</string>
+    <string name="kill_switch_step_2">2. Націсніце на іконку налад побач з Proton VPN-Next.</string>
+    <string name="kill_switch_step_3">3. Уключыце \"Пастаянны VPN\" і \"Блакіраваць злучэнні без VPN\".</string>
+    <string name="kill_switch_button">Адкрыць налады VPN</string>
 
     <!-- Obfuscation Params -->
     <string name="obfuscation_jc">Колькасць смеццевых пакетаў (Jc)</string>
@@ -179,6 +188,16 @@
         <item quantity="many">%1$d IP выбрана</item>
         <item quantity="other">%1$d IP выбрана</item>
     </plurals>
+
+    <string name="st_search_apps_hint">Пошук праграм</string>
+    <string name="st_selected_apps_header">Выбраныя праграмы (%1$d)</string>
+    <string name="st_available_apps_header">Даступныя праграмы (%1$d)</string>
+    <string name="st_ip_hint">напр., 192.168.1.0/24</string>
+    <string name="st_add_ip_desc">Дадаць IP</string>
+    <string name="st_invalid_ip_error">Няправільны фармат IP-адраса</string>
+    <string name="st_excluded_ips_header">Выключаныя IP (%1$d)</string>
+    <string name="st_no_ips_added">IP-адрасы яшчэ не дададзеныя</string>
+    <string name="st_remove_ip_desc">Выдаліць IP</string>
 
     <!-- Notification -->
     <string name="notification_channel_name">Статус VPN</string>

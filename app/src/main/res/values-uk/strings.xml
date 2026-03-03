@@ -78,7 +78,7 @@
     <string name="settings_title">Налаштування</string>
     <string name="settings_connection">Налаштування підключення</string>
     <string name="settings_kill_switch">Kill Switch</string>
-    <string name="settings_kill_switch_desc">Вимикати інтернет у разі розриву VPN-з\'єднання</string>
+    <string name="settings_kill_switch_desc">Kill Switch</string>
     <string name="settings_auto_connect">Автопідключення</string>
     <string name="settings_auto_connect_desc">Підключатися до VPN під час запуску</string>
     <string name="settings_split_tunneling">Роздільне тунелювання</string>
@@ -101,6 +101,15 @@
     <string name="settings_obfuscation">Обфускація (AmneziaWG)</string>
     <string name="settings_obfuscation_desc">Зміна заголовків пакетів для обходу DPI</string>
     <string name="settings_reset_obfuscation">Скинути до стандартного ProtonVPN-Next</string>
+
+    <!-- Kill Switch Screen -->
+    <string name="kill_switch_title">Kill Switch</string>
+    <string name="kill_switch_subtitle">Kill Switch</string>
+    <string name="kill_switch_desc">Щоб ваш трафік завжди був захищений, використовуйте Kill Switch, що надається Android. Це запобігає витоку даних при розриві VPN-з\'єднання.</string>
+    <string name="kill_switch_step_1">1. Натисніть кнопку нижче, щоб відкрити налаштування VPN.</string>
+    <string name="kill_switch_step_2">2. Натисніть на іконку налаштувань поруч із Proton VPN-Next.</string>
+    <string name="kill_switch_step_3">3. Увімкніть \"Постійний VPN\" та \"Блокувати з\'єднання без VPN\".</string>
+    <string name="kill_switch_button">Відкрити налаштування VPN</string>
 
     <!-- Obfuscation Params -->
     <string name="obfuscation_jc">Кількість сміттєвих пакетів (Jc)</string>
@@ -180,10 +189,20 @@
         <item quantity="other">%1$d IP обрано</item>
     </plurals>
 
+    <string name="st_search_apps_hint">Пошук додатків</string>
+    <string name="st_selected_apps_header">Обрані додатки (%1$d)</string>
+    <string name="st_available_apps_header">Доступні додатки (%1$d)</string>
+    <string name="st_ip_hint">напр., 192.168.1.0/24</string>
+    <string name="st_add_ip_desc">Додати IP</string>
+    <string name="st_invalid_ip_error">Невірний формат IP-адреси</string>
+    <string name="st_excluded_ips_header">Виключені IP (%1$d)</string>
+    <string name="st_no_ips_added">IP-адреси ще не додані</string>
+    <string name="st_remove_ip_desc">Видалити IP</string>
+
     <!-- Notification -->
     <string name="notification_channel_name">Статус VPN</string>
     <string name="notification_channel_desc">Відображає поточний статус підключення VPN</string>
-    <string name="notification_title_connected">Підключено до %1$s</string>
+    <string name="notification_title_connected">Подключено до %1$s</string>
     <string name="notification_title_disconnected">Відключено</string>
     <string name="notification_title_connecting">Підключення…</string>
     <string name="notification_action_disconnect">Відключити</string>
@@ -195,7 +214,7 @@
     <string name="error_2fa_failed">Помилка двофакторної перевірки</string>
 
     <!-- Profiles Screen -->
-    <string name="profiles_title">Профілі</string>
+    <string name="profiles_title">Профилі</string>
     <string name="desc_create_profile">Створити профіль</string>
     <string name="desc_edit_profile">Редагувати профіль</string>
     <string name="profiles_empty_title">Поки що немає профілів</string>
