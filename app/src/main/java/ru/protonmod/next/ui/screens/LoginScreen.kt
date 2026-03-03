@@ -1,18 +1,19 @@
 /*
- * Copyright (C) 2026 SMH01
+ * Copyright (c) 2024 Proton Technologies AG
+ * This file is part of Proton AG and ProtonCore.
  *
- * This program is free software: you can redistribute it and/or modify
+ * ProtonCore is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * ProtonCore is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with ProtonCore.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package ru.protonmod.next.ui.screens
@@ -20,9 +21,14 @@ package ru.protonmod.next.ui.screens
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -31,14 +37,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     onBackClick: () -> Unit,
@@ -48,12 +57,10 @@ fun LoginScreen(
     val uiState by viewModel.uiState.collectAsState()
     val colors = ProtonNextTheme.colors
 
-    // User credentials state
+    // Form states
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-
-    // 2FA code state
     var totpCode by remember { mutableStateOf("") }
 
     LaunchedEffect(uiState) {
@@ -64,11 +71,11 @@ fun LoginScreen(
 
     AnimatedContent(
         targetState = uiState,
-        label = "login_to_captcha_transition"
+        label = "login_transitions"
     ) { state ->
         when (state) {
             is LoginUiState.RequiresCaptcha -> {
-                // --- CAPTCHA Verification View ---
+                // --- CAPTCHA View ---
                 CaptchaScreen(
                     webUrl = state.webUrl,
                     sessionId = state.sessionId,
@@ -80,30 +87,54 @@ fun LoginScreen(
             }
 
             is LoginUiState.Requires2FA -> {
-                // --- 2FA Input View ---
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(colors.backgroundNorm),
-                    contentAlignment = Alignment.Center
-                ) {
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = {},
+                            navigationIcon = {
+                                IconButton(onClick = onBackClick) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = stringResource(R.string.desc_back_button),
+                                        tint = colors.textNorm
+                                    )
+                                }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.backgroundNorm)
+                        )
+                    },
+                    containerColor = colors.backgroundNorm
+                ) { padding ->
                     Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(32.dp),
+                            .fillMaxSize()
+                            .padding(padding)
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 24.dp, vertical = 16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        Icon(
+                            imageVector = Icons.Default.Shield,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = colors.brandNorm
+                        )
+
                         Text(
                             text = stringResource(R.string.title_2fa),
-                            style = MaterialTheme.typography.headlineLarge,
+                            style = MaterialTheme.typography.headlineMedium,
                             color = colors.textNorm,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(top = 24.dp)
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+
                         Text(
                             text = stringResource(R.string.msg_2fa_instruction),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = colors.textWeak
+                            color = colors.textWeak,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(top = 8.dp)
                         )
 
                         Spacer(modifier = Modifier.height(32.dp))
@@ -114,7 +145,17 @@ fun LoginScreen(
                             label = { Text(stringResource(R.string.hint_2fa_code)) },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    if (totpCode.isNotBlank()) {
+                                        viewModel.submit2FA(state.sessionId, state.tempAccessToken, state.refreshToken, totpCode)
+                                    }
+                                }
+                            ),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = colors.brandNorm,
                                 unfocusedBorderColor = colors.shade20,
@@ -130,51 +171,81 @@ fun LoginScreen(
                             onClick = {
                                 viewModel.submit2FA(state.sessionId, state.tempAccessToken, state.refreshToken, totpCode)
                             },
-                            modifier = Modifier.fillMaxWidth().height(50.dp),
-                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
-                            enabled = totpCode.isNotBlank()
+                            enabled = totpCode.isNotBlank() && uiState !is LoginUiState.Loading
                         ) {
-                            Text(stringResource(R.string.btn_verify), fontWeight = FontWeight.Bold)
+                            if (uiState is LoginUiState.Loading) {
+                                CircularProgressIndicator(color = colors.textInverted, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                            } else {
+                                Text(stringResource(R.string.btn_verify), fontWeight = FontWeight.Bold)
+                            }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        TextButton(
-                            onClick = onBackClick,
-                            modifier = Modifier.fillMaxWidth().height(50.dp)
-                        ) {
-                            Text(stringResource(R.string.btn_cancel), color = colors.textWeak)
+                        if (uiState is LoginUiState.Error) {
+                            Text(
+                                text = (uiState as LoginUiState.Error).message,
+                                color = colors.notificationError,
+                                style = MaterialTheme.typography.bodySmall,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(top = 16.dp)
+                            )
                         }
                     }
                 }
             }
 
             else -> {
-                // --- Standard Login View ---
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(colors.backgroundNorm),
-                    contentAlignment = Alignment.Center
-                ) {
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = {},
+                            navigationIcon = {
+                                IconButton(onClick = onBackClick) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = stringResource(R.string.desc_back_button),
+                                        tint = colors.textNorm
+                                    )
+                                }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.backgroundNorm)
+                        )
+                    },
+                    containerColor = colors.backgroundNorm
+                ) { padding ->
                     Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(32.dp),
+                            .fillMaxSize()
+                            .padding(padding)
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 24.dp, vertical = 16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
-                            text = stringResource(R.string.app_name),
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = colors.textNorm,
-                            fontWeight = FontWeight.Bold
+                        // Logo representation
+                        Icon(
+                            imageVector = Icons.Default.Shield,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = colors.brandNorm
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = stringResource(R.string.login_title),
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = colors.textNorm,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(top = 24.dp)
+                        )
+
                         Text(
                             text = stringResource(R.string.login_subtitle),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = colors.textWeak
+                            color = colors.textWeak,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(top = 8.dp)
                         )
 
                         Spacer(modifier = Modifier.height(32.dp))
@@ -185,6 +256,7 @@ fun LoginScreen(
                             label = { Text(stringResource(R.string.hint_username)) },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = colors.brandNorm,
                                 unfocusedBorderColor = colors.shade20,
@@ -202,6 +274,17 @@ fun LoginScreen(
                             label = { Text(stringResource(R.string.hint_password)) },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Password,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    if (username.isNotBlank() && password.isNotBlank()) {
+                                        viewModel.login(username, password)
+                                    }
+                                }
+                            ),
                             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             trailingIcon = {
                                 val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
@@ -220,38 +303,43 @@ fun LoginScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Display error message if any
-                        if (uiState is LoginUiState.Error) {
-                            Text(
-                                text = (uiState as LoginUiState.Error).message,
-                                color = colors.notificationError,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.padding(bottom = 16.dp)
-                            )
-                        }
-
                         Button(
                             onClick = { viewModel.login(username, password) },
-                            modifier = Modifier.fillMaxWidth().height(50.dp),
-                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
                             enabled = uiState !is LoginUiState.Loading && username.isNotBlank() && password.isNotBlank()
                         ) {
                             if (uiState is LoginUiState.Loading) {
                                 CircularProgressIndicator(color = colors.textInverted, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                             } else {
-                                Text(stringResource(R.string.btn_login), fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.btn_login), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
                             }
+                        }
+
+                        if (uiState is LoginUiState.Error) {
+                            Text(
+                                text = (uiState as LoginUiState.Error).message,
+                                color = colors.notificationError,
+                                style = MaterialTheme.typography.bodySmall,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(top = 16.dp)
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
 
+                        // Forgot password textual button mapped from ProtonTextButton
                         TextButton(
-                            onClick = onBackClick,
-                            modifier = Modifier.fillMaxWidth().height(50.dp),
+                            onClick = { /* TODO: Forgot Password flow */ },
+                            modifier = Modifier.height(48.dp),
                             enabled = uiState !is LoginUiState.Loading
                         ) {
-                            Text(stringResource(R.string.btn_cancel), color = colors.textWeak)
+                            Text(
+                                text = stringResource(R.string.forgot_password),
+                                color = colors.textAccent,
+                                fontWeight = FontWeight.Medium
+                            )
                         }
                     }
                 }
