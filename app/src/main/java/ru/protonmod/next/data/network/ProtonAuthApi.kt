@@ -96,7 +96,8 @@ interface ProtonAuthApi {
     @POST("auth/v4/sessions")
     suspend fun createAnonymousSession(
         @Body payload: JsonObject,
-        @Header("x-pm-human-verification-token") captchaToken: String? = null
+        @Header("x-pm-human-verification-token") captchaToken: String? = null,
+        @Header("x-pm-human-verification-token-type") captchaTokenType: String? = null
     ): LoginResponse
 
     @POST("auth/v4/info")
@@ -104,7 +105,8 @@ interface ProtonAuthApi {
         @Header("Authorization") authorization: String,
         @Header("x-pm-uid") sessionId: String,
         @Body request: AuthInfoRequest,
-        @Header("x-pm-human-verification-token") captchaToken: String? = null
+        @Header("x-pm-human-verification-token") captchaToken: String? = null,
+        @Header("x-pm-human-verification-token-type") captchaTokenType: String? = null
     ): AuthInfoResponse
 
     @POST("auth/v4")
@@ -112,7 +114,17 @@ interface ProtonAuthApi {
         @Header("Authorization") authorization: String,
         @Header("x-pm-uid") sessionId: String,
         @Body request: LoginRequest,
-        @Header("x-pm-human-verification-token") captchaToken: String? = null
+        @Header("x-pm-human-verification-token") captchaToken: String? = null,
+        @Header("x-pm-human-verification-token-type") captchaTokenType: String? = null
+    ): LoginResponse
+
+    @POST("auth/v4/credentialless")
+    suspend fun performLoginLess(
+        @Header("Authorization") authorization: String,
+        @Header("x-pm-uid") sessionId: String,
+        @Body payload: JsonObject,
+        @Header("x-pm-human-verification-token") captchaToken: String? = null,
+        @Header("x-pm-human-verification-token-type") captchaTokenType: String? = null
     ): LoginResponse
 
     @POST("auth/v4/2fa")

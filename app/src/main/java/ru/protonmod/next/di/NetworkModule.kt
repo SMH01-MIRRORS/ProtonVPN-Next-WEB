@@ -51,7 +51,7 @@ object NetworkModule {
 
     private const val PROTON_PROXY_URL = "https://shimmering-stroopwafel-51675e.netlify.app/"
     private const val PROTON_DIRECT_URL = "https://vpn-api.proton.me/"
-    private const val APP_VERSION_STRING = "5.16.31.0"
+    const val APP_VERSION_STRING = "5.16.31.0"
 
     @Provides
     @Singleton
@@ -60,7 +60,8 @@ object NetworkModule {
         isLenient = true
     }
 
-    private fun generateUserAgent(): String {
+    // Сделали публичным, чтобы юзать в CaptchaScreen
+    fun generateUserAgent(): String {
         val androidVersion = Build.VERSION.RELEASE ?: "12"
         val manufacturer = Build.MANUFACTURER ?: "Unknown"
         val model = Build.MODEL ?: "Device"
@@ -168,7 +169,7 @@ object NetworkModule {
     fun provideRetrofit(okHttpClient: OkHttpClient, json: Json): Retrofit {
         val contentType = "application/json".toMediaType()
         return Retrofit.Builder()
-            .baseUrl(PROTON_PROXY_URL)
+            .baseUrl(PROTON_PROXY_URL) // Дефолт, перезаписывается в interceptor
             .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()

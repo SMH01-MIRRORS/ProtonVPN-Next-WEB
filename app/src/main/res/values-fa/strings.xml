@@ -22,6 +22,7 @@
     <string name="welcome_subtitle">کنترل زندگی دیجیتال خود را با VPN امن، خصوصی و سریع به دست بگیرید. بدون گزارش، بدون ردیابی.</string>
     <string name="btn_create_account">ایجاد حساب کاربری</string>
     <string name="btn_login">ورود</string>
+    <string name="btn_continue_guest">ادامه به عنوان مهمان</string>
 
     <!-- Login Screen -->
     <string name="login_title">خوش آمدید</string>
@@ -242,4 +243,8 @@
     <string name="custom_config_name">پیکربندی سفارشی %1$d</string>
     <string name="title_edit_obfuscation_config">ویرایش پیکربندی مبهم‌سازی</string>
     <string name="error_empty_profile_name">نام پروفایل نمی‌تواند خالی باشد</string>
+
+    <!-- Captcha Screen -->
+    <string name="captcha_title">تایید هویت</string>
+    <string name="desc_close">بستن</string>
 </resources>

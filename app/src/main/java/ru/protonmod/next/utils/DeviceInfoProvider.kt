@@ -1,15 +1,34 @@
+/*
+ * Copyright (C) 2026 SMH01
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ru.protonmod.next.utils
 
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Environment
 import android.os.StatFs
 import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
+import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -18,6 +37,37 @@ import javax.inject.Singleton
 class DeviceInfoProvider @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
+
+    companion object {
+        // The official ProtonVPN client version we are spoofing
+        const val SPOOFED_APP_VERSION = "5.16.31.0"
+
+        /**
+         * Generates a User-Agent string identical to the official Proton client.
+         * Placed in companion object so it can be easily accessed by NetworkModule and CaptchaScreen
+         * without needing to inject Context.
+         */
+        fun getSpoofedUserAgent(): String {
+            val androidVersion = Build.VERSION.RELEASE ?: "12"
+            val manufacturer = Build.MANUFACTURER ?: "Unknown"
+            val model = Build.MODEL ?: "Device"
+
+            val capManufacturer = manufacturer.replaceFirstChar {
+                if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString()
+            }
+
+            val deviceName = if (model.lowercase(Locale.US).startsWith(manufacturer.lowercase(Locale.US))) {
+                model.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
+            } else {
+                "$capManufacturer $model"
+            }
+
+            val safeDeviceName = deviceName.replace(Regex("[^\\x20-\\x7E]"), "").trim()
+            val safeAndroidVersion = androidVersion.replace(Regex("[^\\x20-\\x7E]"), "").trim()
+
+            return "ProtonVPN/$SPOOFED_APP_VERSION (Android $safeAndroidVersion; $safeDeviceName)"
+        }
+    }
 
     fun getAppVersion(): String {
         return try {

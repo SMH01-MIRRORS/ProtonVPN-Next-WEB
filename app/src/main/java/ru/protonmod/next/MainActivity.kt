@@ -130,7 +130,13 @@ fun ProtonNextAppNavHost(viewModel: MainViewModel = hiltViewModel()) {
         composable("welcome") {
             WelcomeScreen(
                 onNavigateToLogin = { navController.navigate("login") },
-                onNavigateToRegister = { /* TODO: Registration flow */ }
+                onNavigateToRegister = { /* TODO: Registration flow */ },
+                onNavigateToHome = {
+                    // Clear the entire backstack and navigate to home (dashboard)
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(0)
+                    }
+                }
             )
         }
 

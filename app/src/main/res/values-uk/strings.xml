@@ -1,0 +1,258 @@
+<resources>
+    <!--
+    ~ Copyright (C) 2026 SMH01
+    ~
+    ~ This program is free software: you can redistribute it and/or modify
+    ~ it under the terms of the GNU General Public License as published by
+    ~ the Free Software Foundation, either version 3 of the License, or
+    ~ (at your option) any later version.
+    ~
+    ~ This program is distributed in the hope that it will be useful,
+    ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+    ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    ~ GNU General Public License for more details.
+    ~
+    ~ You should have received a copy of the GNU General Public License
+    ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+    -->
+    <string name="app_name">Proton VPN-Next</string>
+
+    <!-- Welcome Screen -->
+    <string name="welcome_title">Ласкаво просимо до Proton VPN-Next</string>
+    <string name="welcome_subtitle">Керуйте своїм цифровим життям за допомогою безпечного, приватного та швидкого VPN. Без логів та стеження.</string>
+    <string name="btn_create_account">Створити акаунт</string>
+    <string name="btn_login">Увійти</string>
+    <string name="btn_continue_guest">Продовжити як гість</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">З поверненням</string>
+    <string name="login_subtitle">Увійдіть у свій акаунт Proton</string>
+    <string name="hint_username">Email або ім\'я користувача</string>
+    <string name="hint_password">Пароль</string>
+    <string name="forgot_password">Забули пароль?</string>
+    <string name="desc_back_button">Повернутися назад</string>
+    <string name="desc_toggle_password">Показати/приховати пароль</string>
+    <string name="login_success">Вхід виконано!</string>
+    <string name="login_error">Помилка: %1$s</string>
+    <string name="title_security_check">Перевірка безпеки</string>
+    <string name="title_2fa">Двофакторна автентифікація</string>
+    <string name="msg_2fa_instruction">Введіть 6-значний код TOTP з вашого додатка-автентифікатора.</string>
+    <string name="hint_2fa_code">6-значний код</string>
+    <string name="btn_verify">Перевірити</string>
+
+    <!-- Dashboard Screen -->
+    <string name="dashboard_title">Proton VPN-Next</string>
+    <string name="desc_settings">Налаштування</string>
+    <string name="error_loading_servers">Помилка завантаження серверів</string>
+    <string name="btn_retry">Повторити</string>
+    <string name="error_system_appops">Системна помилка: будь ласка, перевстановіть додаток.</string>
+    <string name="title_recent_connections">Останні підключення</string>
+    <string name="status_connected">Підключено</string>
+    <string name="status_connecting">Підключення…</string>
+    <string name="status_disconnected">Відключено</string>
+    <string name="status_not_connected">Не підключено</string>
+    <string name="msg_traffic_not_protected">Ваш трафік не захищений</string>
+    <string name="desc_toggle_connection">Перемкнути з\'єднання</string>
+    <string name="desc_country">Країна</string>
+    <string name="map_placeholder">Заглушка інтерактивної карти</string>
+    <string name="label_fastest_server">Найшвидший сервер</string>
+    <string name="label_select_location">Оберіть локацію</string>
+    <string name="label_server_unavailable">Сервер недоступний</string>
+    <string name="desc_change_server">Змінити сервер</string>
+    <string name="btn_disconnect">Відключити</string>
+    <string name="btn_quick_connect">Швидке підключення</string>
+
+    <!-- VPN Certificate Messages -->
+    <string name="cert_msg_expiring_soon">Термін дії сертифіката закінчується через %1$d год. Скоро оновимо…</string>
+    <string name="cert_msg_expired">Ваш VPN-сертифікат прострочений і потребує оновлення.</string>
+    <string name="cert_msg_refreshing">Оновлення VPN-сертифіката…</string>
+    <string name="cert_msg_refresh_failed">Не вдалося оновити сертифікат: %1$s. Повтор через 15 хвилин.</string>
+    <string name="cert_msg_auto_refresh_failed">Автооновлення не вдалося. Будь ласка, оновіть вручну для роботи VPN.</string>
+    <string name="cert_btn_refresh_now">Оновити зараз</string>
+
+    <!-- Countries Screen -->
+    <string name="countries_title">Оберіть країну</string>
+    <string name="desc_more_options">Додаткові опції</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Налаштування</string>
+    <string name="settings_connection">Налаштування підключення</string>
+    <string name="settings_kill_switch">Kill Switch</string>
+    <string name="settings_kill_switch_desc">Вимикати інтернет у разі розриву VPN-з\'єднання</string>
+    <string name="settings_auto_connect">Автопідключення</string>
+    <string name="settings_auto_connect_desc">Підключатися до VPN під час запуску</string>
+    <string name="settings_split_tunneling">Роздільне тунелювання</string>
+    <string name="settings_split_tunneling_desc">Виключити додатки або IP з VPN</string>
+    <string name="settings_excluded_apps">Виключені додатки</string>
+    <string name="settings_excluded_ips">Виключені IP-адреси</string>
+    <string name="settings_privacy">Приватність та сповіщення</string>
+    <string name="settings_notifications">Сповіщення</string>
+    <string name="settings_notifications_desc">Отримувати сповіщення про статус VPN</string>
+    <string name="settings_about">Про додаток</string>
+    <string name="settings_version">Версія %1$s</string>
+    <string name="settings_licenses">Ліцензії відкритого ПЗ</string>
+    <string name="settings_licenses_desc">Стороннє ПЗ, що використовується в додатку</string>
+    <string name="settings_on">Увімк</string>
+    <string name="settings_off">Вимк</string>
+    <string name="settings_connection_protocol">Протокол</string>
+    <string name="settings_port">Порт</string>
+    <string name="settings_port_desc">Вибір порту підключення</string>
+    <string name="settings_port_auto">Авто</string>
+    <string name="settings_obfuscation">Обфускація (AmneziaWG)</string>
+    <string name="settings_obfuscation_desc">Зміна заголовків пакетів для обходу DPI</string>
+    <string name="settings_reset_obfuscation">Скинути до стандартного ProtonVPN-Next</string>
+
+    <!-- Obfuscation Params -->
+    <string name="obfuscation_jc">Кількість сміттєвих пакетів (Jc)</string>
+    <string name="obfuscation_jmin">Мін. розмір сміття (Jmin)</string>
+    <string name="obfuscation_jmax">Макс. розмір сміття (Jmax)</string>
+    <string name="obfuscation_s1">Розмір сміття Init пакета (S1)</string>
+    <string name="obfuscation_s2">Розмір сміття Response пакета (S2)</string>
+    <string name="obfuscation_h1">Magic Init пакета (H1)</string>
+    <string name="obfuscation_h2">Magic Response пакета (H2)</string>
+    <string name="obfuscation_h3">Magic Underload пакета (H3)</string>
+    <string name="obfuscation_h4">Magic Transport пакета (H4)</string>
+    <string name="obfuscation_i1">Спеціальне сміття (I1)</string>
+
+    <!-- Settings: Protocol & Obfuscation -->
+    <string name="settings_protocol">Протокол</string>
+    <string name="protocol_title">Протокол</string>
+    <string name="protocol_amneziawg">AmneziaWG</string>
+    <string name="protocol_amneziawg_desc">Покращений протокол WireGuard з обфускацією</string>
+    <string name="obfuscation_title">Обфускація</string>
+    <string name="obfuscation_enable">Увімкнути обфускацію</string>
+    <string name="obfuscation_enable_desc">Обихід DPI та блокувань VPN</string>
+    <string name="obfuscation_info_desc">Налаштуйте параметри AmneziaWG, щоб приховати трафік VPN та обійти блокування в мережах з обмеженнями.</string>
+    <string name="obfuscation_config">Конфігурація</string>
+    <string name="obfuscation_config_standard">Стандартний конфіг Proton VPN-Next</string>
+    <string name="obfuscation_save_config">Зберегти як новий конфіг</string>
+    <string name="obfuscation_config_name">Назва конфігурації</string>
+    <string name="obfuscation_category_junk">Параметри сміття</string>
+    <string name="obfuscation_category_magic">Розміри пакетів (Magic)</string>
+    <string name="obfuscation_category_headers">Заголовки</string>
+    <string name="obfuscation_category_advanced">Додатково</string>
+    <string name="custom_config">Користувацький конфіг</string>
+
+    <!-- About App Screen -->
+    <string name="about_community">Спільнота</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_telegram">Telegram</string>
+
+    <!-- Licenses Screen -->
+    <string name="licenses_title">Ліцензії</string>
+    <string name="license_app_title">Proton VPN-Next</string>
+    <string name="license_app_desc">GNU General Public License v3.0</string>
+    <string name="license_androidx_title">Бібліотеки AndroidX</string>
+    <string name="license_apache_2">Apache License 2.0</string>
+    <string name="license_compose_title">Jetpack Compose</string>
+    <string name="license_kotlin_title">Стандартна бібліотека Kotlin</string>
+    <string name="license_hilt_title">Dagger Hilt</string>
+    <string name="license_retrofit_title">Retrofit та OkHttp</string>
+    <string name="license_proton_go_vpn_title">Proton GO VPN бібліотека</string>
+    <string name="license_amneziawg_title">AmneziaWG Android</string>
+
+    <!-- Split Tunneling -->
+    <string name="st_enabled_subtitle">VPN буде обходити обрані додатки та IP</string>
+    <string name="st_disabled_subtitle">Весь трафік йде через VPN</string>
+    <plurals name="st_apps_selected">
+        <item quantity="one">%1$d додаток обрано</item>
+        <item quantity="few">%1$d додатки обрано</item>
+        <item quantity="many">%1$d додатків обрано</item>
+        <item quantity="other">%1$d додатків обрано</item>
+    </plurals>
+    <plurals name="st_ips_selected">
+        <item quantity="one">%1$d IP обрано</item>
+        <item quantity="few">%1$d IP обрано</item>
+        <item quantity="many">%1$d IP обрано</item>
+        <item quantity="other">%1$d IP обрано</item>
+    </plurals>
+
+    <plurals name="settings_apps_excluded_count">
+        <item quantity="one">%1$d додаток виключено</item>
+        <item quantity="few">%1$d додатки виключено</item>
+        <item quantity="many">%1$d додатків виключено</item>
+        <item quantity="other">%1$d додатків виключено</item>
+    </plurals>
+    <plurals name="settings_ips_excluded_count">
+        <item quantity="one">%1$d IP виключено</item>
+        <item quantity="few">%1$d IP виключено</item>
+        <item quantity="many">%1$d IP обрано</item>
+        <item quantity="other">%1$d IP обрано</item>
+    </plurals>
+
+    <!-- Notification -->
+    <string name="notification_channel_name">Статус VPN</string>
+    <string name="notification_channel_desc">Відображає поточний статус підключення VPN</string>
+    <string name="notification_title_connected">Підключено до %1$s</string>
+    <string name="notification_title_disconnected">Відключено</string>
+    <string name="notification_title_connecting">Підключення…</string>
+    <string name="notification_action_disconnect">Відключити</string>
+
+    <!-- Errors and ViewModels -->
+    <string name="error_session_not_found">Активну сесію не знайдено. Будь ласка, увійдіть знову.</string>
+    <string name="error_unknown">Невідома помилка</string>
+    <string name="error_auth_failed">Сталася непередбачена помилка автентифікації</string>
+    <string name="error_2fa_failed">Помилка двофакторної перевірки</string>
+
+    <!-- Profiles Screen -->
+    <string name="profiles_title">Профілі</string>
+    <string name="desc_create_profile">Створити профіль</string>
+    <string name="desc_edit_profile">Редагувати профіль</string>
+    <string name="profiles_empty_title">Поки що немає профілів</string>
+    <string name="profiles_empty_desc">Створіть профіль для швидкого підключення з певними налаштуваннями.</string>
+    <string name="profile_feature_obfuscation">Обфускація</string>
+    <string name="profile_feature_connect_go">Connect &amp; Go</string>
+    <string name="profile_server_info">Сервер: %1$s</string>
+    <string name="profile_city_info">🏙️ %1$s, %2$s</string>
+    <string name="profile_country_info">%1$s %2$s</string>
+    <string name="profile_fastest_info">⚡ %1$s</string>
+
+    <!-- Edit Profile Screen -->
+    <string name="title_create_profile">Створити профіль</string>
+    <string name="title_edit_profile">Редагувати профіль</string>
+    <string name="btn_save">Зберегти</string>
+    <string name="btn_cancel">Скасувати</string>
+    <string name="btn_delete">Видалити</string>
+    <string name="btn_edit">Редагувати</string>
+    <string name="desc_delete_profile">Видалити профіль</string>
+    <string name="default_profile_name">Мій профіль</string>
+    <string name="category_general">Загальне</string>
+    <string name="label_profile_name">Назва профілю</string>
+    <string name="category_location">Локація</string>
+    <string name="location_server">Сервер: %1$s</string>
+    <string name="location_fastest">Найшвидший</string>
+    <string name="label_target_location">Цільова локація</string>
+    <string name="label_location">Локація</string>
+    <string name="category_connection">Підключення</string>
+    <string name="label_protocol">Протокол</string>
+    <string name="label_port">Порт</string>
+    <string name="category_advanced">Додатково</string>
+    <string name="label_obfuscation">Обфускація</string>
+    <string name="obfuscation_desc">Обихід глибокого аналізу пакетів (DPI)</string>
+    <string name="label_obfuscation_config">Конфіг обфускації</string>
+    <string name="category_automation">Автоматизація</string>
+    <string name="label_connect_go_website">Connect &amp; Go (Веб-сайт)</string>
+    <string name="label_enter_url">Введіть URL</string>
+    <string name="label_not_configured">Не налаштовано</string>
+    <string name="automation_desc">Автоматично відкривати цей сайт у браузері після встановлення VPN-з\'єднання.</string>
+    <string name="title_select_country">Оберіть країну</string>
+    <string name="title_select_city">Оберіть місто</string>
+    <string name="title_select_server">Оберіть сервер</string>
+    <string name="location_fastest_in_country">Найшвидший у %1$s</string>
+    <string name="location_fastest_in_city">Найшвидший у %1$s</string>
+    <string name="location_load">Навантаження: %1$d%%</string>
+    <string name="title_select_obfuscation_config">Оберіть конфіг обфускації</string>
+    <string name="title_auto_open_url">Автоматично відкривати URL</string>
+    <string name="btn_create_new_config">Створити новий конфіг</string>
+    <string name="connect_go_title">Connect &amp; Go</string>
+    <string name="connect_go_desc">Введіть URL для відкриття при підключенні (напр., https://example.com)</string>
+    <string name="hint_url_placeholder">https://</string>
+    <string name="title_select_protocol">Оберіть протокол</string>
+    <string name="custom_config_name">Свій конфіг %1$d</string>
+    <string name="title_edit_obfuscation_config">Редагувати конфіг обфускації</string>
+    <string name="error_empty_profile_name">Назва профілю не може бути порожньою</string>
+
+    <!-- Captcha Screen -->
+    <string name="captcha_title">Перевірка безпеки</string>
+    <string name="desc_close">Закрити</string>
+</resources>

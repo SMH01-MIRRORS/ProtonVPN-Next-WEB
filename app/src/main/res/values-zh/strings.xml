@@ -22,6 +22,7 @@
     <string name="welcome_subtitle">通过安全、私密且快速的 VPN 控制您的数字生活。无日志，无追踪。</string>
     <string name="btn_create_account">创建账户</string>
     <string name="btn_login">登录</string>
+    <string name="btn_continue_guest">以访客身份继续</string>
 
     <!-- Login Screen -->
     <string name="login_title">欢迎回来</string>
@@ -238,4 +239,8 @@
     <string name="custom_config_name">自定义配置 %1$d</string>
     <string name="title_edit_obfuscation_config">编辑混淆配置</string>
     <string name="error_empty_profile_name">配置文件名称不能为空</string>
+
+    <!-- Captcha Screen -->
+    <string name="captcha_title">人机验证</string>
+    <string name="desc_close">关闭</string>
 </resources>

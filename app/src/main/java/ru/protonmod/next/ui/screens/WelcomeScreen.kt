@@ -11,28 +11,33 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You projects have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package ru.protonmod.next.ui.screens
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.delay
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -40,122 +45,179 @@ import ru.protonmod.next.ui.theme.ProtonNextTheme
 @Composable
 fun WelcomeScreen(
     onNavigateToLogin: () -> Unit,
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    onNavigateToHome: () -> Unit,
+    viewModel: LoginViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
-    // State to trigger the entry animations
+    val uiState by viewModel.uiState.collectAsState()
+
     var isVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        // Short delay before starting animations for a smoother UX
         delay(100)
         isVisible = true
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.backgroundNorm)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        // Top section with Icon and Texts
-        Column(
-            modifier = Modifier.weight(1f),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            AnimatedVisibility(
-                visible = isVisible,
-                enter = fadeIn(tween(800)) + slideInVertically(tween(800)) { it / 2 }
-            ) {
-                // Placeholder for Proton Next logo. Using a shield icon for now.
-                Icon(
-                    imageVector = Icons.Default.Shield,
-                    contentDescription = null,
-                    modifier = Modifier.size(100.dp),
-                    tint = colors.brandNorm
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            AnimatedVisibility(
-                visible = isVisible,
-                enter = fadeIn(tween(800, delayMillis = 200)) + slideInVertically(tween(800, delayMillis = 200)) { it / 4 }
-            ) {
-                Text(
-                    text = stringResource(R.string.welcome_title),
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = colors.textNorm,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            AnimatedVisibility(
-                visible = isVisible,
-                enter = fadeIn(tween(800, delayMillis = 400)) + slideInVertically(tween(800, delayMillis = 400)) { it / 4 }
-            ) {
-                Text(
-                    text = stringResource(R.string.welcome_subtitle),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = colors.textWeak,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-            }
+    LaunchedEffect(uiState) {
+        if (uiState is LoginUiState.Success) {
+            onNavigateToHome()
         }
+    }
 
-        // Bottom section with buttons
-        AnimatedVisibility(
-            visible = isVisible,
-            enter = fadeIn(tween(800, delayMillis = 600)) + slideInVertically(tween(800, delayMillis = 600)) { it / 4 }
-        ) {
+    val captchaState = uiState as? LoginUiState.RequiresCaptcha
+
+    AnimatedContent(
+        targetState = captchaState,
+        label = "welcome_to_captcha_transition"
+    ) { currentCaptcha ->
+        if (currentCaptcha != null) {
+            CaptchaScreen(
+                webUrl = currentCaptcha.webUrl,
+                sessionId = currentCaptcha.sessionId,
+                onDismiss = { viewModel.resetError() },
+                onCaptchaSolved = { verifiedToken ->
+                    viewModel.retryWithCaptcha(currentCaptcha, verifiedToken)
+                }
+            )
+        } else {
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(colors.backgroundNorm)
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Button(
-                    onClick = onNavigateToRegister,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = MaterialTheme.shapes.large,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = colors.interactionNorm,
-                        contentColor = colors.textInverted
-                    )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Text(
-                        text = stringResource(R.string.btn_create_account),
-                        style = MaterialTheme.typography.labelLarge
-                    )
+                    AnimatedVisibility(
+                        visible = isVisible,
+                        enter = fadeIn(tween(800)) + slideInVertically(tween(800)) { it / 2 }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Shield,
+                            contentDescription = null,
+                            modifier = Modifier.size(100.dp),
+                            tint = colors.brandNorm
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    AnimatedVisibility(
+                        visible = isVisible,
+                        enter = fadeIn(tween(800, delayMillis = 200)) + slideInVertically(tween(800, delayMillis = 200)) { it / 4 }
+                    ) {
+                        Text(
+                            text = stringResource(R.string.welcome_title),
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = colors.textNorm,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    AnimatedVisibility(
+                        visible = isVisible,
+                        enter = fadeIn(tween(800, delayMillis = 400)) + slideInVertically(tween(800, delayMillis = 400)) { it / 4 }
+                    ) {
+                        Text(
+                            text = stringResource(R.string.welcome_subtitle),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = colors.textWeak,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
                 }
 
-                OutlinedButton(
-                    onClick = onNavigateToLogin,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = MaterialTheme.shapes.large,
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = colors.textNorm
-                    ),
-                    border = ButtonDefaults.outlinedButtonBorder.copy(
-                        brush = androidx.compose.ui.graphics.SolidColor(colors.separatorNorm)
-                    )
+                AnimatedVisibility(
+                    visible = isVisible,
+                    enter = fadeIn(tween(800, delayMillis = 600)) + slideInVertically(tween(800, delayMillis = 600)) { it / 4 }
                 ) {
-                    Text(
-                        text = stringResource(R.string.btn_login),
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Button(
+                            onClick = onNavigateToRegister,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            shape = MaterialTheme.shapes.large,
+                            enabled = uiState !is LoginUiState.Loading,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colors.interactionNorm,
+                                contentColor = colors.textInverted
+                            )
+                        ) {
+                            Text(
+                                text = stringResource(R.string.btn_create_account),
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                        OutlinedButton(
+                            onClick = onNavigateToLogin,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            shape = MaterialTheme.shapes.large,
+                            enabled = uiState !is LoginUiState.Loading,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = colors.textNorm
+                            ),
+                            border = ButtonDefaults.outlinedButtonBorder.copy(
+                                brush = androidx.compose.ui.graphics.SolidColor(colors.separatorNorm)
+                            )
+                        ) {
+                            Text(
+                                text = stringResource(R.string.btn_login),
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
+
+                        TextButton(
+                            onClick = { viewModel.loginAnonymous() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            enabled = uiState !is LoginUiState.Loading
+                        ) {
+                            if (uiState is LoginUiState.Loading) {
+                                CircularProgressIndicator(
+                                    color = colors.brandNorm,
+                                    strokeWidth = 2.dp,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            } else {
+                                Text(
+                                    text = stringResource(R.string.btn_continue_guest),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = colors.brandNorm
+                                )
+                            }
+                        }
+
+                        if (uiState is LoginUiState.Error) {
+                            Text(
+                                text = (uiState as LoginUiState.Error).message,
+                                color = colors.notificationError,
+                                style = MaterialTheme.typography.bodySmall,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
             }
         }
     }

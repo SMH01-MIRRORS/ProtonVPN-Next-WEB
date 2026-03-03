@@ -22,6 +22,7 @@
     <string name="welcome_subtitle">Управляйте своей цифровой жизнью с помощью безопасного, приватного и быстрого VPN. Без логов и слежки.</string>
     <string name="btn_create_account">Создать аккаунт</string>
     <string name="btn_login">Войти</string>
+    <string name="btn_continue_guest">Продолжить как гость</string>
 
     <!-- Login Screen -->
     <string name="login_title">С возвращением</string>
@@ -130,6 +131,7 @@
     <string name="obfuscation_category_magic">Размеры пакетов (Magic)</string>
     <string name="obfuscation_category_headers">Заголовки</string>
     <string name="obfuscation_category_advanced">Дополнительно</string>
+    <string name="custom_config">Пользовательский конфиг</string>
 
     <!-- About App Screen -->
     <string name="about_community">Сообщество</string>
@@ -200,6 +202,10 @@
     <string name="profiles_empty_desc">Создайте профиль для быстрого подключения с определенными настройками.</string>
     <string name="profile_feature_obfuscation">Обфускация</string>
     <string name="profile_feature_connect_go">Connect &amp; Go</string>
+    <string name="profile_server_info">Сервер: %1$s</string>
+    <string name="profile_city_info">🏙️ %1$s, %2$s</string>
+    <string name="profile_country_info">%1$s %2$s</string>
+    <string name="profile_fastest_info">⚡ %1$s</string>
 
     <!-- Edit Profile Screen -->
     <string name="title_create_profile">Создать профиль</string>
@@ -207,6 +213,7 @@
     <string name="btn_save">Сохранить</string>
     <string name="btn_cancel">Отмена</string>
     <string name="btn_delete">Удалить</string>
+    <string name="btn_edit">Редактировать</string>
     <string name="desc_delete_profile">Удалить профиль</string>
     <string name="default_profile_name">Мой профиль</string>
     <string name="category_general">Общее</string>
@@ -215,6 +222,7 @@
     <string name="location_server">Сервер: %1$s</string>
     <string name="location_fastest">Самый быстрый</string>
     <string name="label_target_location">Целевая локация</string>
+    <string name="label_location">Локация</string>
     <string name="category_connection">Подключение</string>
     <string name="label_protocol">Протокол</string>
     <string name="label_port">Порт</string>
@@ -224,6 +232,7 @@
     <string name="label_obfuscation_config">Конфиг обфускации</string>
     <string name="category_automation">Автоматизация</string>
     <string name="label_connect_go_website">Connect &amp; Go (Веб-сайт)</string>
+    <string name="label_enter_url">Введите URL</string>
     <string name="label_not_configured">Не настроено</string>
     <string name="automation_desc">Автоматически открывать этот сайт в браузере после установления VPN-соединения.</string>
     <string name="title_select_country">Выберите страну</string>
@@ -233,6 +242,7 @@
     <string name="location_fastest_in_city">Самый быстрый в %1$s</string>
     <string name="location_load">Нагрузка: %1$d%%</string>
     <string name="title_select_obfuscation_config">Выберите конфиг обфускации</string>
+    <string name="title_auto_open_url">Автоматически открывать URL</string>
     <string name="btn_create_new_config">Создать новый конфиг</string>
     <string name="connect_go_title">Connect &amp; Go</string>
     <string name="connect_go_desc">Введите URL для открытия при подключении (напр., https://example.com)</string>
@@ -240,4 +250,9 @@
     <string name="title_select_protocol">Выберите протокол</string>
     <string name="custom_config_name">Свой конфиг %1$d</string>
     <string name="title_edit_obfuscation_config">Редактировать конфиг обфускации</string>
+    <string name="error_empty_profile_name">Название профиля не может быть пустым</string>
+
+    <!-- Captcha Screen -->
+    <string name="captcha_title">Проверка безопасности</string>
+    <string name="desc_close">Закрыть</string>
 </resources>

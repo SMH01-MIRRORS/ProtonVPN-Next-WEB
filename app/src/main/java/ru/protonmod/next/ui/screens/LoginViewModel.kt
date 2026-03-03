@@ -39,44 +39,40 @@ data class ProtonErrorResponse(
 
 @Serializable
 data class ProtonErrorDetails(
-    @SerialName("WebUrl") val webUrl: String? = null
+    @SerialName("WebUrl") val webUrl: String? = null,
+    @SerialName("HumanVerificationToken") val humanVerificationToken: String? = null
 )
 
 /**
  * Custom exception to trigger the Captcha WebView in the UI.
- * Used when the server returns error code 9001.
+ * Carries the sessionId to ensure the WebView binds the token properly.
  */
-class CaptchaRequiredException(val webUrl: String) : Exception("Human Verification Required")
+class CaptchaRequiredException(val webUrl: String, val token: String, val sessionId: String?) : Exception("Human Verification Required")
 
 // --- UI State ---
 
 sealed class LoginUiState {
-    object Idle : LoginUiState()
-    object Loading : LoginUiState()
+    data object Idle : LoginUiState()
+    data object Loading : LoginUiState()
 
     /**
      * State triggered when Proton requires a Captcha.
-     * Stores credentials to resume the login process automatically after success.
      */
     data class RequiresCaptcha(
         val webUrl: String,
         val username: String,
-        val passwordRaw: String
+        val passwordRaw: String,
+        val captchaToken: String,
+        val isAnonymous: Boolean = false,
+        val sessionId: String? = null // Passed to WebView headers
     ) : LoginUiState()
 
-    /**
-     * State triggered when Two-Factor Authentication is active.
-     * Contains session tokens required for the second stage of authentication.
-     */
     data class Requires2FA(
         val sessionId: String,
         val tempAccessToken: String,
         val refreshToken: String
     ) : LoginUiState()
 
-    /**
-     * Final successful state with permanent tokens and user information.
-     */
     data class Success(
         val accessToken: String,
         val userId: String
@@ -93,10 +89,6 @@ class LoginViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    /**
-     * Starts the authentication flow using SRP.
-     * If a [captchaToken] is provided, it's sent as a verification header.
-     */
     fun login(username: String, passwordRaw: String, captchaToken: String? = null) {
         if (username.isBlank() || passwordRaw.isBlank()) return
 
@@ -105,8 +97,6 @@ class LoginViewModel @Inject constructor(
             authRepository.login(username, passwordRaw, captchaToken)
                 .onSuccess { response ->
                     val scopes = response.scopes
-
-                    // Check if 2FA is required based on the scopes returned by the server
                     if (scopes.contains("twofactor")) {
                         _uiState.value = LoginUiState.Requires2FA(
                             sessionId = response.sessionId ?: "",
@@ -114,7 +104,6 @@ class LoginViewModel @Inject constructor(
                             refreshToken = response.refreshToken ?: ""
                         )
                     } else {
-                        // Direct success if 2FA is not enabled for this account
                         _uiState.value = LoginUiState.Success(
                             accessToken = response.accessToken ?: "",
                             userId = response.userId ?: ""
@@ -122,59 +111,79 @@ class LoginViewModel @Inject constructor(
                     }
                 }
                 .onFailure { exception ->
-                    handleFailure(exception, username, passwordRaw)
+                    if (exception is CaptchaRequiredException) {
+                        _uiState.value = LoginUiState.RequiresCaptcha(
+                            webUrl = exception.webUrl,
+                            username = username,
+                            passwordRaw = passwordRaw,
+                            captchaToken = exception.token,
+                            isAnonymous = false,
+                            sessionId = exception.sessionId
+                        )
+                    } else {
+                        _uiState.value = LoginUiState.Error(
+                            exception.localizedMessage ?: "An unexpected authentication error occurred"
+                        )
+                    }
                 }
         }
     }
 
-    /**
-     * Submits the TOTP code for accounts with 2FA enabled.
-     * Performs a full cycle: verification -> session upgrade -> user profile fetch.
-     */
     fun submit2FA(sessionId: String, tempAccessToken: String, refreshToken: String, totpCode: String) {
         if (totpCode.isBlank()) return
 
         _uiState.value = LoginUiState.Loading
         viewModelScope.launch {
-            authRepository.verify2FA(
-                sessionId = sessionId,
-                tempAccessToken = tempAccessToken,
-                refreshToken = refreshToken,
-                totpCode = totpCode
-            )
+            authRepository.verify2FA(sessionId, tempAccessToken, refreshToken, totpCode)
                 .onSuccess { response ->
-                    // Full login success with valid long-lived AccessToken and actual UserID
                     _uiState.value = LoginUiState.Success(
                         accessToken = response.accessToken ?: "",
                         userId = response.userId ?: ""
                     )
                 }
                 .onFailure { exception ->
-                    _uiState.value = LoginUiState.Error(
-                        exception.localizedMessage ?: "Two-factor verification failed"
-                    )
+                    _uiState.value = LoginUiState.Error(exception.localizedMessage ?: "Two-factor verification failed")
                 }
         }
     }
 
-    /**
-     * Handles various error scenarios, specifically filtering for Captcha requirements.
-     */
-    private fun handleFailure(throwable: Throwable, username: String, passwordRaw: String) {
-        if (throwable is CaptchaRequiredException) {
-            _uiState.value = LoginUiState.RequiresCaptcha(throwable.webUrl, username, passwordRaw)
-        } else {
-            _uiState.value = LoginUiState.Error(
-                throwable.localizedMessage ?: "An unexpected authentication error occurred"
-            )
+    fun loginAnonymous(captchaToken: String? = null) {
+        viewModelScope.launch {
+            _uiState.value = LoginUiState.Loading
+            authRepository.loginAnonymous(captchaToken)
+                .onSuccess { response ->
+                    _uiState.value = LoginUiState.Success(
+                        accessToken = response.accessToken ?: "",
+                        userId = response.userId ?: ""
+                    )
+                }
+                .onFailure { exception ->
+                    if (exception is CaptchaRequiredException) {
+                        _uiState.value = LoginUiState.RequiresCaptcha(
+                            webUrl = exception.webUrl,
+                            username = "",
+                            passwordRaw = "",
+                            captchaToken = exception.token,
+                            isAnonymous = true,
+                            sessionId = exception.sessionId
+                        )
+                    } else {
+                        _uiState.value = LoginUiState.Error(exception.localizedMessage ?: "Guest login failed")
+                    }
+                }
         }
     }
 
-    /**
-     * Specifically resets only the error state.
-     */
+    fun retryWithCaptcha(state: LoginUiState.RequiresCaptcha, verifiedToken: String) {
+        if (state.isAnonymous) {
+            loginAnonymous(verifiedToken)
+        } else {
+            login(state.username, state.passwordRaw, verifiedToken)
+        }
+    }
+
     fun resetError() {
-        if (_uiState.value is LoginUiState.Error) {
+        if (_uiState.value is LoginUiState.Error || _uiState.value is LoginUiState.RequiresCaptcha) {
             _uiState.value = LoginUiState.Idle
         }
     }
