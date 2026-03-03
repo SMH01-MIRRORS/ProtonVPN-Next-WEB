@@ -248,7 +248,25 @@ fun CaptchaScreen(
                         }
                     }
 
-                    loadUrl(webUrl)
+                    // Keep the original Proton URL so relative JS logic doesn't break.
+                    // Our shouldInterceptRequest will catch it and proxy it.
+                    val optimizedUrl = buildString {
+                        append(webUrl)
+                        if (!webUrl.contains("?")) append("?") else append("&")
+                        append("embed=true&theme=1&vpn=true")
+                    }
+
+                    // Use constants from DeviceInfoProvider to keep headers perfectly synchronized
+                    val extraHeaders = mutableMapOf(
+                        "x-pm-appversion" to "android-vpn@${DeviceInfoProvider.SPOOFED_APP_VERSION}-dev+play",
+                        "x-pm-apiversion" to "4",
+                        "Accept" to "application/vnd.protonmail.v1+json"
+                    )
+                    if (sessionId != null) {
+                        extraHeaders["x-pm-uid"] = sessionId
+                    }
+
+                    loadUrl(optimizedUrl, extraHeaders)
                 }
             },
             update = { webView ->
