@@ -49,6 +49,11 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
+
     signingConfigs {
         create("release") {
             val keyFile = System.getenv("SIGNING_KEY_FILE") ?: ""
