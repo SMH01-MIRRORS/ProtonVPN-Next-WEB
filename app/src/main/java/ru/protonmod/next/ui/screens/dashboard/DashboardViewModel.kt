@@ -36,7 +36,7 @@ import okhttp3.Request
 import org.amnezia.awg.backend.Tunnel
 import org.json.JSONObject
 import ru.protonmod.next.R
-import ru.protonmod.next.data.cache.ServersCacheManager
+import ru.protonmod.next.data.repository.VpnRepository
 import ru.protonmod.next.data.local.RecentConnectionEntity
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.network.LogicalServer
@@ -70,7 +70,7 @@ sealed class DashboardUiState {
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val serversCacheManager: ServersCacheManager,
+    private val vpnRepository: VpnRepository,
     private val sessionDao: SessionDao,
     private val amneziaVpnManager: AmneziaVpnManager,
     private val connectedServerState: ConnectedServerState,
@@ -91,7 +91,7 @@ class DashboardViewModel @Inject constructor(
     private val _isIpHidden = MutableStateFlow(prefs.getBoolean("is_ip_hidden", false))
 
     val uiState: StateFlow<DashboardUiState> = combine(
-        serversCacheManager.getServersFlow(),
+        vpnRepository.getServersFlow(),
         _isLoading,
         _errorMessage,
         amneziaVpnManager.tunnelState,
@@ -261,9 +261,9 @@ class DashboardViewModel @Inject constructor(
                 return@launch
             }
 
-            serversCacheManager.getServers(session.accessToken, session.sessionId, session.userTier)
+            vpnRepository.getServers(session.accessToken, session.sessionId, session.userTier)
                 .onFailure { error ->
-                    val cachedServers = serversCacheManager.getCachedServers()
+                    val cachedServers = vpnRepository.getCachedServers()
                     if (cachedServers.isEmpty()) {
                         _errorMessage.value = error.localizedMessage ?: context.getString(R.string.error_unknown)
                     }

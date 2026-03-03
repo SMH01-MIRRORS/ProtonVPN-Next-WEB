@@ -39,7 +39,8 @@ interface ProtonVpnApi {
         @Header("If-Modified-Since") lastModified: String? = null,
         @Header("x-pm-locale") locale: String? = null,
         @Query("WithEntriesForProtocols") protocols: String? = "wireguard",
-        @Query("WithState") withState: Boolean = true
+        @Query("WithState") withState: Boolean = true,
+        @Query("Tier") userTier: Int? = null
     ): Response<LogicalServersResponse>
 
     @GET("vpn/v1/loads")

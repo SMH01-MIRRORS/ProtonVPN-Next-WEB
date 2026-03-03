@@ -53,7 +53,7 @@ class ServersCacheUpdateWorker @AssistedInject constructor(
 
             Log.d(TAG, "Background update worker started for tier $userTier")
 
-            val result = vpnRepository.getServersWithTimeout(accessToken, sessionId, 15L, userTier = userTier)
+            val result = vpnRepository.getServers(accessToken, sessionId, userTier = userTier)
 
             result.onSuccess { servers ->
                 Log.d(TAG, "Background update success: ${servers.size} servers")

@@ -18,15 +18,19 @@
 package ru.protonmod.next.data.repository
 
 import android.util.Log
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
 import ru.protonmod.next.data.network.*
 import ru.protonmod.next.data.local.ServerDao
 import ru.protonmod.next.data.local.ServerMapper
 import ru.protonmod.next.data.local.SessionDao
+import ru.protonmod.next.data.local.ServersCacheDao
+import ru.protonmod.next.data.local.ServersCacheEntity
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -34,71 +38,166 @@ import javax.inject.Singleton
 class VpnRepository @Inject constructor(
     private val vpnApi: ProtonVpnApi,
     private val serverDao: ServerDao,
-    private val sessionDao: SessionDao
+    private val sessionDao: SessionDao,
+    private val serversCacheDao: ServersCacheDao
 ) {
-    private var lastServersUpdate: String? = null
+    private val managerScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private var autoUpdateJob: Job? = null
+    private val fetchMutex = Mutex()
+
+    // Variable for storing the currently executing fetch request
+    private var activeFetch: Deferred<Result<List<LogicalServer>>>? = null
     private var cachedServers: List<LogicalServer> = emptyList()
 
     companion object {
         private const val TAG = "VpnRepository"
         private val json = Json { ignoreUnknownKeys = true }
+        private const val CACHE_DURATION_MILLIS = 60 * 60 * 1000L // 1 hour
+        private const val AUTO_UPDATE_INTERVAL_MINUTES = 20L
     }
 
-    suspend fun getServers(accessToken: String, sessionId: String, userTier: Int = 0): Result<List<LogicalServer>> = withContext(Dispatchers.IO) {
+    fun startAutoUpdate() {
+        if (autoUpdateJob?.isActive == true) return
+
+        autoUpdateJob = managerScope.launch {
+            Log.d(TAG, "Starting auto-update loop")
+            while (isActive) {
+                val session = sessionDao.getSession()
+                if (session != null) {
+                    getServers(
+                        session.accessToken,
+                        session.sessionId,
+                        session.userTier,
+                        forceRefresh = false
+                    )
+                }
+                delay(TimeUnit.MINUTES.toMillis(AUTO_UPDATE_INTERVAL_MINUTES))
+            }
+        }
+    }
+
+    fun stopAutoUpdate() {
+        autoUpdateJob?.cancel()
+        autoUpdateJob = null
+    }
+
+    fun getServersFlow(): Flow<List<LogicalServer>> {
+        return serverDao.getServersFlow().map { entities ->
+            // Extract tier from the current active session dynamically
+            val userTier = sessionDao.getSession()?.userTier ?: 0
+            entities
+                .map { ServerMapper.toDomain(it) }
+                .filter { it.tier <= userTier } // Filter dynamically based on session tier
+        }
+    }
+
+    suspend fun getCachedServers(): List<LogicalServer> {
+        val userTier = sessionDao.getSession()?.userTier ?: 0
+        return serverDao.getAllServers()
+            .map { ServerMapper.toDomain(it) }
+            .filter { it.tier <= userTier } // Filter dynamically based on session tier
+    }
+
+    suspend fun getServers(
+        accessToken: String,
+        sessionId: String,
+        userTier: Int = 0,
+        forceRefresh: Boolean = false
+    ): Result<List<LogicalServer>> {
+        val deferred = fetchMutex.withLock {
+            if (activeFetch != null && !forceRefresh) {
+                Log.d(TAG, "Joining existing servers fetch request")
+                activeFetch!!
+            } else {
+                val newFetch = managerScope.async {
+                    performGetServers(accessToken, sessionId, userTier, forceRefresh)
+                }
+                activeFetch = newFetch
+                newFetch
+            }
+        }
+
+        return try {
+            deferred.await()
+        } finally {
+            fetchMutex.withLock {
+                if (activeFetch == deferred) {
+                    activeFetch = null
+                }
+            }
+        }
+    }
+
+    private suspend fun performGetServers(
+        accessToken: String,
+        sessionId: String,
+        userTier: Int,
+        forceRefresh: Boolean
+    ): Result<List<LogicalServer>> = withContext(Dispatchers.IO) {
         try {
+            val now = System.currentTimeMillis()
+            val cacheInfo = serversCacheDao.getCacheInfo()
+
+            val shouldCheckApi = forceRefresh || cacheInfo == null || now > cacheInfo.expiresAt
+            val isStale = cacheInfo != null && (now - cacheInfo.cachedAt > TimeUnit.MINUTES.toMillis(AUTO_UPDATE_INTERVAL_MINUTES))
+
+            if (!shouldCheckApi && !isStale) {
+                val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
+                if (dbServers.isNotEmpty()) {
+                    val result = dbServers.filter { it.tier <= userTier }
+                    cachedServers = result
+                    return@withContext Result.success(result)
+                }
+            }
+
             val bearer = "Bearer $accessToken"
-            
-            // 1. Try to fetch from API
+            val ifModifiedSince = if (!forceRefresh) cacheInfo?.lastModified else null
+
+            Log.d(TAG, "Fetching servers from API (forceRefresh=$forceRefresh)")
             val response = vpnApi.getLogicalServers(
-                authorization = bearer, 
+                authorization = bearer,
                 sessionId = sessionId,
-                lastModified = lastServersUpdate,
-                protocols = "wireguard"
+                lastModified = ifModifiedSince,
+                protocols = "wireguard",
+                userTier = userTier
             )
 
-            val serversList = when (response.code()) {
+            val (serversList, newLastModified) = when (response.code()) {
                 304 -> {
-                    Log.d(TAG, "Servers not modified (304), using in-memory or DB cache")
-                    cachedServers.ifEmpty {
-                        // If memory is empty (e.g. app restart), load from DB
-                        val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
-                        cachedServers = dbServers
-                        dbServers
-                    }
+                    Log.d(TAG, "Servers not modified (304), updating timestamps only")
+                    val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
+                    dbServers to cacheInfo?.lastModified
                 }
                 200 -> {
                     val body = response.body()
                     if (body?.code == 1000) {
-                        lastServersUpdate = response.headers()["Last-Modified"]
-                        cachedServers = body.logicalServers
-                        body.logicalServers
+                        body.logicalServers to response.headers()["Last-Modified"]
                     } else {
                         return@withContext Result.failure(Exception("API error: ${body?.code}"))
                     }
                 }
-                else -> return@withContext Result.failure(Exception("Network error: ${response.code()}"))
+                else -> {
+                    val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
+                    if (dbServers.isNotEmpty()) return@withContext Result.success(dbServers.filter { it.tier <= userTier })
+                    return@withContext Result.failure(Exception("Network error: ${response.code()}"))
+                }
             }
 
             if (serversList.isEmpty()) {
-                // Last ditch effort: try DB if API failed or returned empty
-                val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
-                if (dbServers.isNotEmpty()) return@withContext Result.success(dbServers.filter { it.tier <= userTier })
                 return@withContext Result.failure(Exception("No servers available"))
             }
 
-            val logicalServers = serversList.filter { it.tier <= userTier }
-            
-            // 2. Fetch server loads (always fresh if possible)
+            // Fetch server loads
             val loadsResponse = vpnApi.getLoads(bearer, sessionId, userTier)
             if (loadsResponse.isSuccessful) {
                 val loadsBody = loadsResponse.body()?.string()
-                val loadsData = loadsBody?.let { 
+                val loadsData = loadsBody?.let {
                     try { json.decodeFromString<LoadsResponse>(it) } catch (e: Exception) { null }
                 }
-                
+
                 val loadsMap = loadsData?.loads?.associate { it.id to it.load } ?: emptyMap()
 
-                logicalServers.forEach { logical ->
+                serversList.forEach { logical ->
                     val logicalLoad = loadsMap[logical.id]
                     if (logicalLoad != null) {
                         logical.averageLoad = logicalLoad
@@ -119,13 +218,26 @@ class VpnRepository @Inject constructor(
                 }
             }
 
+            // Save to DB AFTER fetching loads, ensuring the DB has the latest load values
+            val entities = serversList.map { ServerMapper.toEntity(it) }
+            serverDao.insertServers(entities)
+
+            // Update cache metadata
+            val newCacheInfo = ServersCacheEntity(
+                cachedAt = now,
+                expiresAt = now + CACHE_DURATION_MILLIS,
+                lastModified = newLastModified
+            )
+            serversCacheDao.saveCacheInfo(newCacheInfo)
+
+            val logicalServers = serversList.filter { it.tier <= userTier }
+            cachedServers = logicalServers
             Result.success(logicalServers)
         } catch (e: Exception) {
-            Log.e(TAG, "Error in getServers", e)
-            // Fallback to DB on network failure
+            Log.e(TAG, "Error in performGetServers", e)
             val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
-            if (dbServers.isNotEmpty()) return@withContext Result.success(dbServers.filter { it.tier <= userTier })
-            Result.failure(e)
+            if (dbServers.isNotEmpty()) Result.success(dbServers.filter { it.tier <= userTier })
+            else Result.failure(e)
         }
     }
 
@@ -143,34 +255,14 @@ class VpnRepository @Inject constructor(
         }
     }
 
-    suspend fun getServersWithTimeout(
-        accessToken: String,
-        sessionId: String,
-        timeoutSeconds: Long,
-        userTier: Int = 0
-    ): Result<List<LogicalServer>> = withContext(Dispatchers.IO) {
-        try {
-            withTimeout(timeoutSeconds * 1000) {
-                getServers(accessToken, sessionId, userTier)
-            }
-        } catch (e: TimeoutCancellationException) {
-            Log.e(TAG, "Request timeout, trying cache")
-            val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
-            if (dbServers.isNotEmpty()) Result.success(dbServers.filter { it.tier <= userTier })
-            else Result.failure(Exception("Request timeout"))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
     suspend fun getVpnInfo(accessToken: String, sessionId: String): Result<VpnInfoResponse> = withContext(Dispatchers.IO) {
         try {
             val bearer = "Bearer $accessToken"
             val response = vpnApi.getVpnInfo(bearer, sessionId)
             val body = response.body()?.string()
-            
+
             Log.d(TAG, "getVpnInfo raw body: $body")
-            
+
             if (response.isSuccessful && body != null) {
                 Result.success(json.decodeFromString<VpnInfoResponse>(body))
             } else {

@@ -95,7 +95,6 @@ object NetworkModule {
             val userAgent = DeviceInfoProvider.getSpoofedUserAgent()
             val spoofedVersion = DeviceInfoProvider.SPOOFED_APP_VERSION
 
-            // Determine which base URL to use
             val isVpnUp = vpnManager.tunnelState.value == Tunnel.State.UP
             val newBaseUrl = if (isVpnUp) PROTON_DIRECT_URL.toHttpUrl() else PROTON_PROXY_URL.toHttpUrl()
 
@@ -116,17 +115,19 @@ object NetworkModule {
             chain.proceed(request)
         }
 
-        val bootstrapClient = OkHttpClient.Builder().build()
+        // Для DoH тоже увеличиваем таймаут, иначе DNS не отрезолвится
+        val bootstrapClient = OkHttpClient.Builder()
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .build()
+
         val doh = buildDnsOverHttps(bootstrapClient)
 
-        // Dynamic DNS: Disable DoH when VPN is active
         val dynamicDns = Dns { hostname ->
             val isVpnUp = vpnManager.tunnelState.value == Tunnel.State.UP
             if (isVpnUp) {
-                // Use system DNS when VPN is UP to respect tunnel DNS settings
                 Dns.SYSTEM.lookup(hostname)
             } else {
-                // Use DoH when VPN is DOWN to circumvent censorship
                 try {
                     doh.lookup(hostname)
                 } catch (e: Exception) {
@@ -139,9 +140,10 @@ object NetworkModule {
             .addInterceptor(dynamicBaseUrlInterceptor)
             .authenticator(tokenAuthenticator)
             .dns(dynamicDns)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
+            // 0 означает отсутствие таймаута (unlimited)
+            .connectTimeout(0, TimeUnit.SECONDS)
+            .readTimeout(0, TimeUnit.SECONDS)
+            .writeTimeout(0, TimeUnit.SECONDS)
             .build()
     }
 
@@ -150,7 +152,7 @@ object NetworkModule {
     fun provideRetrofit(okHttpClient: OkHttpClient, json: Json): Retrofit {
         val contentType = "application/json".toMediaType()
         return Retrofit.Builder()
-            .baseUrl(PROTON_PROXY_URL) // Дефолт, перезаписывается в interceptor
+            .baseUrl(PROTON_PROXY_URL)
             .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()

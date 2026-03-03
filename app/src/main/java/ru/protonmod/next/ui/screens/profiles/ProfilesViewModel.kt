@@ -32,13 +32,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import org.amnezia.awg.backend.Tunnel
 import ru.protonmod.next.R
-import ru.protonmod.next.data.cache.ServersCacheManager
+import ru.protonmod.next.data.repository.VpnRepository
 import ru.protonmod.next.data.local.ProfileDao
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SettingsManager
@@ -54,7 +53,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfilesViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val serversCacheManager: ServersCacheManager,
+    private val vpnRepository: VpnRepository,
     private val sessionDao: SessionDao,
     private val amneziaVpnManager: AmneziaVpnManager,
     private val connectedServerState: ConnectedServerState,
@@ -68,7 +67,7 @@ class ProfilesViewModel @Inject constructor(
 
     val profiles: StateFlow<List<VpnProfileUiModel>> = combine(
         profileDao.getAllProfilesFlow(),
-        serversCacheManager.getServersFlow()
+        vpnRepository.getServersFlow()
     ) { entities, servers ->
         entities.map { entity ->
             // Resolve the human-readable name from the cached servers list
@@ -133,7 +132,7 @@ class ProfilesViewModel @Inject constructor(
 
     suspend fun getProfileById(id: String): VpnProfileUiModel? {
         return profileDao.getProfileById(id)?.let { entity ->
-            val servers = serversCacheManager.getCachedServers()
+            val servers = vpnRepository.getCachedServers()
             val serverName = servers.find { it.id == entity.targetServerId }?.name
             VpnProfileUiModel(
                 id = entity.id,
@@ -159,7 +158,7 @@ class ProfilesViewModel @Inject constructor(
                 return@launch
             }
 
-            val servers = serversCacheManager.getCachedServers()
+            val servers = vpnRepository.getCachedServers()
             if (servers.isEmpty()) {
                 Log.e(TAG, "Cannot connect: Server list is empty")
                 return@launch
@@ -285,7 +284,7 @@ class ProfilesViewModel @Inject constructor(
 
     // Now computes average load for countries to be displayed in the UI
     suspend fun getAvailableCountries(): List<CountryDisplayItem> {
-        return serversCacheManager.getCachedServers()
+        return vpnRepository.getCachedServers()
             .groupBy { it.exitCountry }
             .map { (countryCode, servers) ->
                 val avgLoad = if (servers.isEmpty()) 0 else servers.map { it.averageLoad }.average().toInt()
@@ -296,7 +295,7 @@ class ProfilesViewModel @Inject constructor(
 
     // Now computes average load for cities to be displayed in the UI
     suspend fun getCitiesForCountry(countryCode: String): List<CityDisplayItem> {
-        return serversCacheManager.getCachedServers()
+        return vpnRepository.getCachedServers()
             .filter { it.exitCountry == countryCode }
             .groupBy { it.city }
             .map { (cityName, servers) ->
@@ -307,7 +306,7 @@ class ProfilesViewModel @Inject constructor(
     }
 
     suspend fun getServersForCity(countryCode: String, city: String): List<LogicalServer> {
-        return serversCacheManager.getCachedServers()
+        return vpnRepository.getCachedServers()
             .filter { it.exitCountry == countryCode && it.city == city }
             .sortedBy { it.name }
     }

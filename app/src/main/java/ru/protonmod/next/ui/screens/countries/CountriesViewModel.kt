@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.amnezia.awg.backend.Tunnel
-import ru.protonmod.next.data.cache.ServersCacheManager
+import ru.protonmod.next.data.repository.VpnRepository
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.state.ConnectedServerState
@@ -55,7 +55,7 @@ sealed class CountriesUiState {
 
 @HiltViewModel
 class CountriesViewModel @Inject constructor(
-    private val serversCacheManager: ServersCacheManager,
+    private val vpnRepository: VpnRepository,
     private val sessionDao: SessionDao,
     private val amneziaVpnManager: AmneziaVpnManager,
     private val connectedServerState: ConnectedServerState
@@ -81,7 +81,7 @@ class CountriesViewModel @Inject constructor(
 
     private fun observeServers() {
         viewModelScope.launch {
-            serversCacheManager.getServersFlow().collect { servers ->
+            vpnRepository.getServersFlow().collect { servers ->
                 if (servers.isNotEmpty()) {
                     allServers = servers
                     processServers(servers)
@@ -93,7 +93,7 @@ class CountriesViewModel @Inject constructor(
     private fun initialFetch() {
         viewModelScope.launch {
             val session = sessionDao.getSession() ?: return@launch
-            serversCacheManager.getServers(session.accessToken, session.sessionId, session.userTier, forceRefresh = false)
+            vpnRepository.getServers(session.accessToken, session.sessionId, session.userTier, forceRefresh = false)
         }
     }
 

@@ -22,7 +22,7 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
 import okhttp3.OkHttp
-import ru.protonmod.next.data.cache.ServersCacheManager
+import ru.protonmod.next.data.repository.VpnRepository
 import javax.inject.Inject
 
 /**
@@ -38,7 +38,7 @@ class ProtonNextApp : Application(), Configuration.Provider {
     lateinit var workerFactory: HiltWorkerFactory
 
     @Inject
-    lateinit var serversCacheManager: ServersCacheManager
+    lateinit var vpnRepository: VpnRepository
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -60,11 +60,11 @@ class ProtonNextApp : Application(), Configuration.Provider {
         FlavorInitializer.initialize(this)
 
         // Start background server load updates
-        serversCacheManager.startAutoUpdate()
+        vpnRepository.startAutoUpdate()
     }
 
     override fun onTerminate() {
         super.onTerminate()
-        serversCacheManager.stopAutoUpdate()
+        vpnRepository.stopAutoUpdate()
     }
 }
