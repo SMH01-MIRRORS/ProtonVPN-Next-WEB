@@ -18,7 +18,6 @@
 package ru.protonmod.next.di
 
 import android.content.Context
-import android.os.Build
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -38,10 +37,10 @@ import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.network.ProtonAuthApi
 import ru.protonmod.next.data.network.ProtonVpnApi
 import ru.protonmod.next.data.network.TokenAuthenticator
+import ru.protonmod.next.utils.DeviceInfoProvider
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import org.amnezia.awg.backend.Tunnel
 import java.net.InetAddress
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
@@ -51,31 +50,12 @@ object NetworkModule {
 
     private const val PROTON_PROXY_URL = "https://shimmering-stroopwafel-51675e.netlify.app/"
     private const val PROTON_DIRECT_URL = "https://vpn-api.proton.me/"
-    const val APP_VERSION_STRING = "5.16.31.0"
 
     @Provides
     @Singleton
     fun provideJson(): Json = Json {
         ignoreUnknownKeys = true
         isLenient = true
-    }
-
-    // Сделали публичным, чтобы юзать в CaptchaScreen
-    fun generateUserAgent(): String {
-        val androidVersion = Build.VERSION.RELEASE ?: "12"
-        val manufacturer = Build.MANUFACTURER ?: "Unknown"
-        val model = Build.MODEL ?: "Device"
-        val capManufacturer = manufacturer.replaceFirstChar {
-            if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString()
-        }
-        val deviceName = if (model.lowercase(Locale.US).startsWith(manufacturer.lowercase(Locale.US))) {
-            model.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
-        } else {
-            "$capManufacturer $model"
-        }
-        val safeDeviceName = deviceName.replace(Regex("[^\\x20-\\x7E]"), "").trim()
-        val safeAndroidVersion = androidVersion.replace(Regex("[^\\x20-\\x7E]"), "").trim()
-        return "ProtonVPN/$APP_VERSION_STRING (Android $safeAndroidVersion; $safeDeviceName)"
     }
 
     private fun buildDnsOverHttps(bootstrapClient: OkHttpClient): DnsOverHttps {
@@ -112,7 +92,8 @@ object NetworkModule {
 
         val dynamicBaseUrlInterceptor = Interceptor { chain ->
             var request = chain.request()
-            val userAgent = generateUserAgent()
+            val userAgent = DeviceInfoProvider.getSpoofedUserAgent()
+            val spoofedVersion = DeviceInfoProvider.SPOOFED_APP_VERSION
 
             // Determine which base URL to use
             val isVpnUp = vpnManager.tunnelState.value == Tunnel.State.UP
@@ -127,7 +108,7 @@ object NetworkModule {
             request = request.newBuilder()
                 .url(newUrl)
                 .addHeader("User-Agent", userAgent)
-                .addHeader("x-pm-appversion", "android-vpn@$APP_VERSION_STRING-dev+play")
+                .addHeader("x-pm-appversion", "android-vpn@$spoofedVersion-dev+play")
                 .addHeader("x-pm-apiversion", "4")
                 .addHeader("Accept", "application/vnd.protonmail.v1+json")
                 .build()

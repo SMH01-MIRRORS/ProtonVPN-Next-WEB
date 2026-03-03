@@ -30,8 +30,6 @@ import ru.protonmod.next.data.network.*
 import ru.protonmod.next.ui.screens.CaptchaRequiredException
 import ru.protonmod.next.ui.screens.ProtonErrorResponse
 import ru.protonmod.next.utils.DeviceInfoProvider
-import java.util.Locale
-import java.util.TimeZone
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -265,20 +263,18 @@ class AuthRepository @Inject constructor(
                 putJsonObject("vpn-android-v4-challenge-0") {
                     // Added missing polymorphic type required by Proton's backend deserializer
                     put("type", "me.proton.core.challenge.data.frame.ChallengeFrame.Device")
-                    put("v", "2.0.7")
-                    put("appLang", Locale.getDefault().language)
-                    put("timezone", TimeZone.getDefault().id)
-                    put("deviceName", android.os.Build.MODEL.hashCode().toLong())
-                    put("regionCode", Locale.getDefault().country.ifEmpty { "US" })
-                    // Negative offset as used in original client logs (e.g. -180 for UTC+3)
-                    put("timezoneOffset", -(TimeZone.getDefault().rawOffset / 60000))
-                    put("isJailbreak", false)
-                    put("preferredContentSize", "1.0")
-                    put("storageCapacity", 128.0)
-                    put("isDarkmodeOn", true)
+                    put("v", deviceInfoProvider.getAppVersion())
+                    put("appLang", deviceInfoProvider.getAppLanguage())
+                    put("timezone", deviceInfoProvider.getTimezone())
+                    put("deviceName", deviceInfoProvider.getDeviceHash())
+                    put("regionCode", deviceInfoProvider.getRegionCode())
+                    put("timezoneOffset", deviceInfoProvider.getTimezoneOffset())
+                    put("isJailbreak", deviceInfoProvider.isJailbreak())
+                    put("preferredContentSize", deviceInfoProvider.getPreferredContentSize())
+                    put("storageCapacity", deviceInfoProvider.getStorageCapacity())
+                    put("isDarkmodeOn", deviceInfoProvider.isDarkModeOn())
                     putJsonArray("keyboards") {
-                        add("com.google.android.inputmethod.latin")
-                        add("com.google.android.tts")
+                        deviceInfoProvider.getInstalledKeyboards().forEach { add(it) }
                     }
                 }
             }

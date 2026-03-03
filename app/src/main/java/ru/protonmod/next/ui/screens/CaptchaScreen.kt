@@ -41,7 +41,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import ru.protonmod.next.R
-import ru.protonmod.next.di.NetworkModule
+import ru.protonmod.next.utils.DeviceInfoProvider
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import java.io.ByteArrayInputStream
 
@@ -95,8 +95,8 @@ fun CaptchaScreen(
                     settings.javaScriptEnabled = true
                     settings.domStorageEnabled = true
 
-                    // Sync User-Agent precisely with NetworkModule
-                    val customUserAgent = NetworkModule.generateUserAgent()
+                    // Sync User-Agent precisely with NetworkModule and DeviceInfoProvider
+                    val customUserAgent = DeviceInfoProvider.getSpoofedUserAgent()
                     settings.userAgentString = customUserAgent
 
                     CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
@@ -235,39 +235,24 @@ fun CaptchaScreen(
                                     return WebResourceResponse(
                                         mimeType,
                                         encoding,
-                                        response.code,
-                                        response.message.ifEmpty { "OK" },
+                                        200,
+                                        "OK",
                                         responseHeaders,
                                         bodyStream
                                     )
                                 } catch (e: Exception) {
-                                    Log.e("CaptchaScreen", "Failed to proxy request: $targetProxyUrl", e)
+                                    Log.e("CaptchaScreen", "Proxy Error", e)
                                 }
                             }
                             return super.shouldInterceptRequest(view, request)
                         }
                     }
 
-                    // Keep the original Proton URL so relative JS logic doesn't break.
-                    // Our shouldInterceptRequest will catch it and proxy it.
-                    val optimizedUrl = buildString {
-                        append(webUrl)
-                        if (!webUrl.contains("?")) append("?") else append("&")
-                        append("embed=true&theme=1&vpn=true")
-                    }
-
-                    // Use constants from DeviceInfoProvider to keep headers perfectly synchronized
-                    val extraHeaders = mutableMapOf(
-                        "x-pm-appversion" to "android-vpn@${ru.protonmod.next.utils.DeviceInfoProvider.SPOOFED_APP_VERSION}-dev+play",
-                        "x-pm-apiversion" to "4",
-                        "Accept" to "application/vnd.protonmail.v1+json"
-                    )
-                    if (sessionId != null) {
-                        extraHeaders["x-pm-uid"] = sessionId
-                    }
-
-                    loadUrl(optimizedUrl, extraHeaders)
+                    loadUrl(webUrl)
                 }
+            },
+            update = { webView ->
+                // WebView doesn't need to be updated with every state change in this simple case
             }
         )
     }

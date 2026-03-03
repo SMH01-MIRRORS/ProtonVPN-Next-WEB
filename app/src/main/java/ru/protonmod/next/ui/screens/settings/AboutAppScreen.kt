@@ -28,8 +28,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
-import androidx.compose.material.icons.rounded.Code
-import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -37,8 +35,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -170,7 +168,7 @@ fun AboutAppScreen(
                         AboutLinkCard(
                             modifier = Modifier.weight(1f),
                             title = stringResource(id = R.string.about_github),
-                            icon = Icons.Rounded.Code,
+                            iconResId = R.drawable.ic_github,
                             onClick = {
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
                                 context.startActivity(intent)
@@ -180,7 +178,7 @@ fun AboutAppScreen(
                         AboutLinkCard(
                             modifier = Modifier.weight(1f),
                             title = stringResource(id = R.string.about_telegram),
-                            icon = Icons.Rounded.Info,
+                            iconResId = R.drawable.ic_telegram,
                             onClick = {
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(telegramUrl))
                                 context.startActivity(intent)
@@ -227,7 +225,7 @@ fun AboutAppScreen(
 fun AboutLinkCard(
     modifier: Modifier = Modifier,
     title: String,
-    icon: ImageVector,
+    iconResId: Int,
     onClick: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
@@ -255,7 +253,7 @@ fun AboutLinkCard(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = icon,
+                    painter = painterResource(id = iconResId),
                     contentDescription = null,
                     tint = colors.brandNorm,
                     modifier = Modifier.size(20.dp)

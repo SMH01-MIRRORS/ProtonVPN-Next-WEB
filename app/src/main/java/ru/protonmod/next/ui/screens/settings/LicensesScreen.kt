@@ -55,7 +55,7 @@ fun LicensesScreen(
         LicenseItem(R.string.license_hilt_title, R.string.license_apache_2, "https://www.apache.org/licenses/LICENSE-2.0"),
         LicenseItem(R.string.license_retrofit_title, R.string.license_apache_2, "https://www.apache.org/licenses/LICENSE-2.0"),
         LicenseItem(R.string.license_proton_go_vpn_title, R.string.license_app_desc, "https://github.com/ProtonMail/gopenpgp"),
-        LicenseItem(R.string.license_amneziawg_title, R.string.license_apache_2, "https://github.com/amnezia-vpn/amneziawg-android")
+        LicenseItem(R.string.license_amneziawg_title, R.string.license_apache_2, "https://github.com/wgtunnel/amneziawg-android")
     )
 
     Scaffold(

@@ -91,13 +91,13 @@ class DeviceInfoProvider @Inject constructor(
      * A stable long identifier is required. ANDROID_ID is a good candidate.
      */
     @SuppressLint("HardwareIds")
-    fun getDeviceName(): Long {
+    fun getDeviceHash(): Long {
         val androidId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
         return androidId?.hashCode()?.toLong() ?: 53319294142L
     }
 
     fun getRegionCode(): String {
-        return context.resources.configuration.locales[0].country
+        return context.resources.configuration.locales[0].country.ifEmpty { "US" }
     }
 
     fun getTimezoneOffset(): Int {
@@ -119,7 +119,7 @@ class DeviceInfoProvider @Inject constructor(
     }
 
     fun getPreferredContentSize(): String {
-        return String.format("%.1f", context.resources.configuration.fontScale)
+        return String.format(Locale.US, "%.1f", context.resources.configuration.fontScale)
     }
 
     fun getStorageCapacity(): Double {
@@ -128,7 +128,7 @@ class DeviceInfoProvider @Inject constructor(
             val totalBytes = stat.blockCountLong * stat.blockSizeLong
             totalBytes / (1024.0 * 1024.0 * 1024.0) // GB
         } catch (e: Exception) {
-            256.0
+            128.0
         }
     }
 
@@ -139,9 +139,9 @@ class DeviceInfoProvider @Inject constructor(
     fun getInstalledKeyboards(): List<String> {
         return try {
             val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.enabledInputMethodList.map { it.packageName }
+            imm?.enabledInputMethodList?.map { it.packageName } ?: emptyList()
         } catch (e: Exception) {
-            emptyList()
+            listOf("com.google.android.inputmethod.latin")
         }
     }
 }
