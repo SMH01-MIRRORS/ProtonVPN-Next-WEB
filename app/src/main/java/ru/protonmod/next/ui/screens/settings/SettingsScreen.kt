@@ -43,6 +43,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.LiquidGlassBottomBar
 import ru.protonmod.next.ui.nav.MainTarget
@@ -223,7 +224,7 @@ fun SettingsContent(
                 SettingRowWithIcon(
                     icon = Icons.Rounded.Info,
                     title = stringResource(R.string.settings_about),
-                    subtitle = stringResource(R.string.settings_version, "12.0.0"),
+                    subtitle = stringResource(R.string.settings_version, BuildConfig.VERSION_NAME),
                     onClick = onNavigateToAbout
                 )
             }

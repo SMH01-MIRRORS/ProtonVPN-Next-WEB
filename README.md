@@ -13,16 +13,6 @@
 - **USE AT YOUR OWN RISK:** This software is provided "as is" without any warranties. The developer assumes **no responsibility** for your accounts, data, or any potential consequences (such as account restrictions) resulting from the use of this unofficial client.
 - **SUPPORT PROTON:** If you value privacy and enjoy Proton's services, we highly recommend subscribing to an official **Proton VPN paid plan**. Supporting the original creators ensures the continued development of the secure infrastructure we all rely on.
 
-### 🚀 Getting Started (Cloning)
-Since this project uses nested Git submodules, you must clone it recursively to include all necessary components:
-```bash
-git clone --recursive git@github.com:SMH01-MOD-NEXT/ProtonVPNNext.git
-```
-If you have already cloned the project without submodules, run the following command to initialize and update them:
-```bash
-git submodule update --init --recursive
-```
-
 ### 🛠 Build Instructions
 
 #### Using Android Studio (Recommended)
@@ -50,7 +40,7 @@ Ensure you have the Android SDK and JDK 17 installed.
     - **Kill Switch:** System-level and internal protection.
     - **Split Tunneling:** Exclude specific apps or IP addresses from the VPN tunnel.
 - **🌍 Global Network:** Easy server selection with load indicators.
-- **📱 Multi-language:** Support for English, Russian, Farsi, and Chinese.
+- **📱 Multi-language:** Support for English, Russian, Ukrainian, Belarusian, Farsi, and Chinese.
 
 ### 🛠 Tech Stack
 - **Language:** Kotlin
@@ -58,7 +48,7 @@ Ensure you have the Android SDK and JDK 17 installed.
 - **Architecture:** MVVM + Clean Architecture
 - **DI:** Hilt (Dagger 2)
 - **Persistence:** Room Database
-- **VPN Engine:** AmneziaWG (via `:amneziawg-android:tunnel`)
+- **VPN Engine:** AmneziaWG (via Maven dependency)
 
 ---
 
@@ -70,16 +60,6 @@ Ensure you have the Android SDK and JDK 17 installed.
 - **НЕОФИЦИАЛЬНЫЙ КЛИЕНТ:** Данное приложение **НЕ ЯВЛЯЕТСЯ** официальным продуктом Proton AG и никак не связано с официальной командой разработчиков Proton.
 - **ИСПОЛЬЗУЙТЕ НА СВОЙ СТРАХ И РИСК:** Программное обеспечение предоставляется по принципу «как есть». Разработчик **не несет ответственности** за ваши аккаунты, сохранность данных или любые возможные последствия (включая блокировки аккаунтов), возникшие в результате использования этого клиента.
 - **ПОДДЕРЖИТЕ PROTON:** Если вы цените приватность и вам нравятся продукты Proton, мы настоятельно рекомендуем **оформить платную подписку** на официальном сайте. Поддержка оригинальных создателей гарантирует развитие защищенной инфраструктуры, которой мы все пользуемся.
-
-### 🚀 Начало работы (Клонирование)
-Так как проект использует вложенные Git-субмодули, его необходимо клонировать рекурсивно для корректной сборки всех компонентов:
-```bash
-git clone --recursive git@github.com:SMH01-MOD-NEXT/ProtonVPNNext.git
-```
-Если вы уже клонировали проект без этого флага, выполните следующую команду для инициализации и обновления всех вложенных модулей:
-```bash
-git submodule update --init --recursive
-```
 
 ### 🛠 Инструкции по сборке
 
@@ -108,7 +88,7 @@ git submodule update --init --recursive
     - **Kill Switch:** Системная и внутренняя защита при обрыве соединения.
     - **Раздельное туннелирование:** Возможность исключать приложения или конкретные IP-адреса из VPN.
 - **🌍 Глобальная сеть:** Удобный выбор стран и серверов с индикацией нагрузки.
-- **📱 Мультиязычность:** Поддержка русского, английского, фарси и китайского языков.
+- **📱 Мультиязычность:** Поддержка русского, английского, украинского, белорусского, фарси и китайского языков.
 
 ### 🛠 Технологический стек
 - **Язык:** Kotlin
@@ -116,7 +96,7 @@ git submodule update --init --recursive
 - **Архитектура:** MVVM + Clean Architecture
 - **DI:** Hilt (Dagger 2)
 - **База данных:** Room
-- **VPN Engine:** AmneziaWG (через модуль `:amneziawg-android:tunnel`)
+- **VPN Engine:** AmneziaWG (через Maven-зависимость)
 
 ---
 

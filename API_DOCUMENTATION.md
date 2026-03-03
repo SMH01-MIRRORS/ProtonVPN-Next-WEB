@@ -36,142 +36,100 @@ val headerInterceptor = Interceptor { chain ->
 }
 ```
 
-### 3. Authentication Flow (SRP Protocol)
+### 3. Authentication Flow
 
+#### A. Standard Login (SRP Protocol)
 Proton uses **Secure Remote Password (SRP)**. This allows authentication without ever sending the password to the server.
 
-#### Step 1: Anonymous Session (`POST /auth/v4/sessions`)
-Before logging in, a session must be created to receive a `UID` (Session ID).
+1. **Get Auth Info (`POST /auth/v4/info`):** Retrieves the server's SRP parameters (Modulus, Salt, ServerEphemeral).
+2. **Perform Login (`POST /auth/v4`):** The client computes the `ClientProof` (M2) locally and sends it along with the `ClientEphemeral` (A).
+3. **2FA (`POST /auth/v4/2fa`):** If enabled, requires a TOTP code.
 
-#### Step 2: Get Auth Info (`POST /auth/v4/info`)
-Retrieves the server's SRP parameters.
-- **Request:** `{"Username": "user123"}`
-- **Response Key Fields:**
-    - `Modulus`: SRP big prime number (N).
-    - `Salt`: User-specific salt (s).
-    - `ServerEphemeral`: Server's public ephemeral value (B).
-    - `SRPSession`: A temporary token for the SRP handshake.
+#### B. Loginless / Guest Authentication
+Allows users to connect to free servers without creating a permanent account or providing credentials.
 
-#### Step 3: Perform Login (`POST /auth/v4`)
-The client computes the `ClientProof` (M2) locally using the password, salt, and ephemeral values.
-- **Request Body:**
-```json
-{
-  "Username": "user123",
-  "ClientEphemeral": "...", // Client public value (A)
-  "ClientProof": "...",     // Computed proof (M1)
-  "SRPSession": "..."       // From Step 2
-}
-```
-- **Success Response:** Returns `AccessToken`, `RefreshToken`, and `UID`.
+1. **Anonymous Session (`POST /auth/v4/sessions`):**
+   - **Body:** Requires a `challengePayload` (JSON containing device info and integrity hashes).
+   - **Headers:** Supports CAPTCHA via `x-pm-human-verification-token`.
+   - **Returns:** An anonymous `AccessToken` and `UID`.
 
-#### Step 4: 2FA (If applicable) (`POST /auth/v4/2fa`)
-If the account has 2FA, the `AccessToken` from Step 3 will have limited scopes.
-- **Request:** `{"TwoFactorCode": "123456"}`
+2. **Credentialless Upgrade (`POST /auth/v4/credentialless`):**
+   - **Auth:** Uses the anonymous token as `Authorization: Bearer <token>`.
+   - **Body:** Same `challengePayload`.
+   - **Returns:** Full session tokens (`AccessToken`, `RefreshToken`, `UID`) for VPN usage.
 
 ### 4. VPN & Tunnel Management
 
 #### A. Fetching Logical Servers (`GET /vpn/v2/logicals`)
-Returns the hierarchy of locations.
-- **LogicalServer:** Represents a "Location" (e.g., US-FREE#1).
-- **PhysicalServer:** Represents a specific node with an `ExitIP` and `Domain`.
+Returns the hierarchy of locations. Supports delta updates via `If-Modified-Since`.
+- **Query Params:**
+    - `WithEntriesForProtocols=wireguard`: Only fetch servers supporting WireGuard.
+    - `WithState=true`: Include current maintenance/online status.
 - **Key Field:** `X25519PublicKey` – The server's public key for WireGuard.
 
-#### B. Server Loads (`GET /vpn/v2/loads`)
+#### B. Server Loads (`GET /vpn/v1/loads`)
 Returns current load data for all servers.
-- **Response Structure:** The load data is returned in a list named `"LogicalServers"`.
-- **Mapping Logic:** Loads are primarily associated with Logical Server IDs. To ensure UI consistency, the load value from a logical server should be propagated to all its child physical servers.
 
 #### C. Registering WireGuard Keys (`POST /vpn/v1/certificate`)
 This endpoint is used to register your local public key on the Proton backend.
 - **Request:** `{"ClientPublicKey": "YOUR_BASE64_PUBLIC_KEY"}`
-- **Response:** Returns the internal IP assigned to your tunnel and DNS settings.
+- **Response:** Returns the internal IP (`10.x.x.x`) assigned to your tunnel and DNS settings.
+
+#### D. Location Info (`GET /vpn/v1/location`)
+Retrieves the client's current public IP and geographic location.
 
 ---
 
 ## Русский
 
-Это самое полное техническое руководство по API Proton VPN, воссозданное в процессе разработки этого клиента. Так как официальной документации не существует, этот файл является основным справочником по работе с сетью.
+Это самое полное техническое руководство по API Proton VPN, воссозданное в процессе разработки этого клиента.
 
 ### 1. Инфраструктура и Базовые URL
 
-Proton использует несколько доменов. В случае блокировок приложение может переключаться между ними.
-
 - **Основной:** `https://vpn-api.proton.me/`
 - **Дополнительный:** `https://api.protonmail.ch/`
-- **Альтернативный:** `https://api.protonvpn.ch/`
 
 ### 2. Сетевой уровень (`NetworkModule`)
 
-Бэкенд Proton крайне чувствителен к заголовкам. При их отсутствии или неверном формате сервер возвращает ошибки `403` или `422`.
+Бэкенд Proton требует специфические заголовки `User-Agent`, `x-pm-appversion` и `x-pm-apiversion`. Без них сервер вернет `403`.
 
-#### Реализация заголовков
-Все запросы должны проходить через интерцептор:
+### 3. Процесс аутентификации
 
-```kotlin
-// Пример из NetworkModule.kt
-val headerInterceptor = Interceptor { chain ->
-    val userAgent = "ProtonVPN/5.15.95.5 (Android XX; MODEL XXX-XXX)"
-    val request = chain.request().newBuilder()
-        .addHeader("User-Agent", userAgent)
-        .addHeader("x-pm-appversion", "android-vpn@5.15.95.5-dev+play")
-        .addHeader("x-pm-apiversion", "4")
-        .addHeader("Accept", "application/vnd.protonmail.v1+json")
-        .build()
-    chain.proceed(request)
-}
-```
+#### A. Стандартный вход (SRP Протокол)
+Используется **Secure Remote Password (SRP)**, что исключает передачу пароля в открытом или зашифрованном виде.
 
-### 3. Процесс аутентификации (Протокол SRP)
+1. **Auth Info (`POST /auth/v4/info`):** Получение соли и параметров сервера.
+2. **Perform Login (`POST /auth/v4`):** Передача доказательства владения паролем (`ClientProof`).
+3. **2FA (`POST /auth/v4/2fa`):** Проверка двухфакторного кода.
 
-Proton использует **Secure Remote Password (SRP)**. Это позволяет войти в аккаунт, не передавая пароль на сервер в открытом или даже хешированном виде.
+#### B. Вход без учетных данных (Loginless / Guest)
+Позволяет подключаться к бесплатным серверам без регистрации.
 
-#### Шаг 1: Анонимная сессия (`POST /auth/v4/sessions`)
-Перед входом необходимо создать сессию для получения `UID` (ID сессии).
+1. **Анонимная сессия (`POST /auth/v4/sessions`):**
+   - **Тело:** Требует `challengePayload` (JSON с данными об устройстве и хешами целостности).
+   - **Капча:** Поддерживается через заголовки `x-pm-human-verification-token`.
+   - **Результат:** Временный анонимный `AccessToken` и `UID`.
 
-#### Шаг 2: Получение параметров (`POST /auth/v4/info`)
-Запрос параметров SRP сервера.
-- **Запрос:** `{"Username": "user123"}`
-- **Ключевые поля ответа:**
-    - `Modulus`: Большое простое число SRP (N).
-    - `Salt`: Соль пользователя (s).
-    - `ServerEphemeral`: Публичное эфемерное значение сервера (B).
-    - `SRPSession`: Временный токен для хендшейка.
-
-#### Шаг 3: Авторизация (`POST /auth/v4`)
-Клиент вычисляет `ClientProof` локально, используя пароль и полученные значения.
-- **Тело запроса:**
-```json
-{
-  "Username": "user123",
-  "ClientEphemeral": "...", // Публичное значение клиента (A)
-  "ClientProof": "...",     // Вычисленное доказательство (M1)
-  "SRPSession": "..."       // Из Шага 2
-}
-```
-- **Успешный ответ:** Содержит `AccessToken`, `RefreshToken` и `UID`.
-
-#### Шаг 4: 2FA (Если включено) (`POST /auth/v4/2fa`)
-Если на аккаунте активна двухфакторная аутентификация.
-- **Запрос:** `{"TwoFactorCode": "123456"}`
+2. **Апгрейд до VPN-сессии (`POST /auth/v4/credentialless`):**
+   - **Авторизация:** Используется полученный анонимный токен в заголовке `Authorization: Bearer <token>`.
+   - **Тело:** Тот же `challengePayload`.
+   - **Результат:** Полноценные токены сессии (`AccessToken`, `RefreshToken`) для работы с VPN.
 
 ### 4. Управление VPN и Туннелем
 
 #### A. Список серверов (`GET /vpn/v2/logicals`)
-Получение иерархии локаций.
-- **LogicalServer:** Группа серверов (например, US-FREE#1).
-- **PhysicalServer:** Конкретный узел с `ExitIP` и `Domain`.
+Иерархия локаций. Поддерживает инкрементальные обновления через `If-Modified-Since`.
 - **Важное поле:** `X25519PublicKey` – Публичный ключ сервера для WireGuard.
 
-#### B. Загрузка серверов (`GET /vpn/v2/loads`)
-Получение данных о текущей нагрузке на сервера.
-- **Структура ответа:** Список нагрузок возвращается в поле `"LogicalServers"`.
-- **Логика сопоставления:** Нагрузки привязаны в первую очередь к ID логических серверов. Для корректного отображения в интерфейсе, значение нагрузки от логического сервера должно распространяться на все дочерние физические сервера.
+#### B. Загрузка серверов (`GET /vpn/v1/loads`)
+Процент нагрузки серверов для динамического выбора наименее загруженного.
 
 #### C. Регистрация ключей WireGuard (`POST /vpn/v1/certificate`)
-Эндпоинт для "привязки" вашего локального публичного ключа к бэкенду Proton.
-- **Запрос:** `{"ClientPublicKey": "ВАШ_BASE64_ПУБЛИЧНЫЙ_КЛЮЧ"}`
-- **Ответ:** Содержит назначенный внутренний IP для туннеля и настройки DNS.
+"Привязка" вашего публичного ключа.
+- **Результат:** Внутренний IP (`10.x.x.x`) и DNS.
+
+#### D. Информация о местоположении (`GET /vpn/v1/location`)
+Текущий публичный IP и геопозиция клиента.
 
 ---
 
