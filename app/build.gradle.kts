@@ -49,6 +49,24 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            val keyFile = System.getenv("SIGNING_KEY_FILE") ?: ""
+            if (keyFile.isNotEmpty()) {
+                storeFile = file(keyFile)
+                storePassword = System.getenv("SIGNING_STORE_PASSWORD")
+                keyAlias = System.getenv("SIGNING_KEY_ALIAS")
+                keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
+            } else {
+                // Fallback to debug for local builds without env vars
+                storeFile = file("debug.keystore")
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
+    }
+
     flavorDimensions += "distribution"
     productFlavors {
         create("foss") {
@@ -73,6 +91,7 @@ android {
         getByName("debug") {
             isMinifyEnabled = false
             buildConfigField("boolean", "ALLOW_LOGCAT", "true")
+            signingConfig = signingConfigs.getByName("debug")
         }
         getByName("release") {
             isMinifyEnabled = true
@@ -82,7 +101,7 @@ android {
                 "proguard-rules.pro"
             )
             buildConfigField("boolean", "ALLOW_LOGCAT", "false")
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
