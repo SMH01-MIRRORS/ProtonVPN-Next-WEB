@@ -16,6 +16,12 @@ steps:
         from_secret: SIGNING_KEY_ALIAS
       SIGNING_KEY_PASSWORD:
         from_secret: SIGNING_KEY_PASSWORD
+      SENTRY_AUTH_TOKEN:
+        from_secret: SENTRY_AUTH_TOKEN
+      SENTRY_ORG:
+        from_secret: SENTRY_ORG
+      SENTRY_PROJECT:
+        from_secret: SENTRY_PROJECT
     commands:
       - echo $SIGNING_KEY_BASE64 | base64 -d > app/release.keystore
       - chmod +x gradlew
