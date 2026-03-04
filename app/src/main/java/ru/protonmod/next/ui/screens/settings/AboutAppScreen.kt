@@ -20,7 +20,13 @@ package ru.protonmod.next.ui.screens.settings
 import android.content.Intent
 import android.net.Uri
 import android.widget.ImageView
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -29,7 +35,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,7 +61,10 @@ fun AboutAppScreen(
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
     val githubUrl = "https://github.com/SMH01-MOD-NEXT/ProtonMOD-NEXT"
+    val codebergUrl = "https://codeberg.org/SMH01/ProtonVPN-Next"
     val telegramUrl = "https://t.me/ProtonVPN_MOD"
+
+    var showGitHub by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -167,10 +176,10 @@ fun AboutAppScreen(
                     ) {
                         AboutLinkCard(
                             modifier = Modifier.weight(1f),
-                            title = stringResource(id = R.string.about_github),
-                            iconResId = R.drawable.ic_github,
+                            title = stringResource(id = R.string.about_codeberg),
+                            iconResId = R.drawable.ic_codeberg,
                             onClick = {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(codebergUrl))
                                 context.startActivity(intent)
                             }
                         )
@@ -184,6 +193,66 @@ fun AboutAppScreen(
                                 context.startActivity(intent)
                             }
                         )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // GitHub Hidden Section
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showGitHub = !showGitHub },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = colors.backgroundSecondary.copy(alpha = 0.5f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_github),
+                                    contentDescription = null,
+                                    tint = colors.textWeak,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "GitHub (${stringResource(R.string.about_unavailable)})",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = colors.textWeak
+                                )
+                            }
+
+                            AnimatedVisibility(
+                                visible = showGitHub,
+                                enter = fadeIn() + expandVertically(),
+                                exit = fadeOut() + shrinkVertically()
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(top = 12.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Button(
+                                        onClick = {
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
+                                            context.startActivity(intent)
+                                        },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = colors.brandNorm.copy(alpha = 0.8f)
+                                        )
+                                    ) {
+                                        Text(stringResource(R.string.about_github))
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))

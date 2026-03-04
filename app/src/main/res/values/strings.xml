@@ -146,6 +146,8 @@
     <string name="about_community">Community</string>
     <string name="about_github">GitHub</string>
     <string name="about_telegram">Telegram</string>
+    <string name="about_codeberg">Codeberg</string>
+    <string name="about_unavailable">Temporarily unavailable</string>
 
     <!-- Licenses Screen -->
     <string name="licenses_title">Licenses</string>
