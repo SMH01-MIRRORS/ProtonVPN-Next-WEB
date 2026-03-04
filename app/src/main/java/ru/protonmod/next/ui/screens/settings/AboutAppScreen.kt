@@ -18,7 +18,6 @@
 package ru.protonmod.next.ui.screens.settings
 
 import android.content.Intent
-import android.net.Uri
 import android.widget.ImageView
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -50,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -179,7 +179,7 @@ fun AboutAppScreen(
                             title = stringResource(id = R.string.about_codeberg),
                             iconResId = R.drawable.ic_codeberg,
                             onClick = {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(codebergUrl))
+                                val intent = Intent(Intent.ACTION_VIEW, codebergUrl.toUri())
                                 context.startActivity(intent)
                             }
                         )
@@ -189,7 +189,7 @@ fun AboutAppScreen(
                             title = stringResource(id = R.string.about_telegram),
                             iconResId = R.drawable.ic_telegram,
                             onClick = {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(telegramUrl))
+                                val intent = Intent(Intent.ACTION_VIEW, telegramUrl.toUri())
                                 context.startActivity(intent)
                             }
                         )
@@ -241,7 +241,8 @@ fun AboutAppScreen(
                                 ) {
                                     Button(
                                         onClick = {
-                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
+                                            val intent = Intent(Intent.ACTION_VIEW,
+                                                githubUrl.toUri())
                                             context.startActivity(intent)
                                         },
                                         colors = ButtonDefaults.buttonColors(
