@@ -57,8 +57,8 @@ object CountryUtils {
      */
     fun getCountryName(context: Context, countryCode: String?): String {
         if (countryCode == null) return ""
-        
-        val locale = Locale("", countryCode)
+
+        val locale = Locale.Builder().setRegion(countryCode.uppercase()).build()
         val displayName = locale.getDisplayCountry(Locale.getDefault())
         
         return if (displayName.isNotEmpty() && displayName != countryCode) {

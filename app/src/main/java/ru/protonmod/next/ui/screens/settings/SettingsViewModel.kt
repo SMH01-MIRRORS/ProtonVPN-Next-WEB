@@ -58,8 +58,9 @@ data class SettingsUiState(
 )
 
 @HiltViewModel
+@Suppress("UNCHECKED_CAST")
 class SettingsViewModel @Inject constructor(
-    private val amneziaVpnManager: AmneziaVpnManager,
+    amneziaVpnManager: AmneziaVpnManager,
     private val settingsManager: SettingsManager
 ) : ViewModel() {
 
@@ -116,12 +117,6 @@ class SettingsViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = SettingsUiState()
     )
-
-    fun setKillSwitch(enabled: Boolean) {
-        viewModelScope.launch {
-            settingsManager.setKillSwitch(enabled)
-        }
-    }
 
     fun setAutoConnect(enabled: Boolean) {
         viewModelScope.launch {

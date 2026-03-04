@@ -443,7 +443,14 @@ internal fun ProtonColors.toMaterial3ThemeColors() = androidx.compose.material3.
     outline = brandNorm,
     surfaceTint = Color.Unspecified,
     outlineVariant = brandNorm,
-    scrim = blenderNorm
+    scrim = blenderNorm,
+    surfaceBright = backgroundNorm,
+    surfaceDim = backgroundNorm,
+    surfaceContainer = backgroundSecondary,
+    surfaceContainerHigh = backgroundSecondary,
+    surfaceContainerHighest = backgroundSecondary,
+    surfaceContainerLow = backgroundNorm,
+    surfaceContainerLowest = backgroundNorm
 )
 
 val LocalColors = staticCompositionLocalOf { ProtonColors.Light }
@@ -459,8 +466,10 @@ fun ProtonNextTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
+            val controller = WindowCompat.getInsetsController(window, view)
+            controller.isAppearanceLightStatusBars = !darkTheme
+            WindowCompat.setDecorFitsSystemWindows(window, false)
             window.statusBarColor = Color.Transparent.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }
 

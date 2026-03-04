@@ -289,10 +289,9 @@ fun EditProfileScreen(
     if (showPortDialog) {
         PortSelectionDialog(
             currentPort = selectedPort,
-            onDismiss = { showPortDialog = false },
+            onDismiss = {  },
             onPortSelected = {
                 selectedPort = it
-                showPortDialog = false
             }
         )
     }
@@ -690,6 +689,8 @@ fun SettingRowWithIcon(
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
+    val isLocation = title == stringResource(R.string.label_location)
+
     var baseModifier = modifier.fillMaxWidth()
     if (onClick != null) {
         baseModifier = baseModifier.clickable(onClick = onClick)
@@ -700,7 +701,7 @@ fun SettingRowWithIcon(
         modifier = baseModifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (icon != null || countryCode != null || (countryCode == null && title == stringResource(R.string.label_location))) {
+        if (icon != null || countryCode != null || isLocation) {
             val flagResId = CountryUtils.getFlagResource(context, countryCode)
 
             Box(
@@ -718,7 +719,7 @@ fun SettingRowWithIcon(
                     )
                 } else if (countryCode != null) {
                     Text(text = CountryUtils.getFlagForCountry(countryCode), style = MaterialTheme.typography.titleMedium)
-                } else if (title == stringResource(R.string.label_location)) {
+                } else if (isLocation) {
                     FlagIcon(
                         countryFlag = R.drawable.flag_fastest,
                         size = DpSize(36.dp, 24.dp)

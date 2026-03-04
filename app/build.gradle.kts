@@ -37,7 +37,7 @@ android {
 
     defaultConfig {
         applicationId = "ru.protonmod.next"
-        minSdk = 26
+        minSdk = 29
         targetSdk = 36
         versionCode = 605159512
         versionName = "12.0.0"

@@ -208,7 +208,7 @@ fun ObfuscationSettingsScreen(
                                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showConfigDropdown) },
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .menuAnchor(),
+                                            .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true),
                                         shape = RoundedCornerShape(16.dp),
                                         colors = OutlinedTextFieldDefaults.colors(
                                             focusedBorderColor = colors.brandNorm,

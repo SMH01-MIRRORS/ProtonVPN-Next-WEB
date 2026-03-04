@@ -92,31 +92,25 @@ fun WelcomeScreen(
                     .fillMaxSize()
                     .background(colors.backgroundNorm)
             ) {
-                // Top section matching the exact behavior of XML (vpn_gradient_bg + vpn_welcome_globe)
-                // Убрали AnimatedVisibility для глобуса и градиента
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f), // Takes all available space above the text/buttons
-                    contentAlignment = Alignment.Center // Center the globe perfectly in the top area
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
                 ) {
-                    // 1. Native Compose Gradient (Replaces vpn_gradient_bg.xml)
                     Box(
                         modifier = Modifier
                             .matchParentSize()
                             .background(
                                 brush = Brush.verticalGradient(
                                     colors = listOf(
-                                        Color(0x6611D8CC), // startColor from XML
-                                        Color(0x006E4BFF)  // endColor from XML
+                                        Color(0x6611D8CC),
+                                        Color(0x006E4BFF)
                                     )
                                 )
                             )
                     )
 
-                    // 2. The Globe
-                    // Using ContentScale.Fit and fillMaxSize(0.9f) makes it adaptively large
-                    // whether you use a vector (.xml) or a raster image (.webp)
                     Image(
                         painter = painterResource(id = R.drawable.vpn_welcome_globe),
                         contentDescription = null,
@@ -125,7 +119,6 @@ fun WelcomeScreen(
                     )
                 }
 
-                // Bottom section with text and buttons, wrapped in a scroll view for smaller screens
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -167,24 +160,24 @@ fun WelcomeScreen(
                         visible = isVisible,
                         enter = fadeIn(tween(800, delayMillis = 600)) + slideInVertically(tween(800, delayMillis = 600)) { it / 4 }
                     ) {
+                        val isLoading = uiState is LoginUiState.Loading
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            // Primary Action: Continue as Guest (Matching CredentialLessWelcome behavior)
                             Button(
                                 onClick = { viewModel.loginAnonymous() },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(56.dp),
                                 shape = RoundedCornerShape(16.dp),
-                                enabled = uiState !is LoginUiState.Loading,
+                                enabled = !isLoading,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = colors.brandNorm,
                                     contentColor = colors.textInverted
                                 )
                             ) {
-                                if (uiState is LoginUiState.Loading) {
+                                if (isLoading) {
                                     CircularProgressIndicator(
                                         color = colors.textInverted,
                                         strokeWidth = 2.dp,
@@ -199,14 +192,13 @@ fun WelcomeScreen(
                                 }
                             }
 
-                            // Create Account
                             Button(
                                 onClick = onNavigateToRegister,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(56.dp),
                                 shape = RoundedCornerShape(16.dp),
-                                enabled = uiState !is LoginUiState.Loading,
+                                enabled = !isLoading,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = colors.interactionNorm,
                                     contentColor = colors.textInverted
@@ -219,18 +211,17 @@ fun WelcomeScreen(
                                 )
                             }
 
-                            // Secondary Action: Sign In
                             OutlinedButton(
                                 onClick = onNavigateToLogin,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(56.dp),
                                 shape = RoundedCornerShape(16.dp),
-                                enabled = uiState !is LoginUiState.Loading,
+                                enabled = !isLoading,
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     contentColor = colors.textNorm
                                 ),
-                                border = ButtonDefaults.outlinedButtonBorder.copy(
+                                border = ButtonDefaults.outlinedButtonBorder(!isLoading).copy(
                                     brush = androidx.compose.ui.graphics.SolidColor(colors.separatorNorm)
                                 )
                             ) {
@@ -241,7 +232,6 @@ fun WelcomeScreen(
                                 )
                             }
 
-                            // Error Display
                             if (uiState is LoginUiState.Error) {
                                 Text(
                                     text = (uiState as LoginUiState.Error).message,
