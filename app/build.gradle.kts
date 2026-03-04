@@ -23,9 +23,7 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
     id("androidx.room")
-    id("com.google.gms.google-services") apply false
-    id("com.google.firebase.crashlytics") apply false
-    id("com.google.firebase.firebase-perf") apply false
+    id("io.sentry.android.gradle")
 }
 
 android {
@@ -69,22 +67,6 @@ android {
                 keyAlias = "androiddebugkey"
                 keyPassword = "android"
             }
-        }
-    }
-
-    flavorDimensions += "distribution"
-    productFlavors {
-        create("foss") {
-            dimension = "distribution"
-            versionNameSuffix = "-foss"
-        }
-        create("google") {
-            dimension = "distribution"
-        }
-        create("dev") {
-            dimension = "distribution"
-            applicationIdSuffix = ".dev"
-            versionNameSuffix = "-dev"
         }
     }
 
@@ -144,6 +126,13 @@ android {
     }
 }
 
+sentry {
+    includeProguardMapping = true
+    autoUploadProguardMapping = true
+    uploadNativeSymbols = true
+    includeNativeSources = true
+}
+
 dependencies {
     // 1. AndroidX & Core UI
     implementation(libs.androidx.core.ktx)
@@ -181,7 +170,6 @@ dependencies {
     ksp("androidx.room:room-compiler:2.7.2")
 
     // 5. Network & Serialization
-    // Align OkHttp version with amneziawg-android (which uses 5.x)
     implementation("com.squareup.okhttp3:okhttp-dnsoverhttps:5.3.0")
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
@@ -194,14 +182,8 @@ dependencies {
     // 7. Debug Tools
     debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
 
-    // 8. Firebase
-    val firebaseBom = platform("com.google.firebase:firebase-bom:33.7.0")
-    "googleImplementation"(firebaseBom)
-    "googleImplementation"("com.google.firebase:firebase-analytics")
-    "googleImplementation"("com.google.firebase:firebase-crashlytics")
-    "googleImplementation"("com.google.firebase:firebase-messaging")
-    "googleImplementation"("com.google.firebase:firebase-config")
-    "googleImplementation"("com.google.firebase:firebase-perf")
+    // 8. Sentry (Replaces Firebase)
+    implementation("io.sentry:sentry-android:8.33.0")
 
     // 9. Testing
     testImplementation(libs.junit)
@@ -214,28 +196,4 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(composeBom)
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-}
-
-// Conditional application of plugins
-val taskNames = gradle.startParameter.taskNames
-val isGoogleBuild = taskNames.isEmpty() ||
-                    taskNames.any { 
-                        it.contains("google", ignoreCase = true) || 
-                        it == "assemble" || it == "build" || it == "bundle" 
-                    }
-
-if (isGoogleBuild) {
-    apply(plugin = "com.google.gms.google-services")
-    apply(plugin = "com.google.firebase.crashlytics")
-    apply(plugin = "com.google.firebase.firebase-perf")
-}
-
-// Disable Google Services tasks for flavors that don't have the JSON file
-// This prevents "File google-services.json is missing" errors during multi-flavor builds.
-tasks.configureEach {
-    if (name.endsWith("GoogleServices")) {
-        if (name.contains("Foss", ignoreCase = true) || name.contains("Dev", ignoreCase = true)) {
-            enabled = false
-        }
-    }
 }

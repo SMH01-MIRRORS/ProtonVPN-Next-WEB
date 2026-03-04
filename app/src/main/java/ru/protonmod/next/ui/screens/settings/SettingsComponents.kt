@@ -1,0 +1,172 @@
+/*
+ * Copyright (C) 2026 SMH01
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package ru.protonmod.next.ui.screens.settings
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import ru.protonmod.next.ui.theme.ProtonNextTheme
+
+@Composable
+fun Category(
+    modifier: Modifier = Modifier,
+    title: String,
+    content: (@Composable ColumnScope.() -> Unit),
+) {
+    val colors = ProtonNextTheme.colors
+    if (title.isNotEmpty()) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = colors.textNorm,
+            modifier = modifier
+                .padding(start = 12.dp, top = 24.dp, bottom = 8.dp)
+                .fillMaxWidth()
+        )
+    } else {
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = colors.backgroundSecondary.copy(alpha = 0.8f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+            content()
+        }
+    }
+}
+
+@Composable
+fun SettingRowWithIcon(
+    modifier: Modifier = Modifier,
+    icon: ImageVector?,
+    title: String,
+    subtitle: String? = null,
+    trailingContent: (@Composable () -> Unit)? = null,
+    onClick: (() -> Unit)? = null
+) {
+    val colors = ProtonNextTheme.colors
+    var baseModifier = modifier.fillMaxWidth()
+    if (onClick != null) {
+        baseModifier = baseModifier.clickable(onClick = onClick)
+    }
+    baseModifier = baseModifier.padding(vertical = 12.dp, horizontal = 16.dp)
+
+    Row(
+        modifier = baseModifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (icon != null) {
+            Box(
+                modifier = Modifier
+                    .padding(end = 16.dp)
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(colors.brandNorm.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = colors.brandNorm,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        } else {
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                color = colors.textNorm
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textWeak,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+            }
+        }
+
+        if (trailingContent != null) {
+            trailingContent()
+        } else if (onClick != null) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                contentDescription = null,
+                tint = colors.iconWeak.copy(alpha = 0.5f),
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun SettingToggleRow(
+    title: String,
+    subtitle: String? = null,
+    icon: ImageVector,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    val colors = ProtonNextTheme.colors
+    SettingRowWithIcon(
+        title = title,
+        subtitle = subtitle,
+        icon = icon,
+        onClick = { onCheckedChange(!checked) },
+        trailingContent = {
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = colors.textInverted,
+                    checkedTrackColor = colors.brandNorm,
+                    uncheckedThumbColor = colors.shade60,
+                    uncheckedTrackColor = colors.shade20,
+                    uncheckedBorderColor = Color.Transparent
+                )
+            )
+        }
+    )
+}

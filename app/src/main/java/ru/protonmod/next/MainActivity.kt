@@ -54,8 +54,7 @@ import ru.protonmod.next.ui.screens.LoginScreen
 import ru.protonmod.next.ui.screens.WelcomeScreen
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import javax.inject.Inject
-
-// --- Main ViewModel for Auth State Routing ---
+import io.sentry.Sentry
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -66,7 +65,6 @@ class MainViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            // Check for active session in Room DB
             val session = sessionDao.getSession()
             if (session != null && session.accessToken.isNotEmpty()) {
                 _startDestination.value = Screen.Home.route
@@ -87,12 +85,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Enable Edge-To-Edge for immersive UI experience
         enableEdgeToEdge()
 
         setContent {
             ProtonNextTheme {
-                // Remove surface color here to allow Edge-to-Edge to shine through
                 Box(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -123,7 +119,6 @@ fun ProtonNextAppNavHost(viewModel: MainViewModel = hiltViewModel()) {
     val navController = rememberNavController()
     val startDestination by viewModel.startDestination.collectAsState()
 
-    // Show blank screen (or splash) until we know where to route
     if (startDestination.isEmpty()) return
 
     NavHost(navController = navController, startDestination = startDestination) {
@@ -152,7 +147,6 @@ fun ProtonNextAppNavHost(viewModel: MainViewModel = hiltViewModel()) {
             )
         }
 
-        // Add all app navigation routes
         appNavGraph(navController = navController)
     }
 }

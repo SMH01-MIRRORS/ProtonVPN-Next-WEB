@@ -17,6 +17,7 @@
 
 package ru.protonmod.next.ui.screens.settings
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -26,7 +27,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.AltRoute
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -60,6 +59,7 @@ fun SettingsScreen(
     onNavigateToProtocol: (() -> Unit)? = null,
     onNavigateToKillSwitch: (() -> Unit)? = null,
     onNavigateToAbout: (() -> Unit)? = null,
+    onNavigateToErrorReporting: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
@@ -97,10 +97,12 @@ fun SettingsScreen(
                 onAutoConnectChange = viewModel::setAutoConnect,
                 onNotificationsChange = viewModel::setNotifications,
                 onPortChange = viewModel::setVpnPort,
+                onCustomDnsChange = viewModel::setCustomDns,
                 onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
                 onNavigateToProtocol = onNavigateToProtocol,
                 onNavigateToKillSwitch = onNavigateToKillSwitch,
                 onNavigateToAbout = onNavigateToAbout,
+                onNavigateToErrorReporting = onNavigateToErrorReporting,
                 modifier = Modifier
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.statusBars)
@@ -133,11 +135,13 @@ fun SettingsContent(
     onAutoConnectChange: (Boolean) -> Unit,
     onNotificationsChange: (Boolean) -> Unit,
     onPortChange: (Int) -> Unit,
+    onCustomDnsChange: (String) -> Unit,
     onNavigateToSplitTunnelingMain: (() -> Unit)? = null,
     onNavigateToProtocol: (() -> Unit)? = null,
     onNavigateToKillSwitch: (() -> Unit)? = null,
     onNavigateToAbout: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    onNavigateToErrorReporting: (() -> Unit)? = null,
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
 
@@ -202,12 +206,44 @@ fun SettingsContent(
         // Privacy & Notifications
         item {
             Category(title = stringResource(R.string.settings_privacy)) {
+                // Custom DNS Setting
+                var showCustomDnsDialog by remember { mutableStateOf(false) }
+                val currentDnsSubtitle = state.customDns.ifBlank {
+                    stringResource(R.string.settings_custom_dns_default)
+                }
+
+                SettingRowWithIcon(
+                    icon = Icons.Rounded.Dns,
+                    title = stringResource(R.string.settings_custom_dns),
+                    subtitle = currentDnsSubtitle,
+                    onClick = { showCustomDnsDialog = true }
+                )
+
+                if (showCustomDnsDialog) {
+                    CustomDnsDialog(
+                        currentDns = state.customDns,
+                        onDismiss = { showCustomDnsDialog = false },
+                        onDnsSaved = {
+                            onCustomDnsChange(it)
+                            showCustomDnsDialog = false
+                        }
+                    )
+                }
+
                 SettingRowWithIcon(
                     icon = Icons.Rounded.GppMaybe,
                     title = stringResource(R.string.settings_kill_switch),
                     subtitle = stringResource(R.string.settings_kill_switch_desc),
                     onClick = onNavigateToKillSwitch
                 )
+
+                SettingRowWithIcon(
+                    icon = Icons.Rounded.BugReport,
+                    title = stringResource(R.string.settings_error_reporting),
+                    subtitle = stringResource(R.string.settings_error_reporting_desc),
+                    onClick = onNavigateToErrorReporting
+                )
+
                 SettingToggleRow(
                     icon = Icons.Rounded.Notifications,
                     title = stringResource(R.string.settings_notifications),
@@ -227,6 +263,76 @@ fun SettingsContent(
                     subtitle = stringResource(R.string.settings_version, BuildConfig.VERSION_NAME),
                     onClick = onNavigateToAbout
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun CustomDnsDialog(
+    currentDns: String,
+    onDismiss: () -> Unit,
+    onDnsSaved: (String) -> Unit
+) {
+    val colors = ProtonNextTheme.colors
+    var inputText by remember { mutableStateOf(currentDns) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = colors.backgroundSecondary)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(vertical = 24.dp, horizontal = 24.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(
+                    text = stringResource(R.string.settings_custom_dns_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = colors.textNorm,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                Text(
+                    text = stringResource(R.string.settings_custom_dns_desc),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.textWeak,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                OutlinedTextField(
+                    value = inputText,
+                    onValueChange = { inputText = it },
+                    placeholder = { Text("e.g. 1.1.1.1 or 94.140.14.14") },
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colors.brandNorm,
+                        unfocusedBorderColor = colors.shade60,
+                        focusedTextColor = colors.textNorm,
+                        unfocusedTextColor = colors.textNorm
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = { onDnsSaved("") }) {
+                        Text(stringResource(R.string.settings_custom_dns_reset), color = colors.textWeak)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = { onDnsSaved(inputText.trim()) },
+                        colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
+                    ) {
+                        Text(stringResource(R.string.btn_save), color = colors.textInverted)
+                    }
+                }
             }
         }
     }
@@ -404,140 +510,4 @@ fun FeatureTile(
             }
         }
     }
-}
-
-@Composable
-fun Category(
-    modifier: Modifier = Modifier,
-    title: String,
-    content: (@Composable ColumnScope.() -> Unit),
-) {
-    val colors = ProtonNextTheme.colors
-    if (title.isNotEmpty()) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = colors.textNorm,
-            modifier = modifier
-                .padding(start = 12.dp, top = 24.dp, bottom = 8.dp)
-                .fillMaxWidth()
-        )
-    } else {
-        Spacer(modifier = Modifier.height(16.dp))
-    }
-
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colors.backgroundSecondary.copy(alpha = 0.8f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(vertical = 4.dp)) {
-            content()
-        }
-    }
-}
-
-@Composable
-fun SettingRowWithIcon(
-    modifier: Modifier = Modifier,
-    icon: ImageVector?,
-    title: String,
-    subtitle: String? = null,
-    trailingContent: (@Composable () -> Unit)? = null,
-    onClick: (() -> Unit)? = null
-) {
-    val colors = ProtonNextTheme.colors
-    var baseModifier = modifier.fillMaxWidth()
-    if (onClick != null) {
-        baseModifier = baseModifier.clickable(onClick = onClick)
-    }
-    baseModifier = baseModifier.padding(vertical = 12.dp, horizontal = 16.dp)
-
-    Row(
-        modifier = baseModifier,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (icon != null) {
-            Box(
-                modifier = Modifier
-                    .padding(end = 16.dp)
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(colors.brandNorm.copy(alpha = 0.12f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = colors.brandNorm,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        } else {
-            Spacer(modifier = Modifier.width(8.dp))
-        }
-
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                color = colors.textNorm
-            )
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colors.textWeak,
-                    modifier = Modifier.padding(top = 2.dp)
-                )
-            }
-        }
-
-        if (trailingContent != null) {
-            trailingContent()
-        } else if (onClick != null) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                contentDescription = null,
-                tint = colors.iconWeak.copy(alpha = 0.5f),
-                modifier = Modifier.size(20.dp)
-            )
-        }
-    }
-}
-
-@Composable
-fun SettingToggleRow(
-    title: String,
-    subtitle: String? = null,
-    icon: ImageVector,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    val colors = ProtonNextTheme.colors
-    SettingRowWithIcon(
-        title = title,
-        subtitle = subtitle,
-        icon = icon,
-        onClick = { onCheckedChange(!checked) },
-        trailingContent = {
-            Switch(
-                checked = checked,
-                onCheckedChange = onCheckedChange,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = colors.textInverted,
-                    checkedTrackColor = colors.brandNorm,
-                    uncheckedThumbColor = colors.shade60,
-                    uncheckedTrackColor = colors.shade20,
-                    uncheckedBorderColor = Color.Transparent
-                )
-            )
-        }
-    )
 }

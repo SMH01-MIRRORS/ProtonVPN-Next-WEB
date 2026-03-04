@@ -50,9 +50,15 @@ class SettingsManager @Inject constructor(
 
         private val VPN_PORT = intPreferencesKey("vpn_port")
 
+        // Custom DNS IP setting (IPv4 or IPv6)
+        private val CUSTOM_DNS = stringPreferencesKey("custom_dns")
+
         private val OBFUSCATION_ENABLED = booleanPreferencesKey("obfuscation_enabled")
         private val SELECTED_PROFILE_ID = stringPreferencesKey("selected_profile_id")
         private val CUSTOM_PROFILES = stringPreferencesKey("custom_profiles")
+
+        private val ANALYTICS_ENABLED = booleanPreferencesKey("analytics_enabled")
+        private val CRASH_REPORTS_ENABLED = booleanPreferencesKey("crash_reports_enabled")
 
         private val AWG_JC = intPreferencesKey("awg_jc")
         private val AWG_JMIN = intPreferencesKey("awg_jmin")
@@ -78,8 +84,14 @@ class SettingsManager @Inject constructor(
 
     val vpnPort: Flow<Int> = context.dataStore.data.map { it[VPN_PORT] ?: 1194 }
 
+    // Provide the current Custom DNS setting as a Flow
+    val customDns: Flow<String> = context.dataStore.data.map { it[CUSTOM_DNS] ?: "" }
+
     val obfuscationEnabled: Flow<Boolean> = context.dataStore.data.map { it[OBFUSCATION_ENABLED] ?: false }
     val selectedProfileId: Flow<String> = context.dataStore.data.map { it[SELECTED_PROFILE_ID] ?: "standard_1" }
+
+    val analyticsEnabled: Flow<Boolean> = context.dataStore.data.map { it[ANALYTICS_ENABLED] ?: true }
+    val crashReportsEnabled: Flow<Boolean> = context.dataStore.data.map { it[CRASH_REPORTS_ENABLED] ?: true }
 
     val customProfiles: Flow<List<ObfuscationProfile>> = context.dataStore.data.map { preferences ->
         val jsonString = preferences[CUSTOM_PROFILES] ?: "[]"
@@ -151,12 +163,25 @@ class SettingsManager @Inject constructor(
         context.dataStore.edit { it[VPN_PORT] = port }
     }
 
+    // Save the Custom DNS IP address (empty string means default)
+    suspend fun setCustomDns(dnsIp: String) {
+        context.dataStore.edit { it[CUSTOM_DNS] = dnsIp }
+    }
+
     suspend fun setObfuscationEnabled(enabled: Boolean) {
         context.dataStore.edit { it[OBFUSCATION_ENABLED] = enabled }
     }
 
     suspend fun setSelectedProfileId(id: String) {
         context.dataStore.edit { it[SELECTED_PROFILE_ID] = id }
+    }
+
+    suspend fun setAnalyticsEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[ANALYTICS_ENABLED] = enabled }
+    }
+
+    suspend fun setCrashReportsEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[CRASH_REPORTS_ENABLED] = enabled }
     }
 
     suspend fun saveCustomProfiles(profiles: List<ObfuscationProfile>) {

@@ -1,32 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <!--
-  ~ Copyright (C) 2026 SMH01
-  ~
-  ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  ~ GNU General Public License for more details.
-  ~
-  ~ You should have received a copy of the GNU General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
-  -->
     <string name="app_name">Proton VPN-Next</string>
 
     <!-- Welcome Screen -->
     <string name="welcome_title">به Proton VPN-Next خوش آمدید</string>
-    <string name="welcome_subtitle">کنترل زندگی دیجیتال خود را با VPN امن، خصوصی و سریع به دست بگیرید. بدون گزارش، بدون ردیابی.</string>
+    <string name="welcome_subtitle">زندگی دیجیتال خود را با VPN امن، خصوصی و سریع کنترل کنید. بدون لاگ، بدون ردیابی.</string>
     <string name="btn_create_account">ایجاد حساب کاربری</string>
     <string name="btn_login">ورود</string>
     <string name="btn_continue_guest">ادامه به عنوان مهمان</string>
 
     <!-- Login Screen -->
     <string name="login_title">خوش آمدید</string>
-    <string name="login_subtitle">وارد حساب Proton خود شوید</string>
+    <string name="login_subtitle">وارد حساب پروتون خود شوید</string>
     <string name="hint_username">ایمیل یا نام کاربری</string>
     <string name="hint_password">رمز عبور</string>
     <string name="forgot_password">رمز عبور را فراموش کرده‌اید؟</string>
@@ -45,16 +30,16 @@
     <string name="desc_settings">تنظیمات</string>
     <string name="error_loading_servers">خطا در بارگذاری سرورها</string>
     <string name="btn_retry">تلاش مجدد</string>
-    <string name="error_system_appops">خطای سیستم: لطفا برنامه را دوباره نصب کنید.</string>
-    <string name="title_recent_connections">اتصالات اخیر</string>
-    <string name="status_connected">متصل</string>
+    <string name="error_system_appops">خطای سیستم: لطفاً برنامه را دوباره نصب کنید.</string>
+    <string name="title_recent_connections">اتصال‌های اخیر</string>
+    <string name="status_connected">متصل شد</string>
     <string name="status_connecting">در حال اتصال…</string>
     <string name="status_disconnected">قطع شد</string>
     <string name="status_not_connected">متصل نیست</string>
     <string name="msg_traffic_not_protected">ترافیک شما محافظت نمی‌شود</string>
     <string name="desc_toggle_connection">تغییر وضعیت اتصال</string>
     <string name="desc_country">کشور</string>
-    <string name="map_placeholder">محل نقشه تعاملی</string>
+    <string name="map_placeholder">محل قرارگیری نقشه تعاملی</string>
     <string name="label_fastest_server">سریع‌ترین سرور</string>
     <string name="label_select_location">انتخاب مکان</string>
     <string name="label_server_unavailable">سرور در دسترس نیست</string>
@@ -63,12 +48,12 @@
     <string name="btn_quick_connect">اتصال سریع</string>
 
     <!-- VPN Certificate Messages -->
-    <string name="cert_msg_expiring_soon">گواهی در %1$d ساعت دیگر منقضی می‌شود. در حال تمدید…</string>
+    <string name="cert_msg_expiring_soon">گواهی تا %1$d ساعت دیگر منقضی می‌شود. به زودی تازه سازی می‌شود…</string>
     <string name="cert_msg_expired">گواهی VPN شما منقضی شده است و باید تمدید شود.</string>
-    <string name="cert_msg_refreshing">در حال تمدید گواهی VPN…</string>
-    <string name="cert_msg_refresh_failed">تمدید گواهی ناموفق بود: %1$s. تلاش مجدد تا ۱۵ دقیقه دیگر.</string>
-    <string name="cert_msg_auto_refresh_failed">تمدید خودکار ناموفق بود. لطفا برای اطمینان از اتصال، به صورت دستی بروزرسانی کنید.</string>
-    <string name="cert_btn_refresh_now">همین حالا تمدید کنید</string>
+    <string name="cert_msg_refreshing">در حال تازه سازی گواهی VPN…</string>
+    <string name="cert_msg_refresh_failed">تازه سازی گواهی ناموفق بود: %1$s. تلاش مجدد در ۱۵ دقیقه دیگر.</string>
+    <string name="cert_msg_auto_refresh_failed">تازه سازی خودکار ناموفق بود. لطفاً برای اطمینان از اتصال، به صورت دستی بروزرسانی کنید.</string>
+    <string name="cert_btn_refresh_now">همین حالا تازه سازی کن</string>
 
     <!-- Countries Screen -->
     <string name="countries_title">انتخاب کشور</string>
@@ -78,20 +63,20 @@
     <string name="settings_title">تنظیمات</string>
     <string name="settings_connection">تنظیمات اتصال</string>
     <string name="settings_kill_switch">Kill Switch</string>
-    <string name="settings_kill_switch_desc">Kill Switch</string>
+    <string name="settings_kill_switch_desc">کیل سوئیچ</string>
     <string name="settings_auto_connect">اتصال خودکار</string>
-    <string name="settings_auto_connect_desc">اتصال به VPN هنگام راه‎‌اندازی</string>
-    <string name="settings_split_tunneling">Split Tunneling</string>
-    <string name="settings_split_tunneling_desc">برنامه‌ها یا IPها را از VPN مستثنی کنید</string>
-    <string name="settings_excluded_apps">برنامه‌های مستثنی شده</string>
-    <string name="settings_excluded_ips">آدرس‌های IP مستثنی شده</string>
+    <string name="settings_auto_connect_desc">اتصال به VPN هنگام راه اندازی</string>
+    <string name="settings_split_tunneling">تونل‌زنی تقسیم‌شده</string>
+    <string name="settings_split_tunneling_desc">حذف برنامه‌ها یا IPها از VPN</string>
+    <string name="settings_excluded_apps">برنامه‌های حذف شده</string>
+    <string name="settings_excluded_ips">آدرس‌های IP حذف شده</string>
     <string name="settings_privacy">حریم خصوصی و اعلان‌ها</string>
     <string name="settings_notifications">اعلان‌ها</string>
     <string name="settings_notifications_desc">دریافت اعلان‌های وضعیت VPN</string>
     <string name="settings_about">درباره</string>
     <string name="settings_version">نسخه %1$s</string>
-    <string name="settings_licenses">مجوزهای منبع باز</string>
-    <string name="settings_licenses_desc">نرم‌افزار شخص ثالث مورد استفاده در برنامه</string>
+    <string name="settings_licenses">مجوزهای متن باز</string>
+    <string name="settings_licenses_desc">نرم‌افزارهای شخص ثالث استفاده شده در برنامه</string>
     <string name="settings_on">روشن</string>
     <string name="settings_off">خاموش</string>
     <string name="settings_connection_protocol">پروتکل</string>
@@ -99,53 +84,71 @@
     <string name="settings_port_desc">انتخاب پورت اتصال</string>
     <string name="settings_port_auto">خودکار</string>
     <string name="settings_obfuscation">مبهم‌سازی (AmneziaWG)</string>
-    <string name="settings_obfuscation_desc">تغییر هدر بسته‌ها برای دور زدن DPI</string>
+    <string name="settings_obfuscation_desc">تغییر هدرهای بسته برای دور زدن DPI</string>
     <string name="settings_reset_obfuscation">بازنشانی به استاندارد ProtonVPN-Next</string>
+
+    <!-- Custom DNS -->
+    <string name="settings_custom_dns">DNS سفارشی</string>
+    <string name="settings_custom_dns_default">پیش‌فرض (Proton DNS)</string>
+    <string name="settings_custom_dns_title">سرور DNS سفارشی</string>
+    <string name="settings_custom_dns_desc">یک آدرس IPv4 یا IPv6 وارد کنید. برای استفاده از DNS ایمن پیش‌فرض پروتون، خالی بگذارید.</string>
+    <string name="settings_custom_dns_reset">بازنشانی پیش‌فرض</string>
+    <string name="settings_custom_dns_placeholder">مثلاً 1.1.1.1 یا 2606:4700:4700::1111</string>
+
+    <!-- Error Reporting Settings -->
+    <string name="settings_error_reporting">گزارش خطا</string>
+    <string name="settings_error_reporting_desc">مدیریت گزارش‌های خرابی و تجزیه و تحلیل</string>
+    <string name="settings_crash_reports">ارسال گزارش‌های خرابی</string>
+    <string name="settings_crash_reports_desc">گزارش‌های دقیق زمانی که برنامه به طور غیرمنتظره متوقف می‌شود</string>
+    <string name="settings_analytics">ارسال تجزیه و تحلیل</string>
+    <string name="settings_analytics_desc">داده‌های استفاده ناشناس برای کمک به ما در درک نحوه استفاده از برنامه</string>
 
     <!-- Kill Switch Screen -->
     <string name="kill_switch_title">Kill Switch</string>
-    <string name="kill_switch_subtitle">Kill Switch</string>
+    <string name="kill_switch_subtitle">کیل سوئیچ</string>
     <string name="kill_switch_desc">برای اطمینان از اینکه ترافیک شما همیشه محافظت می‌شود، از Kill Switch ارائه شده توسط اندروید استفاده کنید. این کار از نشت داده‌ها در صورت قطع اتصال VPN جلوگیری می‌کند.</string>
     <string name="kill_switch_step_1">۱. برای باز کردن تنظیمات VPN، روی دکمه زیر ضربه بزنید.</string>
     <string name="kill_switch_step_2">۲. روی نماد تنظیمات در کنار Proton VPN-Next ضربه بزنید.</string>
-    <string name="kill_switch_step_3">۳. \"VPN همیشه روشن\" و \"مسدود کردن اتصالات بدون VPN\" را فعال کنید.</string>
+    <string name="kill_switch_step_3">۳. «Always-on VPN» و «Block connections without VPN» را فعال کنید.</string>
     <string name="kill_switch_button">باز کردن تنظیمات VPN</string>
 
     <!-- Obfuscation Params -->
-    <string name="obfuscation_jc">تعداد بسته‌های زباله (Jc)</string>
-    <string name="obfuscation_jmin">حداقل اندازه زباله (Jmin)</string>
-    <string name="obfuscation_jmax">حداکثر اندازه زباله (Jmax)</string>
-    <string name="obfuscation_s1">اندازه زباله بسته اولیه (S1)</string>
-    <string name="obfuscation_s2">اندازه زباله بسته پاسخ (S2)</string>
-    <string name="obfuscation_h1">جادوی بسته اولیه (H1)</string>
-    <string name="obfuscation_h2">جادوی بسته پاسخ (H2)</string>
-    <string name="obfuscation_h3">جادوی بسته بار کم (H3)</string>
-    <string name="obfuscation_h4">جادوی بسته انتقال (H4)</string>
-    <string name="obfuscation_i1">زباله خاص (I1)</string>
+    <string name="obfuscation_jc">تعداد بسته‌های بیهوده (Jc)</string>
+    <string name="obfuscation_jmin">حداقل اندازه بسته بیهوده (Jmin)</string>
+    <string name="obfuscation_jmax">حداکثر اندازه بسته بیهوده (Jmax)</string>
+    <string name="obfuscation_s1">اندازه بیهوده بسته Init (S1)</string>
+    <string name="obfuscation_s2">اندازه بیهوده بسته Response (S2)</string>
+    <string name="obfuscation_h1">جادوی بسته Init (H1)</string>
+    <string name="obfuscation_h2">جادوی بسته Response (H2)</string>
+    <string name="obfuscation_h3">جادوی بسته Underload (H3)</string>
+    <string name="obfuscation_h4">جادوی بسته Transport (H4)</string>
+    <string name="obfuscation_i1">بیهوده خاص (I1)</string>
 
     <!-- Settings: Protocol & Obfuscation -->
-  <string name="settings_protocol">پروتکل</string>
-  <string name="protocol_title">پروتکل</string>
-  <string name="protocol_amneziawg">AmneziaWG</string>
-  <string name="protocol_amneziawg_desc">پروتکل پیشرفته WireGuard با قابلیت مبهم‌سازی</string>
-  <string name="obfuscation_title">مبهم‌سازی</string>
-  <string name="obfuscation_enable">فعال‌سازی مبهم‌سازی</string>
-  <string name="obfuscation_enable_desc">دور زدن DPI و مسدودسازی VPN</string>
-  <string name="obfuscation_info_desc">پارامترهای AmneziaWG را برای پنهان کردن ترافیک VPN و دور زدن محدودیت‌های اتصال در شبکه‌های محدود تنظیم کنید.</string>
-  <string name="obfuscation_config">پیکربندی</string>
-  <string name="obfuscation_config_standard">پیکربندی استاندارد Proton VPN-Next</string>
-  <string name="obfuscation_save_config">ذخیره به عنوان پیکربندی جدید</string>
-  <string name="obfuscation_config_name">نام پیکربندی</string>
-  <string name="obfuscation_category_junk">پارامترهای Junk</string>
-  <string name="obfuscation_category_magic">اندازه‌های بسته (Magic)</string>
-  <string name="obfuscation_category_headers">هدرها (Header)</string>
-  <string name="obfuscation_category_advanced">پیشرفته</string>
-  <string name="custom_config">پیکربندی سفارشی</string>
+    <string name="settings_protocol">پروتکل</string>
+    <string name="protocol_title">پروتکل</string>
+    <string name="protocol_amneziawg">AmneziaWG</string>
+    <string name="protocol_amneziawg_desc">پروتکل پیشرفته WireGuard با مبهم‌سازی</string>
+    <string name="obfuscation_title">مبهم‌سازی</string>
+    <string name="obfuscation_enable">فعال‌سازی مبهم‌سازی</string>
+    <string name="obfuscation_enable_desc">دور زدن DPI و مسدود کردن VPN</string>
+    <string name="obfuscation_info_desc">پارامترهای AmneziaWG را برای پنهان کردن ترافیک VPN و دور زدن بلوک‌های اتصال در شبکه‌های محدود تنظیم کنید.</string>
+    <string name="obfuscation_config">پیکربندی</string>
+    <string name="obfuscation_config_standard">پیکربندی استاندارد Proton VPN-Next</string>
+    <string name="obfuscation_save_config">ذخیره به عنوان پیکربندی جدید</string>
+    <string name="obfuscation_config_name">نام پیکربندی</string>
+    <string name="obfuscation_category_junk">پارامترهای بیهوده</string>
+    <string name="obfuscation_category_magic">اندازه‌های بسته (جادو)</string>
+    <string name="obfuscation_category_headers">هدرها</string>
+    <string name="obfuscation_category_advanced">پیشرفته</string>
+    <string name="custom_config">پیکربندی سفارشی</string>
 
     <!-- About App Screen -->
     <string name="about_community">انجمن</string>
-    <string name="about_github">گیت‌هاب</string>
-    <string name="about_telegram">تلگرام</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_telegram">Telegram</string>
+    <string name="about_codeberg">Codeberg</string>
+    <string name="about_unavailable">موقت در دسترس نیست</string>
 
     <!-- Licenses Screen -->
     <string name="licenses_title">مجوزها</string>
@@ -156,38 +159,38 @@
     <string name="license_compose_title">Jetpack Compose</string>
     <string name="license_kotlin_title">کتابخانه استاندارد Kotlin</string>
     <string name="license_hilt_title">Dagger Hilt</string>
-    <string name="license_retrofit_title">Retrofit و OkHttp</string>
-    <string name="license_proton_go_vpn_title">کتابخانه Proton GO VPN</string>
+    <string name="license_retrofit_title">Retrofit &amp; OkHttp</string>
+    <string name="license_proton_go_vpn_title">Proton GO VPN lib</string>
     <string name="license_amneziawg_title">AmneziaWG Android</string>
 
     <!-- Split Tunneling -->
-    <string name="st_enabled_subtitle">اتصال VPN از برنامه‌ها و آدرس‌های IP انتخابی عبور نخواهد کرد</string>
+    <string name="st_enabled_subtitle">اتصال VPN از برنامه‌ها و IPهای انتخاب شده عبور نخواهد کرد</string>
     <string name="st_disabled_subtitle">تمام ترافیک از طریق VPN عبور می‌کند</string>
     <plurals name="st_apps_selected">
-        <item quantity="one">%1$d برنامه انتخاب شده است</item>
-        <item quantity="other">%1$d برنامه انتخاب شده است</item>
+        <item quantity="one">%1$d برنامه انتخاب شد</item>
+        <item quantity="other">%1$d برنامه انتخاب شدند</item>
     </plurals>
     <plurals name="st_ips_selected">
-        <item quantity="one">%1$d آدرس IP انتخاب شده است</item>
-        <item quantity="other">%1$d آدرس IP انتخاب شده است</item>
+        <item quantity="one">%1$d IP انتخاب شد</item>
+        <item quantity="other">%1$d IP انتخاب شدند</item>
     </plurals>
 
     <plurals name="settings_apps_excluded_count">
-        <item quantity="one">%1$d برنامه مستثنی شده است</item>
-        <item quantity="other">%1$d برنامه مستثنی شده است</item>
+        <item quantity="one">%1$d برنامه حذف شد</item>
+        <item quantity="other">%1$d برنامه حذف شدند</item>
     </plurals>
     <plurals name="settings_ips_excluded_count">
-        <item quantity="one">%1$d آدرس IP مستثنی شده است</item>
-        <item quantity="other">%1$d آدرس IP مستثنی شده است</item>
+        <item quantity="one">%1$d IP حذف شد</item>
+        <item quantity="other">%1$d IP حذف شدند</item>
     </plurals>
 
     <string name="st_search_apps_hint">جستجوی برنامه‌ها</string>
-    <string name="st_selected_apps_header">برنامه‌های انتخابی (%1$d)</string>
+    <string name="st_selected_apps_header">برنامه‌های انتخاب شده (%1$d)</string>
     <string name="st_available_apps_header">برنامه‌های موجود (%1$d)</string>
     <string name="st_ip_hint">مثلاً 192.168.1.0/24</string>
     <string name="st_add_ip_desc">افزودن IP</string>
     <string name="st_invalid_ip_error">فرمت آدرس IP نامعتبر است</string>
-    <string name="st_excluded_ips_header">IPهای مستثنی شده (%1$d)</string>
+    <string name="st_excluded_ips_header">IPهای حذف شده (%1$d)</string>
     <string name="st_no_ips_added">هنوز هیچ آدرس IP اضافه نشده است</string>
     <string name="st_remove_ip_desc">حذف IP</string>
 
@@ -200,7 +203,7 @@
     <string name="notification_action_disconnect">قطع اتصال</string>
 
     <!-- Errors and ViewModels -->
-    <string name="error_session_not_found">نشست فعال یافت نشد. لطفا دوباره وارد شوید.</string>
+    <string name="error_session_not_found">نشست فعال یافت نشد. لطفاً دوباره وارد شوید.</string>
     <string name="error_unknown">خطای ناشناخته</string>
     <string name="error_auth_failed">یک خطای احراز هویت غیرمنتظره رخ داد</string>
     <string name="error_2fa_failed">تایید دو مرحله‌ای ناموفق بود</string>
@@ -210,11 +213,11 @@
     <string name="desc_create_profile">ایجاد پروفایل</string>
     <string name="desc_edit_profile">ویرایش پروفایل</string>
     <string name="profiles_empty_title">هنوز پروفایلی وجود ندارد</string>
-    <string name="profiles_empty_desc">یک پروفایل ایجاد کنید تا سریعاً با تنظیمات خاص متصل شوید.</string>
+    <string name="profiles_empty_desc">یک پروفایل ایجاد کنید تا به سرعت با تنظیمات خاص متصل شوید.</string>
     <string name="profile_feature_obfuscation">مبهم‌سازی</string>
-    <string name="profile_feature_connect_go">اتصال و رفتن</string>
+    <string name="profile_feature_connect_go">اتصال و اجرا</string>
     <string name="profile_server_info">سرور: %1$s</string>
-    <string name="profile_city_info">🏙️ %1$s, %2$s</string>
+    <string name="profile_city_info">🏙️ %1$s، %2$s</string>
     <string name="profile_country_info">%1$s %2$s</string>
     <string name="profile_fastest_info">⚡ %1$s</string>
 
@@ -239,11 +242,11 @@
     <string name="label_port">پورت</string>
     <string name="category_advanced">پیشرفته</string>
     <string name="label_obfuscation">مبهم‌سازی</string>
-    <string name="obfuscation_desc">دور زدن بازرسی عمیق بسته‌ها (DPI)</string>
+    <string name="obfuscation_desc">دور زدن بازرسی عمیق بسته (DPI)</string>
     <string name="label_obfuscation_config">پیکربندی مبهم‌سازی</string>
     <string name="category_automation">اتوماسیون</string>
-    <string name="label_connect_go_website">اتصال و رفتن (وب‌سایت)</string>
-    <string name="label_enter_url">وارد کردن URL</string>
+    <string name="label_connect_go_website">اتصال و اجرا (وب‌سایت)</string>
+    <string name="label_enter_url">URL را وارد کنید</string>
     <string name="label_not_configured">پیکربندی نشده</string>
     <string name="automation_desc">پس از برقراری اتصال VPN، این وب‌سایت را به‌طور خودکار در مرورگر خود باز کنید.</string>
     <string name="title_select_country">انتخاب کشور</string>
@@ -255,7 +258,7 @@
     <string name="title_select_obfuscation_config">انتخاب پیکربندی مبهم‌سازی</string>
     <string name="title_auto_open_url">باز کردن خودکار URL</string>
     <string name="btn_create_new_config">ایجاد پیکربندی جدید</string>
-    <string name="connect_go_title">اتصال و رفتن</string>
+    <string name="connect_go_title">اتصال و اجرا</string>
     <string name="connect_go_desc">URL را برای باز شدن پس از اتصال وارد کنید (مثلاً https://example.com)</string>
     <string name="hint_url_placeholder">https://</string>
     <string name="title_select_protocol">انتخاب پروتکل</string>
@@ -264,6 +267,6 @@
     <string name="error_empty_profile_name">نام پروفایل نمی‌تواند خالی باشد</string>
 
     <!-- Captcha Screen -->
-    <string name="captcha_title">تایید هویت</string>
+    <string name="captcha_title">تایید انسانی</string>
     <string name="desc_close">بستن</string>
 </resources>

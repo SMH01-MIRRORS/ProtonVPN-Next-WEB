@@ -1,43 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!--
-    ~ Copyright (C) 2026 SMH01
-    ~
-    ~ This program is free software: you can redistribute it and/or modify
-    ~ it under the terms of the GNU General Public License as published by
-    ~ the Free Software Foundation, either version 3 of the License, or
-    ~ (at your option) any later version.
-    ~
-    ~ This program is distributed in the hope that it will be useful,
-    ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ~ GNU General Public License for more details.
-    ~
-    ~ You should have received a copy of the GNU General Public License
-    ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
-    -->
     <string name="app_name">Proton VPN-Next</string>
 
     <!-- Welcome Screen -->
     <string name="welcome_title">Сардэчна запрашаем у Proton VPN-Next</string>
     <string name="welcome_subtitle">Кіруйце сваім лічбавым жыццём з дапамогай бяспечнага, прыватнага і хуткага VPN. Без логаў і сачэння.</string>
-    <string name="btn_create_account">Стварыць акаунт</string>
+    <string name="btn_create_account">Стварыць акаўнт</string>
     <string name="btn_login">Увайсці</string>
     <string name="btn_continue_guest">Працягнуць як госць</string>
 
     <!-- Login Screen -->
     <string name="login_title">З вяртаннем</string>
-    <string name="login_subtitle">Увайдзіце ў свой акаунт Proton</string>
+    <string name="login_subtitle">Увайдзіце ў свой акаўнт Proton</string>
     <string name="hint_username">Email або імя карыстальніка</string>
     <string name="hint_password">Пароль</string>
-    <string name="forgot_password">Забыліся на пароль?</string>
-    <string name="desc_back_button">Вярнуцца назад</string>
+    <string name="forgot_password">Забыліся пароль?</string>
+    <string name="desc_back_button">Назад</string>
     <string name="desc_toggle_password">Паказаць/схаваць пароль</string>
     <string name="login_success">Уваход выкананы!</string>
     <string name="login_error">Памылка: %1$s</string>
     <string name="title_security_check">Праверка бяспекі</string>
     <string name="title_2fa">Двухфактарная аўтэнтыфікацыя</string>
-    <string name="msg_2fa_instruction">Увядзіце 6-значны код TOTP з вашай праграмы-аўтэнтыфікатара.</string>
-    <string name="hint_2fa_code">6-значный код</string>
+    <string name="msg_2fa_instruction">Увядзіце 6-значны код TOTP з вашага прыкладання-аўтэнтыфікатара.</string>
+    <string name="hint_2fa_code">6-значны код</string>
     <string name="btn_verify">Праверыць</string>
 
     <!-- Dashboard Screen -->
@@ -45,14 +30,14 @@
     <string name="desc_settings">Налады</string>
     <string name="error_loading_servers">Памылка загрузкі сервераў</string>
     <string name="btn_retry">Паўтарыць</string>
-    <string name="error_system_appops">Сістэмная памылка: калі ласка, пераўсталюйце праграму.</string>
-    <string name="title_recent_connections">Нядаўнія падключэнні</string>
+    <string name="error_system_appops">Сістэмная памылка: калі ласка, пераўсталюйце прыкладанне.</string>
+    <string name="title_recent_connections">Апошнія падключэнні</string>
     <string name="status_connected">Падключана</string>
     <string name="status_connecting">Падключэнне…</string>
     <string name="status_disconnected">Адключана</string>
     <string name="status_not_connected">Не падключана</string>
     <string name="msg_traffic_not_protected">Ваш трафік не абаронены</string>
-    <string name="desc_toggle_connection">Пераключыць злучэнне</string>
+    <string name="desc_toggle_connection">Пераключыць падключэнне</string>
     <string name="desc_country">Краіна</string>
     <string name="map_placeholder">Заглушка інтэрактыўнай карты</string>
     <string name="label_fastest_server">Самы хуткі сервер</string>
@@ -63,11 +48,11 @@
     <string name="btn_quick_connect">Хуткае падключэнне</string>
 
     <!-- VPN Certificate Messages -->
-    <string name="cert_msg_expiring_soon">Сертыфікат заканчваецца праз %1$d г. Хутка абнавім…</string>
-    <string name="cert_msg_expired">Ваш VPN-сертыфікат пратэрмінаваны і патрабуе абнаўлення.</string>
+    <string name="cert_msg_expiring_soon">Тэрмін дзеяння сертыфіката заканчваецца праз %1$d г. Хуткае абнаўленне…</string>
+    <string name="cert_msg_expired">Тэрмін дзеяння вашага VPN-сертыфіката скончыўся і яго неабходна абнавіць.</string>
     <string name="cert_msg_refreshing">Абнаўленне VPN-сертыфіката…</string>
-    <string name="cert_msg_refresh_failed">Не ўдалося абнавіць сертыфікат: %1$s. Паўтор праз 15 хвілін.</string>
-    <string name="cert_msg_auto_refresh_failed">Аўтаабнаўленне не ўдалося. Калі ласка, абнавіце ўручную для працы VPN.</string>
+    <string name="cert_msg_refresh_failed">Не ўдалося абнавіць сертыфікат: %1$s. Паўторная спроба праз 15 хвілін.</string>
+    <string name="cert_msg_auto_refresh_failed">Аўтаматычнае абнаўленне не ўдалося. Калі ласка, абнавіце ўручную.</string>
     <string name="cert_btn_refresh_now">Абнавіць зараз</string>
 
     <!-- Countries Screen -->
@@ -78,50 +63,66 @@
     <string name="settings_title">Налады</string>
     <string name="settings_connection">Налады падключэння</string>
     <string name="settings_kill_switch">Kill Switch</string>
-    <string name="settings_kill_switch_desc">Kill Switch</string>
+    <string name="settings_kill_switch_desc">Аварыйны выключальнік</string>
     <string name="settings_auto_connect">Аўтападключэнне</string>
     <string name="settings_auto_connect_desc">Падключацца да VPN пры запуску</string>
     <string name="settings_split_tunneling">Раздзельнае тунэляванне</string>
-    <string name="settings_split_tunneling_desc">Выключыць праграмы або IP з VPN</string>
-    <string name="settings_excluded_apps">Выключаныя праграмы</string>
+    <string name="settings_split_tunneling_desc">Выключыць прыкладанні або IP з VPN</string>
+    <string name="settings_excluded_apps">Выключаныя прыкладанні</string>
     <string name="settings_excluded_ips">Выключаныя IP-адрасы</string>
     <string name="settings_privacy">Прыватнасць і апавяшчэнні</string>
     <string name="settings_notifications">Апавяшчэнні</string>
     <string name="settings_notifications_desc">Атрымліваць апавяшчэнні аб статусе VPN</string>
-    <string name="settings_about">Пра праграму</string>
+    <string name="settings_about">Аб прыкладанні</string>
     <string name="settings_version">Версія %1$s</string>
     <string name="settings_licenses">Ліцэнзіі адкрытага ПЗ</string>
-    <string name="settings_licenses_desc">Баковыя праграмы, якія выкарыстоўваюцца ў праграме</string>
+    <string name="settings_licenses_desc">Баковыя ПЗ, якія выкарыстоўваюцца ў прыкладанні</string>
     <string name="settings_on">Укл</string>
     <string name="settings_off">Выкл</string>
     <string name="settings_connection_protocol">Пратакол</string>
     <string name="settings_port">Порт</string>
-    <string name="settings_port_desc">Выбар порта падключення</string>
+    <string name="settings_port_desc">Выбар порта падключэння</string>
     <string name="settings_port_auto">Аўта</string>
     <string name="settings_obfuscation">Абфускацыя (AmneziaWG)</string>
     <string name="settings_obfuscation_desc">Змена загалоўкаў пакетаў для абыходу DPI</string>
-    <string name="settings_reset_obfuscation">Скінуць да стандартного ProtonVPN-Next</string>
+    <string name="settings_reset_obfuscation">Скінуць да стандартнага ProtonVPN-Next</string>
+
+    <!-- Custom DNS -->
+    <string name="settings_custom_dns">Карыстальніцкі DNS</string>
+    <string name="settings_custom_dns_default">Па змаўчанні (Proton DNS)</string>
+    <string name="settings_custom_dns_title">Карыстальніцкі DNS-сервер</string>
+    <string name="settings_custom_dns_desc">Увядзіце IPv4 або IPv6 адрас. Пакіньце пустым, каб выкарыстоўваць стандартны бяспечны DNS ад Proton.</string>
+    <string name="settings_custom_dns_reset">Скінуць</string>
+    <string name="settings_custom_dns_placeholder">напр. 1.1.1.1 або 94.140.14.14</string>
+
+    <!-- Error Reporting Settings -->
+    <string name="settings_error_reporting">Справаздачы аб памылках</string>
+    <string name="settings_error_reporting_desc">Кіраванне справаздачамі аб збоях і аналітыкай</string>
+    <string name="settings_crash_reports">Адпраўляць справаздачы аб збоях</string>
+    <string name="settings_crash_reports_desc">Падрабязныя справаздачы пры нечаканым прыпынку прыкладання</string>
+    <string name="settings_analytics">Адпраўляць аналітыку</string>
+    <string name="settings_analytics_desc">Ананімныя даныя аб выкарыстанні, якія дапамагаюць нам паляпшаць прыкладанне</string>
 
     <!-- Kill Switch Screen -->
     <string name="kill_switch_title">Kill Switch</string>
-    <string name="kill_switch_subtitle">Kill Switch</string>
-    <string name="kill_switch_desc">Каб ваш трафік заўсёды быў абаронены, выкарыстоўвайце Kill Switch, які забяспечваецца Android. Гэта прадухіляе ўцечку даных пры разрыве VPN-злучэння.</string>
+    <string name="kill_switch_subtitle">Аварыйны выключальнік</string>
+    <string name="kill_switch_desc">Каб ваш трафік заўсёды быў абаронены, выкарыстоўвайце Kill Switch, які прадастаўляецца Android. Гэта прадухіляе ўцечку даных пры разрыве VPN-злучэння.</string>
     <string name="kill_switch_step_1">1. Націсніце кнопку ніжэй, каб адкрыць налады VPN.</string>
-    <string name="kill_switch_step_2">2. Націсніце на іконку налад побач з Proton VPN-Next.</string>
-    <string name="kill_switch_step_3">3. Уключыце \"Пастаянны VPN\" і \"Блакіраваць злучэнні без VPN\".</string>
+    <string name="kill_switch_step_2">2. Націсніце іконку налад побач з Proton VPN-Next.</string>
+    <string name="kill_switch_step_3">3. Уключыце «Пастаянны VPN» і «Блакаваць злучэнні без VPN».</string>
     <string name="kill_switch_button">Адкрыць налады VPN</string>
 
     <!-- Obfuscation Params -->
     <string name="obfuscation_jc">Колькасць смеццевых пакетаў (Jc)</string>
-    <string name="obfuscation_jmin">Мін. памер смецця (Jmin)</string>
-    <string name="obfuscation_jmax">Макс. памер смецця (Jmax)</string>
-    <string name="obfuscation_s1">Памер смецця Init пакета (S1)</string>
-    <string name="obfuscation_s2">Памер смецця Response пакета (S2)</string>
-    <string name="obfuscation_h1">Magic Init пакета (H1)</string>
-    <string name="obfuscation_h2">Magic Response пакета (H2)</string>
-    <string name="obfuscation_h3">Magic Underload пакета (H3)</string>
-    <string name="obfuscation_h4">Magic Transport пакета (H4)</string>
-    <string name="obfuscation_i1">Спецыяльнае смецце (I1)</string>
+    <string name="obfuscation_jmin">Мін. памер смеццевага пакета (Jmin)</string>
+    <string name="obfuscation_jmax">Макс. памер смеццевага пакета (Jmax)</string>
+    <string name="obfuscation_s1">Памер смецця ў Init пакеце (S1)</string>
+    <string name="obfuscation_s2">Памер смецця ў Response пакеце (S2)</string>
+    <string name="obfuscation_h1">Init Packet Magic (H1)</string>
+    <string name="obfuscation_h2">Response Packet Magic (H2)</string>
+    <string name="obfuscation_h3">Underload Packet Magic (H3)</string>
+    <string name="obfuscation_h4">Transport Packet Magic (H4)</string>
+    <string name="obfuscation_i1">Special Junk (I1)</string>
 
     <!-- Settings: Protocol & Obfuscation -->
     <string name="settings_protocol">Пратакол</string>
@@ -131,21 +132,23 @@
     <string name="obfuscation_title">Абфускацыя</string>
     <string name="obfuscation_enable">Уключыць абфускацыю</string>
     <string name="obfuscation_enable_desc">Абыход DPI і блакіровак VPN</string>
-    <string name="obfuscation_info_desc">Наладзьце параметры AmneziaWG, каб схаваць трафік VPN і абысці блакіроўкі ў сетках з абмежаваннямі.</string>
+    <string name="obfuscation_info_desc">Наладзьце параметры AmneziaWG, каб схаваць VPN-трафік і абысці блакіроўкі ў абмежаваных сетках.</string>
     <string name="obfuscation_config">Канфігурацыя</string>
-    <string name="obfuscation_config_standard">Стандартны канфіг Proton VPN-Next</string>
-    <string name="obfuscation_save_config">Захаваць як новы канфіг</string>
+    <string name="obfuscation_config_standard">Стандартная канфігурацыя Proton VPN-Next</string>
+    <string name="obfuscation_save_config">Захаваць як новую канфігурацыю</string>
     <string name="obfuscation_config_name">Назва канфігурацыі</string>
     <string name="obfuscation_category_junk">Параметры смецця</string>
     <string name="obfuscation_category_magic">Памеры пакетаў (Magic)</string>
     <string name="obfuscation_category_headers">Загалоўкі</string>
-    <string name="obfuscation_category_advanced">Дадаткова</string>
-    <string name="custom_config">Карыстальніцкі канфіг</string>
+    <string name="obfuscation_category_advanced">Пашыраныя</string>
+    <string name="custom_config">Свая канфігурацыя</string>
 
     <!-- About App Screen -->
     <string name="about_community">Супольнасць</string>
     <string name="about_github">GitHub</string>
     <string name="about_telegram">Telegram</string>
+    <string name="about_codeberg">Codeberg</string>
+    <string name="about_unavailable">Часова недаступна</string>
 
     <!-- Licenses Screen -->
     <string name="licenses_title">Ліцэнзіі</string>
@@ -157,51 +160,51 @@
     <string name="license_kotlin_title">Стандартная бібліятэка Kotlin</string>
     <string name="license_hilt_title">Dagger Hilt</string>
     <string name="license_retrofit_title">Retrofit і OkHttp</string>
-    <string name="license_proton_go_vpn_title">Proton GO VPN бібліятэка</string>
+    <string name="license_proton_go_vpn_title">Бібліятэка Proton GO VPN</string>
     <string name="license_amneziawg_title">AmneziaWG Android</string>
 
     <!-- Split Tunneling -->
-    <string name="st_enabled_subtitle">VPN будзе абыходзіць выбраныя праграмы і IP</string>
+    <string name="st_enabled_subtitle">VPN-падключэнне будзе абыходзіць выбраныя прыкладанні і IP-адрасы</string>
     <string name="st_disabled_subtitle">Увесь трафік ідзе праз VPN</string>
     <plurals name="st_apps_selected">
-        <item quantity="one">%1$d праграма выбрана</item>
-        <item quantity="few">%1$d праграмы выбрана</item>
-        <item quantity="many">%1$d праграм выбрана</item>
-        <item quantity="other">%1$d праграм выбрана</item>
+        <item quantity="one">Выбрана %1$d прыкладанне</item>
+        <item quantity="few">Выбрана %1$d прыкладанні</item>
+        <item quantity="many">Выбрана %1$d прыкладанняў</item>
+        <item quantity="other">Выбрана %1$d прыкладанняў</item>
     </plurals>
     <plurals name="st_ips_selected">
-        <item quantity="one">%1$d IP выбраны</item>
-        <item quantity="few">%1$d IP выбрана</item>
-        <item quantity="many">%1$d IP выбрана</item>
-        <item quantity="other">%1$d IP выбрана</item>
+        <item quantity="one">Выбраны %1$d IP-адрас</item>
+        <item quantity="few">Выбрана %1$d IP-адрасы</item>
+        <item quantity="many">Выбрана %1$d IP-адрасоў</item>
+        <item quantity="other">Выбрана %1$d IP-адрасоў</item>
     </plurals>
 
     <plurals name="settings_apps_excluded_count">
-        <item quantity="one">%1$d праграма выключана</item>
-        <item quantity="few">%1$d праграмы выключана</item>
-        <item quantity="many">%1$d праграм выключана</item>
-        <item quantity="other">%1$d праграм выключана</item>
+        <item quantity="one">Выключана %1$d прыкладанне</item>
+        <item quantity="few">Выключана %1$d прыкладанні</item>
+        <item quantity="many">Выключана %1$d прыкладанняў</item>
+        <item quantity="other">Выключана %1$d прыкладанняў</item>
     </plurals>
     <plurals name="settings_ips_excluded_count">
-        <item quantity="one">%1$d IP выключаны</item>
-        <item quantity="few">%1$d IP выключана</item>
-        <item quantity="many">%1$d IP выбрана</item>
-        <item quantity="other">%1$d IP выбрана</item>
+        <item quantity="one">Выключаны %1$d IP-адрас</item>
+        <item quantity="few">Выключана %1$d IP-адрасы</item>
+        <item quantity="many">Выключана %1$d IP-адрасоў</item>
+        <item quantity="other">Выключана %1$d IP-адрасоў</item>
     </plurals>
 
-    <string name="st_search_apps_hint">Пошук праграм</string>
-    <string name="st_selected_apps_header">Выбраныя праграмы (%1$d)</string>
-    <string name="st_available_apps_header">Даступныя праграмы (%1$d)</string>
-    <string name="st_ip_hint">напр., 192.168.1.0/24</string>
+    <string name="st_search_apps_hint">Пошук прыкладанняў</string>
+    <string name="st_selected_apps_header">Выбраныя прыкладанні (%1$d)</string>
+    <string name="st_available_apps_header">Даступныя прыкладанні (%1$d)</string>
+    <string name="st_ip_hint">напр. 192.168.1.0/24</string>
     <string name="st_add_ip_desc">Дадаць IP</string>
     <string name="st_invalid_ip_error">Няправільны фармат IP-адраса</string>
     <string name="st_excluded_ips_header">Выключаныя IP (%1$d)</string>
-    <string name="st_no_ips_added">IP-адрасы яшчэ не дададзеныя</string>
+    <string name="st_no_ips_added">IP-адрасы яшчэ не дададзены</string>
     <string name="st_remove_ip_desc">Выдаліць IP</string>
 
     <!-- Notification -->
     <string name="notification_channel_name">Статус VPN</string>
-    <string name="notification_channel_desc">Адлюстроўвае бягучы статус падключэння VPN</string>
+    <string name="notification_channel_desc">Паказвае бягучы статус падключэння VPN</string>
     <string name="notification_title_connected">Падключана да %1$s</string>
     <string name="notification_title_disconnected">Адключана</string>
     <string name="notification_title_connecting">Падключэнне…</string>
@@ -217,7 +220,7 @@
     <string name="profiles_title">Профілі</string>
     <string name="desc_create_profile">Стварыць профіль</string>
     <string name="desc_edit_profile">Рэдагаваць профіль</string>
-    <string name="profiles_empty_title">Пакуль няма профіляў</string>
+    <string name="profiles_empty_title">Профіляў пакуль няма</string>
     <string name="profiles_empty_desc">Стварыце профіль для хуткага падключэння з пэўнымі наладамі.</string>
     <string name="profile_feature_obfuscation">Абфускацыя</string>
     <string name="profile_feature_connect_go">Connect &amp; Go</string>
@@ -230,12 +233,12 @@
     <string name="title_create_profile">Стварыць профіль</string>
     <string name="title_edit_profile">Рэдагаваць профіль</string>
     <string name="btn_save">Захаваць</string>
-    <string name="btn_cancel">Скасаваць</string>
+    <string name="btn_cancel">Адмена</string>
     <string name="btn_delete">Выдаліць</string>
     <string name="btn_edit">Рэдагаваць</string>
     <string name="desc_delete_profile">Выдаліць профіль</string>
     <string name="default_profile_name">Мой профіль</string>
-    <string name="category_general">Агульнае</string>
+    <string name="category_general">Агульныя</string>
     <string name="label_profile_name">Назва профілю</string>
     <string name="category_location">Лакацыя</string>
     <string name="location_server">Сервер: %1$s</string>
@@ -245,33 +248,33 @@
     <string name="category_connection">Падключэнне</string>
     <string name="label_protocol">Пратакол</string>
     <string name="label_port">Порт</string>
-    <string name="category_advanced">Дадаткова</string>
+    <string name="category_advanced">Пашыраныя</string>
     <string name="label_obfuscation">Абфускацыя</string>
     <string name="obfuscation_desc">Абыход глыбокага аналізу пакетаў (DPI)</string>
-    <string name="label_obfuscation_config">Канфіг абфускацыі</string>
+    <string name="label_obfuscation_config">Канфігурацыя абфускацыі</string>
     <string name="category_automation">Аўтаматызацыя</string>
-    <string name="label_connect_go_website">Connect &amp; Go (Вэб-сайт)</string>
+    <string name="label_connect_go_website">Connect &amp; Go (Веб-сайт)</string>
     <string name="label_enter_url">Увядзіце URL</string>
-    <string name="label_not_configured">Не наладжана</string>
-    <string name="automation_desc">Аўтаматычна адкрываць гэты сайт у браўзеры пасля ўсталявання VPN-злучэння.</string>
+    <string name="label_not_configured">Не настроена</string>
+    <string name="automation_desc">Аўтаматычна адкрываць гэты сайт у браўзеры пасля ўстанаўлення VPN-злучэння.</string>
     <string name="title_select_country">Выберыце краіну</string>
     <string name="title_select_city">Выберыце горад</string>
     <string name="title_select_server">Выберыце сервер</string>
     <string name="location_fastest_in_country">Самы хуткі ў %1$s</string>
     <string name="location_fastest_in_city">Самы хуткі ў %1$s</string>
     <string name="location_load">Нагрузка: %1$d%%</string>
-    <string name="title_select_obfuscation_config">Выберыце канфіг абфускацыі</string>
-    <string name="title_auto_open_url">Аўтаматычна адкрываць URL</string>
-    <string name="btn_create_new_config">Стварыць новы канфіг</string>
+    <string name="title_select_obfuscation_config">Выберыце канфігурацыю абфускацыі</string>
+    <string name="title_auto_open_url">Аўтаадкрыццё URL</string>
+    <string name="btn_create_new_config">Стварыць новую канфігурацыю</string>
     <string name="connect_go_title">Connect &amp; Go</string>
     <string name="connect_go_desc">Увядзіце URL для адкрыцця пры падключэнні (напр., https://example.com)</string>
     <string name="hint_url_placeholder">https://</string>
     <string name="title_select_protocol">Выберыце пратакол</string>
-    <string name="custom_config_name">Свой канфіг %1$d</string>
-    <string name="title_edit_obfuscation_config">Рэдагаваць канфіг абфускацыі</string>
+    <string name="custom_config_name">Свая канфігурацыя %1$d</string>
+    <string name="title_edit_obfuscation_config">Рэдагаваць канфігурацыю абфускацыі</string>
     <string name="error_empty_profile_name">Назва профілю не можа быць пустой</string>
 
     <!-- Captcha Screen -->
-    <string name="captcha_title">Праверка бяспекі</string>
+    <string name="captcha_title">Праверка на чалавечнасць</string>
     <string name="desc_close">Закрыць</string>
 </resources>

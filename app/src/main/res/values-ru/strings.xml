@@ -1,20 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (C) 2026 SMH01
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
 <resources>
-    <!--
-    ~ Copyright (C) 2026 SMH01
-    ~
-    ~ This program is free software: you can redistribute it and/or modify
-    ~ it under the terms of the GNU General Public License as published by
-    ~ the Free Software Foundation, either version 3 of the License, or
-    ~ (at your option) any later version.
-    ~
-    ~ This program is distributed in the hope that it will be useful,
-    ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ~ GNU General Public License for more details.
-    ~
-    ~ You should have received a copy of the GNU General Public License
-    ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
-    -->
     <string name="app_name">Proton VPN-Next</string>
 
     <!-- Welcome Screen -->
@@ -101,6 +102,22 @@
     <string name="settings_obfuscation">Обфускация (AmneziaWG)</string>
     <string name="settings_obfuscation_desc">Изменение заголовков пакетов для обхода DPI</string>
     <string name="settings_reset_obfuscation">Сбросить до стандартного ProtonVPN-Next</string>
+
+    <!-- Custom DNS -->
+    <string name="settings_custom_dns">Пользовательский DNS</string>
+    <string name="settings_custom_dns_default">По умолчанию (Proton DNS)</string>
+    <string name="settings_custom_dns_title">Пользовательский DNS-сервер</string>
+    <string name="settings_custom_dns_desc">Введите IPv4 или IPv6 адрес. Оставьте пустым, чтобы использовать безопасный DNS Proton по умолчанию.</string>
+    <string name="settings_custom_dns_reset">Сбросить</string>
+    <string name="settings_custom_dns_placeholder">напр. 1.1.1.1 или 94.140.14.14</string>
+
+    <!-- Error Reporting Settings -->
+    <string name="settings_error_reporting">Отчеты об ошибках</string>
+    <string name="settings_error_reporting_desc">Управление отчетами о сбоях и аналитикой</string>
+    <string name="settings_crash_reports">Отправлять отчеты о сбоях</string>
+    <string name="settings_crash_reports_desc">Подробные отчеты в случае непредвиденного завершения работы приложения</string>
+    <string name="settings_analytics">Отправлять аналитику</string>
+    <string name="settings_analytics_desc">Анонимные данные об использовании, помогающие нам понять, как работает приложение</string>
 
     <!-- Kill Switch Screen -->
     <string name="kill_switch_title">Kill Switch</string>

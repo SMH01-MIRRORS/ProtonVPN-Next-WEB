@@ -1,0 +1,50 @@
+when:
+  - event: push
+    branch: protonvpn-next-dev
+  - event: tag
+  - event: manual
+
+steps:
+  build-android:
+    image: ghcr.io/cirruslabs/android-sdk:36
+    environment:
+      SIGNING_KEY_BASE64:
+        from_secret: SIGNING_KEY_BASE64
+      SIGNING_STORE_PASSWORD:
+        from_secret: SIGNING_STORE_PASSWORD
+      SIGNING_KEY_ALIAS:
+        from_secret: SIGNING_KEY_ALIAS
+      SIGNING_KEY_PASSWORD:
+        from_secret: SIGNING_KEY_PASSWORD
+    commands:
+      - echo $SIGNING_KEY_BASE64 | base64 -d > app/release.keystore
+      - chmod +x gradlew
+      - export SIGNING_KEY_FILE=release.keystore
+      - ./gradlew assembleRelease
+
+  generate-changelog:
+    image: alpine/git
+    when:
+      event: tag
+    commands:
+      - git fetch --tags
+      - PREVIOUS_TAG=$(git describe --tags --abbrev=0 ${CI_COMMIT_TAG}^ 2>/dev/null || echo "")
+      - |
+        if [ -z "$PREVIOUS_TAG" ]; then
+          git log --pretty=format:"* %s (%h)" > changelog.txt
+        else
+          git log ${PREVIOUS_TAG}..${CI_COMMIT_TAG} --pretty=format:"* %s (%h)" > changelog.txt
+        fi
+
+  publish-release:
+    image: woodpeckerci/plugin-gitea-release
+    when:
+      event: tag
+    settings:
+      api_key:
+        from_secret: CODEBERG_TOKEN
+      base_url: https://codeberg.org
+      files:
+        - app/build/outputs/apk/release/*.apk
+      note: changelog.txt
+      title: "Release ${CI_COMMIT_TAG}"

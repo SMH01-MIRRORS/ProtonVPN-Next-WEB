@@ -1,5 +1,5 @@
-<resources>
-  <!--
+<?xml version="1.0" encoding="utf-8"?>
+<!--
   ~ Copyright (C) 2026 SMH01
   ~
   ~ This program is free software: you can redistribute it and/or modify
@@ -15,6 +15,7 @@
   ~ You should have received a copy of the GNU General Public License
   ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
   -->
+<resources>
     <string name="app_name">Proton VPN-Next</string>
 
     <!-- Welcome Screen -->
@@ -101,6 +102,22 @@
     <string name="settings_obfuscation">Obfuscation (AmneziaWG)</string>
     <string name="settings_obfuscation_desc">Modify packet headers to bypass DPI</string>
     <string name="settings_reset_obfuscation">Reset to Standard ProtonVPN-Next</string>
+
+    <!-- Custom DNS -->
+    <string name="settings_custom_dns">Custom DNS</string>
+    <string name="settings_custom_dns_default">Default (Proton DNS)</string>
+    <string name="settings_custom_dns_title">Custom DNS Server</string>
+    <string name="settings_custom_dns_desc">Enter an IPv4 or IPv6 address. Leave blank to use Proton\'s default secure DNS.</string>
+    <string name="settings_custom_dns_reset">Reset Default</string>
+    <string name="settings_custom_dns_placeholder">e.g. 1.1.1.1 or 2606:4700:4700::1111</string>
+
+    <!-- Error Reporting Settings -->
+    <string name="settings_error_reporting">Error Reporting</string>
+    <string name="settings_error_reporting_desc">Manage crash reports and analytics</string>
+    <string name="settings_crash_reports">Send Crash Reports</string>
+    <string name="settings_crash_reports_desc">Detailed reports when the app stops working unexpectedly</string>
+    <string name="settings_analytics">Send Analytics</string>
+    <string name="settings_analytics_desc">Anonymous usage data to help us understand how the app is used</string>
 
     <!-- Kill Switch Screen -->
     <string name="kill_switch_title">Kill Switch</string>

@@ -54,7 +54,12 @@ data class SettingsUiState(
     // Obfuscation configuration state
     val isObfuscationEnabled: Boolean = false,
     val customObfuscationProfiles: List<ObfuscationProfile> = emptyList(),
-    val selectedProfileId: String = "standard_1"
+    val selectedProfileId: String = "standard_1",
+    val customDns: String = "",
+
+    // Privacy & Analytics
+    val isAnalyticsEnabled: Boolean = true,
+    val isCrashReportsEnabled: Boolean = true
 )
 
 @HiltViewModel
@@ -84,10 +89,12 @@ class SettingsViewModel @Inject constructor(
         settingsManager.awgH4,
         settingsManager.awgI1,
         amneziaVpnManager.tunnelState,
-        // Added properties for obfuscation configs
         settingsManager.obfuscationEnabled,
         settingsManager.customProfiles,
-        settingsManager.selectedProfileId
+        settingsManager.selectedProfileId,
+        settingsManager.customDns,
+        settingsManager.analyticsEnabled,
+        settingsManager.crashReportsEnabled
     ) { args: Array<Any?> ->
         SettingsUiState(
             killSwitchEnabled = args[0] as Boolean,
@@ -110,7 +117,10 @@ class SettingsViewModel @Inject constructor(
             isVpnConnected = args[17] == Tunnel.State.UP,
             isObfuscationEnabled = args[18] as Boolean,
             customObfuscationProfiles = args[19] as List<ObfuscationProfile>,
-            selectedProfileId = args[20] as String
+            selectedProfileId = args[20] as String,
+            customDns = args[21] as String,
+            isAnalyticsEnabled = args[22] as Boolean,
+            isCrashReportsEnabled = args[23] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -142,14 +152,30 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    // Master switch for obfuscation
+    fun setCustomDns(dns: String) {
+        viewModelScope.launch {
+            settingsManager.setCustomDns(dns)
+        }
+    }
+
     fun setObfuscationEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setObfuscationEnabled(enabled)
         }
     }
 
-    // Used strictly to update currently active params
+    fun setAnalyticsEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setAnalyticsEnabled(enabled)
+        }
+    }
+
+    fun setCrashReportsEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setCrashReportsEnabled(enabled)
+        }
+    }
+
     fun setAwgParams(
         jc: Int, jmin: Int, jmax: Int, s1: Int, s2: Int,
         h1: String, h2: String, h3: String, h4: String, i1: String
@@ -159,7 +185,6 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    // Selects a profile and applies its settings immediately
     fun selectObfuscationProfile(profile: ObfuscationProfile) {
         viewModelScope.launch {
             settingsManager.setSelectedProfileId(profile.id)
@@ -172,7 +197,6 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    // Upserts a profile (add new or update existing)
     fun saveObfuscationProfile(profile: ObfuscationProfile) {
         viewModelScope.launch {
             val currentList = uiState.value.customObfuscationProfiles
@@ -183,7 +207,7 @@ class SettingsViewModel @Inject constructor(
                 currentList + profile
             }
             settingsManager.saveCustomProfiles(newList)
-            selectObfuscationProfile(profile) // Auto-select on save
+            selectObfuscationProfile(profile)
         }
     }
 

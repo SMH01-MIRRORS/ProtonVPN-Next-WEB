@@ -64,11 +64,11 @@ class AmneziaVpnManager @Inject constructor(
     companion object {
         private const val TAG = "AmneziaVpnManager"
         private const val PROTON_CLIENT_IP = "10.2.0.2"
-        private const val PROTON_DNS_IP = "10.2.0.1"
+        private const val PROTON_DNS_IP = "10.2.0.1" // Fallback default DNS
         private const val DNS_RETRY_COUNT = 5
         private const val DNS_RETRY_DELAY_MS = 1000L
         private const val STATE_CONNECTING = "CONNECTING"
-        
+
         private const val REFRESH_THRESHOLD_MS = 6 * 3600 * 1000L // 6 hours
         private const val RETRY_DELAY_MS = 15 * 60 * 1000L // 15 minutes
         private const val PERIODIC_REFRESH_MS = 2 * 3600 * 1000L // 2 hours
@@ -131,12 +131,11 @@ class AmneziaVpnManager @Inject constructor(
 
         applicationScope.launch { settingsManager.notificationsEnabled.collect { updateServiceSettings() } }
         applicationScope.launch { settingsManager.killSwitchEnabled.collect { updateServiceSettings() } }
-        
+
         applicationScope.launch {
             val session = sessionDao.getSession()
             if (session != null) {
                 updateCertificateState(session.wgCertificate)
-                // Always try to refresh on app start if not perfectly valid
                 if (_certState.value !is CertificateState.Valid) {
                     checkAndRefreshCertificateProactively()
                 }
@@ -154,7 +153,7 @@ class AmneziaVpnManager @Inject constructor(
             val x509 = cf.generateCertificate(ByteArrayInputStream(certPem.toByteArray())) as X509Certificate
             val now = System.currentTimeMillis()
             val expiry = x509.notAfter.time
-            
+
             if (now >= expiry) {
                 _certState.value = CertificateState.Expired
             } else if (expiry - now < REFRESH_THRESHOLD_MS) {
@@ -188,8 +187,8 @@ class AmneziaVpnManager @Inject constructor(
             }
         } else {
             val error = result.exceptionOrNull()?.message ?: "Unknown error"
-            val isFullyExpired = previousState is CertificateState.Expired || 
-                                (previousState is CertificateState.RefreshFailed && previousState.isFullyExpired)
+            val isFullyExpired = previousState is CertificateState.Expired ||
+                    (previousState is CertificateState.RefreshFailed && previousState.isFullyExpired)
             _certState.value = CertificateState.RefreshFailed(error, isFullyExpired)
             Result.failure(result.exceptionOrNull() ?: Exception(error))
         }
@@ -245,7 +244,6 @@ class AmneziaVpnManager @Inject constructor(
             var currentSession = session
             updateCertificateState(currentSession.wgCertificate)
 
-            // 1. Strict blocking for Expired certificate
             if (_certState.value is CertificateState.Expired) {
                 Log.d(TAG, "Blocking connection: Certificate is fully expired.")
                 while (true) {
@@ -254,7 +252,7 @@ class AmneziaVpnManager @Inject constructor(
                         currentSession = currentSession.copy(wgCertificate = refreshResult.getOrNull()!!)
                         break
                     }
-                    delay(5000) // Retry every 5s while blocking
+                    delay(5000)
                     currentSession = sessionDao.getSession() ?: throw Exception("Session lost during refresh")
                 }
             }
@@ -296,8 +294,13 @@ class AmneziaVpnManager @Inject constructor(
                 ObfuscationParams(0, 0, 0, 0, 0, "", "", "", "", "")
             }
 
+            // Retrieve Custom DNS IP or fallback to Proton Default
+            val userDns = settingsManager.customDns.first().trim()
+            val activeDns = if (userDns.isNotEmpty()) userDns else PROTON_DNS_IP
+            Log.d(TAG, "Using DNS Server: $activeDns")
+
             val config = buildAwgConfig(
-                serverPublicKey = serverPubKey, privateKey = wgPrivateKeyB64, localIp = PROTON_CLIENT_IP, dnsServer = PROTON_DNS_IP,
+                serverPublicKey = serverPubKey, privateKey = wgPrivateKeyB64, localIp = PROTON_CLIENT_IP, dnsServer = activeDns,
                 targetIp = targetIp, excludedApps = excludedApps, excludedIps = excludedIps, port = selectedPort,
                 jc = params.jc, jmin = params.jmin, jmax = params.jmax, s1 = params.s1, s2 = params.s2,
                 h1 = params.h1, h2 = params.h2, h3 = params.h3, h4 = params.h4, i1 = params.i1
@@ -313,7 +316,6 @@ class AmneziaVpnManager @Inject constructor(
             }
             context.startService(intent)
 
-            // Start periodic refresh job (3s initially, then every 2h)
             startScheduledRefresh()
 
             Result.success(Unit)
@@ -327,16 +329,13 @@ class AmneziaVpnManager @Inject constructor(
     private fun startScheduledRefresh() {
         scheduledRefreshJob?.cancel()
         scheduledRefreshJob = applicationScope.launch {
-            // Wait for connection to be active
             _tunnelState.first { it == Tunnel.State.UP }
-            
-            // First refresh after 3 seconds
+
             delay(3000)
             Log.d(TAG, "Initial 3s post-connect refresh.")
             val sessionAfterConnect = sessionDao.getSession() ?: return@launch
             performCertificateRefresh(sessionAfterConnect)
 
-            // Then every 2 hours without reconnecting
             while (_tunnelState.value == Tunnel.State.UP) {
                 delay(PERIODIC_REFRESH_MS)
                 Log.d(TAG, "Periodic 2h background refresh.")
@@ -361,7 +360,7 @@ class AmneziaVpnManager @Inject constructor(
             disconnectInternal()
             try { withTimeout(5000) { _rawTunnelState.first { it == Tunnel.State.DOWN } } } catch (_: Exception) {}
             delay(500)
-            isReconnecting = false 
+            isReconnecting = false
             connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams)
         }
     }
@@ -409,6 +408,7 @@ class AmneziaVpnManager @Inject constructor(
         val ifaceBuilder = Interface.Builder()
             .parsePrivateKey(privateKey)
             .parseAddresses("$localIp/32")
+            // WireGuard accepts the custom DNS directly here
             .parseDnsServers(dnsServer)
             .setMtu(1280)
             .setJunkPacketCount(jc)
@@ -422,7 +422,7 @@ class AmneziaVpnManager @Inject constructor(
                 if (h3.isNotEmpty()) setUnderloadPacketMagicHeader(h3)
                 if (h4.isNotEmpty()) setTransportPacketMagicHeader(h4)
             }
-        
+
         if (i1.isNotEmpty()) ifaceBuilder.parseSpecialJunkI1(i1)
         if (excludedApps.isNotEmpty()) ifaceBuilder.parseExcludedApplications(excludedApps.joinToString(","))
 

@@ -1,25 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <!--
-  ~ Copyright (C) 2026 SMH01
-  ~
-  ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  ~ GNU General Public License for more details.
-  ~
-  ~ You should have received a copy of the GNU General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
-  -->
     <string name="app_name">Proton VPN-Next</string>
 
     <!-- Welcome Screen -->
     <string name="welcome_title">欢迎使用 Proton VPN-Next</string>
-    <string name="welcome_subtitle">通过安全、私密且快速的 VPN 控制您的数字生活。无日志，无追踪。</string>
+    <string name="welcome_subtitle">通过安全、私密且快速的 VPN 掌控您的数字生活。无日志，无追踪。</string>
     <string name="btn_create_account">创建账户</string>
     <string name="btn_login">登录</string>
     <string name="btn_continue_guest">以访客身份继续</string>
@@ -36,23 +21,23 @@
     <string name="login_error">错误：%1$s</string>
     <string name="title_security_check">安全检查</string>
     <string name="title_2fa">双重身份验证</string>
-    <string name="msg_2fa_instruction">输入身份验证器应用中的 6 位 TOTP 代码。</string>
+    <string name="msg_2fa_instruction">输入您身份验证器应用中的 6 位 TOTP 代码。</string>
     <string name="hint_2fa_code">6 位代码</string>
     <string name="btn_verify">验证</string>
 
     <!-- Dashboard Screen -->
     <string name="dashboard_title">Proton VPN-Next</string>
     <string name="desc_settings">设置</string>
-    <string name="error_loading_servers">加载服务器时出错</string>
+    <string name="error_loading_servers">加载服务器出错</string>
     <string name="btn_retry">重试</string>
     <string name="error_system_appops">系统错误：请重新安装应用。</string>
     <string name="title_recent_connections">最近连接</string>
     <string name="status_connected">已连接</string>
     <string name="status_connecting">正在连接…</string>
-    <string name="status_disconnected">未连接</string>
+    <string name="status_disconnected">已断开</string>
     <string name="status_not_connected">未连接</string>
     <string name="msg_traffic_not_protected">您的流量未受保护</string>
-    <string name="desc_toggle_connection">切换连接状态</string>
+    <string name="desc_toggle_connection">切换连接</string>
     <string name="desc_country">国家</string>
     <string name="map_placeholder">交互式地图占位符</string>
     <string name="label_fastest_server">最快服务器</string>
@@ -78,11 +63,11 @@
     <string name="settings_title">设置</string>
     <string name="settings_connection">连接设置</string>
     <string name="settings_kill_switch">Kill Switch</string>
-    <string name="settings_kill_switch_desc">Kill Switch</string>
+    <string name="settings_kill_switch_desc">终止开关</string>
     <string name="settings_auto_connect">自动连接</string>
     <string name="settings_auto_connect_desc">启动时连接到 VPN</string>
-    <string name="settings_split_tunneling">分流隧道 (Split Tunneling)</string>
-    <string name="settings_split_tunneling_desc">在 VPN 中排除特定应用或 IP</string>
+    <string name="settings_split_tunneling">拆分隧道</string>
+    <string name="settings_split_tunneling_desc">从 VPN 中排除应用或 IP</string>
     <string name="settings_excluded_apps">排除的应用</string>
     <string name="settings_excluded_ips">排除的 IP 地址</string>
     <string name="settings_privacy">隐私与通知</string>
@@ -96,49 +81,65 @@
     <string name="settings_off">关闭</string>
     <string name="settings_connection_protocol">协议</string>
     <string name="settings_port">端口</string>
-    <string name="settings_port_desc">连接端口选择</string>
+    <string name="settings_port_desc">选择连接端口</string>
     <string name="settings_port_auto">自动</string>
     <string name="settings_obfuscation">混淆 (AmneziaWG)</string>
     <string name="settings_obfuscation_desc">修改数据包头以绕过 DPI</string>
     <string name="settings_reset_obfuscation">重置为标准 ProtonVPN-Next</string>
 
+    <!-- Custom DNS -->
+    <string name="settings_custom_dns">自定义 DNS</string>
+    <string name="settings_custom_dns_default">默认 (Proton DNS)</string>
+    <string name="settings_custom_dns_title">自定义 DNS 服务器</string>
+    <string name="settings_custom_dns_desc">输入 IPv4 或 IPv6 地址。留空则使用 Proton 默认的安全 DNS。</string>
+    <string name="settings_custom_dns_reset">重置默认</string>
+    <string name="settings_custom_dns_placeholder">例如 1.1.1.1 或 2606:4700:4700::1111</string>
+
+    <!-- Error Reporting Settings -->
+    <string name="settings_error_reporting">错误报告</string>
+    <string name="settings_error_reporting_desc">管理崩溃报告和分析</string>
+    <string name="settings_crash_reports">发送崩溃报告</string>
+    <string name="settings_crash_reports_desc">应用意外停止运行时的详细报告</string>
+    <string name="settings_analytics">发送分析数据</string>
+    <string name="settings_analytics_desc">匿名使用数据，帮助我们了解应用的使用情况</string>
+
     <!-- Kill Switch Screen -->
     <string name="kill_switch_title">Kill Switch</string>
-    <string name="kill_switch_subtitle">Kill Switch</string>
-    <string name="kill_switch_desc">为了确保您的流量始终受到保护，请使用 Android 提供的 Kill Switch。这可以防止在 VPN 连接断开时发生数据泄漏。</string>
+    <string name="kill_switch_subtitle">终止开关</string>
+    <string name="kill_switch_desc">为了确保您的流量始终受到保护，请使用 Android 提供的 Kill Switch。这可以防止在 VPN 连接断开时发生数据泄露。</string>
     <string name="kill_switch_step_1">1. 点击下方按钮打开 VPN 设置。</string>
-    <string name="kill_switch_step_2">2. 点击 Proton VPN-Next 旁边的设置图标。</string>
-    <string name="kill_switch_step_3">3. 启用“始终开启的 VPN”和“禁止非 VPN 连接”。</string>
+    <string name="kill_switch_step_2">2. 点击 Proton VPN-Next 旁的设置图标。</string>
+    <string name="kill_switch_step_3">3. 启用“始终开启的 VPN”和“屏蔽未使用 VPN 的连接”。</string>
     <string name="kill_switch_button">打开 VPN 设置</string>
 
     <!-- Obfuscation Params -->
     <string name="obfuscation_jc">垃圾包数量 (Jc)</string>
-    <string name="obfuscation_jmin">垃圾包最小大小 (Jmin)</string>
-    <string name="obfuscation_jmax">垃圾包最大大小 (Jmax)</string>
-    <string name="obfuscation_s1">初始包垃圾大小 (S1)</string>
-    <string name="obfuscation_s2">响应包垃圾大小 (S2)</string>
-    <string name="obfuscation_h1">初始包 Magic (H1)</string>
-    <string name="obfuscation_h2">响应包 Magic (H2)</string>
-    <string name="obfuscation_h3">低负载包 Magic (H3)</string>
-    <string name="obfuscation_h4">传输包 Magic (H4)</string>
+    <string name="obfuscation_jmin">垃圾包最小尺寸 (Jmin)</string>
+    <string name="obfuscation_jmax">垃圾包最大尺寸 (Jmax)</string>
+    <string name="obfuscation_s1">Init 包垃圾尺寸 (S1)</string>
+    <string name="obfuscation_s2">Response 包垃圾尺寸 (S2)</string>
+    <string name="obfuscation_h1">Init 包 Magic (H1)</string>
+    <string name="obfuscation_h2">Response 包 Magic (H2)</string>
+    <string name="obfuscation_h3">Underload 包 Magic (H3)</string>
+    <string name="obfuscation_h4">Transport 包 Magic (H4)</string>
     <string name="obfuscation_i1">特殊垃圾 (I1)</string>
 
     <!-- Settings: Protocol & Obfuscation -->
     <string name="settings_protocol">协议</string>
     <string name="protocol_title">协议</string>
     <string name="protocol_amneziawg">AmneziaWG</string>
-    <string name="protocol_amneziawg_desc">带有混淆功能的高级 WireGuard 协议</string>
+    <string name="protocol_amneziawg_desc">具有混淆功能的高级 WireGuard 协议</string>
     <string name="obfuscation_title">混淆</string>
     <string name="obfuscation_enable">启用混淆</string>
-    <string name="obfuscation_enable_desc">绕过 DPI 和 VPN 封锁</string>
-    <string name="obfuscation_info_desc">调整 AmneziaWG 参数以隐藏 VPN 流量，并绕过受限网络中的连接封锁。</string>
+    <string name="obfuscation_enable_desc">绕过 DPI 和 VPN 屏蔽</string>
+    <string name="obfuscation_info_desc">调整 AmneziaWG 参数以隐藏 VPN 流量并在受限网络中绕过连接屏蔽。</string>
     <string name="obfuscation_config">配置</string>
     <string name="obfuscation_config_standard">标准 Proton VPN-Next 配置</string>
-    <string name="obfuscation_save_config">另存为新配置</string>
+    <string name="obfuscation_save_config">保存为新配置</string>
     <string name="obfuscation_config_name">配置名称</string>
-    <string name="obfuscation_category_junk">Junk 参数</string>
-    <string name="obfuscation_category_magic">数据包大小 (Magic)</string>
-    <string name="obfuscation_category_headers">标头 (Header)</string>
+    <string name="obfuscation_category_junk">垃圾参数</string>
+    <string name="obfuscation_category_magic">包大小 (Magic)</string>
+    <string name="obfuscation_category_headers">头部</string>
     <string name="obfuscation_category_advanced">高级</string>
     <string name="custom_config">自定义配置</string>
 
@@ -146,9 +147,11 @@
     <string name="about_community">社区</string>
     <string name="about_github">GitHub</string>
     <string name="about_telegram">Telegram</string>
+    <string name="about_codeberg">Codeberg</string>
+    <string name="about_unavailable">暂时不可用</string>
 
     <!-- Licenses Screen -->
-    <string name="licenses_title">许可证</string>
+    <string name="licenses_title">许可</string>
     <string name="license_app_title">Proton VPN-Next</string>
     <string name="license_app_desc">GNU General Public License v3.0</string>
     <string name="license_androidx_title">AndroidX 库</string>
@@ -156,34 +159,34 @@
     <string name="license_compose_title">Jetpack Compose</string>
     <string name="license_kotlin_title">Kotlin 标准库</string>
     <string name="license_hilt_title">Dagger Hilt</string>
-    <string name="license_retrofit_title">Retrofit 和 OkHttp</string>
+    <string name="license_retrofit_title">Retrofit &amp; OkHttp</string>
     <string name="license_proton_go_vpn_title">Proton GO VPN 库</string>
     <string name="license_amneziawg_title">AmneziaWG Android</string>
 
     <!-- Split Tunneling -->
-    <string name="st_enabled_subtitle">VPN 连接将绕过选定的应用和 IP 地址</string>
+    <string name="st_enabled_subtitle">VPN 连接将绕过选定的应用和 IP</string>
     <string name="st_disabled_subtitle">所有流量都通过 VPN</string>
     <plurals name="st_apps_selected">
         <item quantity="other">已选择 %1$d 个应用</item>
     </plurals>
     <plurals name="st_ips_selected">
-        <item quantity="other">已选择 %1$d 个 IP 地址</item>
+        <item quantity="other">已选择 %1$d 个 IP</item>
     </plurals>
 
     <plurals name="settings_apps_excluded_count">
-        <item quantity="other">%1$d 个应用已排除</item>
+        <item quantity="other">已排除 %1$d 个应用</item>
     </plurals>
     <plurals name="settings_ips_excluded_count">
-        <item quantity="other">%1$d 个 IP 地址已排除</item>
+        <item quantity="other">已排除 %1$d 个 IP</item>
     </plurals>
 
     <string name="st_search_apps_hint">搜索应用</string>
-    <string name="st_selected_apps_header">已选择的应用 (%1$d)</string>
+    <string name="st_selected_apps_header">已选择应用 (%1$d)</string>
     <string name="st_available_apps_header">可用应用 (%1$d)</string>
     <string name="st_ip_hint">例如 192.168.1.0/24</string>
     <string name="st_add_ip_desc">添加 IP</string>
     <string name="st_invalid_ip_error">无效的 IP 地址格式</string>
-    <string name="st_excluded_ips_header">已排除的 IP (%1$d)</string>
+    <string name="st_excluded_ips_header">排除的 IP (%1$d)</string>
     <string name="st_no_ips_added">尚未添加 IP 地址</string>
     <string name="st_remove_ip_desc">移除 IP</string>
 
@@ -191,7 +194,7 @@
     <string name="notification_channel_name">VPN 状态</string>
     <string name="notification_channel_desc">显示 VPN 的当前连接状态</string>
     <string name="notification_title_connected">已连接到 %1$s</string>
-    <string name="notification_title_disconnected">未连接</string>
+    <string name="notification_title_disconnected">已断开连接</string>
     <string name="notification_title_connecting">正在连接…</string>
     <string name="notification_action_disconnect">断开连接</string>
 
@@ -202,31 +205,31 @@
     <string name="error_2fa_failed">双重验证失败</string>
 
     <!-- Profiles Screen -->
-    <string name="profiles_title">配置文件</string>
-    <string name="desc_create_profile">创建配置文件</string>
-    <string name="desc_edit_profile">编辑配置文件</string>
-    <string name="profiles_empty_title">暂无配置文件</string>
-    <string name="profiles_empty_desc">创建一个配置文件以使用特定设置快速连接。</string>
+    <string name="profiles_title">配置方案</string>
+    <string name="desc_create_profile">创建方案</string>
+    <string name="desc_edit_profile">编辑方案</string>
+    <string name="profiles_empty_title">暂无配置方案</string>
+    <string name="profiles_empty_desc">创建一个配置方案以快速连接特定设置。</string>
     <string name="profile_feature_obfuscation">混淆</string>
-    <string name="profile_feature_connect_go">一键开启</string>
+    <string name="profile_feature_connect_go">连接即启动</string>
     <string name="profile_server_info">服务器：%1$s</string>
     <string name="profile_city_info">🏙️ %1$s, %2$s</string>
     <string name="profile_country_info">%1$s %2$s</string>
     <string name="profile_fastest_info">⚡ %1$s</string>
 
     <!-- Edit Profile Screen -->
-    <string name="title_create_profile">创建配置文件</string>
-    <string name="title_edit_profile">编辑配置文件</string>
+    <string name="title_create_profile">创建配置方案</string>
+    <string name="title_edit_profile">编辑配置方案</string>
     <string name="btn_save">保存</string>
     <string name="btn_cancel">取消</string>
     <string name="btn_delete">删除</string>
     <string name="btn_edit">编辑</string>
-    <string name="desc_delete_profile">删除配置文件</string>
-    <string name="default_profile_name">我的配置文件</string>
-    <string name="category_general">通用</string>
-    <string name="label_profile_name">配置文件名称</string>
+    <string name="desc_delete_profile">删除配置方案</string>
+    <string name="default_profile_name">我的方案</string>
+    <string name="category_general">常规</string>
+    <string name="label_profile_name">方案名称</string>
     <string name="category_location">位置</string>
-    <string name="location_server">服务器: %1$s</string>
+    <string name="location_server">服务器：%1$s</string>
     <string name="location_fastest">最快</string>
     <string name="label_target_location">目标位置</string>
     <string name="label_location">位置</string>
@@ -238,7 +241,7 @@
     <string name="obfuscation_desc">绕过深度数据包检测 (DPI)</string>
     <string name="label_obfuscation_config">混淆配置</string>
     <string name="category_automation">自动化</string>
-    <string name="label_connect_go_website">一键开启 (网站)</string>
+    <string name="label_connect_go_website">连接即启动 (网站)</string>
     <string name="label_enter_url">输入 URL</string>
     <string name="label_not_configured">未配置</string>
     <string name="automation_desc">VPN 连接建立后，在浏览器中自动打开此网站。</string>
@@ -247,19 +250,19 @@
     <string name="title_select_server">选择服务器</string>
     <string name="location_fastest_in_country">%1$s 中最快</string>
     <string name="location_fastest_in_city">%1$s 中最快</string>
-    <string name="location_load">负载: %1$d%%</string>
+    <string name="location_load">负载：%1$d%%</string>
     <string name="title_select_obfuscation_config">选择混淆配置</string>
     <string name="title_auto_open_url">自动打开 URL</string>
     <string name="btn_create_new_config">创建新配置</string>
-    <string name="connect_go_title">一键开启</string>
-    <string name="connect_go_desc">输入连接后要打开的 URL (例如 https://example.com)</string>
+    <string name="connect_go_title">连接即启动</string>
+    <string name="connect_go_desc">输入连接后打开的 URL (例如 https://example.com)</string>
     <string name="hint_url_placeholder">https://</string>
     <string name="title_select_protocol">选择协议</string>
     <string name="custom_config_name">自定义配置 %1$d</string>
     <string name="title_edit_obfuscation_config">编辑混淆配置</string>
-    <string name="error_empty_profile_name">配置文件名称不能为空</string>
+    <string name="error_empty_profile_name">配置方案名称不能为空</string>
 
     <!-- Captcha Screen -->
-    <string name="captcha_title">人机验证</string>
+    <string name="captcha_title">人机身份验证</string>
     <string name="desc_close">关闭</string>
 </resources>
