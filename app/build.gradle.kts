@@ -43,7 +43,7 @@ android {
         versionName = "12.0.0"
 
         ndk {
-            abiFilters.addAll(listOf("arm64-v8a", "x86_64", "armeabi-v7a"))
+            abiFilters.addAll(listOf("arm64-v8a", "x86_64"))
         }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -80,10 +80,6 @@ android {
         }
         create("google") {
             dimension = "distribution"
-            // We apply Firebase plugins only for this flavor
-            apply(plugin = "com.google.gms.google-services")
-            apply(plugin = "com.google.firebase.crashlytics")
-            apply(plugin = "com.google.firebase.firebase-perf")
         }
         create("dev") {
             dimension = "distribution"
@@ -200,17 +196,12 @@ dependencies {
 
     // 8. Firebase
     val firebaseBom = platform("com.google.firebase:firebase-bom:33.7.0")
-    implementation(firebaseBom)
+    "googleImplementation"(firebaseBom)
     "googleImplementation"("com.google.firebase:firebase-analytics")
     "googleImplementation"("com.google.firebase:firebase-crashlytics")
     "googleImplementation"("com.google.firebase:firebase-messaging")
     "googleImplementation"("com.google.firebase:firebase-config")
-    
-    // We use implementation instead of googleImplementation for firebase-perf.
-    // The Firebase Performance plugin instruments all variants when applied,
-    // and if the library is missing from the classpath (e.g. in FOSS flavor),
-    // it causes a NoClassDefFoundError at runtime.
-    implementation("com.google.firebase:firebase-perf")
+    "googleImplementation"("com.google.firebase:firebase-perf")
 
     // 9. Testing
     testImplementation(libs.junit)
@@ -223,4 +214,28 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(composeBom)
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+}
+
+// Conditional application of plugins
+val taskNames = gradle.startParameter.taskNames
+val isGoogleBuild = taskNames.isEmpty() ||
+                    taskNames.any { 
+                        it.contains("google", ignoreCase = true) || 
+                        it == "assemble" || it == "build" || it == "bundle" 
+                    }
+
+if (isGoogleBuild) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
+    apply(plugin = "com.google.firebase.firebase-perf")
+}
+
+// Disable Google Services tasks for flavors that don't have the JSON file
+// This prevents "File google-services.json is missing" errors during multi-flavor builds.
+tasks.configureEach {
+    if (name.endsWith("GoogleServices")) {
+        if (name.contains("Foss", ignoreCase = true) || name.contains("Dev", ignoreCase = true)) {
+            enabled = false
+        }
+    }
 }
