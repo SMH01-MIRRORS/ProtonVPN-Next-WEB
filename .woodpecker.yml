@@ -43,13 +43,12 @@ steps:
         fi
 
   publish-release:
-    image: woodpeckerci/plugin-gitea-release
+    image: woodpeckerci/plugin-release
     when:
       event: tag
     settings:
       api_key:
         from_secret: CODEBERG_TOKEN
-      base_url: https://codeberg.org
       files:
         - app/build/outputs/apk/release/*.apk
       note: changelog.txt
