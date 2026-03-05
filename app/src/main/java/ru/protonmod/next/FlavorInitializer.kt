@@ -18,7 +18,6 @@
 package ru.protonmod.next
 
 import android.content.Context
-import io.sentry.SentryLevel
 import io.sentry.android.core.SentryAndroid
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -40,25 +39,59 @@ object FlavorInitializer {
         SentryAndroid.init(context) { options ->
             options.dsn = "https://7b74cef88678ecb3e6047ac6b4abf139@o4510986952310784.ingest.de.sentry.io/4510986956374096"
             
+            // Initial state based on settings
+            options.isEnabled = isCrashReportsEnabled
+
+            // Filter out system spam from breadcrumbs to keep logs clean
+            options.setBeforeBreadcrumb { breadcrumb, _ ->
+                val category = breadcrumb.category ?: ""
+                val message = breadcrumb.message ?: ""
+                
+                // List of noisy tags/categories that usually don't help with app-level debugging
+                val spammyTags = listOf(
+                    "chromium", 
+                    "mesa", 
+                    "GoLog", 
+                    "EGL_emulation", 
+                    "Vulkan", 
+                    "skia", 
+                    "libEGL", 
+                    "OpenGLRenderer",
+                    "SceneHelper",
+                    "SurfaceFilters",
+                    "InputMethodManager",
+                    "ViewRootImpl",
+                    "Choreographer"
+                )
+
+                val isSpam = spammyTags.any { tag -> 
+                    category.contains(tag.trim(), ignoreCase = true) || 
+                    message.contains(tag.trim(), ignoreCase = true)
+                }
+
+                if (isSpam) null else breadcrumb
+            }
+
             // Only send if user enabled crash reporting
             options.setBeforeSend { event, _ ->
                 val currentCrashEnabled = runBlocking { settingsManager.crashReportsEnabled.first() }
                 if (!currentCrashEnabled) return@setBeforeSend null
                 
-                // Extra filter: Only allow FATAL and ERROR levels to save quota
-                if (event.level != SentryLevel.FATAL && event.level != SentryLevel.ERROR) {
-                    null
-                } else {
-                    event
-                }
+                // On Business plan during alpha, we send all events (FATAL, ERROR, WARNING, INFO, DEBUG)
+                // to catch as many issues as possible.
+                event
             }
 
             // Performance monitoring (Analytics)
-            options.tracesSampleRate = if (isAnalyticsEnabled) 0.05 else 0.0
+            options.tracesSampleRate = if (isAnalyticsEnabled) 1.0 else 0.0 // 100% for alpha/business plan
             
             // Collect more context for errors
             options.isEnableAutoSessionTracking = isAnalyticsEnabled
             options.isAnrEnabled = true
+            
+            // Collect breadcrumbs for user interactions to help debugging
+            options.isEnableUserInteractionBreadcrumbs = true
+            options.isEnableAppLifecycleBreadcrumbs = true
         }
     }
 }
