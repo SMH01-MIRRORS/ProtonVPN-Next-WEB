@@ -290,7 +290,6 @@ private fun LocationTextElement(
 
 @Composable
 fun DashboardScreen(
-    onNavigateToMap: (() -> Unit)? = null,
     onNavigateToCountries: (() -> Unit)? = null,
     onNavigateToSettings: (() -> Unit)? = null,
     onNavigateToProfiles: (() -> Unit)? = null,
@@ -373,8 +372,7 @@ fun DashboardScreen(
             HomeMap(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight(0.6f)
-                    .clickable { onNavigateToMap?.invoke() },
+                    .fillMaxHeight(0.6f),
                 allServers = successState?.servers ?: emptyList(),
                 connectedServer = successState?.connectedServer,
                 isConnecting = isConnecting,

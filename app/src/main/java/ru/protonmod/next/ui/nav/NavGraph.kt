@@ -31,7 +31,6 @@ import ru.protonmod.next.ui.screens.settings.*
 
 sealed class Screen(val route: String) {
     data object Home : Screen("home")
-    data object Map : Screen("map")
     data object Settings : Screen("settings")
     data object Profiles : Screen("profiles")
     data object EditProfile : Screen("edit_profile?profileId={profileId}") {
@@ -64,7 +63,6 @@ fun NavGraphBuilder.appNavGraph(
 ) {
     composable(Screen.Home.route) {
         DashboardScreen(
-            onNavigateToMap = { navController.navigate(Screen.Map.route) },
             onNavigateToCountries = { navController.navigate(Screen.Countries.route) },
             onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
             onNavigateToProfiles = { navController.navigate(Screen.Profiles.route) }
