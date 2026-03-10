@@ -342,18 +342,4 @@ class DashboardViewModel @Inject constructor(
             _errorMessage.value = context.getString(R.string.label_server_unavailable)
         }
     }
-
-    fun connectToCountry(countryCode: String) {
-        viewModelScope.launch {
-            val currentState = uiState.value
-            if (currentState !is DashboardUiState.Success) return@launch
-
-            val serversInCountry = currentState.servers.filter { it.exitCountry == countryCode }
-            if (serversInCountry.isNotEmpty()) {
-                // Find fastest server in this country
-                val bestServer = serversInCountry.minByOrNull { it.averageLoad } ?: serversInCountry.random()
-                initiateConnection(bestServer)
-            }
-        }
-    }
 }

@@ -172,6 +172,7 @@ private fun annotatedCountryHighlight(
 /**
  * Text that can beautifully obscure its contents with a character-by-character animation.
  * Replaces chars with '*' while keeping spaces and dots intact.
+ * Only obscures the IP address part (everything after " • ").
  */
 @Composable
 private fun ObscurableText(
@@ -183,12 +184,16 @@ private fun ObscurableText(
     targetCharacter: Char = '*',
     preserveCharacters: CharArray = charArrayOf('.', ' ', '-', ':')
 ) {
-    var displayText by remember(targetText) {
+    // Find where the IP starts (after the separator) so we don't obscure the country name
+    val separatorIndex = targetText.indexOf(" • ")
+    val obscureStartIndex = if (separatorIndex != -1) separatorIndex + 3 else 0
+
+    // Remove targetText from remember keys so we don't instantly throw away the animation state
+    var displayText by remember {
         mutableStateOf(
-            // Pre-obscure immediately to avoid IP flashes on launch if the user set it to hidden
             if (isObscured) {
                 val chars = targetText.toCharArray()
-                for (i in chars.indices) {
+                for (i in obscureStartIndex until chars.size) {
                     if (!preserveCharacters.contains(chars[i])) chars[i] = targetCharacter
                 }
                 String(chars)
@@ -197,18 +202,51 @@ private fun ObscurableText(
             }
         )
     }
-    val fixedWidth = remember(targetText) { mutableStateOf<Int?>(null) }
+    var fixedWidth by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(isObscured, targetText) {
         val targetChars = targetText.toCharArray()
         var currentChars = displayText.toCharArray()
 
-        // Failsafe in case lengths mismatch due to edge cases
-        if (currentChars.size != targetChars.size) {
-            currentChars = targetChars.clone()
+        val currentSeparator = targetText.indexOf(" • ")
+        val currentObscureStart = if (currentSeparator != -1) currentSeparator + 3 else 0
+
+        // Check if the base string structure changed (length difference or country name change)
+        var baseChanged = currentChars.size != targetChars.size
+        if (!baseChanged) {
+            for (i in 0 until currentObscureStart) {
+                if (currentChars[i] != targetChars[i]) {
+                    baseChanged = true
+                    break
+                }
+            }
         }
 
-        val indicesToAnimate = targetText.indices
+        if (baseChanged) {
+            // Reset fixed width to allow the layout to remeasure for the new string
+            fixedWidth = null
+
+            val baseChars = targetChars.clone()
+            if (isObscured) {
+                // If the new string is obscured, jump to its obscured form immediately
+                for (i in currentObscureStart until baseChars.size) {
+                    if (!preserveCharacters.contains(baseChars[i])) baseChars[i] = targetCharacter
+                }
+                displayText = String(baseChars)
+                return@LaunchedEffect
+            } else {
+                // If we are unobscuring to a NEW target, start from its obscured version
+                // and let the animation below reveal the new characters.
+                for (i in currentObscureStart until baseChars.size) {
+                    if (!preserveCharacters.contains(baseChars[i])) baseChars[i] = targetCharacter
+                }
+                currentChars = baseChars
+                displayText = String(currentChars)
+            }
+        }
+
+        // Animate the differences character by character
+        val indicesToAnimate = (currentObscureStart until targetText.length)
             .filter { !preserveCharacters.contains(targetText[it]) }
             .filter {
                 if (isObscured) currentChars[it] != targetCharacter
@@ -236,9 +274,9 @@ private fun ObscurableText(
                     style = MaterialTheme.typography.bodyMedium,
                     color = ProtonNextTheme.colors.textWeak,
                     modifier = Modifier.onGloballyPositioned {
-                        // Prevent layout jumping while animating
-                        if (fixedWidth.value == null) {
-                            fixedWidth.value = it.size.width
+                        // Prevent layout jumping while animating asterisks
+                        if (fixedWidth == null || fixedWidth!! < it.size.width) {
+                            fixedWidth = it.size.width
                         }
                     },
                 )
@@ -246,7 +284,7 @@ private fun ObscurableText(
             modifier = modifier,
             measurePolicy = { measurables, constraints ->
                 val placeable = measurables.first().measure(constraints)
-                val width = fixedWidth.value ?: placeable.width
+                val width = fixedWidth ?: placeable.width
                 val offsetX = (width - placeable.width) / 2
                 layout(width, placeable.height) {
                     placeable.placeRelative(offsetX, 0)
@@ -369,7 +407,6 @@ fun DashboardScreen(
             val isConnected = successState?.isConnected == true
             val isConnecting = successState?.isConnecting == true
 
-            // 1. Z-Index Bottom: Map Layer (fills status bar)
             HomeMap(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -380,7 +417,6 @@ fun DashboardScreen(
                 isInteractive = false
             )
 
-            // 2. Z-Index Middle: Gradient Overlay (over the map, under the cards, fills status bar)
             Spacer(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -389,7 +425,6 @@ fun DashboardScreen(
                     .vpnStatusOverlayBackground(isConnected, isConnecting, colors)
             )
 
-            // 3. Z-Index Top: Lock Icon & Status
             VpnStatusTop(
                 isConnected = isConnected,
                 isConnecting = isConnecting,
@@ -397,10 +432,9 @@ fun DashboardScreen(
                     .align(Alignment.TopCenter)
                     // ADD windowInsetsPadding here to move the icon BELOW the status bar
                     .windowInsetsPadding(WindowInsets.statusBars)
-                    .padding(top = 16.dp) 
+                    .padding(top = 16.dp)
             )
 
-            // 4. Z-Index Top-most: Scrollable Content (Cards will scroll over everything above)
             val baseState = when (uiState) {
                 is DashboardUiState.Loading -> 0
                 is DashboardUiState.Error -> 1
@@ -434,10 +468,10 @@ fun DashboardScreen(
                         }
                     }
                     2 -> {
-                        val successState = uiState as? DashboardUiState.Success
-                        if (successState != null) {
+                        val state = uiState as? DashboardUiState.Success
+                        if (state != null) {
                             DashboardContent(
-                                state = successState,
+                                state = state,
                                 onServerClick = { server ->
                                     checkVpnAndConnect(server)
                                 },
@@ -493,7 +527,6 @@ fun DashboardContent(
     ) {
         item {
             // This spacer pushes the cards down so the Map and Lock icon are visible
-            // We increase this height slightly because we removed the top padding from Scaffold
             Spacer(modifier = Modifier.height(380.dp))
         }
 
@@ -718,15 +751,26 @@ fun ConnectionStatusCard(
                     fontWeight = FontWeight.Bold
                 )
 
-                // Select current location source
-                val currentLocation = if (isConnected) vpnLocationText else originalLocationText
+                // Manage the intermediate state when the VPN is UP, but the real IP hasn't been fetched yet
+                val isFetchingVpnIp = isConnected && vpnLocationText == null
+
+                val currentLocation = when {
+                    isConnected && vpnLocationText != null -> vpnLocationText
+                    isConnected && vpnLocationText == null -> {
+                        // Provide a dummy IP string while waiting for the real one.
+                        // We use zeros here so the dots align, and ObscurableText will turn them into asterisks.
+                        val countryName = connectedServer?.exitCountry?.let { CountryUtils.getCountryName(context, it) } ?: ""
+                        LocationText(countryName, "000.000.000.000")
+                    }
+                    else -> originalLocationText
+                }
 
                 if (currentLocation != null) {
                     Spacer(modifier = Modifier.width(12.dp))
                     LocationTextElement(
                         locationText = currentLocation,
-                        // Always force hide when connecting to emulate the "encrypting" animation
-                        isObscured = isIpHidden || isConnecting,
+                        // Force obscuring when connecting, hiding IP manually, or waiting for the new IP
+                        isObscured = isIpHidden || isConnecting || isFetchingVpnIp,
                         onClick = onToggleIpVisibility
                     )
                 }
