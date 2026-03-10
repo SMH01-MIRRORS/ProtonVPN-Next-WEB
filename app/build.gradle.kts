@@ -31,7 +31,7 @@ android {
     compileSdk = 36
 
     // Force AGP to use a specific NDK version instead of the default one
-    ndkVersion = "29.0.13113169"
+    ndkVersion = "29.0.14206865"
 
     defaultConfig {
         applicationId = "ru.protonmod.next"
@@ -113,6 +113,19 @@ android {
     }
 
     packaging {
+        jniLibs {
+            keepDebugSymbols.addAll(listOf(
+                "**/libam-go.so",
+                "**/libam-quick.so",
+                "**/libam.so",
+                "**/libandroidx.graphics.path.so",
+                "**/libdatastore_shared_counter.so",
+                "**/libgojni.so",
+                "**/libhev-socks5-tunnel.so",
+                "**/libsentry-android.so",
+                "**/libsentry.so"
+            ))
+        }
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "/META-INF/DEPENDENCIES"
