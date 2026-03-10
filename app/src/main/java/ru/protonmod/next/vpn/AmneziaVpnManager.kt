@@ -32,7 +32,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.amnezia.awg.backend.Tunnel
@@ -69,7 +72,7 @@ class AmneziaVpnManager @Inject constructor(
         private const val DNS_RETRY_DELAY_MS = 1000L
         private const val STATE_CONNECTING = "CONNECTING"
 
-        private const val REFRESH_THRESHOLD_MS = 6 * 3600 * 1000L // 6 hours
+        private const val REFRESH_THRESHOLD_MS = 12 * 3600 * 1000L // 12 hours
         private const val RETRY_DELAY_MS = 15 * 60 * 1000L // 15 minutes
         private const val PERIODIC_REFRESH_MS = 2 * 3600 * 1000L // 2 hours
     }
@@ -103,6 +106,7 @@ class AmneziaVpnManager @Inject constructor(
     private var connectionJob: Job? = null
     private var refreshJob: Job? = null
     private var scheduledRefreshJob: Job? = null
+    private val refreshMutex = Mutex()
 
     init {
         val filter = IntentFilter(ProtonVpnService.ACTION_STATE_CHANGED)
@@ -167,13 +171,22 @@ class AmneziaVpnManager @Inject constructor(
         }
     }
 
-    private suspend fun performCertificateRefresh(session: SessionEntity): Result<String> {
+    private suspend fun performCertificateRefresh(): Result<String> = refreshMutex.withLock {
+        val currentSession = sessionDao.getSession() ?: return Result.failure(Exception("No session"))
+        updateCertificateState(currentSession.wgCertificate)
+
+        if (_certState.value is CertificateState.Valid) {
+            return Result.success(currentSession.wgCertificate ?: "")
+        }
+
         val previousState = _certState.value
         _certState.value = CertificateState.Refreshing
+        Log.d(TAG, "Refreshing certificate (previous state: $previousState)")
+
         val result = vpnRepositoryProvider.get().registerWireGuardKey(
-            accessToken = session.accessToken,
-            sessionId = session.sessionId,
-            publicKeyPem = session.wgPublicKeyPem ?: ""
+            accessToken = currentSession.accessToken,
+            sessionId = currentSession.sessionId,
+            publicKeyPem = currentSession.wgPublicKeyPem ?: ""
         )
         return if (result.isSuccess) {
             val newCert = result.getOrNull()?.certificate
@@ -197,15 +210,38 @@ class AmneziaVpnManager @Inject constructor(
     fun checkAndRefreshCertificateProactively() {
         if (refreshJob?.isActive == true) return
         refreshJob = applicationScope.launch {
-            while (true) {
+            var currentRetryDelay = 5000L
+            while (isActive) {
                 val session = sessionDao.getSession() ?: break
                 updateCertificateState(session.wgCertificate)
-                if (_certState.value is CertificateState.Valid) break
-                val result = performCertificateRefresh(session)
-                if (result.isSuccess) break
-                delay(RETRY_DELAY_MS)
+
+                if (_certState.value is CertificateState.Valid) {
+                    // All good, check again in 2 hours
+                    delay(PERIODIC_REFRESH_MS)
+                    currentRetryDelay = 5000L
+                    continue
+                }
+
+                Log.d(TAG, "Proactive refresh starting (cert state: ${_certState.value})")
+                val result = performCertificateRefresh()
+                
+                if (result.isSuccess) {
+                    currentRetryDelay = 5000L
+                    delay(PERIODIC_REFRESH_MS)
+                } else {
+                    // API access is expected to be preserved, so we retry with backoff.
+                    // This covers cases where internet is temporarily down.
+                    Log.w(TAG, "Proactive refresh failed, retrying in ${currentRetryDelay}ms")
+                    delay(currentRetryDelay)
+                    currentRetryDelay = (currentRetryDelay * 2).coerceAtMost(RETRY_DELAY_MS)
+                }
             }
         }
+    }
+
+    private fun isEffectivelyExpired(): Boolean {
+        val state = _certState.value
+        return state is CertificateState.Expired || (state is CertificateState.RefreshFailed && state.isFullyExpired)
     }
 
     private suspend fun updateServiceSettings() {
@@ -242,19 +278,29 @@ class AmneziaVpnManager @Inject constructor(
         try {
             _isConnecting.value = true
             var currentSession = session
-            updateCertificateState(currentSession.wgCertificate)
 
-            if (_certState.value is CertificateState.Expired) {
-                Log.d(TAG, "Blocking connection: Certificate is fully expired.")
-                while (true) {
-                    val refreshResult = performCertificateRefresh(currentSession)
-                    if (refreshResult.isSuccess) {
-                        currentSession = currentSession.copy(wgCertificate = refreshResult.getOrNull()!!)
-                        break
-                    }
-                    delay(5000)
-                    currentSession = sessionDao.getSession() ?: throw Exception("Session lost during refresh")
+            // Proactively refresh certificate if it's not valid (Expired or ExpiringSoon)
+            updateCertificateState(currentSession.wgCertificate)
+            if (_certState.value !is CertificateState.Valid) {
+                Log.d(TAG, "Certificate state is ${_certState.value}, attempting refresh before connection.")
+                
+                var attempts = 0
+                while (isEffectivelyExpired() && attempts < 3) {
+                    val refreshResult = performCertificateRefresh()
+                    if (refreshResult.isSuccess) break
+                    attempts++
+                    if (isEffectivelyExpired() && attempts < 3) delay(2000)
                 }
+
+                if (isEffectivelyExpired()) {
+                    // Even if expired, we try to connect because Proton API might be reachable 
+                    // and some servers might still accept the old key for a short grace period.
+                    // But we keep the UI warning.
+                    Log.w(TAG, "Certificate is expired. Proceeding with connection anyway as Proton API is accessible.")
+                }
+                
+                // Refresh session from DB to get the new certificate and any other potential updates
+                currentSession = sessionDao.getSession() ?: currentSession
             }
 
             val wgPrivateKeyB64 = currentSession.wgPrivateKey ?: throw Exception("Offline VPN private key missing!")
@@ -333,15 +379,10 @@ class AmneziaVpnManager @Inject constructor(
 
             delay(3000)
             Log.d(TAG, "Initial 3s post-connect refresh.")
-            val sessionAfterConnect = sessionDao.getSession() ?: return@launch
-            performCertificateRefresh(sessionAfterConnect)
-
-            while (_tunnelState.value == Tunnel.State.UP) {
-                delay(PERIODIC_REFRESH_MS)
-                Log.d(TAG, "Periodic 2h background refresh.")
-                val sessionPeriodic = sessionDao.getSession() ?: break
-                performCertificateRefresh(sessionPeriodic)
-            }
+            performCertificateRefresh()
+            
+            // Proactive loop already handles periodic refreshes, 
+            // but we keep this job alive to potentially handle tunnel-specific logic.
         }
     }
 

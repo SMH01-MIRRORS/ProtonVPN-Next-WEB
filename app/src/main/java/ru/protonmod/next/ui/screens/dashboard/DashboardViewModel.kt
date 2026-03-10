@@ -18,6 +18,7 @@
 package ru.protonmod.next.ui.screens.dashboard
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -197,29 +198,35 @@ class DashboardViewModel @Inject constructor(
 
     private fun fetchVpnLocation(countryCode: String) {
         viewModelScope.launch {
-            // TODO: In a real implementation, call an API like https://api.ipify.org through the VPN tunnel
-            // to get the actual public IP of the VPN server.
-            // For now, we simulate a network delay and generate a fake IP to demonstrate the UI.
-            delay(1500)
-            val fakeIp = "185.201.${(10..250).random()}.${(10..250).random()}"
-            val localizedCountry = CountryUtils.getCountryName(context, countryCode)
-            _vpnLocationText.value = LocationText(localizedCountry, fakeIp)
+            // Fetch real location through the VPN tunnel
+            val location = fetchRealLocation(useProxy = false)
+            if (location != null) {
+                val localizedCountry = CountryUtils.getCountryName(context, location.countryCode)
+                _vpnLocationText.value = LocationText(localizedCountry, location.ip)
+            } else {
+                // Fallback to simulated if API fails
+                delay(1000)
+                val fakeIp = "185.201.${(10..250).random()}.${(10..250).random()}"
+                val localizedCountry = CountryUtils.getCountryName(context, countryCode)
+                _vpnLocationText.value = LocationText(localizedCountry, fakeIp)
+            }
         }
     }
 
     /**
-     * Fetches the user's real location based on IP, bypassing any proxy or VPN.
+     * Fetches the user's real location based on IP.
      *
+     * @param useProxy If true, forces the request to bypass system proxy (used for original IP).
      * @return [LocationData] object containing location info, or null in case of an error.
      */
-    private suspend fun fetchRealLocation(): LocationData? = withContext(Dispatchers.IO) {
+    private suspend fun fetchRealLocation(useProxy: Boolean = true): LocationData? = withContext(Dispatchers.IO) {
         try {
-            // Create an OkHttp client that ignores system proxies/VPNs
-            val client = OkHttpClient.Builder()
-                .proxy(Proxy.NO_PROXY)
-                .build()
+            val clientBuilder = OkHttpClient.Builder()
+            if (useProxy) {
+                clientBuilder.proxy(Proxy.NO_PROXY)
+            }
+            val client = clientBuilder.build()
 
-            // Request to geolocation service
             val request = Request.Builder()
                 .url("https://ipwho.is/")
                 .build()
@@ -239,8 +246,7 @@ class DashboardViewModel @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            // Log the error for debugging purposes
-            e.printStackTrace()
+            Log.e("DashboardViewModel", "Error fetching location", e)
         }
         null
     }

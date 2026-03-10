@@ -24,7 +24,7 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -47,6 +47,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
@@ -607,6 +608,22 @@ fun CertificateBanner(
         else -> return
     }
 
+    val isRefreshing = state is AmneziaVpnManager.CertificateState.Refreshing
+    val infiniteTransition = rememberInfiniteTransition(label = "refresh_anim")
+    val rotation by if (isRefreshing) {
+        infiniteTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = 360f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(1000, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart
+            ),
+            label = "rotation"
+        )
+    } else {
+        remember { mutableStateOf(0f) }
+    }
+
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -620,7 +637,9 @@ fun CertificateBanner(
                 imageVector = icon,
                 contentDescription = null,
                 tint = contentColor,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier
+                    .size(24.dp)
+                    .graphicsLayer { rotationZ = rotation }
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -635,11 +654,12 @@ fun CertificateBanner(
                 TextButton(onClick = onRefresh) {
                     Text(stringResource(R.string.cert_btn_refresh_now), color = contentColor)
                 }
-            } else if (state is AmneziaVpnManager.CertificateState.Refreshing) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    color = contentColor,
-                    strokeWidth = 2.dp
+            } else if (isRefreshing) {
+                Text(
+                    text = stringResource(R.string.cert_msg_refreshing),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = contentColor.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(start = 8.dp)
                 )
             }
         }
