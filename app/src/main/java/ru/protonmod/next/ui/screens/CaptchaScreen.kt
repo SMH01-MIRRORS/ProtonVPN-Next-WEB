@@ -180,11 +180,11 @@ fun CaptchaScreen(
 
                                     responseHeaders["Access-Control-Allow-Origin"] = "*"
 
-                                    var bodyStream = response.body?.byteStream()
+                                    var bodyStream = response.body.byteStream()
 
                                     // Inject JS to rewrite fetch/XHR endpoints for POST requests (like captcha submission)
                                     if (mimeType.contains("text/html", ignoreCase = true)) {
-                                        val html = response.body?.string() ?: ""
+                                        val html = response.body.string()
 
                                         val jsInject = """
                                             <script>

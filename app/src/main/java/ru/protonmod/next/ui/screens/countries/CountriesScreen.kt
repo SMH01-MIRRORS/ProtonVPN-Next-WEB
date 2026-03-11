@@ -20,6 +20,7 @@ package ru.protonmod.next.ui.screens.countries
 import android.app.Activity
 import android.net.VpnService
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -46,7 +47,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.R
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.FlagIcon
@@ -84,6 +85,8 @@ fun CountriesScreen(
         }
     }
 
+    val errorAppOpsMsg = stringResource(R.string.error_system_appops)
+
     val checkVpnAndConnect: (() -> Unit) -> Unit = { connectAction ->
         try {
             val intent = VpnService.prepare(context)
@@ -94,7 +97,7 @@ fun CountriesScreen(
                 connectAction()
             }
         } catch (_: SecurityException) {
-            android.widget.Toast.makeText(context, context.getString(R.string.error_system_appops), android.widget.Toast.LENGTH_LONG).show()
+            Toast.makeText(context, errorAppOpsMsg, Toast.LENGTH_LONG).show()
             connectAction()
         }
     }

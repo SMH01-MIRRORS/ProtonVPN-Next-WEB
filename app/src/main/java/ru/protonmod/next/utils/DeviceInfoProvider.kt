@@ -139,7 +139,7 @@ class DeviceInfoProvider @Inject constructor(
     fun getInstalledKeyboards(): List<String> {
         return try {
             val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm?.enabledInputMethodList?.map { it.packageName } ?: emptyList()
+            imm.enabledInputMethodList.map { it.packageName }
         } catch (e: Exception) {
             listOf("com.google.android.inputmethod.latin")
         }

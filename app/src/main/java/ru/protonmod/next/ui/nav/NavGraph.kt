@@ -22,7 +22,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.ui.screens.countries.CountriesScreen
 import ru.protonmod.next.ui.screens.dashboard.DashboardScreen

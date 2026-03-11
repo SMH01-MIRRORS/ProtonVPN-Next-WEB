@@ -24,12 +24,6 @@ steps:
       SENTRY_PROJECT:
         from_secret: SENTRY_PROJECT
     commands:
-      - apt-get update && apt-get install -y golang-go openjdk-17-jdk
-      - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-      - export PATH=$JAVA_HOME/bin:$PATH
-      - yes | sdkmanager "ndk;29.0.14206865"
-      - chmod +x build-sing-box.sh
-      - ./build-sing-box.sh
       - echo $SIGNING_KEY_BASE64 | base64 -d > app/release.keystore
       - chmod +x gradlew
       - export SIGNING_KEY_FILE=release.keystore

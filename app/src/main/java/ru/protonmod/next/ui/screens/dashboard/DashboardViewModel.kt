@@ -46,6 +46,7 @@ import ru.protonmod.next.ui.utils.CountryUtils
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import java.net.Proxy
 import javax.inject.Inject
+import androidx.core.content.edit
 
 data class LocationText(
     val country: String,
@@ -182,7 +183,7 @@ class DashboardViewModel @Inject constructor(
     fun toggleIpVisibility() {
         val newValue = !_isIpHidden.value
         _isIpHidden.value = newValue
-        prefs.edit().putBoolean("is_ip_hidden", newValue).apply()
+        prefs.edit { putBoolean("is_ip_hidden", newValue) }
     }
 
     private fun fetchOriginalLocation() {
@@ -233,8 +234,8 @@ class DashboardViewModel @Inject constructor(
 
             client.newCall(request).execute().use { response ->
                 if (response.isSuccessful) {
-                    val body = response.body?.string()
-                    if (!body.isNullOrBlank()) {
+                    val body = response.body.string()
+                    if (body.isNotBlank()) {
                         val json = JSONObject(body)
                         val ip = json.optString("ip", "")
                         val countryCode = json.optString("country_code", "")

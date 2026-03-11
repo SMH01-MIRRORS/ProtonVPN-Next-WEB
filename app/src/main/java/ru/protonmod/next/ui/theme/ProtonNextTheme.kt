@@ -31,7 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
@@ -450,7 +449,19 @@ internal fun ProtonColors.toMaterial3ThemeColors() = androidx.compose.material3.
     surfaceContainerHigh = backgroundSecondary,
     surfaceContainerHighest = backgroundSecondary,
     surfaceContainerLow = backgroundNorm,
-    surfaceContainerLowest = backgroundNorm
+    surfaceContainerLowest = backgroundNorm,
+    primaryFixed = brandNorm,
+    onPrimaryFixed = Color.White,
+    primaryFixedDim = brandDarken20,
+    onPrimaryFixedVariant = Color.White,
+    secondaryFixed = brandNorm,
+    onSecondaryFixed = Color.White,
+    secondaryFixedDim = brandDarken20,
+    onSecondaryFixedVariant = Color.White,
+    tertiaryFixed = brandDarken20,
+    onTertiaryFixed = Color.White,
+    tertiaryFixedDim = brandDarken40,
+    onTertiaryFixedVariant = Color.White
 )
 
 val LocalColors = staticCompositionLocalOf { ProtonColors.Light }
@@ -469,7 +480,6 @@ fun ProtonNextTheme(
             val controller = WindowCompat.getInsetsController(window, view)
             controller.isAppearanceLightStatusBars = !darkTheme
             WindowCompat.setDecorFitsSystemWindows(window, false)
-            window.statusBarColor = Color.Transparent.toArgb()
         }
     }
 

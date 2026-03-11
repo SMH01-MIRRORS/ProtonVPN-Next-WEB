@@ -31,7 +31,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
@@ -61,7 +60,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.delay
 import ru.protonmod.next.R
 import ru.protonmod.next.data.network.LogicalServer
@@ -360,6 +359,8 @@ fun DashboardScreen(
         }
     }
 
+    val errorAppOpsMsg = stringResource(R.string.error_system_appops)
+
     val checkVpnAndConnect: (LogicalServer) -> Unit = { server ->
         try {
             val intent = VpnService.prepare(context)
@@ -370,7 +371,8 @@ fun DashboardScreen(
                 viewModel.toggleConnection(server)
             }
         } catch (_: SecurityException) {
-            android.widget.Toast.makeText(context, context.getString(R.string.error_system_appops), android.widget.Toast.LENGTH_LONG).show()
+            // Fix: Replaced context.getString() with pre-resolved string from Composable context
+            android.widget.Toast.makeText(context, errorAppOpsMsg, android.widget.Toast.LENGTH_LONG).show()
             viewModel.toggleConnection(server)
         }
     }
@@ -385,7 +387,7 @@ fun DashboardScreen(
                 viewModel.quickConnect()
             }
         } catch (_: SecurityException) {
-            android.widget.Toast.makeText(context, context.getString(R.string.error_system_appops), android.widget.Toast.LENGTH_LONG).show()
+            android.widget.Toast.makeText(context, errorAppOpsMsg, android.widget.Toast.LENGTH_LONG).show()
             viewModel.quickConnect()
         }
     }
@@ -638,7 +640,6 @@ fun CertificateBanner(
                 msg
             )
         }
-        else -> return
     }
 
     val isRefreshing = state is AmneziaVpnManager.CertificateState.Refreshing
@@ -654,7 +655,7 @@ fun CertificateBanner(
             label = "rotation"
         )
     } else {
-        remember { mutableStateOf(0f) }
+        remember { mutableFloatStateOf(0f) }
     }
 
     Surface(

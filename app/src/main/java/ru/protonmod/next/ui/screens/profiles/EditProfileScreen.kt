@@ -187,16 +187,11 @@ fun EditProfileScreen(
 
             item {
                 Category(title = stringResource(R.string.category_connection)) {
-                    val locationSubtitle = remember(targetCountry, targetCity, targetServerId, targetServerName) {
-                        when {
-                            targetServerId != null -> context.getString(R.string.location_server, targetServerName ?: targetServerId)
-                            targetCity != null -> "🏙️ ${getLocalizedCityName(context, targetCity!!)}, ${CountryUtils.getCountryName(context, targetCountry)}"
-                            targetCountry != null -> {
-                                val localizedName = CountryUtils.getCountryName(context, targetCountry)
-                                localizedName
-                            }
-                            else -> context.getString(R.string.location_fastest)
-                        }
+                    val locationSubtitle = when {
+                        targetServerId != null -> stringResource(R.string.location_server, (targetServerName ?: targetServerId) as Any)
+                        targetCity != null -> "🏙️ ${getLocalizedCityName(context, targetCity!!)}, ${CountryUtils.getCountryName(context, targetCountry)}"
+                        targetCountry != null -> CountryUtils.getCountryName(context, targetCountry)
+                        else -> stringResource(R.string.location_fastest)
                     }
 
                     SettingRowWithIcon(
@@ -336,6 +331,8 @@ fun EditProfileScreen(
     }
 
     if (showObfuscationConfigDialog) {
+        val newConfigName = stringResource(R.string.custom_config_name, customObfuscationConfigs.size + 1)
+
         ObfuscationConfigSelectionDialog(
             configs = listOf(ObfuscationProfile.getStandardProfile(standardProfileName)) + customObfuscationConfigs,
             selectedId = obfuscationProfileId,
@@ -347,7 +344,7 @@ fun EditProfileScreen(
             onCreateNew = {
                 val newConfig = ObfuscationProfile.createDefaultCustomProfile(
                     id = UUID.randomUUID().toString(),
-                    name = context.getString(R.string.custom_config_name, customObfuscationConfigs.size + 1)
+                    name = newConfigName
                 )
                 viewModel.saveObfuscationProfile(newConfig)
                 obfuscationProfileId = newConfig.id

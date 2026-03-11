@@ -44,7 +44,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.delay
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -131,23 +131,10 @@ fun WelcomeScreen(
                             .padding(top = 48.dp, end = 16.dp), // Top padding for status bar safe area
                         contentAlignment = Alignment.TopEnd
                     ) {
-                        // FIX: Using fully qualified name to avoid Scope clash with ColumnScope
-                        androidx.compose.animation.AnimatedVisibility(
-                            visible = isVisible,
-                            enter = fadeIn(tween(800))
-                        ) {
-                            IconButton(
-                                onClick = onNavigateToApiBypassSettings,
-                                modifier = Modifier
-                                    .background(colors.backgroundSecondary.copy(alpha = 0.6f), CircleShape)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.CloudSync,
-                                    contentDescription = stringResource(R.string.settings_api_bypass),
-                                    tint = colors.textNorm
-                                )
-                            }
-                        }
+                        ApiBypassButton(
+                            isVisible = isVisible,
+                            onClick = onNavigateToApiBypassSettings
+                        )
                     }
                 }
 
@@ -279,6 +266,31 @@ fun WelcomeScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+// Extracted to avoid ColumnScope LayoutScopeMarker conflict
+@Composable
+private fun ApiBypassButton(
+    isVisible: Boolean,
+    onClick: () -> Unit
+) {
+    val colors = ProtonNextTheme.colors
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn(tween(800))
+    ) {
+        IconButton(
+            onClick = onClick,
+            modifier = Modifier
+                .background(colors.backgroundSecondary.copy(alpha = 0.6f), CircleShape)
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.CloudSync,
+                contentDescription = stringResource(R.string.settings_api_bypass),
+                tint = colors.textNorm
+            )
         }
     }
 }
