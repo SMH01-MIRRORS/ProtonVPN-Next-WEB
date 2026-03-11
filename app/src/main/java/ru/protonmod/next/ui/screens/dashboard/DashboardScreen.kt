@@ -415,6 +415,7 @@ fun DashboardScreen(
                     .fillMaxHeight(0.6f),
                 allServers = successState?.servers ?: emptyList(),
                 connectedServer = successState?.connectedServer,
+                userCountryCode = successState?.originalLocationText?.countryCode, // Focus on user's real location initially
                 isConnecting = isConnecting,
                 isInteractive = false
             )
@@ -771,9 +772,9 @@ fun ConnectionStatusCard(
                         // Provide a dummy IP string while waiting for the real one.
                         val rawCountry = connectedServer?.exitCountry?.let { CountryUtils.getCountryName(context, it) }
                         val safeCountry = rawCountry?.takeIf { it.isNotBlank() && it != "null" } ?: "VPN"
-                        LocationText(safeCountry, "000.000.000.000")
+                        LocationText(country = safeCountry, countryCode = connectedServer?.exitCountry, ip = "000.000.000.000")
                     }
-                    else -> originalLocationText ?: LocationText(stringResource(R.string.status_connecting), "000.000.000.000")
+                    else -> originalLocationText ?: LocationText(country = stringResource(R.string.status_connecting), ip = "000.000.000.000")
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -829,7 +830,6 @@ fun ConnectionStatusCard(
                 Spacer(modifier = Modifier.width(16.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    // Fix: Complete sanitization to avoid "null, null" artifacts
                     val rawCountry = connectedServer?.let { CountryUtils.getCountryName(context, it.exitCountry) }
                     val safeCountryName = rawCountry?.takeIf { it.isNotBlank() && it != "null" } ?: "VPN"
                     val safeCityName = connectedServer?.city?.takeIf { it.isNotBlank() && it != "null" } ?: ""

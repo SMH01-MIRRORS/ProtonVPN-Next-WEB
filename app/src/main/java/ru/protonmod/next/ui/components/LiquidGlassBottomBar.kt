@@ -89,6 +89,11 @@ fun LiquidGlassBottomBar(
                 brush = glassBorderBrush,
                 shape = glassShape
             )
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = {}
+            )
     ) {
         Row(
             modifier = Modifier

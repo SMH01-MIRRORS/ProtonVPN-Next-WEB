@@ -222,7 +222,7 @@ object MapCoordinates {
     fun getFocusRegion(countryCode: String?): RectF {
         if (countryCode == null) {
             // Default full map view (zoomed out)
-            return RectF(50f, 0f, MAP_ORIGINAL_WIDTH - 50f, MAP_ORIGINAL_HEIGHT)
+            return RectF(150f, 50f, MAP_ORIGINAL_WIDTH - 150f, MAP_ORIGINAL_HEIGHT - 50f)
         }
         val name = codeToMapCountryName[countryCode.uppercase()]
         val bounds = tvMapNameToBounds[name]
@@ -230,13 +230,20 @@ object MapCoordinates {
         if (bounds != null) {
             val cx = bounds.centerX()
             val cy = bounds.centerY()
-            // Make the viewport size tighter so we zoom in significantly closer
-            val w = max(bounds.width() * 2.5f, 50f)
-            val h = max(bounds.height() * 2.5f, 50f)
-            return RectF(cx - w/2, cy - h/2, cx + w/2, cy + h/2)
+            
+            // Proton-like consistent zoom:
+            // We use a fixed viewport size for most countries, but expand it for very large ones (like Russia/USA)
+            val baseSize = 280f 
+            val w = max(bounds.width() * 1.6f, baseSize)
+            val h = max(bounds.height() * 1.6f, baseSize * 0.6f) // Maintain aspect ratio roughly
+            
+            val finalW = max(w, h * 2f)
+            val finalH = max(h, w / 2f)
+
+            return RectF(cx - finalW/2, cy - finalH/2, cx + finalW/2, cy + finalH/2)
         }
-        // Fallback
-        return RectF(50f, 0f, MAP_ORIGINAL_WIDTH - 50f, MAP_ORIGINAL_HEIGHT)
+        // Fallback to a slightly zoomed in world view if country unknown
+        return RectF(100f, 20f, MAP_ORIGINAL_WIDTH - 100f, MAP_ORIGINAL_HEIGHT - 20f)
     }
 }
 
@@ -270,6 +277,7 @@ class MapView(context: Context) : View(context) {
     // Server data
     var allServers: List<LogicalServer> = emptyList()
     var connectedServer: LogicalServer? = null
+    var userCountryCode: String? = null // New: focus here when not connected
     var isConnecting: Boolean = false
     var isInteractive: Boolean = false
     var onNodeClick: ((String) -> Unit)? = null
@@ -360,24 +368,28 @@ class MapView(context: Context) : View(context) {
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         if (w > 0 && h > 0) {
-            animateToCountry(connectedServer?.exitCountry)
+            val focusTarget = connectedServer?.exitCountry ?: userCountryCode
+            animateToCountry(focusTarget)
         }
     }
 
-    fun onServerStateChanged(newServer: LogicalServer?) {
-        val oldCountry = connectedServer?.exitCountry
+    fun onServerStateChanged(newServer: LogicalServer?, newUserCountry: String? = null) {
+        val oldTarget = connectedServer?.exitCountry ?: userCountryCode
         connectedServer = newServer
+        userCountryCode = newUserCountry
+
+        val newTarget = connectedServer?.exitCountry ?: userCountryCode
 
         // Render once upon initialization
         if (!isSvgRendered) {
             renderSvgInBackground()
         }
 
-        if (oldCountry != newServer?.exitCountry) {
+        if (oldTarget != newTarget) {
             if (width > 0 && height > 0) {
-                animateToCountry(newServer?.exitCountry)
+                animateToCountry(newTarget)
             } else {
-                pendingCountryFocus = newServer?.exitCountry
+                pendingCountryFocus = newTarget
             }
         } else {
             invalidate()
@@ -521,6 +533,7 @@ fun HomeMap(
     modifier: Modifier = Modifier,
     allServers: List<LogicalServer>,
     connectedServer: LogicalServer?,
+    userCountryCode: String? = null,
     isConnecting: Boolean,
     isInteractive: Boolean = false,
     onNodeClick: ((String) -> Unit)? = null
@@ -549,6 +562,7 @@ fun HomeMap(
                 this.bgColor = bgColor
                 this.baseMapColor = baseMapColor
                 this.borderMapColor = borderMapColor
+                this.userCountryCode = userCountryCode
             }
         },
         update = { mapView ->
@@ -559,7 +573,7 @@ fun HomeMap(
             mapView.pinColor = pinColorValue.value.toArgb()
 
             // Passes state down safely, triggering background SVG renders and Matrix animations if needed
-            mapView.onServerStateChanged(connectedServer)
+            mapView.onServerStateChanged(connectedServer, userCountryCode)
         }
     )
 }

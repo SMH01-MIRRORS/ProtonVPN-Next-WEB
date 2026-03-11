@@ -51,6 +51,7 @@ import androidx.core.content.edit
 
 data class LocationText(
     val country: String,
+    val countryCode: String? = null,
     val ip: String,
 )
 
@@ -186,8 +187,6 @@ class DashboardViewModel @Inject constructor(
                     // Refresh server loads after connection is established
                     loadServers()
                 } else if (state == Tunnel.State.DOWN) {
-                    // FIX: DO NOT clear `connectedServer` here!
-                    // This was wiping out the target server during fast reconnects.
                     _vpnLocationText.value = null
                 }
             }
@@ -211,10 +210,10 @@ class DashboardViewModel @Inject constructor(
                 val cleanCode = location.countryCode.takeIf { it.isNotBlank() } ?: "US"
                 val localizedCountry = CountryUtils.getCountryName(context, cleanCode)
                     .takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) } ?: cleanCode
-                _originalLocationText.value = LocationText(localizedCountry, location.ip)
+                _originalLocationText.value = LocationText(localizedCountry, cleanCode, location.ip)
             } else {
                 // Fallback if API completely fails on boot
-                _originalLocationText.value = LocationText("Unknown", "127.0.0.1")
+                _originalLocationText.value = LocationText("Unknown", null, "127.0.0.1")
             }
         }
     }
@@ -236,7 +235,7 @@ class DashboardViewModel @Inject constructor(
             val safeIp = location?.ip?.takeIf { it.isNotBlank() }
                 ?: "185.201.${(10..250).random()}.${(10..250).random()}"
 
-            _vpnLocationText.value = LocationText(localizedCountry, safeIp)
+            _vpnLocationText.value = LocationText(localizedCountry, finalCountryCode, safeIp)
         }
     }
 
@@ -266,8 +265,6 @@ class DashboardViewModel @Inject constructor(
                         val ip = json.optString("ip", "")
                         val countryCode = json.optString("country_code", "")
 
-                        // Fix: Android's JSONObject.optString converts true JSON `null` to the string "null".
-                        // We MUST strip these out before they poison the UI.
                         val cleanIp = if (ip.equals("null", ignoreCase = true)) "" else ip.trim()
                         val cleanCountryCode = if (countryCode.equals("null", ignoreCase = true)) "" else countryCode.trim()
 
@@ -313,7 +310,6 @@ class DashboardViewModel @Inject constructor(
     fun disconnect() {
         viewModelScope.launch {
             _vpnLocationText.value = null
-            // FIX: Explicitly clear target server ONLY on manual disconnect
             connectedServerState.setConnectedServer(null)
             amneziaVpnManager.disconnect()
         }
