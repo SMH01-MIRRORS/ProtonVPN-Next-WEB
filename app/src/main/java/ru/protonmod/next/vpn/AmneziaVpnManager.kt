@@ -72,7 +72,7 @@ class AmneziaVpnManager @Inject constructor(
         private const val DNS_RETRY_DELAY_MS = 1000L
         private const val STATE_CONNECTING = "CONNECTING"
 
-        private const val REFRESH_THRESHOLD_MS = 12 * 3600 * 1000L // 12 hours
+        private const val REFRESH_THRESHOLD_MS = 1 * 3600 * 1000L // 1 hour
         private const val RETRY_DELAY_MS = 15 * 60 * 1000L // 15 minutes
         private const val PERIODIC_REFRESH_MS = 2 * 3600 * 1000L // 2 hours
     }
@@ -105,7 +105,6 @@ class AmneziaVpnManager @Inject constructor(
     private var isReconnecting = false
     private var connectionJob: Job? = null
     private var refreshJob: Job? = null
-    private var scheduledRefreshJob: Job? = null
     private val refreshMutex = Mutex()
 
     init {
@@ -124,8 +123,6 @@ class AmneziaVpnManager @Inject constructor(
                             _tunnelState.value = newState
                             if (newState == Tunnel.State.UP) {
                                 checkAndRefreshCertificateProactively()
-                            } else if (newState == Tunnel.State.DOWN) {
-                                scheduledRefreshJob?.cancel()
                             }
                         }
                     }
@@ -210,7 +207,7 @@ class AmneziaVpnManager @Inject constructor(
     fun checkAndRefreshCertificateProactively() {
         if (refreshJob?.isActive == true) return
         refreshJob = applicationScope.launch {
-            var currentRetryDelay = 5000L
+            var currentRetryDelay = 60000L // Start retrying after 1 minute
             while (isActive) {
                 val session = sessionDao.getSession() ?: break
                 updateCertificateState(session.wgCertificate)
@@ -283,14 +280,7 @@ class AmneziaVpnManager @Inject constructor(
             updateCertificateState(currentSession.wgCertificate)
             if (_certState.value !is CertificateState.Valid) {
                 Log.d(TAG, "Certificate state is ${_certState.value}, attempting refresh before connection.")
-                
-                var attempts = 0
-                while (isEffectivelyExpired() && attempts < 3) {
-                    val refreshResult = performCertificateRefresh()
-                    if (refreshResult.isSuccess) break
-                    attempts++
-                    if (isEffectivelyExpired() && attempts < 3) delay(2000)
-                }
+                performCertificateRefresh()
 
                 if (isEffectivelyExpired()) {
                     // Even if expired, we try to connect because Proton API might be reachable 
@@ -362,27 +352,11 @@ class AmneziaVpnManager @Inject constructor(
             }
             context.startService(intent)
 
-            startScheduledRefresh()
-
             Result.success(Unit)
         } catch (e: Exception) {
             _isConnecting.value = false
             _tunnelState.value = Tunnel.State.DOWN
             Result.failure(e)
-        }
-    }
-
-    private fun startScheduledRefresh() {
-        scheduledRefreshJob?.cancel()
-        scheduledRefreshJob = applicationScope.launch {
-            _tunnelState.first { it == Tunnel.State.UP }
-
-            delay(3000)
-            Log.d(TAG, "Initial 3s post-connect refresh.")
-            performCertificateRefresh()
-            
-            // Proactive loop already handles periodic refreshes, 
-            // but we keep this job alive to potentially handle tunnel-specific logic.
         }
     }
 
@@ -408,7 +382,6 @@ class AmneziaVpnManager @Inject constructor(
 
     fun disconnect() {
         connectionJob?.cancel()
-        scheduledRefreshJob?.cancel()
         applicationScope.launch {
             isReconnecting = false
             disconnectInternal()

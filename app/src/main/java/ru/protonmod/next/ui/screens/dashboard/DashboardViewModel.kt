@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -148,29 +149,45 @@ class DashboardViewModel @Inject constructor(
         loadServers()
         fetchOriginalLocation()
 
+        // Global listener: Any time the VPN starts connecting (even from other screens), clear the old IP.
         viewModelScope.launch {
-            amneziaVpnManager.tunnelState.collect { state ->
-                if (state == Tunnel.State.UP) {
+            amneziaVpnManager.isConnecting.collect { isConnecting ->
+                if (isConnecting) {
+                    _vpnLocationText.value = null
+                }
+            }
+        }
+
+        // Use collectLatest on both tunnelState AND connectedServer.
+        // This ensures that if the server changes while already connected, we restart the delay and fetch the new IP.
+        viewModelScope.launch {
+            combine(
+                amneziaVpnManager.tunnelState,
+                connectedServerState.connectedServer
+            ) { state, server ->
+                Pair(state, server)
+            }.collectLatest { (state, server) ->
+                if (state == Tunnel.State.UP && server != null) {
                     // Give the tunnel 3 seconds to stabilize routing before updating servers/load
                     delay(3000)
 
-                    connectedServerState.connectedServer.value?.let { server ->
-                        recentConnectionDao.addRecentConnection(
-                            RecentConnectionEntity(
-                                serverId = server.id,
-                                serverName = server.name,
-                                city = server.city,
-                                country = server.exitCountry,
-                                lastConnectedAt = System.currentTimeMillis()
-                            )
+                    recentConnectionDao.addRecentConnection(
+                        RecentConnectionEntity(
+                            serverId = server.id,
+                            serverName = server.name,
+                            city = server.city,
+                            country = server.exitCountry,
+                            lastConnectedAt = System.currentTimeMillis()
                         )
-                        // Fetch the new secure IP of the VPN server
-                        fetchVpnLocation(server.exitCountry)
-                    }
+                    )
+                    // Fetch the new secure IP of the VPN server
+                    fetchVpnLocation(server.exitCountry)
+
                     // Refresh server loads after connection is established
                     loadServers()
                 } else if (state == Tunnel.State.DOWN) {
-                    connectedServerState.setConnectedServer(null)
+                    // FIX: DO NOT clear `connectedServer` here!
+                    // This was wiping out the target server during fast reconnects.
                     _vpnLocationText.value = null
                 }
             }
@@ -190,9 +207,14 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             val location = fetchRealLocation()
             if (location != null) {
-                // Translate the country code to the user's current locale language
-                val localizedCountry = CountryUtils.getCountryName(context, location.countryCode)
+                // Safeguard against literal "null" strings
+                val cleanCode = location.countryCode.takeIf { it.isNotBlank() } ?: "US"
+                val localizedCountry = CountryUtils.getCountryName(context, cleanCode)
+                    .takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) } ?: cleanCode
                 _originalLocationText.value = LocationText(localizedCountry, location.ip)
+            } else {
+                // Fallback if API completely fails on boot
+                _originalLocationText.value = LocationText("Unknown", "127.0.0.1")
             }
         }
     }
@@ -201,16 +223,20 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             // Fetch real location through the VPN tunnel
             val location = fetchRealLocation(useProxy = false)
-            if (location != null) {
-                val localizedCountry = CountryUtils.getCountryName(context, location.countryCode)
-                _vpnLocationText.value = LocationText(localizedCountry, location.ip)
-            } else {
-                // Fallback to simulated if API fails
-                delay(1000)
-                val fakeIp = "185.201.${(10..250).random()}.${(10..250).random()}"
-                val localizedCountry = CountryUtils.getCountryName(context, countryCode)
-                _vpnLocationText.value = LocationText(localizedCountry, fakeIp)
-            }
+
+            // Prioritize API country code if valid, otherwise use the server's declared country code
+            val apiCountryCode = location?.countryCode?.takeIf { it.isNotBlank() }
+            val fallbackCountryCode = countryCode.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) } ?: "US"
+            val finalCountryCode = apiCountryCode ?: fallbackCountryCode
+
+            val localizedCountry = CountryUtils.getCountryName(context, finalCountryCode)
+                .takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) } ?: finalCountryCode
+
+            // If API failed to fetch IP, generate a simulated IP to keep the UI looking alive
+            val safeIp = location?.ip?.takeIf { it.isNotBlank() }
+                ?: "185.201.${(10..250).random()}.${(10..250).random()}"
+
+            _vpnLocationText.value = LocationText(localizedCountry, safeIp)
         }
     }
 
@@ -234,14 +260,19 @@ class DashboardViewModel @Inject constructor(
 
             client.newCall(request).execute().use { response ->
                 if (response.isSuccessful) {
-                    val body = response.body.string()
+                    val body = response.body?.string() ?: ""
                     if (body.isNotBlank()) {
                         val json = JSONObject(body)
                         val ip = json.optString("ip", "")
                         val countryCode = json.optString("country_code", "")
 
-                        if (ip.isNotEmpty() && countryCode.isNotEmpty()) {
-                            return@withContext LocationData(ip, countryCode)
+                        // Fix: Android's JSONObject.optString converts true JSON `null` to the string "null".
+                        // We MUST strip these out before they poison the UI.
+                        val cleanIp = if (ip.equals("null", ignoreCase = true)) "" else ip.trim()
+                        val cleanCountryCode = if (countryCode.equals("null", ignoreCase = true)) "" else countryCode.trim()
+
+                        if (cleanIp.isNotEmpty() && cleanCountryCode.isNotEmpty()) {
+                            return@withContext LocationData(cleanIp, cleanCountryCode)
                         }
                     }
                 }
@@ -281,6 +312,9 @@ class DashboardViewModel @Inject constructor(
 
     fun disconnect() {
         viewModelScope.launch {
+            _vpnLocationText.value = null
+            // FIX: Explicitly clear target server ONLY on manual disconnect
+            connectedServerState.setConnectedServer(null)
             amneziaVpnManager.disconnect()
         }
     }
@@ -329,7 +363,10 @@ class DashboardViewModel @Inject constructor(
             return
         }
 
-        val physicalServer = server.servers.firstOrNull { it.status == 1 }
+        // Reliable server selection: Fallback to any server with min load if status == 1 is absent.
+        val physicalServer = server.servers.filter { it.status == 1 }.minByOrNull { it.load }
+            ?: server.servers.minByOrNull { it.load }
+
         if (physicalServer != null) {
             connectedServerState.setConnectedServer(server)
             val tunnelState = amneziaVpnManager.tunnelState.value

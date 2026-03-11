@@ -171,7 +171,6 @@ private fun annotatedCountryHighlight(
 /**
  * Text that can beautifully obscure its contents with a character-by-character animation.
  * Replaces chars with '*' while keeping spaces and dots intact.
- * Only obscures the IP address part (everything after " • ").
  */
 @Composable
 private fun ObscurableText(
@@ -183,9 +182,8 @@ private fun ObscurableText(
     targetCharacter: Char = '*',
     preserveCharacters: CharArray = charArrayOf('.', ' ', '-', ':')
 ) {
-    // Find where the IP starts (after the separator) so we don't obscure the country name
-    val separatorIndex = targetText.indexOf(" • ")
-    val obscureStartIndex = if (separatorIndex != -1) separatorIndex + 3 else 0
+    // Fix: We now obscure the entire line (including Country and IP)
+    val obscureStartIndex = 0
 
     // Remove targetText from remember keys so we don't instantly throw away the animation state
     var displayText by remember {
@@ -207,8 +205,8 @@ private fun ObscurableText(
         val targetChars = targetText.toCharArray()
         var currentChars = displayText.toCharArray()
 
-        val currentSeparator = targetText.indexOf(" • ")
-        val currentObscureStart = if (currentSeparator != -1) currentSeparator + 3 else 0
+        // Fix: Starting animation check exactly at 0
+        val currentObscureStart = 0
 
         // Check if the base string structure changed (length difference or country name change)
         var baseChanged = currentChars.size != targetChars.size
@@ -312,8 +310,12 @@ private fun LocationTextElement(
             .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onClick) // Makes the entire IP block clickable to toggle privacy mode
     ) {
-        val country = BidiFormatter.getInstance().unicodeWrap(locationText.country)
-        val fullText = "$country • ${locationText.ip}"
+        // Safe fallbacks to absolutely guarantee no null strings
+        val safeCountry = if (locationText.country.isBlank() || locationText.country == "null") "Unknown" else locationText.country
+        val safeIp = if (locationText.ip.isBlank() || locationText.ip == "null") "000.000.000.000" else locationText.ip
+
+        val country = BidiFormatter.getInstance().unicodeWrap(safeCountry)
+        val fullText = "$country • $safeIp"
 
         ObscurableText(
             targetText = fullText,
@@ -371,7 +373,6 @@ fun DashboardScreen(
                 viewModel.toggleConnection(server)
             }
         } catch (_: SecurityException) {
-            // Fix: Replaced context.getString() with pre-resolved string from Composable context
             android.widget.Toast.makeText(context, errorAppOpsMsg, android.widget.Toast.LENGTH_LONG).show()
             viewModel.toggleConnection(server)
         }
@@ -432,7 +433,6 @@ fun DashboardScreen(
                 isConnecting = isConnecting,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    // ADD windowInsetsPadding here to move the icon BELOW the status bar
                     .windowInsetsPadding(WindowInsets.statusBars)
                     .padding(top = 16.dp)
             )
@@ -504,7 +504,6 @@ fun DashboardScreen(
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    // Add bottom insets padding here if necessary
                     .windowInsetsPadding(WindowInsets.navigationBars)
             )
         }
@@ -759,22 +758,20 @@ fun ConnectionStatusCard(
                     isConnected && vpnLocationText != null -> vpnLocationText
                     isConnected && vpnLocationText == null -> {
                         // Provide a dummy IP string while waiting for the real one.
-                        // We use zeros here so the dots align, and ObscurableText will turn them into asterisks.
-                        val countryName = connectedServer?.exitCountry?.let { CountryUtils.getCountryName(context, it) } ?: ""
-                        LocationText(countryName, "000.000.000.000")
+                        val rawCountry = connectedServer?.exitCountry?.let { CountryUtils.getCountryName(context, it) }
+                        val safeCountry = rawCountry?.takeIf { it.isNotBlank() && it != "null" } ?: "VPN"
+                        LocationText(safeCountry, "000.000.000.000")
                     }
-                    else -> originalLocationText
+                    else -> originalLocationText ?: LocationText(stringResource(R.string.status_connecting), "000.000.000.000")
                 }
 
-                if (currentLocation != null) {
-                    Spacer(modifier = Modifier.width(12.dp))
-                    LocationTextElement(
-                        locationText = currentLocation,
-                        // Force obscuring when connecting, hiding IP manually, or waiting for the new IP
-                        isObscured = isIpHidden || isConnecting || isFetchingVpnIp,
-                        onClick = onToggleIpVisibility
-                    )
-                }
+                Spacer(modifier = Modifier.width(12.dp))
+                LocationTextElement(
+                    locationText = currentLocation,
+                    // Force obscuring when connecting, hiding IP manually, waiting for VPN IP, or waiting for Original IP
+                    isObscured = isIpHidden || isConnecting || isFetchingVpnIp || originalLocationText == null,
+                    onClick = onToggleIpVisibility
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -821,12 +818,19 @@ fun ConnectionStatusCard(
                 Spacer(modifier = Modifier.width(16.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    val countryName = connectedServer?.let { CountryUtils.getCountryName(context, it.exitCountry) }
+                    // Fix: Complete sanitization to avoid "null, null" artifacts
+                    val rawCountry = connectedServer?.let { CountryUtils.getCountryName(context, it.exitCountry) }
+                    val safeCountryName = rawCountry?.takeIf { it.isNotBlank() && it != "null" } ?: "VPN"
+                    val safeCityName = connectedServer?.city?.takeIf { it.isNotBlank() && it != "null" } ?: ""
+
+                    val locationTitleText = if (isConnected || isConnecting) {
+                        if (safeCityName.isNotEmpty()) "$safeCountryName, $safeCityName" else safeCountryName
+                    } else {
+                        stringResource(R.string.label_fastest_server)
+                    }
 
                     Text(
-                        text = if (isConnected || isConnecting) {
-                            "$countryName, ${connectedServer?.city}"
-                        } else stringResource(R.string.label_fastest_server),
+                        text = locationTitleText,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = contentColor,
@@ -932,9 +936,14 @@ fun ServerCard(
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                val countryName = CountryUtils.getCountryName(context, server.exitCountry)
+                // Fix: Safely rendering country and city to prevent "null, null"
+                val rawCountry = CountryUtils.getCountryName(context, server.exitCountry)
+                val safeCountry = rawCountry.takeIf { it.isNotBlank() && it != "null" } ?: "VPN"
+                val safeCity = server.city.takeIf { it.isNotBlank() && it != "null" } ?: ""
+                val locationTitle = if (safeCity.isNotEmpty()) "$safeCountry, $safeCity" else safeCountry
+
                 Text(
-                    text = "$countryName, ${server.city}",
+                    text = locationTitle,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = colors.textNorm
