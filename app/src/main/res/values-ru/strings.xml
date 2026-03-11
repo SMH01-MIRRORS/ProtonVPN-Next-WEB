@@ -103,6 +103,14 @@
     <string name="settings_obfuscation_desc">Изменение заголовков пакетов для обхода DPI</string>
     <string name="settings_reset_obfuscation">Сбросить до стандартного ProtonVPN-Next</string>
 
+    <string name="settings_api_bypass">Обход блокировки API</string>
+    <string name="settings_api_bypass_desc">Обеспечивает успешный вход и получение данных сервера путем маршрутизации запросов API через альтернативные каналы при блокировке.</string>
+    <string name="api_bypass_vpn_detected">Обнаружено активное VPN-соединение. Обход API автоматически отключен, так как он не требуется.</string>
+    <string name="api_bypass_disabled_by_vpn">Отключено (VPN активен)</string>
+    <string name="api_bypass_strategy_title">СТРАТЕГИЯ МАРШРУТИЗАЦИИ</string>
+    <string name="api_bypass_strategy_netlify">Прокси Netlify</string>
+    <string name="api_bypass_strategy_netlify_desc">Направляет запросы API через защищенный прокси-сервер Netlify.</string>
+
     <!-- Custom DNS -->
     <string name="settings_custom_dns">Пользовательский DNS</string>
     <string name="settings_custom_dns_default">По умолчанию (Proton DNS)</string>

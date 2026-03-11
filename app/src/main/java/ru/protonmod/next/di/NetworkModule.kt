@@ -18,12 +18,16 @@
 package ru.protonmod.next.di
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import okhttp3.Dns
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -34,6 +38,7 @@ import okhttp3.OkHttpClient
 import okhttp3.dnsoverhttps.DnsOverHttps
 import retrofit2.Retrofit
 import ru.protonmod.next.data.local.SessionDao
+import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.network.ProtonAuthApi
 import ru.protonmod.next.data.network.ProtonVpnApi
 import ru.protonmod.next.data.network.TokenAuthenticator
@@ -79,24 +84,59 @@ object NetworkModule {
         return TokenAuthenticator(sessionDao, authApiProvider)
     }
 
+    /**
+     * Helper function to determine if API requests should be routed through the bypass proxy.
+     * Evaluates active VPN states (both app-level and OS-level) and user preferences.
+     */
+    private fun shouldUseApiBypass(
+        context: Context,
+        vpnManager: AmneziaVpnManager,
+        settingsManager: SettingsManager
+    ): Boolean {
+        // 1. If our VPN tunnel is active, bypass is not needed
+        if (vpnManager.tunnelState.value == Tunnel.State.UP) return false
+
+        // 2. If a third-party VPN is active at the OS level, bypass is not needed
+        try {
+            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val activeNetwork = connectivityManager.activeNetwork
+            val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork)
+            if (capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true) {
+                return false
+            }
+        } catch (e: Exception) {
+            // Ignore potential permission issues and fallback to reading settings
+        }
+
+        // 3. Read user preferences synchronously.
+        // This is safe because OkHttp interceptors and DNS resolvers run on background threads.
+        return runBlocking {
+            val isBypassEnabled = settingsManager.apiBypassEnabled.first()
+            val strategy = settingsManager.apiBypassStrategy.first()
+            isBypassEnabled && strategy == "netlify"
+        }
+    }
+
     @Provides
     @Singleton
     fun provideOkHttpClient(
         @ApplicationContext context: Context,
         vpnManager: AmneziaVpnManager,
+        settingsManager: SettingsManager,
         tokenAuthenticator: TokenAuthenticator
     ): OkHttpClient {
         try {
             OkHttp.initialize(context)
         } catch (e: Throwable) {}
 
+        // Interceptor to dynamically swap the base URL depending on bypass rules
         val dynamicBaseUrlInterceptor = Interceptor { chain ->
             var request = chain.request()
             val userAgent = DeviceInfoProvider.getSpoofedUserAgent()
             val spoofedVersion = DeviceInfoProvider.SPOOFED_APP_VERSION
 
-            val isVpnUp = vpnManager.tunnelState.value == Tunnel.State.UP
-            val newBaseUrl = if (isVpnUp) PROTON_DIRECT_URL.toHttpUrl() else PROTON_PROXY_URL.toHttpUrl()
+            val useProxy = shouldUseApiBypass(context, vpnManager, settingsManager)
+            val newBaseUrl = if (useProxy) PROTON_PROXY_URL.toHttpUrl() else PROTON_DIRECT_URL.toHttpUrl()
 
             val newUrl = request.url.newBuilder()
                 .scheme(newBaseUrl.scheme)
@@ -115,7 +155,7 @@ object NetworkModule {
             chain.proceed(request)
         }
 
-        // Для DoH тоже увеличиваем таймаут, иначе DNS не отрезолвится
+        // Bootstrap client for DNS over HTTPS requires longer timeouts
         val bootstrapClient = OkHttpClient.Builder()
             .connectTimeout(60, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
@@ -123,16 +163,17 @@ object NetworkModule {
 
         val doh = buildDnsOverHttps(bootstrapClient)
 
+        // Dynamic DNS configuration
         val dynamicDns = Dns { hostname ->
-            val isVpnUp = vpnManager.tunnelState.value == Tunnel.State.UP
-            if (isVpnUp) {
-                Dns.SYSTEM.lookup(hostname)
-            } else {
+            val useProxy = shouldUseApiBypass(context, vpnManager, settingsManager)
+            if (useProxy) {
                 try {
                     doh.lookup(hostname)
                 } catch (e: Exception) {
                     Dns.SYSTEM.lookup(hostname)
                 }
+            } else {
+                Dns.SYSTEM.lookup(hostname)
             }
         }
 
@@ -140,7 +181,7 @@ object NetworkModule {
             .addInterceptor(dynamicBaseUrlInterceptor)
             .authenticator(tokenAuthenticator)
             .dns(dynamicDns)
-            // 0 означает отсутствие таймаута (unlimited)
+            // 0 means no timeout (unlimited)
             .connectTimeout(0, TimeUnit.SECONDS)
             .readTimeout(0, TimeUnit.SECONDS)
             .writeTimeout(0, TimeUnit.SECONDS)
@@ -152,7 +193,8 @@ object NetworkModule {
     fun provideRetrofit(okHttpClient: OkHttpClient, json: Json): Retrofit {
         val contentType = "application/json".toMediaType()
         return Retrofit.Builder()
-            .baseUrl(PROTON_PROXY_URL)
+            // The base URL provided here is just a placeholder, the interceptor rewrites it
+            .baseUrl(PROTON_DIRECT_URL)
             .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()

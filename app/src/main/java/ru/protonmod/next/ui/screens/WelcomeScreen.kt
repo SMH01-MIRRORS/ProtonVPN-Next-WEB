@@ -27,8 +27,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CloudSync
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -51,6 +54,7 @@ fun WelcomeScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToRegister: () -> Unit,
     onNavigateToHome: () -> Unit,
+    onNavigateToApiBypassSettings: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
@@ -98,6 +102,7 @@ fun WelcomeScreen(
                         .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
+                    // Background gradient
                     Box(
                         modifier = Modifier
                             .matchParentSize()
@@ -111,12 +116,39 @@ fun WelcomeScreen(
                             )
                     )
 
+                    // Globe Image
                     Image(
                         painter = painterResource(id = R.drawable.vpn_welcome_globe),
                         contentDescription = null,
                         contentScale = ContentScale.Fit,
                         modifier = Modifier.fillMaxSize(0.9f)
                     )
+
+                    // Top Right Action Buttons (API Bypass configuration before login)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 48.dp, end = 16.dp), // Top padding for status bar safe area
+                        contentAlignment = Alignment.TopEnd
+                    ) {
+                        // FIX: Using fully qualified name to avoid Scope clash with ColumnScope
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = isVisible,
+                            enter = fadeIn(tween(800))
+                        ) {
+                            IconButton(
+                                onClick = onNavigateToApiBypassSettings,
+                                modifier = Modifier
+                                    .background(colors.backgroundSecondary.copy(alpha = 0.6f), CircleShape)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.CloudSync,
+                                    contentDescription = stringResource(R.string.settings_api_bypass),
+                                    tint = colors.textNorm
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Column(

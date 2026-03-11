@@ -87,6 +87,14 @@
     <string name="settings_obfuscation_desc">تغییر هدرهای بسته برای دور زدن DPI</string>
     <string name="settings_reset_obfuscation">بازنشانی به استاندارد ProtonVPN-Next</string>
 
+    <string name="settings_api_bypass">دور زدن مسدودسازی API</string>
+    <string name="settings_api_bypass_desc">با مسیریابی درخواست‌های API از طریق کانال‌های جایگزین در صورت مسدود بودن، ورود موفقیت‌آمیز و بازیابی سرور را تضمین می‌کند.</string>
+    <string name="api_bypass_vpn_detected">اتصال VPN فعال شناسایی شد. دور زدن API به طور خودکار غیرفعال شد زیرا نیازی به آن نیست.</string>
+    <string name="api_bypass_disabled_by_vpn">غیرفعال (VPN فعال)</string>
+    <string name="api_bypass_strategy_title">استراتژی مسیریابی</string>
+    <string name="api_bypass_strategy_netlify">پراکسی Netlify</string>
+    <string name="api_bypass_strategy_netlify_desc">درخواست‌های API را از طریق یک پراکسی امن Netlify مسیریابی می‌کند.</string>
+
     <!-- Custom DNS -->
     <string name="settings_custom_dns">DNS سفارشی</string>
     <string name="settings_custom_dns_default">پیش‌فرض (Proton DNS)</string>

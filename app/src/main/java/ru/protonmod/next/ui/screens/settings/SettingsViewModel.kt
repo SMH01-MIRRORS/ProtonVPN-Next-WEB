@@ -17,9 +17,16 @@
 
 package ru.protonmod.next.ui.screens.settings
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -35,10 +42,19 @@ data class SettingsUiState(
     val killSwitchEnabled: Boolean = false,
     val autoConnectEnabled: Boolean = true,
     val notificationsEnabled: Boolean = true,
+
+    // Connection configs
     val splitTunnelingEnabled: Boolean = false,
     val excludedApps: Set<String> = emptySet(),
     val excludedIps: Set<String> = emptySet(),
     val vpnPort: Int = 1194,
+
+    // API Bypass Feature
+    val apiBypassEnabled: Boolean = false,
+    val apiBypassStrategy: String = "netlify",
+    val isAnyVpnActive: Boolean = false,
+
+    // AWG low-level params
     val awgJc: Int = 3,
     val awgJmin: Int = 1,
     val awgJmax: Int = 3,
@@ -49,6 +65,8 @@ data class SettingsUiState(
     val awgH3: String = "3",
     val awgH4: String = "4",
     val awgI1: String = SettingsManager.DEFAULT_I1,
+
+    // States
     val isVpnConnected: Boolean = false,
 
     // Obfuscation configuration state
@@ -65,9 +83,41 @@ data class SettingsUiState(
 @HiltViewModel
 @Suppress("UNCHECKED_CAST")
 class SettingsViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     amneziaVpnManager: AmneziaVpnManager,
     private val settingsManager: SettingsManager
 ) : ViewModel() {
+
+    // Internal state tracking if any VPN is operating at the OS level
+    private val _isAnyVpnActive = MutableStateFlow(false)
+
+    init {
+        // Monitor system networks to automatically detect active VPN connections
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val request = NetworkRequest.Builder()
+            .addTransportType(NetworkCapabilities.TRANSPORT_VPN)
+            .build()
+
+        val networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                _isAnyVpnActive.value = true
+            }
+            override fun onLost(network: Network) {
+                _isAnyVpnActive.value = false
+            }
+        }
+
+        try {
+            connectivityManager.registerNetworkCallback(request, networkCallback)
+
+            // Initial synchronous check
+            val activeNetwork = connectivityManager.activeNetwork
+            val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork)
+            _isAnyVpnActive.value = capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
+        } catch (e: Exception) {
+            // Ignore if missing permissions in some edge cases
+        }
+    }
 
     // Using array combine to bypass the 5 Flow limit in coroutines
     val uiState: StateFlow<SettingsUiState> = combine(
@@ -94,7 +144,10 @@ class SettingsViewModel @Inject constructor(
         settingsManager.selectedProfileId,
         settingsManager.customDns,
         settingsManager.analyticsEnabled,
-        settingsManager.crashReportsEnabled
+        settingsManager.crashReportsEnabled,
+        settingsManager.apiBypassEnabled,
+        settingsManager.apiBypassStrategy,
+        _isAnyVpnActive
     ) { args: Array<Any?> ->
         SettingsUiState(
             killSwitchEnabled = args[0] as Boolean,
@@ -120,7 +173,10 @@ class SettingsViewModel @Inject constructor(
             selectedProfileId = args[20] as String,
             customDns = args[21] as String,
             isAnalyticsEnabled = args[22] as Boolean,
-            isCrashReportsEnabled = args[23] as Boolean
+            isCrashReportsEnabled = args[23] as Boolean,
+            apiBypassEnabled = args[24] as Boolean,
+            apiBypassStrategy = args[25] as String,
+            isAnyVpnActive = args[26] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -155,6 +211,18 @@ class SettingsViewModel @Inject constructor(
     fun setCustomDns(dns: String) {
         viewModelScope.launch {
             settingsManager.setCustomDns(dns)
+        }
+    }
+
+    fun setApiBypassEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setApiBypassEnabled(enabled)
+        }
+    }
+
+    fun setApiBypassStrategy(strategy: String) {
+        viewModelScope.launch {
+            settingsManager.setApiBypassStrategy(strategy)
         }
     }
 

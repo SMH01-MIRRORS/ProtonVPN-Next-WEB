@@ -131,6 +131,9 @@ fun ProtonNextAppNavHost(viewModel: MainViewModel = hiltViewModel()) {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(0)
                     }
+                },
+                onNavigateToApiBypassSettings = {
+                    navController.navigate(Screen.ApiBypass.route)
                 }
             )
         }

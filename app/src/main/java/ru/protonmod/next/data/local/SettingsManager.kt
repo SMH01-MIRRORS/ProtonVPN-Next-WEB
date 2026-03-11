@@ -53,6 +53,10 @@ class SettingsManager @Inject constructor(
         // Custom DNS IP setting (IPv4 or IPv6)
         private val CUSTOM_DNS = stringPreferencesKey("custom_dns")
 
+        // API Bypass Settings
+        private val API_BYPASS_ENABLED = booleanPreferencesKey("api_bypass_enabled")
+        private val API_BYPASS_STRATEGY = stringPreferencesKey("api_bypass_strategy")
+
         private val OBFUSCATION_ENABLED = booleanPreferencesKey("obfuscation_enabled")
         private val SELECTED_PROFILE_ID = stringPreferencesKey("selected_profile_id")
         private val CUSTOM_PROFILES = stringPreferencesKey("custom_profiles")
@@ -83,9 +87,10 @@ class SettingsManager @Inject constructor(
     val excludedIps: Flow<Set<String>> = context.dataStore.data.map { it[EXCLUDED_IPS] ?: emptySet() }
 
     val vpnPort: Flow<Int> = context.dataStore.data.map { it[VPN_PORT] ?: 1194 }
-
-    // Provide the current Custom DNS setting as a Flow
     val customDns: Flow<String> = context.dataStore.data.map { it[CUSTOM_DNS] ?: "" }
+
+    val apiBypassEnabled: Flow<Boolean> = context.dataStore.data.map { it[API_BYPASS_ENABLED] ?: false }
+    val apiBypassStrategy: Flow<String> = context.dataStore.data.map { it[API_BYPASS_STRATEGY] ?: "netlify" }
 
     val obfuscationEnabled: Flow<Boolean> = context.dataStore.data.map { it[OBFUSCATION_ENABLED] ?: false }
     val selectedProfileId: Flow<String> = context.dataStore.data.map { it[SELECTED_PROFILE_ID] ?: "standard_1" }
@@ -163,9 +168,16 @@ class SettingsManager @Inject constructor(
         context.dataStore.edit { it[VPN_PORT] = port }
     }
 
-    // Save the Custom DNS IP address (empty string means default)
     suspend fun setCustomDns(dnsIp: String) {
         context.dataStore.edit { it[CUSTOM_DNS] = dnsIp }
+    }
+
+    suspend fun setApiBypassEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[API_BYPASS_ENABLED] = enabled }
+    }
+
+    suspend fun setApiBypassStrategy(strategy: String) {
+        context.dataStore.edit { it[API_BYPASS_STRATEGY] = strategy }
     }
 
     suspend fun setObfuscationEnabled(enabled: Boolean) {

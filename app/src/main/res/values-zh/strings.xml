@@ -87,6 +87,14 @@
     <string name="settings_obfuscation_desc">修改数据包头以绕过 DPI</string>
     <string name="settings_reset_obfuscation">重置为标准 ProtonVPN-Next</string>
 
+    <string name="settings_api_bypass">API 屏蔽绕过</string>
+    <string name="settings_api_bypass_desc">当 API 请求被屏蔽时，通过替代通道路由请求，确保成功登录并获取服务器列表。</string>
+    <string name="api_bypass_vpn_detected">检测到活跃的 VPN 连接。API 绕过已自动禁用，因为当前不需要。</string>
+    <string name="api_bypass_disabled_by_vpn">已禁用 (VPN 活跃)</string>
+    <string name="api_bypass_strategy_title">路由策略</string>
+    <string name="api_bypass_strategy_netlify">Netlify 代理</string>
+    <string name="api_bypass_strategy_netlify_desc">通过安全的 Netlify 代理路由 API 请求。</string>
+
     <!-- Custom DNS -->
     <string name="settings_custom_dns">自定义 DNS</string>
     <string name="settings_custom_dns_default">默认 (Proton DNS)</string>

@@ -103,6 +103,14 @@
     <string name="settings_obfuscation_desc">Modify packet headers to bypass DPI</string>
     <string name="settings_reset_obfuscation">Reset to Standard ProtonVPN-Next</string>
 
+    <string name="settings_api_bypass">API Block Bypass</string>
+    <string name="settings_api_bypass_desc">Ensures successful login and server retrieval by routing API requests through alternative channels when blocked.</string>
+    <string name="api_bypass_vpn_detected">Active VPN connection detected. API bypass is automatically disabled as it is not required.</string>
+    <string name="api_bypass_disabled_by_vpn">Disabled (VPN Active)</string>
+    <string name="api_bypass_strategy_title">ROUTING STRATEGY</string>
+    <string name="api_bypass_strategy_netlify">Netlify Proxy</string>
+    <string name="api_bypass_strategy_netlify_desc">Routes API requests through a secure Netlify proxy.</string>
+
     <!-- Custom DNS -->
     <string name="settings_custom_dns">Custom DNS</string>
     <string name="settings_custom_dns_default">Default (Proton DNS)</string>

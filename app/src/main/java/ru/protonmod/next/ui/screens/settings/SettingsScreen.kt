@@ -58,6 +58,7 @@ fun SettingsScreen(
     onNavigateToSplitTunnelingMain: (() -> Unit)? = null,
     onNavigateToProtocol: (() -> Unit)? = null,
     onNavigateToKillSwitch: (() -> Unit)? = null,
+    onNavigateToApiBypass: (() -> Unit)? = null,
     onNavigateToAbout: (() -> Unit)? = null,
     onNavigateToErrorReporting: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
@@ -101,6 +102,7 @@ fun SettingsScreen(
                 onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
                 onNavigateToProtocol = onNavigateToProtocol,
                 onNavigateToKillSwitch = onNavigateToKillSwitch,
+                onNavigateToApiBypass = onNavigateToApiBypass,
                 onNavigateToAbout = onNavigateToAbout,
                 onNavigateToErrorReporting = onNavigateToErrorReporting,
                 modifier = Modifier
@@ -139,6 +141,7 @@ fun SettingsContent(
     onNavigateToSplitTunnelingMain: (() -> Unit)? = null,
     onNavigateToProtocol: (() -> Unit)? = null,
     onNavigateToKillSwitch: (() -> Unit)? = null,
+    onNavigateToApiBypass: (() -> Unit)? = null,
     onNavigateToAbout: (() -> Unit)? = null,
     onNavigateToErrorReporting: (() -> Unit)? = null,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
@@ -182,7 +185,15 @@ fun SettingsContent(
                     checked = state.autoConnectEnabled,
                     onCheckedChange = onAutoConnectChange
                 )
-                
+
+                // API Block Bypass Strategy
+                SettingRowWithIcon(
+                    icon = Icons.Rounded.CloudSync,
+                    title = stringResource(R.string.settings_api_bypass),
+                    subtitle = if (state.apiBypassEnabled) stringResource(R.string.settings_on) else stringResource(R.string.settings_off),
+                    onClick = { onNavigateToApiBypass?.invoke() }
+                )
+
                 var showPortDialog by remember { mutableStateOf(false) }
                 SettingRowWithIcon(
                     icon = Icons.Rounded.Numbers,

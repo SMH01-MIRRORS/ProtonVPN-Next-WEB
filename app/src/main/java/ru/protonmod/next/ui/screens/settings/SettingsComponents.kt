@@ -28,6 +28,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -75,15 +76,25 @@ fun SettingRowWithIcon(
     icon: ImageVector?,
     title: String,
     subtitle: String? = null,
+    enabled: Boolean = true,
     trailingContent: (@Composable () -> Unit)? = null,
     onClick: (() -> Unit)? = null
 ) {
     val colors = ProtonNextTheme.colors
     var baseModifier = modifier.fillMaxWidth()
+
+    // Pass the enabled state to the clickable modifier
     if (onClick != null) {
-        baseModifier = baseModifier.clickable(onClick = onClick)
+        baseModifier = baseModifier.clickable(
+            enabled = enabled,
+            onClick = onClick
+        )
     }
-    baseModifier = baseModifier.padding(vertical = 12.dp, horizontal = 16.dp)
+
+    // Apply visual opacity when disabled
+    baseModifier = baseModifier
+        .alpha(if (enabled) 1f else 0.5f)
+        .padding(vertical = 12.dp, horizontal = 16.dp)
 
     Row(
         modifier = baseModifier,
@@ -147,6 +158,7 @@ fun SettingToggleRow(
     subtitle: String? = null,
     icon: ImageVector,
     checked: Boolean,
+    enabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit
 ) {
     val colors = ProtonNextTheme.colors
@@ -154,17 +166,19 @@ fun SettingToggleRow(
         title = title,
         subtitle = subtitle,
         icon = icon,
+        enabled = enabled,
         onClick = { onCheckedChange(!checked) },
         trailingContent = {
             Switch(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
+                enabled = enabled, // Pass enabled state to the Switch component
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = colors.textInverted,
                     checkedTrackColor = colors.brandNorm,
                     uncheckedThumbColor = colors.shade60,
                     uncheckedTrackColor = colors.shade20,
-                    uncheckedBorderColor = Color.Transparent
+                    uncheckedBorderColor = Color.Transparent,
                 )
             )
         }

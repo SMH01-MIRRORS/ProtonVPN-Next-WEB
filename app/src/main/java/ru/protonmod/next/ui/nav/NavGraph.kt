@@ -31,6 +31,7 @@ import ru.protonmod.next.ui.screens.settings.*
 
 sealed class Screen(val route: String) {
     data object Home : Screen("home")
+    data object ApiBypass : Screen("api_bypass")
     data object Settings : Screen("settings")
     data object Profiles : Screen("profiles")
     data object EditProfile : Screen("edit_profile?profileId={profileId}") {
@@ -78,6 +79,9 @@ fun NavGraphBuilder.appNavGraph(
                     launchSingleTop = true
                 }
             },
+            onNavigateToApiBypass = {
+                navController.navigate(Screen.ApiBypass.route)
+            },
             onNavigateToCountries = {
                 navController.navigate(Screen.Countries.route) {
                     popUpTo(Screen.Home.route)
@@ -105,6 +109,12 @@ fun NavGraphBuilder.appNavGraph(
             onNavigateToErrorReporting = {
                 navController.navigate(Screen.ErrorReporting.route)
             }
+        )
+    }
+
+    composable(Screen.ApiBypass.route) {
+        ApiBypassScreen(
+            onBack = { navController.popBackStack() }
         )
     }
 
