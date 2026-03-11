@@ -18,7 +18,8 @@
 #    sing-box repository, compile libbox.aar, and copy it to app/libs/.
 # ==============================================================================
 
-export ANDROID_HOME=$HOME/Android/Sdk
+# Если ANDROID_HOME не задан, используем путь по умолчанию
+export ANDROID_HOME=${ANDROID_HOME:-$HOME/Android/Sdk}
 
 if [ ! -d "$ANDROID_HOME" ]; then
     echo "Error: Android SDK not found at $ANDROID_HOME"
@@ -89,10 +90,11 @@ if [ -f "libbox.aar" ]; then
     # Create the libs directory if it does not exist
     mkdir -p app/libs
 
-    # Copy the compiled AAR to the Android project
-    cp sing-box/libbox.aar app/libs/
+    # Copy the compiled AAR to the Android project and rename it to libbox-raw.aar
+    # so that our Gradle script can process it and remove duplicate 'go' classes
+    cp sing-box/libbox.aar app/libs/libbox-raw.aar
 
-    echo "Success: libbox.aar has been copied to app/libs/"
+    echo "Success: libbox-raw.aar has been copied to app/libs/"
 
     # Clean up the cloned repository as it is no longer needed
     echo "Cleaning up the sing-box source directory..."

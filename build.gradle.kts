@@ -16,24 +16,14 @@
  */
 
 plugins {
-    // Android plugins
-    id("com.android.application") version "8.13.2" apply false
-    id("com.android.library") version "8.13.2" apply false
-
-    // Kotlin plugins - Upgrade to 2.1.0 to match library metadata
-    id("org.jetbrains.kotlin.android") version "2.1.0" apply false
-    id("org.jetbrains.kotlin.plugin.compose") version "2.1.0" apply false
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0" apply false
-
-    // KSP & Hilt - Upgrade KSP to match Kotlin 2.1.0
-    id("com.google.devtools.ksp") version "2.1.0-1.0.29" apply false
-    id("com.google.dagger.hilt.android") version "2.53.1" apply false
-
-    // Room
-    id("androidx.room") version "2.7.2" apply false
-
-    // Sentry
-    id("io.sentry.android.gradle") version "5.3.0" apply false
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
+    alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.hilt) apply false
+    alias(libs.plugins.room) apply false
+    alias(libs.plugins.sentry) apply false
 }
 
 // Global cleanup task

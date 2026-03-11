@@ -15,15 +15,20 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import org.gradle.process.ExecOperations
+import javax.inject.Inject
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
+
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.plugin.compose")
-    id("org.jetbrains.kotlin.plugin.serialization")
-    id("com.google.devtools.ksp")
-    id("com.google.dagger.hilt.android")
-    id("androidx.room")
-    id("io.sentry.android.gradle")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.room)
+    alias(libs.plugins.sentry)
 }
 
 android {
@@ -102,14 +107,9 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
-    }
-
-    room {
-        schemaDirectory("$projectDir/schemas")
-        generateKotlin = true
+    kotlin.compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
     }
 
     packaging {
@@ -139,6 +139,11 @@ android {
     }
 }
 
+room {
+    schemaDirectory("$projectDir/schemas")
+    generateKotlin = true
+}
+
 sentry {
     includeProguardMapping = true
     autoUploadProguardMapping = true
@@ -147,66 +152,144 @@ sentry {
 }
 
 dependencies {
-    // 1. AndroidX & Core UI
+    // AndroidX & Core UI
     implementation(libs.androidx.core.ktx)
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
-    implementation("androidx.activity:activity-compose:1.9.3")
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
-    implementation("androidx.work:work-runtime-ktx:2.9.1")
-    implementation("com.caverock:androidsvg-aar:1.4")
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.android.svg)
 
-    // 2. Jetpack Compose
-    val composeBom = platform("androidx.compose:compose-bom:2024.10.01")
+    // Jetpack Compose
+    val composeBom = platform(libs.compose.bom)
     implementation(composeBom)
     implementation(libs.material)
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.navigation:navigation-compose:2.8.5")
-    implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.compose.animation:animation")
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.navigation)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.compose.animation)
 
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-    // 3. Dependency Injection (Hilt)
-    implementation("com.google.dagger:hilt-android:2.53.1")
-    ksp("com.google.dagger:hilt-compiler:2.53.1")
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
-    implementation("androidx.hilt:hilt-work:1.2.0")
-    ksp("androidx.hilt:hilt-compiler:1.2.0")
+    // Dependency Injection (Hilt)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
 
-    // 4. Local Database (Room)
-    implementation("androidx.room:room-runtime:2.7.2")
-    implementation("androidx.room:room-ktx:2.7.2")
-    ksp("androidx.room:room-compiler:2.7.2")
+    // Local Database (Room)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
-    // 5. Network & Serialization
-    implementation("com.squareup.okhttp3:okhttp-dnsoverhttps:5.3.0")
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    // Network & Serialization
+    implementation(libs.okhttp.dnsoverhttps)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.kotlinx.serialization.converter)
+    implementation(libs.kotlinx.serialization.json)
 
-    // 6. VPN Protocols (Local modules)
-    implementation("com.zaneschepke:amneziawg-android:2.3.4")
+    // VPN Protocols
+    implementation(libs.amneziawg.android)
+    implementation(files("libs/libbox.aar"))
     implementation(libs.go.vpn.lib)
 
-    // 7. Debug Tools
-    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
+    // Debug Tools
+    debugImplementation(libs.leakcanary.android)
 
-    // 8. Sentry (Replaces Firebase)
-    implementation("io.sentry:sentry-android:8.33.0")
+    // Sentry
+    implementation(libs.sentry.android)
 
-    // 9. Testing
+    // Testing
     testImplementation(libs.junit)
-    testImplementation("org.mockito:mockito-core:5.11.0")
-    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
-    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockwebserver)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(composeBom)
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+}
+
+abstract class FixLibboxAarTask @Inject constructor() : DefaultTask() {
+
+    @get:InputFile
+    abstract val rawAar: RegularFileProperty
+
+    @get:OutputFile
+    abstract val fixedAar: RegularFileProperty
+
+    @TaskAction
+    fun fixAar() {
+        val raw = rawAar.get().asFile
+        val fixed = fixedAar.get().asFile
+
+        println("Fixing gomobile duplicate classes in ${raw.name}...")
+
+        val tmpDir = File(project.layout.buildDirectory.asFile.get(), "tmp/fixLibbox").apply {
+            deleteRecursively()
+            mkdirs()
+        }
+
+        // 1. Unpack AAR
+        project.copy {
+            from(project.zipTree(raw))
+            into(tmpDir)
+        }
+
+        val classesJar = File(tmpDir, "classes.jar")
+        val fixedClassesJar = File(tmpDir, "classes-fixed.jar")
+
+        if (classesJar.exists()) {
+            // 2. Process classes.jar to remove 'go/' package
+            ZipInputStream(classesJar.inputStream()).use { zipIn ->
+                ZipOutputStream(fixedClassesJar.outputStream()).use { zipOut ->
+                    var entry = zipIn.nextEntry
+                    while (entry != null) {
+                        if (!entry.name.startsWith("go/")) {
+                            zipOut.putNextEntry(ZipEntry(entry.name))
+                            zipIn.copyTo(zipOut)
+                            zipOut.closeEntry()
+                        }
+                        entry = zipIn.nextEntry
+                    }
+                }
+            }
+            classesJar.delete()
+            fixedClassesJar.renameTo(classesJar)
+        }
+
+        // 3. Repack AAR
+        ZipOutputStream(fixed.outputStream()).use { zipOutAar ->
+            tmpDir.walkTopDown().forEach { file ->
+                if (file.isFile) {
+                    val relativePath = file.relativeTo(tmpDir).path
+                    zipOutAar.putNextEntry(ZipEntry(relativePath))
+                    file.inputStream().use { it.copyTo(zipOutAar) }
+                    zipOutAar.closeEntry()
+                }
+            }
+        }
+
+        tmpDir.deleteRecursively()
+        println("Successfully created clean libbox.aar!")
+    }
+}
+
+tasks.register<FixLibboxAarTask>("fixLibboxAar") {
+    rawAar.set(file("libs/libbox-raw.aar"))
+    fixedAar.set(file("libs/libbox.aar"))
+}
+
+// Attach the fix task to the build process before compilation starts
+tasks.configureEach {
+    if (name.startsWith("pre") && name.endsWith("Build")) {
+        dependsOn("fixLibboxAar")
+    }
 }
