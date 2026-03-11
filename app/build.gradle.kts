@@ -15,76 +15,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import javax.inject.Inject
-import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
-import java.util.zip.ZipOutputStream
-
-abstract class FixLibboxAarTask @Inject constructor() : DefaultTask() {
-
-    @get:InputFile
-    abstract val rawAar: RegularFileProperty
-
-    @get:OutputFile
-    abstract val fixedAar: RegularFileProperty
-
-    @TaskAction
-    fun fixAar() {
-        val raw = rawAar.get().asFile
-        val fixed = fixedAar.get().asFile
-
-        println("Fixing gomobile duplicate classes in ${raw.name}...")
-
-        val tmpDir = File(project.layout.buildDirectory.asFile.get(), "tmp/fixLibbox").apply {
-            deleteRecursively()
-            mkdirs()
-        }
-
-        // 1. Unpack AAR
-        project.copy {
-            from(project.zipTree(raw))
-            into(tmpDir)
-        }
-
-        val classesJar = File(tmpDir, "classes.jar")
-        val fixedClassesJar = File(tmpDir, "classes-fixed.jar")
-
-        if (classesJar.exists()) {
-            // 2. Process classes.jar to remove 'go/' package
-            ZipInputStream(classesJar.inputStream()).use { zipIn ->
-                ZipOutputStream(fixedClassesJar.outputStream()).use { zipOut ->
-                    var entry = zipIn.nextEntry
-                    while (entry != null) {
-                        if (!entry.name.startsWith("go/")) {
-                            zipOut.putNextEntry(ZipEntry(entry.name))
-                            zipIn.copyTo(zipOut)
-                            zipOut.closeEntry()
-                        }
-                        entry = zipIn.nextEntry
-                    }
-                }
-            }
-            classesJar.delete()
-            fixedClassesJar.renameTo(classesJar)
-        }
-
-        // 3. Repack AAR
-        ZipOutputStream(fixed.outputStream()).use { zipOutAar ->
-            tmpDir.walkTopDown().forEach { file ->
-                if (file.isFile) {
-                    val relativePath = file.relativeTo(tmpDir).path
-                    zipOutAar.putNextEntry(ZipEntry(relativePath))
-                    file.inputStream().use { it.copyTo(zipOutAar) }
-                    zipOutAar.closeEntry()
-                }
-            }
-        }
-
-        tmpDir.deleteRecursively()
-        println("Successfully created clean libbox.aar!")
-    }
-}
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -93,11 +23,6 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.room)
     alias(libs.plugins.sentry)
-}
-
-val fixLibboxAar = tasks.register<FixLibboxAarTask>("fixLibboxAar") {
-    rawAar.set(layout.projectDirectory.file("libs/libbox-raw.aar"))
-    fixedAar.set(layout.buildDirectory.file("intermediates/fixed_aar/libbox.aar"))
 }
 
 android {
@@ -264,7 +189,6 @@ dependencies {
 
     // VPN Protocols
     implementation(libs.amneziawg.android)
-    implementation(files(fixLibboxAar))
     implementation(libs.go.vpn.lib)
 
     // Debug Tools
