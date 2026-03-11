@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
@@ -182,7 +183,6 @@ private fun ObscurableText(
     targetCharacter: Char = '*',
     preserveCharacters: CharArray = charArrayOf('.', ' ', '-', ':')
 ) {
-    // Fix: We now obscure the entire line (including Country and IP)
     val obscureStartIndex = 0
 
     // Remove targetText from remember keys so we don't instantly throw away the animation state
@@ -205,7 +205,6 @@ private fun ObscurableText(
         val targetChars = targetText.toCharArray()
         var currentChars = displayText.toCharArray()
 
-        // Fix: Starting animation check exactly at 0
         val currentObscureStart = 0
 
         // Check if the base string structure changed (length difference or country name change)
@@ -305,9 +304,9 @@ private fun LocationTextElement(
             1.dp,
             Brush.verticalGradient(listOf(colors.shade100.copy(alpha = 0.08f), colors.shade100.copy(alpha = 0.02f)))
         ),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(12.dp),
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick) // Makes the entire IP block clickable to toggle privacy mode
     ) {
         // Safe fallbacks to absolutely guarantee no null strings
@@ -520,15 +519,22 @@ fun DashboardContent(
     onToggleIpVisibility: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp.dp
+    
+    // Dynamically calculate the top spacer to push the card lower on larger screens
+    // This addresses the issue where the card was too high when no recent connections existed.
+    val topSpacerHeight = (screenHeight * 0.55f).coerceAtLeast(400.dp)
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
-            bottom = 120.dp
+            bottom = 140.dp // Increased padding for better scroll feel with the floating bottom bar
         )
     ) {
         item {
             // This spacer pushes the cards down so the Map and Lock icon are visible
-            Spacer(modifier = Modifier.height(380.dp))
+            Spacer(modifier = Modifier.height(topSpacerHeight))
         }
 
         item {
@@ -720,9 +726,9 @@ fun ConnectionStatusCard(
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
     val cardContainerColor = when {
-        isConnected -> colors.notificationSuccess.copy(alpha = 0.15f)
+        isConnected -> colors.notificationSuccess.copy(alpha = 0.18f)
         isConnecting -> colors.backgroundSecondary
-        else -> colors.backgroundSecondary.copy(alpha = 0.5f)
+        else -> colors.backgroundSecondary.copy(alpha = 0.92f)
     }
 
     val contentColor = colors.textNorm
@@ -731,8 +737,13 @@ fun ConnectionStatusCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = cardContainerColor)
+        shape = RoundedCornerShape(32.dp),
+        colors = CardDefaults.cardColors(containerColor = cardContainerColor),
+        border = BorderStroke(
+            1.dp,
+            if (isConnected) colors.notificationSuccess.copy(alpha = 0.25f)
+            else colors.shade100.copy(alpha = 0.08f)
+        )
     ) {
         Column(
             modifier = Modifier
@@ -859,11 +870,15 @@ fun ConnectionStatusCard(
                 onClick = onToggleConnection,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
+                    .height(58.dp),
+                shape = RoundedCornerShape(18.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (isConnected) colors.shade20 else colors.brandNorm,
                     contentColor = if (isConnected) colors.textNorm else colors.textInverted
+                ),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = if (isConnected) 0.dp else 4.dp,
+                    pressedElevation = 2.dp
                 ),
                 enabled = !isConnecting
             ) {
@@ -899,9 +914,13 @@ fun ServerCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable(enabled = !isConnecting) { onClick() },
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isConnected) colors.brandNorm.copy(alpha = 0.1f) else colors.backgroundSecondary.copy(alpha = 0.5f)
+            containerColor = if (isConnected) colors.brandNorm.copy(alpha = 0.12f) else colors.backgroundSecondary.copy(alpha = 0.8f)
+        ),
+        border = BorderStroke(
+            1.dp,
+            if (isConnected) colors.brandNorm.copy(alpha = 0.2f) else colors.shade100.copy(alpha = 0.05f)
         )
     ) {
         Row(
@@ -910,33 +929,45 @@ fun ServerCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val flagResId = CountryUtils.getFlagResource(context, server.exitCountry)
-            if (flagResId != 0) {
-                FlagIcon(
-                    countryFlag = flagResId,
-                    size = DpSize(36.dp, 24.dp)
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp, 24.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(colors.backgroundNorm),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Public,
-                        contentDescription = stringResource(R.string.desc_country),
-                        tint = colors.iconNorm,
-                        modifier = Modifier.size(20.dp)
+            Box(
+                modifier = Modifier.size(36.dp, 24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isConnecting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = colors.brandNorm
                     )
+                } else {
+                    val flagResId = CountryUtils.getFlagResource(context, server.exitCountry)
+                    if (flagResId != 0) {
+                        FlagIcon(
+                            countryFlag = flagResId,
+                            size = DpSize(36.dp, 24.dp)
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(colors.backgroundNorm),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Public,
+                                contentDescription = stringResource(R.string.desc_country),
+                                tint = colors.iconNorm,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                // Fix: Safely rendering country and city to prevent "null, null"
                 val rawCountry = CountryUtils.getCountryName(context, server.exitCountry)
                 val safeCountry = rawCountry.takeIf { it.isNotBlank() && it != "null" } ?: "VPN"
                 val safeCity = server.city.takeIf { it.isNotBlank() && it != "null" } ?: ""
