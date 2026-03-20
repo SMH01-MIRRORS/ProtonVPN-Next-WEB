@@ -7,7 +7,7 @@
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * ProtonCore is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -48,6 +48,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.delay
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.utils.isTablet
 
 @Composable
 fun WelcomeScreen(
@@ -60,6 +61,7 @@ fun WelcomeScreen(
     val colors = ProtonNextTheme.colors
     val uiState by viewModel.uiState.collectAsState()
     val isApiBypassEnabled by viewModel.isApiBypassEnabled.collectAsState()
+    val isTablet = isTablet()
 
     var isVisible by remember { mutableStateOf(false) }
 
@@ -93,186 +95,300 @@ fun WelcomeScreen(
                 }
             )
         } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(colors.backgroundNorm)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    // Background gradient
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .background(
-                                brush = Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color(0x6611D8CC),
-                                        Color(0x006E4BFF)
-                                    )
-                                )
-                            )
-                    )
-
-                    // Globe Image
-                    Image(
-                        painter = painterResource(id = R.drawable.vpn_welcome_globe),
-                        contentDescription = null,
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxSize(0.9f)
-                    )
-
-                    // Top Right Action Buttons (API Bypass configuration before login)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(top = 48.dp, end = 16.dp), // Top padding for status bar safe area
-                        contentAlignment = Alignment.TopEnd
-                    ) {
-                        ApiBypassButton(
-                            isVisible = isVisible,
-                            onClick = onNavigateToApiBypassSettings
-                        )
-                    }
-                }
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 24.dp, vertical = 32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    AnimatedVisibility(
-                        visible = isVisible,
-                        enter = fadeIn(tween(800, delayMillis = 200)) + slideInVertically(tween(800, delayMillis = 200)) { it / 4 }
-                    ) {
-                        Text(
-                            text = stringResource(R.string.welcome_title),
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = colors.textNorm,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    AnimatedVisibility(
-                        visible = isVisible,
-                        enter = fadeIn(tween(800, delayMillis = 400)) + slideInVertically(tween(800, delayMillis = 400)) { it / 4 }
-                    ) {
-                        Text(
-                            text = stringResource(R.string.welcome_subtitle),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = colors.textWeak,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 8.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(48.dp))
-
-                    AnimatedVisibility(
-                        visible = isVisible,
-                        enter = fadeIn(tween(800, delayMillis = 600)) + slideInVertically(tween(800, delayMillis = 600)) { it / 4 }
-                    ) {
-                        val isLoading = uiState is LoginUiState.Loading
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Button(
-                                onClick = { viewModel.loginAnonymous() },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp),
-                                shape = RoundedCornerShape(16.dp),
-                                enabled = !isLoading,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = colors.brandNorm,
-                                    contentColor = colors.textInverted
-                                )
-                            ) {
-                                if (isLoading) {
-                                    CircularProgressIndicator(
-                                        color = colors.textInverted,
-                                        strokeWidth = 2.dp,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                } else {
-                                    Text(
-                                        text = stringResource(R.string.btn_continue_guest),
-                                        style = MaterialTheme.typography.labelLarge,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-
-                            Button(
-                                onClick = onNavigateToRegister,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp),
-                                shape = RoundedCornerShape(16.dp),
-                                enabled = !isLoading,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = colors.interactionNorm,
-                                    contentColor = colors.textInverted
-                                )
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.btn_create_account),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-
-                            OutlinedButton(
-                                onClick = onNavigateToLogin,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp),
-                                shape = RoundedCornerShape(16.dp),
-                                enabled = !isLoading,
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = colors.textNorm
-                                ),
-                                border = ButtonDefaults.outlinedButtonBorder(!isLoading).copy(
-                                    brush = androidx.compose.ui.graphics.SolidColor(colors.separatorNorm)
-                                )
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.btn_login),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-
-                            if (uiState is LoginUiState.Error) {
-                                Text(
-                                    text = (uiState as LoginUiState.Error).message,
-                                    color = colors.notificationError,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 8.dp)
-                                )
-                            }
-                        }
-                    }
-                }
+            if (isTablet) {
+                WelcomeTabletContent(
+                    isVisible = isVisible,
+                    uiState = uiState,
+                    onLoginAnonymous = { viewModel.loginAnonymous() },
+                    onNavigateToRegister = onNavigateToRegister,
+                    onNavigateToLogin = onNavigateToLogin,
+                    onNavigateToApiBypassSettings = onNavigateToApiBypassSettings
+                )
+            } else {
+                WelcomePhoneContent(
+                    isVisible = isVisible,
+                    uiState = uiState,
+                    onLoginAnonymous = { viewModel.loginAnonymous() },
+                    onNavigateToRegister = onNavigateToRegister,
+                    onNavigateToLogin = onNavigateToLogin,
+                    onNavigateToApiBypassSettings = onNavigateToApiBypassSettings
+                )
             }
         }
     }
 }
 
-// Extracted to avoid ColumnScope LayoutScopeMarker conflict
+@Composable
+private fun WelcomePhoneContent(
+    isVisible: Boolean,
+    uiState: LoginUiState,
+    onLoginAnonymous: () -> Unit,
+    onNavigateToRegister: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+    onNavigateToApiBypassSettings: () -> Unit
+) {
+    val colors = ProtonNextTheme.colors
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.backgroundNorm)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            // Background gradient
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0x6611D8CC),
+                                Color(0x006E4BFF)
+                            )
+                        )
+                    )
+            )
+
+            // Globe Image
+            Image(
+                painter = painterResource(id = R.drawable.vpn_welcome_globe),
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize(0.9f)
+            )
+
+            // Top Right Action Buttons
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 48.dp, end = 16.dp),
+                contentAlignment = Alignment.TopEnd
+            ) {
+                ApiBypassButton(
+                    isVisible = isVisible,
+                    onClick = onNavigateToApiBypassSettings
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = fadeIn(tween(800, delayMillis = 200)) + slideInVertically(tween(800, delayMillis = 200)) { it / 4 }
+            ) {
+                Text(
+                    text = stringResource(R.string.welcome_title),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = colors.textNorm,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = fadeIn(tween(800, delayMillis = 400)) + slideInVertically(tween(800, delayMillis = 400)) { it / 4 }
+            ) {
+                Text(
+                    text = stringResource(R.string.welcome_subtitle),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = colors.textWeak,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = fadeIn(tween(800, delayMillis = 600)) + slideInVertically(tween(800, delayMillis = 600)) { it / 4 }
+            ) {
+                WelcomeButtons(
+                    uiState = uiState,
+                    onLoginAnonymous = onLoginAnonymous,
+                    onNavigateToRegister = onNavigateToRegister,
+                    onNavigateToLogin = onNavigateToLogin
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun WelcomeTabletContent(
+    isVisible: Boolean,
+    uiState: LoginUiState,
+    onLoginAnonymous: () -> Unit,
+    onNavigateToRegister: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+    onNavigateToApiBypassSettings: () -> Unit
+) {
+    val colors = ProtonNextTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.backgroundNorm)
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0x6611D8CC),
+                                Color(0x006E4BFF)
+                            )
+                        )
+                    )
+            )
+
+            Image(
+                painter = painterResource(id = R.drawable.vpn_welcome_globe),
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize(0.8f)
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .padding(48.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.Start
+        ) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
+                ApiBypassButton(isVisible = isVisible, onClick = onNavigateToApiBypassSettings)
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = fadeIn(tween(800, delayMillis = 200)) + slideInVertically(tween(800, delayMillis = 200)) { it / 4 }
+            ) {
+                Text(
+                    text = stringResource(R.string.welcome_title),
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = colors.textNorm
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = fadeIn(tween(800, delayMillis = 400)) + slideInVertically(tween(800, delayMillis = 400)) { it / 4 }
+            ) {
+                Text(
+                    text = stringResource(R.string.welcome_subtitle),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = colors.textWeak
+                )
+            }
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = fadeIn(tween(800, delayMillis = 600)) + slideInVertically(tween(800, delayMillis = 600)) { it / 4 }
+            ) {
+                Box(modifier = Modifier.widthIn(max = 400.dp)) {
+                    WelcomeButtons(
+                        uiState = uiState,
+                        onLoginAnonymous = onLoginAnonymous,
+                        onNavigateToRegister = onNavigateToRegister,
+                        onNavigateToLogin = onNavigateToLogin
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun WelcomeButtons(
+    uiState: LoginUiState,
+    onLoginAnonymous: () -> Unit,
+    onNavigateToRegister: () -> Unit,
+    onNavigateToLogin: () -> Unit
+) {
+    val colors = ProtonNextTheme.colors
+    val isLoading = uiState is LoginUiState.Loading
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Button(
+            onClick = onLoginAnonymous,
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = RoundedCornerShape(16.dp),
+            enabled = !isLoading,
+            colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm, contentColor = colors.textInverted)
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(color = colors.textInverted, strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
+            } else {
+                Text(text = stringResource(R.string.btn_continue_guest), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        Button(
+            onClick = onNavigateToRegister,
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = RoundedCornerShape(16.dp),
+            enabled = !isLoading,
+            colors = ButtonDefaults.buttonColors(containerColor = colors.interactionNorm, contentColor = colors.textInverted)
+        ) {
+            Text(text = stringResource(R.string.btn_create_account), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+        }
+
+        OutlinedButton(
+            onClick = onNavigateToLogin,
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = RoundedCornerShape(16.dp),
+            enabled = !isLoading,
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.textNorm),
+            border = ButtonDefaults.outlinedButtonBorder(!isLoading).copy(brush = androidx.compose.ui.graphics.SolidColor(colors.separatorNorm))
+        ) {
+            Text(text = stringResource(R.string.btn_login), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+        }
+
+        if (uiState is LoginUiState.Error) {
+            Text(
+                text = (uiState as LoginUiState.Error).message,
+                color = colors.notificationError,
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            )
+        }
+    }
+}
+
 @Composable
 private fun ApiBypassButton(
     isVisible: Boolean,
@@ -285,8 +401,7 @@ private fun ApiBypassButton(
     ) {
         IconButton(
             onClick = onClick,
-            modifier = Modifier
-                .background(colors.backgroundSecondary.copy(alpha = 0.6f), CircleShape)
+            modifier = Modifier.background(colors.backgroundSecondary.copy(alpha = 0.6f), CircleShape)
         ) {
             Icon(
                 imageVector = Icons.Rounded.CloudSync,

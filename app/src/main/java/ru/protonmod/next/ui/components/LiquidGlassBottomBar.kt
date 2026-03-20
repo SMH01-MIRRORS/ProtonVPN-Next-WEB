@@ -24,13 +24,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -52,6 +46,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.utils.isTablet
 
 @Composable
 fun LiquidGlassBottomBar(
@@ -63,7 +58,8 @@ fun LiquidGlassBottomBar(
     modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
-    // Styling matching the exact visual design of Proton Next Liquid Glass
+    val isTablet = isTablet()
+
     val glassShape = RoundedCornerShape(32.dp)
     val glassBackgroundColor = colors.backgroundNorm.copy(alpha = 0.85f)
 
@@ -74,100 +70,121 @@ fun LiquidGlassBottomBar(
         )
     )
 
+    val targets = mutableListOf(MainTarget.Home)
+    if (showCountries) targets.add(MainTarget.Countries)
+    targets.add(MainTarget.Profiles)
+    targets.add(MainTarget.Settings)
+
+    // Center the bar on tablets and limit its width
     Box(
         modifier = modifier
-            .padding(horizontal = 24.dp, vertical = 24.dp)
-            .shadow(
-                elevation = 15.dp,
-                shape = glassShape,
-                spotColor = Color.Black.copy(alpha = 0.5f)
-            )
-            .clip(glassShape)
-            .background(glassBackgroundColor)
-            .border(
-                width = 1.dp,
-                brush = glassBorderBrush,
-                shape = glassShape
-            )
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = {}
-            )
+            .fillMaxWidth()
+            .padding(bottom = 24.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Row(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(70.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val targets = mutableListOf(MainTarget.Home)
-            if (showCountries) targets.add(MainTarget.Countries)
-            // TODO: Add a toggle in user settings to show/hide profiles if needed
-            targets.add(MainTarget.Profiles)
-            targets.add(MainTarget.Settings)
-
-            targets.forEach { target ->
-                val isSelected = target == selectedTarget
-
-                val activeColor = colors.brandNorm
-                val inactiveColor = colors.iconWeak
-
-                val iconColor by animateColorAsState(
-                    targetValue = if (isSelected) activeColor else inactiveColor,
-                    animationSpec = spring(stiffness = Spring.StiffnessLow),
-                    label = "iconColor"
+                .padding(horizontal = 24.dp)
+                .widthIn(max = if (isTablet) 400.dp else 600.dp) // Limit width on tablets
+                .shadow(
+                    elevation = 15.dp,
+                    shape = glassShape,
+                    spotColor = Color.Black.copy(alpha = 0.5f)
                 )
-
-                val iconVector = getMaterialIconForTarget(target)
-
-
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(CircleShape)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) { navigateTo(target) }
-                ) {
-                    if (isSelected) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .background(
-                                    color = iconColor.copy(alpha = 0.15f),
-                                    shape = CircleShape
-                                )
-                        )
-                    }
-
-                    Box {
-                        Icon(
-                            imageVector = iconVector,
-                            contentDescription = target.name,
-                            tint = iconColor,
-                            modifier = Modifier.size(24.dp)
-                        )
-
-                        if (notificationDots.contains(target)) {
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .background(colors.notificationError, CircleShape)
-                                    .align(Alignment.TopEnd)
-                            )
-                        }
-                    }
+                .clip(glassShape)
+                .background(glassBackgroundColor)
+                .border(
+                    width = 1.dp,
+                    brush = glassBorderBrush,
+                    shape = glassShape
+                )
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {}
+                )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(70.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                targets.forEach { target ->
+                    NavigationItem(
+                        target = target,
+                        isSelected = target == selectedTarget,
+                        hasNotification = notificationDots.contains(target),
+                        onNavigate = { navigateTo(target) },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }
     }
 }
 
-// Replaced proprietary Proton drawables with Material Icons
+@Composable
+private fun NavigationItem(
+    target: MainTarget,
+    isSelected: Boolean,
+    hasNotification: Boolean,
+    onNavigate: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = ProtonNextTheme.colors
+    val activeColor = colors.brandNorm
+    val inactiveColor = colors.iconWeak
+
+    val iconColor by animateColorAsState(
+        targetValue = if (isSelected) activeColor else inactiveColor,
+        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        label = "iconColor"
+    )
+
+    val iconVector = getMaterialIconForTarget(target)
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .clip(CircleShape)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) { onNavigate() }
+    ) {
+        if (isSelected) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(
+                        color = iconColor.copy(alpha = 0.15f),
+                        shape = CircleShape
+                    )
+            )
+        }
+
+        Box {
+            Icon(
+                imageVector = iconVector,
+                contentDescription = target.name,
+                tint = iconColor,
+                modifier = Modifier.size(24.dp)
+            )
+
+            if (hasNotification) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .background(colors.notificationError, CircleShape)
+                        .align(Alignment.TopEnd)
+                )
+            }
+        }
+    }
+}
+
 private fun getMaterialIconForTarget(target: MainTarget): ImageVector {
     return when (target) {
         MainTarget.Home -> Icons.Rounded.Home

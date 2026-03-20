@@ -71,6 +71,7 @@ import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.theme.ProtonColors
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.CountryUtils
+import ru.protonmod.next.ui.utils.isTablet
 import ru.protonmod.next.vpn.AmneziaVpnManager
 
 // --- Extensions for UI Effects matching Original Proton ---
@@ -339,6 +340,7 @@ fun DashboardScreen(
     val context = LocalContext.current
     var pendingServer by remember { mutableStateOf<LogicalServer?>(null) }
     var isQuickConnectPending by remember { mutableStateOf(false) }
+    val isTablet = isTablet()
 
     val vpnPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -412,21 +414,23 @@ fun DashboardScreen(
             HomeMap(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight(0.6f),
+                    .fillMaxHeight(if (isTablet) 1f else 0.6f),
                 allServers = successState?.servers ?: emptyList(),
                 connectedServer = successState?.connectedServer,
-                userCountryCode = successState?.originalLocationText?.countryCode, // Focus on user's real location initially
+                userCountryCode = successState?.originalLocationText?.countryCode,
                 isConnecting = isConnecting,
-                isInteractive = false
+                isInteractive = isTablet
             )
 
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(250.dp) // Proton uses ~200-250dp for the top gradient
-                    .align(Alignment.TopCenter)
-                    .vpnStatusOverlayBackground(isConnected, isConnecting, colors)
-            )
+            if (!isTablet) {
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                        .align(Alignment.TopCenter)
+                        .vpnStatusOverlayBackground(isConnected, isConnecting, colors)
+                )
+            }
 
             VpnStatusTop(
                 isConnected = isConnected,
@@ -474,12 +478,9 @@ fun DashboardScreen(
                         if (state != null) {
                             DashboardContent(
                                 state = state,
-                                onServerClick = { server ->
-                                    checkVpnAndConnect(server)
-                                },
-                                onQuickConnect = {
-                                    checkVpnAndQuickConnect()
-                                },
+                                isTablet = isTablet,
+                                onServerClick = { server -> checkVpnAndConnect(server) },
+                                onQuickConnect = { checkVpnAndQuickConnect() },
                                 onDisconnect = { viewModel.disconnect() },
                                 onRefreshCert = { viewModel.refreshCertificate() },
                                 onToggleIpVisibility = { viewModel.toggleIpVisibility() }
@@ -489,7 +490,7 @@ fun DashboardScreen(
                 }
             }
 
-            // Bottom Navigation
+            // Bottom Navigation (Centered for both Phone and Tablet now)
             LiquidGlassBottomBar(
                 selectedTarget = currentTarget,
                 showCountries = true,
@@ -513,6 +514,7 @@ fun DashboardScreen(
 @Composable
 fun DashboardContent(
     state: DashboardUiState.Success,
+    isTablet: Boolean = false,
     onServerClick: (LogicalServer) -> Unit,
     onQuickConnect: () -> Unit,
     onDisconnect: () -> Unit,
@@ -523,82 +525,146 @@ fun DashboardContent(
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     
-    // Dynamically calculate the top spacer to push the card lower on larger screens
-    // This addresses the issue where the card was too high when no recent connections existed.
-    val topSpacerHeight = (screenHeight * 0.55f).coerceAtLeast(400.dp)
+    if (isTablet) {
+        // Tablet Layout: Split connection (Left) and recent connections (Right)
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 32.dp)
+                .padding(bottom = 140.dp), // Increased for the centered bottom bar
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(32.dp)
+        ) {
+            // Left Side: Connection Status
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.Center
+            ) {
+                CertificateBanner(
+                    state = state.certificateState,
+                    onRefresh = onRefreshCert,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            bottom = 140.dp // Increased padding for better scroll feel with the floating bottom bar
-        )
-    ) {
-        item {
-            // This spacer pushes the cards down so the Map and Lock icon are visible
-            Spacer(modifier = Modifier.height(topSpacerHeight))
-        }
-
-        item {
-            CertificateBanner(
-                state = state.certificateState,
-                onRefresh = onRefreshCert,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-        }
-
-        item {
-            ConnectionStatusCard(
-                isConnected = state.isConnected,
-                isConnecting = state.isConnecting,
-                connectedServer = state.connectedServer,
-                originalLocationText = state.originalLocationText,
-                vpnLocationText = state.vpnLocationText,
-                isIpHidden = state.isIpHidden,
-                onToggleIpVisibility = onToggleIpVisibility,
-                onToggleConnection = {
-                    if (state.isConnected) {
-                        onDisconnect()
-                    } else {
-                        onQuickConnect()
+                ConnectionStatusCard(
+                    isConnected = state.isConnected,
+                    isConnecting = state.isConnecting,
+                    connectedServer = state.connectedServer,
+                    originalLocationText = state.originalLocationText,
+                    vpnLocationText = state.vpnLocationText,
+                    isIpHidden = state.isIpHidden,
+                    onToggleIpVisibility = onToggleIpVisibility,
+                    onToggleConnection = {
+                        if (state.isConnected) onDisconnect() else onQuickConnect()
                     }
-                }
-            )
-        }
+                )
+            }
 
-        if (state.recentConnections.isNotEmpty()) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    colors.backgroundNorm
-                                )
-                            )
-                        )
-                        .padding(top = 24.dp)
-                ) {
+            // Right Side: Recent Connections
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.Center
+            ) {
+                if (state.recentConnections.isNotEmpty()) {
                     Text(
                         text = stringResource(R.string.title_recent_connections),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = colors.textNorm,
-                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                        modifier = Modifier.padding(bottom = 16.dp)
                     )
+
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(colors.backgroundNorm.copy(alpha = 0.5f)),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(state.recentConnections) { server ->
+                            ServerCard(
+                                server = server,
+                                isConnected = state.connectedServer?.id == server.id,
+                                isConnecting = state.isConnecting && state.connectedServer?.id == server.id,
+                                onClick = { onServerClick(server) }
+                            )
+                        }
+                    }
                 }
             }
+        }
+    } else {
+        // Phone Layout (original LazyColumn)
+        val topSpacerHeight = (screenHeight * 0.55f).coerceAtLeast(400.dp)
 
-            items(state.recentConnections) { server ->
-                Box(modifier = Modifier.background(colors.backgroundNorm)) {
-                    ServerCard(
-                        server = server,
-                        isConnected = state.connectedServer?.id == server.id,
-                        isConnecting = state.isConnecting && state.connectedServer?.id == server.id,
-                        onClick = { onServerClick(server) },
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
-                    )
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 140.dp)
+        ) {
+            item {
+                Spacer(modifier = Modifier.height(topSpacerHeight))
+            }
+
+            item {
+                CertificateBanner(
+                    state = state.certificateState,
+                    onRefresh = onRefreshCert,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+
+            item {
+                ConnectionStatusCard(
+                    isConnected = state.isConnected,
+                    isConnecting = state.isConnecting,
+                    connectedServer = state.connectedServer,
+                    originalLocationText = state.originalLocationText,
+                    vpnLocationText = state.vpnLocationText,
+                    isIpHidden = state.isIpHidden,
+                    onToggleIpVisibility = onToggleIpVisibility,
+                    onToggleConnection = {
+                        if (state.isConnected) onDisconnect() else onQuickConnect()
+                    }
+                )
+            }
+
+            if (state.recentConnections.isNotEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(Color.Transparent, colors.backgroundNorm)
+                                )
+                            )
+                            .padding(top = 24.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.title_recent_connections),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = colors.textNorm,
+                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                        )
+                    }
+                }
+
+                items(state.recentConnections) { server ->
+                    Box(modifier = Modifier.background(colors.backgroundNorm)) {
+                        ServerCard(
+                            server = server,
+                            isConnected = state.connectedServer?.id == server.id,
+                            isConnecting = state.isConnecting && state.connectedServer?.id == server.id,
+                            onClick = { onServerClick(server) },
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                        )
+                    }
                 }
             }
         }

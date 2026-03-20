@@ -42,6 +42,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import ru.protonmod.next.R
 import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.utils.isTablet
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,6 +53,7 @@ fun ObfuscationSettingsScreen(
 ) {
     val colors = ProtonNextTheme.colors
     val uiState by viewModel.uiState.collectAsState()
+    val isTablet = isTablet()
 
     // Aggregate profiles logic
     val standardProfileName = stringResource(R.string.obfuscation_config_standard)
@@ -132,9 +134,12 @@ fun ObfuscationSettingsScreen(
 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start,
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    val contentModifier = if (isTablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
+
                     // Master Toggle
                     item {
                         Card(
@@ -143,7 +148,7 @@ fun ObfuscationSettingsScreen(
                                 containerColor = if (uiState.isObfuscationEnabled) colors.brandNorm.copy(alpha = 0.15f)
                                 else colors.backgroundSecondary.copy(alpha = 0.5f)
                             ),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = contentModifier
                         ) {
                             Row(
                                 modifier = Modifier
@@ -186,7 +191,8 @@ fun ObfuscationSettingsScreen(
                         AnimatedVisibility(
                             visible = uiState.isObfuscationEnabled,
                             enter = fadeIn() + expandVertically(),
-                            exit = fadeOut() + shrinkVertically()
+                            exit = fadeOut() + shrinkVertically(),
+                            modifier = contentModifier
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
 

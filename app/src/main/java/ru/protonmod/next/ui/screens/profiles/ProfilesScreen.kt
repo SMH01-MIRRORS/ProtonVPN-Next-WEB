@@ -25,6 +25,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -51,6 +54,7 @@ import ru.protonmod.next.ui.components.LiquidGlassBottomBar
 import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.CountryUtils
+import ru.protonmod.next.ui.utils.isTablet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,6 +69,7 @@ fun ProfilesScreen(
     val colors = ProtonNextTheme.colors
     val currentTarget = MainTarget.Profiles
     val context = LocalContext.current
+    val isTablet = isTablet()
 
     // Collect profiles from ViewModel
     val profiles by viewModel.profiles.collectAsState()
@@ -103,17 +108,18 @@ fun ProfilesScreen(
         containerColor = colors.backgroundNorm,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onCreateNewProfile,
-                containerColor = colors.brandNorm,
-                contentColor = Color.White,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-                    // Added more padding to lift the FAB well above the BottomBar
-                    .padding(bottom = 130.dp)
-            ) {
-                Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.desc_create_profile))
+            if (!isTablet) {
+                FloatingActionButton(
+                    onClick = onCreateNewProfile,
+                    containerColor = colors.brandNorm,
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .windowInsetsPadding(WindowInsets.navigationBars)
+                        .padding(bottom = 130.dp)
+                ) {
+                    Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.desc_create_profile))
+                }
             }
         },
         bottomBar = {}
@@ -138,53 +144,87 @@ fun ProfilesScreen(
                     )
             )
 
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .windowInsetsPadding(WindowInsets.statusBars),
-                contentPadding = PaddingValues(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = 16.dp,
-                    // Increased bottom padding so the last item scrolls above the higher FAB
-                    bottom = 140.dp
-                ),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .windowInsetsPadding(WindowInsets.statusBars)
             ) {
-                item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 24.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
                         text = stringResource(R.string.profiles_title),
                         style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        color = colors.textNorm,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 24.dp)
+                        color = colors.textNorm
                     )
+
+                    if (isTablet) {
+                        Button(
+                            onClick = onCreateNewProfile,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
+                        ) {
+                            Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(stringResource(R.string.desc_create_profile))
+                        }
+                    }
                 }
 
                 if (profiles.isEmpty()) {
-                    item {
-                        // Fixed centering: fillMaxWidth ensures it's horizontally centered,
-                        // fillParentMaxHeight(0.75f) takes 75% of height to account for the title above
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .fillParentMaxHeight(0.75f),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            EmptyProfilesState()
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        EmptyProfilesState()
+                    }
+                } else if (isTablet) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(minSize = 340.dp),
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 120.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(profiles, key = { it.id }) { profile ->
+                            ProfileCardItem(
+                                profile = profile,
+                                onConnect = {
+                                    checkVpnAndConnect {
+                                        viewModel.connectWithProfile(profile)
+                                        onNavigateToHome()
+                                    }
+                                },
+                                onEdit = { onEditProfile(profile.id) }
+                            )
                         }
                     }
                 } else {
-                    items(profiles, key = { it.id }) { profile ->
-                        ProfileCardItem(
-                            profile = profile,
-                            onConnect = {
-                                checkVpnAndConnect {
-                                    viewModel.connectWithProfile(profile)
-                                    onNavigateToHome()
-                                }
-                            },
-                            onEdit = { onEditProfile(profile.id) }
-                        )
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            start = 16.dp,
+                            end = 16.dp,
+                            bottom = 140.dp
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(profiles, key = { it.id }) { profile ->
+                            ProfileCardItem(
+                                profile = profile,
+                                onConnect = {
+                                    checkVpnAndConnect {
+                                        viewModel.connectWithProfile(profile)
+                                        onNavigateToHome()
+                                    }
+                                },
+                                onEdit = { onEditProfile(profile.id) }
+                            )
+                        }
                     }
                 }
             }
@@ -192,8 +232,6 @@ fun ProfilesScreen(
             // Bottom Navigation
             LiquidGlassBottomBar(
                 selectedTarget = currentTarget,
-                showCountries = true,
-                showGateways = false,
                 navigateTo = { target ->
                     when (target) {
                         MainTarget.Home -> onNavigateToHome()

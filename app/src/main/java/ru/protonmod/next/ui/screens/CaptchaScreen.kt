@@ -48,6 +48,7 @@ import ru.protonmod.next.R
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.utils.DeviceInfoProvider
 import ru.protonmod.next.utils.ProtonLogger
+import ru.protonmod.next.ui.utils.isTablet
 import java.io.ByteArrayInputStream
 
 @SuppressLint("SetJavaScriptEnabled")
@@ -64,6 +65,7 @@ fun CaptchaScreen(
     val coroutineScope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(true) }
     var progress by remember { mutableIntStateOf(0) }
+    val isTablet = isTablet()
 
     Scaffold(
         topBar = {
@@ -106,10 +108,11 @@ fun CaptchaScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(colors.backgroundNorm)
+                .background(colors.backgroundNorm),
+            horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start
         ) {
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = if (isTablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth(),
                 color = colors.backgroundNorm,
                 tonalElevation = 2.dp
             ) {
@@ -145,8 +148,7 @@ fun CaptchaScreen(
             }
 
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
+                modifier = (if (isTablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth())
                     .weight(1f)
             ) {
                 AndroidView(

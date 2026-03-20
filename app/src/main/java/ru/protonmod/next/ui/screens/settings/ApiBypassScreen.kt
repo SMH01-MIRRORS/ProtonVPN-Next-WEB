@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.utils.isTablet
 
 /**
  * Screen for configuring API Block Bypass strategies.
@@ -64,6 +65,7 @@ fun ApiBypassScreen(
 ) {
     val colors = ProtonNextTheme.colors
     val uiState by viewModel.uiState.collectAsState()
+    val isTablet = isTablet()
 
     // Assuming the ViewModel exposes whether ANY VPN (ours or third-party) is active
     // via ConnectivityManager NetworkCapabilities.TRANSPORT_VPN
@@ -120,12 +122,14 @@ fun ApiBypassScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 16.dp),
+                horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start
             ) {
+                val contentModifier = if (isTablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
+
                 // Header Image/Icon
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = contentModifier
                         .padding(vertical = 32.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -151,7 +155,7 @@ fun ApiBypassScreen(
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                     color = colors.textNorm,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = contentModifier
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -162,8 +166,7 @@ fun ApiBypassScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.textWeak,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = contentModifier
                         .padding(horizontal = 16.dp)
                 )
 
@@ -173,7 +176,8 @@ fun ApiBypassScreen(
                 AnimatedVisibility(
                     visible = isAnyVpnActive,
                     enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically()
+                    exit = fadeOut() + shrinkVertically(),
+                    modifier = contentModifier
                 ) {
                     Surface(
                         modifier = Modifier
@@ -195,7 +199,7 @@ fun ApiBypassScreen(
                             )
                             Spacer(modifier = Modifier.width(16.dp))
                             Text(
-                                text = stringResource(R.string.api_bypass_vpn_detected), // "VPN detected. API bypass is disabled as it's not needed."
+                                text = stringResource(R.string.api_bypass_vpn_detected),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = colors.notificationWarning,
                                 fontWeight = FontWeight.Medium
@@ -210,7 +214,7 @@ fun ApiBypassScreen(
                     colors = CardDefaults.cardColors(
                         containerColor = colors.backgroundSecondary.copy(alpha = 0.8f)
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = contentModifier
                 ) {
                     Column(modifier = Modifier.padding(vertical = 4.dp)) {
 

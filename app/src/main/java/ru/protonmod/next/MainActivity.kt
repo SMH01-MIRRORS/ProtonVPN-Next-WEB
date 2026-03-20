@@ -46,11 +46,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import ru.protonmod.next.data.local.SessionDao
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import ru.protonmod.next.ui.nav.Screen
 import ru.protonmod.next.ui.nav.appNavGraph
 import ru.protonmod.next.ui.screens.LoginScreen
 import ru.protonmod.next.ui.screens.WelcomeScreen
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.utils.ProvideDeviceType
 import javax.inject.Inject
 
 @HiltViewModel
@@ -79,20 +82,24 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission()
     ) { _ -> }
 
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
 
         setContent {
+            val windowSizeClass = calculateWindowSizeClass(this)
             ProtonNextTheme {
-                Box(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    LaunchedEffect(Unit) {
-                        checkAndRequestNotificationPermission()
+                ProvideDeviceType(windowSizeClass.widthSizeClass) {
+                    Box(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        LaunchedEffect(Unit) {
+                            checkAndRequestNotificationPermission()
+                        }
+                        ProtonNextAppNavHost()
                     }
-                    ProtonNextAppNavHost()
                 }
             }
         }

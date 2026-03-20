@@ -47,6 +47,7 @@ import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.LiquidGlassBottomBar
 import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.utils.isTablet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,6 +67,7 @@ fun SettingsScreen(
     val colors = ProtonNextTheme.colors
     val uiState by viewModel.uiState.collectAsState()
     val currentTarget = MainTarget.Settings
+    val isTablet = isTablet()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -95,6 +97,7 @@ fun SettingsScreen(
 
             SettingsContent(
                 state = uiState,
+                isTablet = isTablet,
                 onAutoConnectChange = viewModel::setAutoConnect,
                 onNotificationsChange = viewModel::setNotifications,
                 onPortChange = viewModel::setVpnPort,
@@ -134,6 +137,7 @@ fun SettingsScreen(
 @Composable
 fun SettingsContent(
     state: SettingsUiState,
+    isTablet: Boolean = false,
     onAutoConnectChange: (Boolean) -> Unit,
     onNotificationsChange: (Boolean) -> Unit,
     onPortChange: (Int) -> Unit,
@@ -150,132 +154,229 @@ fun SettingsContent(
 
     LazyColumn(
         modifier = modifier,
+        horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start,
         contentPadding = PaddingValues(
             start = 16.dp,
             end = 16.dp,
             top = 16.dp,
-            bottom = 120.dp
+            bottom = if (isTablet) 140.dp else 120.dp
         )
     ) {
-        item {
-            Text(
-                text = stringResource(R.string.settings_title),
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                color = colors.textNorm,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 24.dp)
+        if (isTablet) {
+            item {
+                Row(
+                    modifier = Modifier
+                        .widthIn(max = 1000.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(32.dp)
+                ) {
+                    // Left Column: Main Settings & Connection
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.settings_title),
+                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                            color = colors.textNorm,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 24.dp)
+                        )
+
+                        FeatureCategory(
+                            state = state,
+                            onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
+                            onNavigateToProtocol = onNavigateToProtocol
+                        )
+
+                        ConnectionSettingsSection(
+                            state = state,
+                            onAutoConnectChange = onAutoConnectChange,
+                            onNavigateToApiBypass = onNavigateToApiBypass,
+                            onPortChange = onPortChange
+                        )
+                    }
+
+                    // Right Column: Privacy, Notifications & About
+                    Column(modifier = Modifier.weight(1f)) {
+                        Spacer(modifier = Modifier.height(80.dp)) // Alignment offset
+
+                        PrivacySettingsSection(
+                            state = state,
+                            onCustomDnsChange = onCustomDnsChange,
+                            onNavigateToKillSwitch = onNavigateToKillSwitch,
+                            onNavigateToErrorReporting = onNavigateToErrorReporting,
+                            onNotificationsChange = onNotificationsChange
+                        )
+
+                        AboutSettingsSection(
+                            onNavigateToAbout = onNavigateToAbout
+                        )
+                    }
+                }
+            }
+        } else {
+            // Phone Layout
+            val contentModifier = Modifier.fillMaxWidth()
+
+            item {
+                Text(
+                    text = stringResource(R.string.settings_title),
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    color = colors.textNorm,
+                    modifier = contentModifier.padding(horizontal = 12.dp, vertical = 24.dp)
+                )
+            }
+
+            item {
+                FeatureCategory(
+                    modifier = contentModifier,
+                    state = state,
+                    onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
+                    onNavigateToProtocol = onNavigateToProtocol
+                )
+            }
+
+            item {
+                ConnectionSettingsSection(
+                    modifier = contentModifier,
+                    state = state,
+                    onAutoConnectChange = onAutoConnectChange,
+                    onNavigateToApiBypass = onNavigateToApiBypass,
+                    onPortChange = onPortChange
+                )
+            }
+
+            item {
+                PrivacySettingsSection(
+                    modifier = contentModifier,
+                    state = state,
+                    onCustomDnsChange = onCustomDnsChange,
+                    onNavigateToKillSwitch = onNavigateToKillSwitch,
+                    onNavigateToErrorReporting = onNavigateToErrorReporting,
+                    onNotificationsChange = onNotificationsChange
+                )
+            }
+
+            item {
+                AboutSettingsSection(
+                    modifier = contentModifier,
+                    onNavigateToAbout = onNavigateToAbout
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ConnectionSettingsSection(
+    modifier: Modifier = Modifier,
+    state: SettingsUiState,
+    onAutoConnectChange: (Boolean) -> Unit,
+    onNavigateToApiBypass: (() -> Unit)?,
+    onPortChange: (Int) -> Unit
+) {
+    Category(modifier = modifier, title = stringResource(R.string.settings_connection)) {
+        SettingToggleRow(
+            icon = Icons.Rounded.Autorenew,
+            title = stringResource(R.string.settings_auto_connect),
+            subtitle = stringResource(R.string.settings_auto_connect_desc),
+            checked = state.autoConnectEnabled,
+            onCheckedChange = onAutoConnectChange
+        )
+
+        SettingRowWithIcon(
+            icon = Icons.Rounded.CloudSync,
+            title = stringResource(R.string.settings_api_bypass),
+            subtitle = if (state.apiBypassEnabled) stringResource(R.string.settings_on) else stringResource(R.string.settings_off),
+            onClick = { onNavigateToApiBypass?.invoke() }
+        )
+
+        var showPortDialog by remember { mutableStateOf(false) }
+        SettingRowWithIcon(
+            icon = Icons.Rounded.Numbers,
+            title = stringResource(R.string.settings_port),
+            subtitle = if (state.vpnPort == 0) stringResource(R.string.settings_port_auto) else state.vpnPort.toString(),
+            onClick = { showPortDialog = true }
+        )
+        if (showPortDialog) {
+            PortSelectionDialog(
+                currentPort = state.vpnPort,
+                onDismiss = { showPortDialog = false },
+                onPortSelected = {
+                    onPortChange(it)
+                    showPortDialog = false
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun PrivacySettingsSection(
+    modifier: Modifier = Modifier,
+    state: SettingsUiState,
+    onCustomDnsChange: (String) -> Unit,
+    onNavigateToKillSwitch: (() -> Unit)?,
+    onNavigateToErrorReporting: (() -> Unit)?,
+    onNotificationsChange: (Boolean) -> Unit
+) {
+    Category(modifier = modifier, title = stringResource(R.string.settings_privacy)) {
+        var showCustomDnsDialog by remember { mutableStateOf(false) }
+        val currentDnsSubtitle = state.customDns.ifBlank {
+            stringResource(R.string.settings_custom_dns_default)
+        }
+
+        SettingRowWithIcon(
+            icon = Icons.Rounded.Dns,
+            title = stringResource(R.string.settings_custom_dns),
+            subtitle = currentDnsSubtitle,
+            onClick = { showCustomDnsDialog = true }
+        )
+
+        if (showCustomDnsDialog) {
+            CustomDnsDialog(
+                currentDns = state.customDns,
+                onDismiss = { showCustomDnsDialog = false },
+                onDnsSaved = {
+                    onCustomDnsChange(it)
+                    showCustomDnsDialog = false
+                }
             )
         }
 
-        // Feature Tiles: Split Tunneling & Protocol
-        item {
-            FeatureCategory(
-                state = state,
-                onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
-                onNavigateToProtocol = onNavigateToProtocol
-            )
-        }
+        SettingRowWithIcon(
+            icon = Icons.Rounded.GppMaybe,
+            title = stringResource(R.string.settings_kill_switch),
+            subtitle = stringResource(R.string.settings_kill_switch_desc),
+            onClick = onNavigateToKillSwitch
+        )
 
-        // Connection Settings
-        item {
-            Category(title = stringResource(R.string.settings_connection)) {
-                SettingToggleRow(
-                    icon = Icons.Rounded.Autorenew,
-                    title = stringResource(R.string.settings_auto_connect),
-                    subtitle = stringResource(R.string.settings_auto_connect_desc),
-                    checked = state.autoConnectEnabled,
-                    onCheckedChange = onAutoConnectChange
-                )
+        SettingRowWithIcon(
+            icon = Icons.Rounded.BugReport,
+            title = stringResource(R.string.settings_error_reporting),
+            subtitle = stringResource(R.string.settings_error_reporting_desc),
+            onClick = onNavigateToErrorReporting
+        )
 
-                // API Block Bypass Strategy
-                SettingRowWithIcon(
-                    icon = Icons.Rounded.CloudSync,
-                    title = stringResource(R.string.settings_api_bypass),
-                    subtitle = if (state.apiBypassEnabled) stringResource(R.string.settings_on) else stringResource(R.string.settings_off),
-                    onClick = { onNavigateToApiBypass?.invoke() }
-                )
+        SettingToggleRow(
+            icon = Icons.Rounded.Notifications,
+            title = stringResource(R.string.settings_notifications),
+            subtitle = stringResource(R.string.settings_notifications_desc),
+            checked = state.notificationsEnabled,
+            onCheckedChange = onNotificationsChange
+        )
+    }
+}
 
-                var showPortDialog by remember { mutableStateOf(false) }
-                SettingRowWithIcon(
-                    icon = Icons.Rounded.Numbers,
-                    title = stringResource(R.string.settings_port),
-                    subtitle = if (state.vpnPort == 0) stringResource(R.string.settings_port_auto) else state.vpnPort.toString(),
-                    onClick = { showPortDialog = true }
-                )
-                if (showPortDialog) {
-                    PortSelectionDialog(
-                        currentPort = state.vpnPort,
-                        onDismiss = { showPortDialog = false },
-                        onPortSelected = {
-                            onPortChange(it)
-                            showPortDialog = false
-                        }
-                    )
-                }
-            }
-        }
-
-        // Privacy & Notifications
-        item {
-            Category(title = stringResource(R.string.settings_privacy)) {
-                // Custom DNS Setting
-                var showCustomDnsDialog by remember { mutableStateOf(false) }
-                val currentDnsSubtitle = state.customDns.ifBlank {
-                    stringResource(R.string.settings_custom_dns_default)
-                }
-
-                SettingRowWithIcon(
-                    icon = Icons.Rounded.Dns,
-                    title = stringResource(R.string.settings_custom_dns),
-                    subtitle = currentDnsSubtitle,
-                    onClick = { showCustomDnsDialog = true }
-                )
-
-                if (showCustomDnsDialog) {
-                    CustomDnsDialog(
-                        currentDns = state.customDns,
-                        onDismiss = { showCustomDnsDialog = false },
-                        onDnsSaved = {
-                            onCustomDnsChange(it)
-                            showCustomDnsDialog = false
-                        }
-                    )
-                }
-
-                SettingRowWithIcon(
-                    icon = Icons.Rounded.GppMaybe,
-                    title = stringResource(R.string.settings_kill_switch),
-                    subtitle = stringResource(R.string.settings_kill_switch_desc),
-                    onClick = onNavigateToKillSwitch
-                )
-
-                SettingRowWithIcon(
-                    icon = Icons.Rounded.BugReport,
-                    title = stringResource(R.string.settings_error_reporting),
-                    subtitle = stringResource(R.string.settings_error_reporting_desc),
-                    onClick = onNavigateToErrorReporting
-                )
-
-                SettingToggleRow(
-                    icon = Icons.Rounded.Notifications,
-                    title = stringResource(R.string.settings_notifications),
-                    subtitle = stringResource(R.string.settings_notifications_desc),
-                    checked = state.notificationsEnabled,
-                    onCheckedChange = onNotificationsChange
-                )
-            }
-        }
-
-        // About
-        item {
-            Category(title = stringResource(R.string.settings_about)) {
-                SettingRowWithIcon(
-                    icon = Icons.Rounded.Info,
-                    title = stringResource(R.string.settings_about),
-                    subtitle = stringResource(R.string.settings_version, BuildConfig.VERSION_NAME),
-                    onClick = onNavigateToAbout
-                )
-            }
-        }
+@Composable
+private fun AboutSettingsSection(
+    modifier: Modifier = Modifier,
+    onNavigateToAbout: (() -> Unit)?
+) {
+    Category(modifier = modifier, title = stringResource(R.string.settings_about)) {
+        SettingRowWithIcon(
+            icon = Icons.Rounded.Info,
+            title = stringResource(R.string.settings_about),
+            subtitle = stringResource(R.string.settings_version, BuildConfig.VERSION_NAME),
+            onClick = onNavigateToAbout
+        )
     }
 }
 

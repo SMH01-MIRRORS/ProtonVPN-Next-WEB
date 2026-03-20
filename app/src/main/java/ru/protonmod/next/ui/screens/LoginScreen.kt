@@ -7,7 +7,7 @@
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * ProtonCore is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.utils.isTablet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,6 +57,7 @@ fun LoginScreen(
     val uiState by viewModel.uiState.collectAsState()
     val isApiBypassEnabled by viewModel.isApiBypassEnabled.collectAsState()
     val colors = ProtonNextTheme.colors
+    val isTablet = isTablet()
 
     // Form states
     var username by remember { mutableStateOf("") }
@@ -75,7 +77,6 @@ fun LoginScreen(
     ) { state ->
         when (state) {
             is LoginUiState.RequiresCaptcha -> {
-                // --- CAPTCHA View ---
                 CaptchaScreen(
                     webUrl = state.webUrl,
                     sessionId = state.sessionId,
@@ -106,92 +107,95 @@ fun LoginScreen(
                     },
                     containerColor = colors.backgroundNorm
                 ) { padding ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding)
-                            .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 24.dp, vertical = 16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Shield,
-                            contentDescription = null,
-                            modifier = Modifier.size(64.dp),
-                            tint = colors.brandNorm
-                        )
-
-                        Text(
-                            text = stringResource(R.string.title_2fa),
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = colors.textNorm,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(top = 24.dp)
-                        )
-
-                        Text(
-                            text = stringResource(R.string.msg_2fa_instruction),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = colors.textWeak,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(32.dp))
-
-                        OutlinedTextField(
-                            value = totpCode,
-                            onValueChange = { totpCode = it },
-                            label = { Text(stringResource(R.string.hint_2fa_code)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    if (totpCode.isNotBlank()) {
-                                        viewModel.submit2FA(state.sessionId, state.tempAccessToken, state.refreshToken, totpCode)
-                                    }
-                                }
-                            ),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = colors.brandNorm,
-                                unfocusedBorderColor = colors.shade20,
-                                focusedTextColor = colors.textNorm,
-                                unfocusedTextColor = colors.textNorm
-                            ),
-                            singleLine = true
-                        )
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        Button(
-                            onClick = {
-                                viewModel.submit2FA(state.sessionId, state.tempAccessToken, state.refreshToken, totpCode)
-                            },
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
-                            enabled = totpCode.isNotBlank() && uiState !is LoginUiState.Loading
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(padding)
+                                .widthIn(max = 480.dp)
+                                .verticalScroll(rememberScrollState())
+                                .padding(horizontal = 24.dp, vertical = 16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            if (uiState is LoginUiState.Loading) {
-                                CircularProgressIndicator(color = colors.textInverted, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-                            } else {
-                                Text(stringResource(R.string.btn_verify), fontWeight = FontWeight.Bold)
-                            }
-                        }
-
-                        if (uiState is LoginUiState.Error) {
-                            Text(
-                                text = (uiState as LoginUiState.Error).message,
-                                color = colors.notificationError,
-                                style = MaterialTheme.typography.bodySmall,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(top = 16.dp)
+                            Icon(
+                                imageVector = Icons.Default.Shield,
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp),
+                                tint = colors.brandNorm
                             )
+
+                            Text(
+                                text = stringResource(R.string.title_2fa),
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = colors.textNorm,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(top = 24.dp)
+                            )
+
+                            Text(
+                                text = stringResource(R.string.msg_2fa_instruction),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = colors.textWeak,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(32.dp))
+
+                            OutlinedTextField(
+                                value = totpCode,
+                                onValueChange = { totpCode = it },
+                                label = { Text(stringResource(R.string.hint_2fa_code)) },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        if (totpCode.isNotBlank()) {
+                                            viewModel.submit2FA(state.sessionId, state.tempAccessToken, state.refreshToken, totpCode)
+                                        }
+                                    }
+                                ),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = colors.brandNorm,
+                                    unfocusedBorderColor = colors.shade20,
+                                    focusedTextColor = colors.textNorm,
+                                    unfocusedTextColor = colors.textNorm
+                                ),
+                                singleLine = true
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            Button(
+                                onClick = {
+                                    viewModel.submit2FA(state.sessionId, state.tempAccessToken, state.refreshToken, totpCode)
+                                },
+                                modifier = Modifier.fillMaxWidth().height(56.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
+                                enabled = totpCode.isNotBlank() && uiState !is LoginUiState.Loading
+                            ) {
+                                if (uiState is LoginUiState.Loading) {
+                                    CircularProgressIndicator(color = colors.textInverted, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                                } else {
+                                    Text(stringResource(R.string.btn_verify), fontWeight = FontWeight.Bold)
+                                }
+                            }
+
+                            if (uiState is LoginUiState.Error) {
+                                Text(
+                                    text = (uiState as LoginUiState.Error).message,
+                                    color = colors.notificationError,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(top = 16.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -216,131 +220,134 @@ fun LoginScreen(
                     },
                     containerColor = colors.backgroundNorm
                 ) { padding ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding)
-                            .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 24.dp, vertical = 16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        // Logo representation
-                        Icon(
-                            imageVector = Icons.Default.Shield,
-                            contentDescription = null,
-                            modifier = Modifier.size(64.dp),
-                            tint = colors.brandNorm
-                        )
-
-                        Text(
-                            text = stringResource(R.string.login_title),
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = colors.textNorm,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(top = 24.dp)
-                        )
-
-                        Text(
-                            text = stringResource(R.string.login_subtitle),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = colors.textWeak,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(32.dp))
-
-                        OutlinedTextField(
-                            value = username,
-                            onValueChange = { username = it },
-                            label = { Text(stringResource(R.string.hint_username)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = colors.brandNorm,
-                                unfocusedBorderColor = colors.shade20,
-                                focusedTextColor = colors.textNorm,
-                                unfocusedTextColor = colors.textNorm
-                            ),
-                            singleLine = true
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        OutlinedTextField(
-                            value = password,
-                            onValueChange = { password = it },
-                            label = { Text(stringResource(R.string.hint_password)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Password,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    if (username.isNotBlank() && password.isNotBlank()) {
-                                        viewModel.login(username, password)
-                                    }
-                                }
-                            ),
-                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                            trailingIcon = {
-                                val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                    Icon(imageVector = image, contentDescription = stringResource(R.string.desc_toggle_password), tint = colors.iconWeak)
-                                }
-                            },
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = colors.brandNorm,
-                                unfocusedBorderColor = colors.shade20,
-                                focusedTextColor = colors.textNorm,
-                                unfocusedTextColor = colors.textNorm
-                            ),
-                            singleLine = true
-                        )
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        Button(
-                            onClick = { viewModel.login(username, password) },
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
-                            enabled = uiState !is LoginUiState.Loading && username.isNotBlank() && password.isNotBlank()
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(padding)
+                                .widthIn(max = 480.dp)
+                                .verticalScroll(rememberScrollState())
+                                .padding(horizontal = 24.dp, vertical = 16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            if (uiState is LoginUiState.Loading) {
-                                CircularProgressIndicator(color = colors.textInverted, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-                            } else {
-                                Text(stringResource(R.string.btn_login), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
-                            }
-                        }
+                            // Logo representation
+                            Icon(
+                                imageVector = Icons.Default.Shield,
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp),
+                                tint = colors.brandNorm
+                            )
 
-                        if (uiState is LoginUiState.Error) {
                             Text(
-                                text = (uiState as LoginUiState.Error).message,
-                                color = colors.notificationError,
-                                style = MaterialTheme.typography.bodySmall,
+                                text = stringResource(R.string.login_title),
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = colors.textNorm,
+                                fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(top = 16.dp)
+                                modifier = Modifier.padding(top = 24.dp)
                             )
-                        }
 
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Forgot password textual button mapped from ProtonTextButton
-                        TextButton(
-                            onClick = { /* TODO: Forgot Password flow */ },
-                            modifier = Modifier.height(48.dp),
-                            enabled = uiState !is LoginUiState.Loading
-                        ) {
                             Text(
-                                text = stringResource(R.string.forgot_password),
-                                color = colors.textAccent,
-                                fontWeight = FontWeight.Medium
+                                text = stringResource(R.string.login_subtitle),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = colors.textWeak,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(top = 8.dp)
                             )
+
+                            Spacer(modifier = Modifier.height(32.dp))
+
+                            OutlinedTextField(
+                                value = username,
+                                onValueChange = { username = it },
+                                label = { Text(stringResource(R.string.hint_username)) },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = colors.brandNorm,
+                                    unfocusedBorderColor = colors.shade20,
+                                    focusedTextColor = colors.textNorm,
+                                    unfocusedTextColor = colors.textNorm
+                                ),
+                                singleLine = true
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            OutlinedTextField(
+                                value = password,
+                                onValueChange = { password = it },
+                                label = { Text(stringResource(R.string.hint_password)) },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Password,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        if (username.isNotBlank() && password.isNotBlank()) {
+                                            viewModel.login(username, password)
+                                        }
+                                    }
+                                ),
+                                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                                trailingIcon = {
+                                    val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                        Icon(imageVector = image, contentDescription = stringResource(R.string.desc_toggle_password), tint = colors.iconWeak)
+                                    }
+                                },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = colors.brandNorm,
+                                    unfocusedBorderColor = colors.shade20,
+                                    focusedTextColor = colors.textNorm,
+                                    unfocusedTextColor = colors.textNorm
+                                ),
+                                singleLine = true
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            Button(
+                                onClick = { viewModel.login(username, password) },
+                                modifier = Modifier.fillMaxWidth().height(56.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
+                                enabled = uiState !is LoginUiState.Loading && username.isNotBlank() && password.isNotBlank()
+                            ) {
+                                if (uiState is LoginUiState.Loading) {
+                                    CircularProgressIndicator(color = colors.textInverted, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                                } else {
+                                    Text(stringResource(R.string.btn_login), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
+                                }
+                            }
+
+                            if (uiState is LoginUiState.Error) {
+                                Text(
+                                    text = (uiState as LoginUiState.Error).message,
+                                    color = colors.notificationError,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(top = 16.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Forgot password textual button mapped from ProtonTextButton
+                            TextButton(
+                                onClick = { /* TODO: Forgot Password flow */ },
+                                modifier = Modifier.height(48.dp),
+                                enabled = uiState !is LoginUiState.Loading
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.forgot_password),
+                                    color = colors.textAccent,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         }
                     }
                 }
