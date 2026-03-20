@@ -21,7 +21,7 @@ import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
-import android.util.Log
+import ru.protonmod.next.utils.ProtonLogger
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
@@ -467,7 +467,7 @@ class MapView(context: Context) : View(context) {
                     invalidate()
                 }
             } catch (e: Exception) {
-                Log.e("HomeMap", "Failed to render SVG. Check if world.svg is in assets folder.", e)
+                ProtonLogger.e("HomeMap", "Failed to render SVG. Check if world.svg is in assets folder.", e)
             }
         }
     }

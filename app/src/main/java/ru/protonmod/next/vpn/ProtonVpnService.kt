@@ -28,7 +28,7 @@ import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.system.Os
-import android.util.Log
+import ru.protonmod.next.utils.ProtonLogger
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
@@ -129,7 +129,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             currentTunnelState = newState
             isCurrentlyConnecting = false
 
-            Log.d(TAG, "VPN State changed to $newState")
+            ProtonLogger.d(TAG, "VPN State changed to $newState")
 
             // Broadcast the new state to the rest of the application
             val broadcast = Intent(ACTION_STATE_CHANGED).apply {
@@ -164,7 +164,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             if (intent?.action == ACTION_UPDATE_SETTINGS) {
                 notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
                 killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
-                Log.d(TAG, "Settings updated via broadcast: notifications=$notificationsEnabled, killSwitch=$killSwitchEnabled")
+                ProtonLogger.d(TAG, "Settings updated via broadcast: notifications=$notificationsEnabled, killSwitch=$killSwitchEnabled")
                 
                 val label = when {
                     isCurrentlyConnecting -> STATE_CONNECTING
@@ -177,14 +177,14 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     }
 
     override fun onCreate() {
-        Log.d(TAG, "VPN Service creating in isolated :vpn process")
+        ProtonLogger.d(TAG, "VPN Service creating in isolated :vpn process")
 
         // Set environment variables required for the Go backend (WireGuard/AmneziaWG)
         try {
             Os.setenv("TMPDIR", cacheDir.absolutePath, true)
             Os.setenv("WG_TUN_DIR", cacheDir.absolutePath, true)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to set environment variables for the backend", e)
+            ProtonLogger.e(TAG, "Failed to set environment variables for the backend", e)
         }
 
         super.onCreate()
@@ -204,7 +204,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "VPN Service start command received: ${intent?.action}")
+        ProtonLogger.d(TAG, "VPN Service start command received: ${intent?.action}")
 
         when (intent?.action) {
             ACTION_CONNECT -> {
@@ -219,7 +219,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 updateNotification(STATE_CONNECTING)
 
                 if (configStr != null) {
-                    Log.d(TAG, "Received connection config:\n$configStr")
+                    ProtonLogger.d(TAG, "Received connection config:\n$configStr")
                     serviceScope.launch(Dispatchers.IO) {
                         try {
                             val configStream = ByteArrayInputStream(configStr.toByteArray())
@@ -235,7 +235,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                             // Bring the tunnel up
                             backend.setState(tunnel, Tunnel.State.UP, config)
                         } catch (e: Exception) {
-                            Log.e(TAG, "Failed to start VPN tunnel", e)
+                            ProtonLogger.e(TAG, "Failed to start VPN tunnel", e)
                             tunnel.onStateChange(Tunnel.State.DOWN)
                         }
                     }
@@ -248,7 +248,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                     // Bring the tunnel down gracefully
                     backend.setState(tunnel, Tunnel.State.DOWN, null)
                 } catch (e: Exception) {
-                    Log.e(TAG, "Failed to stop VPN tunnel", e)
+                    ProtonLogger.e(TAG, "Failed to stop VPN tunnel", e)
                     stopForegroundOrService()
                 }
             }
@@ -328,12 +328,12 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                             }
                         }
                     } catch (e: Exception) {
-                        Log.e(TAG, "Error while fetching traffic statistics", e)
+                        ProtonLogger.e(TAG, "Error while fetching traffic statistics", e)
                     }
                     delay(1000) // Update frequency
                 }
             } finally {
-                Log.d(TAG, "Traffic updates coroutine finished")
+                ProtonLogger.d(TAG, "Traffic updates coroutine finished")
             }
         }
     }
@@ -470,11 +470,11 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     }
 
     override fun onDestroy() {
-        Log.d(TAG, "VPN Service destroyed")
+        ProtonLogger.d(TAG, "VPN Service destroyed")
         try {
             unregisterReceiver(settingsReceiver)
         } catch (e: Exception) {
-            Log.w(TAG, "Receiver already unregistered", e)
+            ProtonLogger.w(TAG, "Receiver already unregistered", e)
         }
 
         // Cancel all ongoing coroutines (like stats job)
@@ -484,7 +484,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         try {
             backend.setState(tunnel, Tunnel.State.DOWN, null)
         } catch (e: Exception) {
-            Log.e(TAG, "Error stopping VPN on service destroy", e)
+            ProtonLogger.e(TAG, "Error stopping VPN on service destroy", e)
         }
         super.onDestroy()
     }

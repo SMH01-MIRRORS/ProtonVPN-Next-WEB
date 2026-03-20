@@ -18,7 +18,7 @@
 package ru.protonmod.next.ui.screens.dashboard
 
 import android.content.Context
-import android.util.Log
+import ru.protonmod.next.utils.ProtonLogger
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -275,7 +275,7 @@ class DashboardViewModel @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Log.e("DashboardViewModel", "Error fetching location", e)
+            ProtonLogger.e("DashboardViewModel", "Error fetching location", e)
         }
         null
     }

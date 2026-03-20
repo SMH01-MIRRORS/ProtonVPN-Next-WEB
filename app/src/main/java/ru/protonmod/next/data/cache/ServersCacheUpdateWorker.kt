@@ -18,7 +18,7 @@
 package ru.protonmod.next.data.cache
 
 import android.content.Context
-import android.util.Log
+import ru.protonmod.next.utils.ProtonLogger
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -51,12 +51,12 @@ class ServersCacheUpdateWorker @AssistedInject constructor(
             val sessionId = inputData.getString("session_id") ?: return@withContext Result.failure()
             val userTier = inputData.getInt("user_tier", 0)
 
-            Log.d(TAG, "Background update worker started for tier $userTier")
+            ProtonLogger.d(TAG, "Background update worker started for tier $userTier")
 
             val result = vpnRepository.getServers(accessToken, sessionId, userTier = userTier)
 
             result.onSuccess { servers ->
-                Log.d(TAG, "Background update success: ${servers.size} servers")
+                ProtonLogger.d(TAG, "Background update success: ${servers.size} servers")
                 serverDao.insertServers(servers.map { ServerMapper.toEntity(it) })
                 val now = System.currentTimeMillis()
                 serversCacheDao.saveCacheInfo(ServersCacheEntity(cachedAt = now, expiresAt = now + 3600000L))
@@ -64,13 +64,13 @@ class ServersCacheUpdateWorker @AssistedInject constructor(
             }
 
             result.onFailure {
-                Log.e(TAG, "Background update failed: ${it.message}")
+                ProtonLogger.e(TAG, "Background update failed: ${it.message}")
                 return@withContext Result.retry()
             }
 
             Result.success()
         } catch (e: Exception) {
-            Log.e(TAG, "Exception: ${e.message}")
+            ProtonLogger.e(TAG, "Exception: ${e.message}")
             Result.retry()
         }
     }

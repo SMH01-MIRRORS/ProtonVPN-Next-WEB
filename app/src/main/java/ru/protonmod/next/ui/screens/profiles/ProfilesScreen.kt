@@ -19,7 +19,7 @@ package ru.protonmod.next.ui.screens.profiles
 
 import android.app.Activity
 import android.net.VpnService
-import android.util.Log
+import ru.protonmod.next.utils.ProtonLogger
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -75,7 +75,7 @@ fun ProfilesScreen(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            Log.d("ProfilesScreen", "VPN permission granted")
+            ProtonLogger.d("ProfilesScreen", "VPN permission granted")
             pendingAction?.invoke()
             pendingAction = null
         } else {

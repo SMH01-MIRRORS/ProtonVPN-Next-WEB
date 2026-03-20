@@ -19,7 +19,7 @@ package ru.protonmod.next.ui.screens.countries
 
 import android.app.Activity
 import android.net.VpnService
-import android.util.Log
+import ru.protonmod.next.utils.ProtonLogger
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -77,7 +77,7 @@ fun CountriesScreen(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            Log.d("CountriesScreen", "VPN permission granted")
+            ProtonLogger.d("CountriesScreen", "VPN permission granted")
             pendingAction?.invoke()
             pendingAction = null
         } else {

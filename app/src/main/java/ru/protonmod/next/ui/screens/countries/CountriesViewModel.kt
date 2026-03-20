@@ -17,7 +17,7 @@
 
 package ru.protonmod.next.ui.screens.countries
 
-import android.util.Log
+import ru.protonmod.next.utils.ProtonLogger
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -129,7 +129,7 @@ class CountriesViewModel @Inject constructor(
     private suspend fun connectToServer(server: LogicalServer) {
         val session = sessionDao.getSession()
         if (session == null) {
-            Log.e(TAG, "Cannot connect: No session found")
+            ProtonLogger.e(TAG, "Cannot connect: No session found")
             return
         }
 

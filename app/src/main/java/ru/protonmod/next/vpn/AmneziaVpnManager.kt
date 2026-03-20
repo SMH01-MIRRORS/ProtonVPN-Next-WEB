@@ -21,7 +21,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.util.Log
+import ru.protonmod.next.utils.ProtonLogger
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -179,7 +179,7 @@ class AmneziaVpnManager @Inject constructor(
 
         val previousState = _certState.value
         _certState.value = CertificateState.Refreshing
-        Log.d(TAG, "Refreshing certificate (previous state: $previousState)")
+        ProtonLogger.d(TAG, "Refreshing certificate (previous state: $previousState)")
 
         val result = vpnRepositoryProvider.get().registerWireGuardKey(
             accessToken = currentSession.accessToken,
@@ -220,7 +220,7 @@ class AmneziaVpnManager @Inject constructor(
                     continue
                 }
 
-                Log.d(TAG, "Proactive refresh starting (cert state: ${_certState.value})")
+                ProtonLogger.d(TAG, "Proactive refresh starting (cert state: ${_certState.value})")
                 val result = performCertificateRefresh()
                 
                 if (result.isSuccess) {
@@ -229,7 +229,7 @@ class AmneziaVpnManager @Inject constructor(
                 } else {
                     // API access is expected to be preserved, so we retry with backoff.
                     // This covers cases where internet is temporarily down.
-                    Log.w(TAG, "Proactive refresh failed, retrying in ${currentRetryDelay}ms")
+                    ProtonLogger.w(TAG, "Proactive refresh failed, retrying in ${currentRetryDelay}ms")
                     delay(currentRetryDelay)
                     currentRetryDelay = (currentRetryDelay * 2).coerceAtMost(RETRY_DELAY_MS)
                 }
@@ -280,14 +280,14 @@ class AmneziaVpnManager @Inject constructor(
             // Proactively refresh certificate if it's not valid (Expired or ExpiringSoon)
             updateCertificateState(currentSession.wgCertificate)
             if (_certState.value !is CertificateState.Valid) {
-                Log.d(TAG, "Certificate state is ${_certState.value}, attempting refresh before connection.")
+                ProtonLogger.d(TAG, "Certificate state is ${_certState.value}, attempting refresh before connection.")
                 performCertificateRefresh()
 
                 if (isEffectivelyExpired()) {
                     // Even if expired, we try to connect because Proton API might be reachable 
                     // and some servers might still accept the old key for a short grace period.
                     // But we keep the UI warning.
-                    Log.w(TAG, "Certificate is expired. Proceeding with connection anyway as Proton API is accessible.")
+                    ProtonLogger.w(TAG, "Certificate is expired. Proceeding with connection anyway as Proton API is accessible.")
                 }
                 
                 // Refresh session from DB to get the new certificate and any other potential updates
@@ -335,7 +335,7 @@ class AmneziaVpnManager @Inject constructor(
             // Retrieve Custom DNS IP or fallback to Proton Default
             val userDns = settingsManager.customDns.first().trim()
             val activeDns = if (userDns.isNotEmpty()) userDns else PROTON_DNS_IP
-            Log.d(TAG, "Using DNS Server: $activeDns")
+            ProtonLogger.d(TAG, "Using DNS Server: $activeDns")
 
             val config = buildAwgConfig(
                 serverPublicKey = serverPubKey, privateKey = wgPrivateKeyB64, localIp = PROTON_CLIENT_IP, dnsServer = activeDns,
@@ -347,7 +347,7 @@ class AmneziaVpnManager @Inject constructor(
             )
 
             val configStr = config.toAwgQuickString(false, false)
-            Log.d(TAG, "Connecting with AWG config:\n$configStr")
+            ProtonLogger.d(TAG, "Connecting with AWG config:\n$configStr")
 
             val intent = Intent(context, ProtonVpnService::class.java).apply {
                 action = ProtonVpnService.ACTION_CONNECT

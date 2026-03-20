@@ -17,7 +17,7 @@
 
 package ru.protonmod.next.data.repository
 
-import android.util.Log
+import ru.protonmod.next.utils.ProtonLogger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -60,7 +60,7 @@ class VpnRepository @Inject constructor(
         if (autoUpdateJob?.isActive == true) return
 
         autoUpdateJob = managerScope.launch {
-            Log.d(TAG, "Starting auto-update loop")
+            ProtonLogger.d(TAG, "Starting auto-update loop")
             while (isActive) {
                 val session = sessionDao.getSession()
                 if (session != null) {
@@ -106,7 +106,7 @@ class VpnRepository @Inject constructor(
     ): Result<List<LogicalServer>> {
         val deferred = fetchMutex.withLock {
             if (activeFetch != null && !forceRefresh) {
-                Log.d(TAG, "Joining existing servers fetch request")
+                ProtonLogger.d(TAG, "Joining existing servers fetch request")
                 activeFetch!!
             } else {
                 val newFetch = managerScope.async {
@@ -153,7 +153,7 @@ class VpnRepository @Inject constructor(
             val bearer = "Bearer $accessToken"
             val ifModifiedSince = if (!forceRefresh) cacheInfo?.lastModified else null
 
-            Log.d(TAG, "Fetching servers from API (forceRefresh=$forceRefresh)")
+            ProtonLogger.d(TAG, "Fetching servers from API (forceRefresh=$forceRefresh)")
             val response = vpnApi.getLogicalServers(
                 authorization = bearer,
                 sessionId = sessionId,
@@ -164,7 +164,7 @@ class VpnRepository @Inject constructor(
 
             val (serversList, newLastModified) = when (response.code()) {
                 304 -> {
-                    Log.d(TAG, "Servers not modified (304), updating timestamps only")
+                    ProtonLogger.d(TAG, "Servers not modified (304), updating timestamps only")
                     val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
                     dbServers to cacheInfo?.lastModified
                 }
@@ -234,7 +234,7 @@ class VpnRepository @Inject constructor(
             cachedServers = logicalServers
             Result.success(logicalServers)
         } catch (e: Exception) {
-            Log.e(TAG, "Error in performGetServers", e)
+            ProtonLogger.e(TAG, "Error in performGetServers", e)
             val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
             if (dbServers.isNotEmpty()) Result.success(dbServers.filter { it.tier <= userTier })
             else Result.failure(e)
@@ -261,7 +261,7 @@ class VpnRepository @Inject constructor(
             val response = vpnApi.getVpnInfo(bearer, sessionId)
             val body = response.body()?.string()
 
-            Log.d(TAG, "getVpnInfo raw body: $body")
+            ProtonLogger.d(TAG, "getVpnInfo raw body: $body")
 
             if (response.isSuccessful && body != null) {
                 Result.success(json.decodeFromString<VpnInfoResponse>(body))
@@ -283,7 +283,7 @@ class VpnRepository @Inject constructor(
             val request = CreateCertificateRequest(clientPublicKey = publicKeyPem)
             val response = vpnApi.registerVpnKey(bearer, sessionId, request)
 
-            Log.d(TAG, "registerWireGuardKey response code: ${response.code}, cert length: ${response.certificate?.length ?: 0}")
+            ProtonLogger.d(TAG, "registerWireGuardKey response code: ${response.code}, cert length: ${response.certificate?.length ?: 0}")
 
             if (response.code == 1000) {
                 val cert = response.certificate
@@ -295,7 +295,7 @@ class VpnRepository @Inject constructor(
                 Result.failure(Exception("Proton Cert Error: ${response.code}"))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error in registerWireGuardKey", e)
+            ProtonLogger.e(TAG, "Error in registerWireGuardKey", e)
             Result.failure(e)
         }
     }

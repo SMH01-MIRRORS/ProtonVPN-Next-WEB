@@ -18,7 +18,7 @@
 package ru.protonmod.next.ui.screens
 
 import android.annotation.SuppressLint
-import android.util.Log
+import ru.protonmod.next.utils.ProtonLogger
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
@@ -105,7 +105,7 @@ fun CaptchaScreen(
                         @JavascriptInterface
                         fun dispatch(response: String) {
                             try {
-                                Log.d("CaptchaScreen", "JS Dispatch: $response")
+                                ProtonLogger.d("CaptchaScreen", "JS Dispatch: $response")
                                 val json = JSONObject(response)
                                 val type = json.optString("type")
 
@@ -120,7 +120,7 @@ fun CaptchaScreen(
                                     }
                                 }
                             } catch (e: Exception) {
-                                Log.e("CaptchaScreen", "JS Parse Error", e)
+                                ProtonLogger.e("CaptchaScreen", "JS Parse Error", e)
                             }
                         }
                     }
@@ -241,7 +241,7 @@ fun CaptchaScreen(
                                         bodyStream
                                     )
                                 } catch (e: Exception) {
-                                    Log.e("CaptchaScreen", "Proxy Error", e)
+                                    ProtonLogger.e("CaptchaScreen", "Proxy Error", e)
                                 }
                             }
                             return super.shouldInterceptRequest(view, request)

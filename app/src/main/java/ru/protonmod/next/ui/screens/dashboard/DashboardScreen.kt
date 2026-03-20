@@ -20,7 +20,7 @@ package ru.protonmod.next.ui.screens.dashboard
 import android.app.Activity
 import android.net.VpnService
 import android.text.BidiFormatter
-import android.util.Log
+import ru.protonmod.next.utils.ProtonLogger
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
@@ -344,7 +344,7 @@ fun DashboardScreen(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            Log.d("DashboardScreen", "VPN permission granted")
+            ProtonLogger.d("DashboardScreen", "VPN permission granted")
             if (isQuickConnectPending) {
                 viewModel.quickConnect()
                 isQuickConnectPending = false

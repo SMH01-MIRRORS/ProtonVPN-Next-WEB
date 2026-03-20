@@ -20,7 +20,7 @@ package ru.protonmod.next.ui.screens.profiles
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
+import ru.protonmod.next.utils.ProtonLogger
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -154,25 +154,25 @@ class ProfilesViewModel @Inject constructor(
         viewModelScope.launch {
             val session = sessionDao.getSession()
             if (session == null) {
-                Log.e(TAG, "Cannot connect: No session found")
+                ProtonLogger.e(TAG, "Cannot connect: No session found")
                 return@launch
             }
 
             val servers = vpnRepository.getCachedServers()
             if (servers.isEmpty()) {
-                Log.e(TAG, "Cannot connect: Server list is empty")
+                ProtonLogger.e(TAG, "Cannot connect: Server list is empty")
                 return@launch
             }
 
             val targetServer = findBestServerForProfile(profile, servers)
             if (targetServer == null) {
-                Log.e(TAG, "Cannot connect: No suitable server found for profile")
+                ProtonLogger.e(TAG, "Cannot connect: No suitable server found for profile")
                 return@launch
             }
 
             val physicalServer = targetServer.servers.firstOrNull { it.status == 1 }
             if (physicalServer == null) {
-                Log.e(TAG, "Cannot connect: Selected server is currently unavailable.")
+                ProtonLogger.e(TAG, "Cannot connect: Selected server is currently unavailable.")
                 return@launch
             }
 
@@ -252,7 +252,7 @@ class ProfilesViewModel @Inject constructor(
         if (url.isNullOrEmpty()) return
 
         viewModelScope.launch {
-            Log.d(TAG, "Waiting for VPN to be UP before opening URL: $url")
+            ProtonLogger.d(TAG, "Waiting for VPN to be UP before opening URL: $url")
             try {
                 // Wait for the tunnel to reach UP state with a 20s timeout
                 withTimeout(20000) {
@@ -266,9 +266,9 @@ class ProfilesViewModel @Inject constructor(
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
                 context.startActivity(intent)
-                Log.d(TAG, "Connect & Go: URL opened successfully")
+                ProtonLogger.d(TAG, "Connect & Go: URL opened successfully")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to handle Connect & Go", e)
+                ProtonLogger.e(TAG, "Failed to handle Connect & Go", e)
                 // Fallback: try opening anyway if it took too long but we are still attempting
                 if (amneziaVpnManager.tunnelState.value == Tunnel.State.UP) {
                     try {
