@@ -54,6 +54,7 @@ fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val isApiBypassEnabled by viewModel.isApiBypassEnabled.collectAsState()
     val colors = ProtonNextTheme.colors
 
     // Form states
@@ -78,6 +79,7 @@ fun LoginScreen(
                 CaptchaScreen(
                     webUrl = state.webUrl,
                     sessionId = state.sessionId,
+                    isApiBypassEnabled = isApiBypassEnabled,
                     onDismiss = { viewModel.resetError() },
                     onCaptchaSolved = { verifiedToken ->
                         viewModel.retryWithCaptcha(state, verifiedToken)

@@ -18,7 +18,6 @@
 package ru.protonmod.next.ui.screens
 
 import android.annotation.SuppressLint
-import ru.protonmod.next.utils.ProtonLogger
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
@@ -26,23 +25,29 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import ru.protonmod.next.R
-import ru.protonmod.next.utils.DeviceInfoProvider
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.utils.DeviceInfoProvider
+import ru.protonmod.next.utils.ProtonLogger
 import java.io.ByteArrayInputStream
 
 @SuppressLint("SetJavaScriptEnabled")
@@ -51,227 +56,285 @@ import java.io.ByteArrayInputStream
 fun CaptchaScreen(
     webUrl: String,
     sessionId: String?,
+    isApiBypassEnabled: Boolean = false,
     onDismiss: () -> Unit,
     onCaptchaSolved: (String) -> Unit
 ) {
     val colors = ProtonNextTheme.colors
     val coroutineScope = rememberCoroutineScope()
+    var isLoading by remember { mutableStateOf(true) }
+    var progress by remember { mutableIntStateOf(0) }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(id = R.string.captcha_title),
-                        color = colors.textNorm,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onDismiss) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = stringResource(id = R.string.desc_close),
-                            tint = colors.textNorm
+            Column {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = stringResource(id = R.string.captcha_title),
+                            color = colors.textNorm,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
                         )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colors.backgroundNorm
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onDismiss) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(id = R.string.desc_close),
+                                tint = colors.textNorm
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = colors.backgroundNorm
+                    )
                 )
-            )
+                if (isLoading) {
+                    LinearProgressIndicator(
+                        progress = { progress / 100f },
+                        modifier = Modifier.fillMaxWidth(),
+                        color = colors.brandNorm,
+                        trackColor = colors.shade20
+                    )
+                }
+            }
         },
         containerColor = colors.backgroundNorm
     ) { padding ->
-        AndroidView(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
-            factory = { context ->
-                WebView(context).apply {
-                    setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                .padding(padding)
+                .background(colors.backgroundNorm)
+        ) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = colors.backgroundNorm,
+                tonalElevation = 2.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.captcha_message),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.textWeak
+                    )
 
-                    settings.javaScriptEnabled = true
-                    settings.domStorageEnabled = true
-
-                    // Sync User-Agent precisely with NetworkModule and DeviceInfoProvider
-                    val customUserAgent = DeviceInfoProvider.getSpoofedUserAgent()
-                    settings.userAgentString = customUserAgent
-
-                    CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-
-                    val jsInterface = object {
-                        @JavascriptInterface
-                        fun dispatch(response: String) {
-                            try {
-                                ProtonLogger.d("CaptchaScreen", "JS Dispatch: $response")
-                                val json = JSONObject(response)
-                                val type = json.optString("type")
-
-                                if (type == "HUMAN_VERIFICATION_SUCCESS" || type == "Success") {
-                                    val payload = json.optJSONObject("payload")
-                                    val token = payload?.optString("token")
-
-                                    if (!token.isNullOrEmpty()) {
-                                        coroutineScope.launch {
-                                            onCaptchaSolved(token)
-                                        }
-                                    }
-                                }
-                            } catch (e: Exception) {
-                                ProtonLogger.e("CaptchaScreen", "JS Parse Error", e)
-                            }
+                    if (isApiBypassEnabled) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(Color(0xFF4CAF50), CircleShape)
+                            )
+                            Text(
+                                text = stringResource(R.string.captcha_proxy_active),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color(0xFF4CAF50),
+                                fontWeight = FontWeight.Medium
+                            )
                         }
                     }
+                }
+            }
 
-                    addJavascriptInterface(jsInterface, "AndroidInterface")
-                    webChromeClient = WebChromeClient()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
+                AndroidView(
+                    modifier = Modifier.fillMaxSize(),
+                    factory = { context ->
+                        WebView(context).apply {
+                            setBackgroundColor(android.graphics.Color.TRANSPARENT)
 
-                    webViewClient = object : WebViewClient() {
-                        private val okHttpClient = OkHttpClient.Builder().build()
-                        private val proxyBaseUrl = "https://shimmering-stroopwafel-51675e.netlify.app"
+                            settings.javaScriptEnabled = true
+                            settings.domStorageEnabled = true
 
-                        override fun shouldInterceptRequest(
-                            view: WebView,
-                            request: WebResourceRequest
-                        ): WebResourceResponse? {
-                            val originalUrl = request.url.toString()
+                            val customUserAgent = DeviceInfoProvider.getSpoofedUserAgent()
+                            settings.userAgentString = customUserAgent
 
-                            // Intercept only GET requests. POST requests will be handled by injected JS.
-                            if (request.method != "GET") return super.shouldInterceptRequest(view, request)
+                            CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
 
-                            var targetProxyUrl: String? = null
+                            val jsInterface = object {
+                                @JavascriptInterface
+                                fun dispatch(response: String) {
+                                    try {
+                                        ProtonLogger.d("CaptchaScreen", "JS Dispatch: $response")
+                                        val json = JSONObject(response)
+                                        val type = json.optString("type")
 
-                            if (originalUrl.startsWith("https://verify.proton.me")) {
-                                targetProxyUrl = originalUrl.replace("https://verify.proton.me", "$proxyBaseUrl/verify")
-                            } else if (originalUrl.startsWith("https://verify-api.proton.me")) {
-                                targetProxyUrl = originalUrl.replace("https://verify-api.proton.me", "$proxyBaseUrl/verify-api")
-                            }
+                                        if (type == "HUMAN_VERIFICATION_SUCCESS" || type == "Success") {
+                                            val payload = json.optJSONObject("payload")
+                                            val token = payload?.optString("token")
 
-                            if (targetProxyUrl != null) {
-                                try {
-                                    val okRequest = Request.Builder()
-                                        .url(targetProxyUrl)
-                                        .apply {
-                                            // Copy original headers
-                                            request.requestHeaders?.forEach { (key, value) ->
-                                                if (!key.equals("Host", ignoreCase = true)) {
-                                                    addHeader(key, value)
+                                            if (!token.isNullOrEmpty()) {
+                                                coroutineScope.launch {
+                                                    onCaptchaSolved(token)
                                                 }
                                             }
                                         }
-                                        .build()
-
-                                    val response = okHttpClient.newCall(okRequest).execute()
-
-                                    val contentTypeHeader = response.header("Content-Type", "application/octet-stream") ?: "application/octet-stream"
-                                    val mimeType = contentTypeHeader.substringBefore(";").trim()
-                                    val encoding = if (contentTypeHeader.contains("charset=")) {
-                                        contentTypeHeader.substringAfter("charset=").substringBefore(";").trim()
-                                    } else {
-                                        "utf-8"
+                                    } catch (e: Exception) {
+                                        ProtonLogger.e("CaptchaScreen", "JS Parse Error", e)
                                     }
-
-                                    val responseHeaders = response.headers.toMap().toMutableMap()
-
-                                    val cspKeys = responseHeaders.keys.filter { it.equals("Content-Security-Policy", ignoreCase = true) }
-                                    cspKeys.forEach { responseHeaders.remove(it) }
-
-                                    responseHeaders["Access-Control-Allow-Origin"] = "*"
-
-                                    var bodyStream = response.body.byteStream()
-
-                                    // Inject JS to rewrite fetch/XHR endpoints for POST requests (like captcha submission)
-                                    if (mimeType.contains("text/html", ignoreCase = true)) {
-                                        val html = response.body.string()
-
-                                        val jsInject = """
-                                            <script>
-                                            (function() {
-                                                var proxyBase = '$proxyBaseUrl';
-                                                
-                                                function rewriteUrl(url) {
-                                                    if (typeof url !== 'string') return url;
-                                                    if (url.startsWith('https://verify-api.proton.me')) {
-                                                        return url.replace('https://verify-api.proton.me', proxyBase + '/verify-api');
-                                                    }
-                                                    if (url.startsWith('https://verify.proton.me')) {
-                                                        return url.replace('https://verify.proton.me', proxyBase + '/verify');
-                                                    }
-                                                    return url;
-                                                }
-
-                                                var origFetch = window.fetch;
-                                                window.fetch = function() {
-                                                    if (arguments[0] instanceof Request) {
-                                                        var newUrl = rewriteUrl(arguments[0].url);
-                                                        if (newUrl !== arguments[0].url) {
-                                                            arguments[0] = new Request(newUrl, arguments[0]);
-                                                        }
-                                                    } else {
-                                                        arguments[0] = rewriteUrl(arguments[0]);
-                                                    }
-                                                    return origFetch.apply(this, arguments);
-                                                };
-                                                
-                                                var origOpen = XMLHttpRequest.prototype.open;
-                                                XMLHttpRequest.prototype.open = function() {
-                                                    arguments[1] = rewriteUrl(arguments[1]);
-                                                    return origOpen.apply(this, arguments);
-                                                };
-                                            })();
-                                            </script>
-                                        """.trimIndent()
-
-                                        val injectedHtml = if (html.contains("<head>", ignoreCase = true)) {
-                                            html.replaceFirst(Regex("<head>", RegexOption.IGNORE_CASE), "<head>\n$jsInject")
-                                        } else {
-                                            jsInject + html
-                                        }
-                                        bodyStream = ByteArrayInputStream(injectedHtml.toByteArray())
-                                    }
-
-                                    return WebResourceResponse(
-                                        mimeType,
-                                        encoding,
-                                        200,
-                                        "OK",
-                                        responseHeaders,
-                                        bodyStream
-                                    )
-                                } catch (e: Exception) {
-                                    ProtonLogger.e("CaptchaScreen", "Proxy Error", e)
                                 }
                             }
-                            return super.shouldInterceptRequest(view, request)
+
+                            addJavascriptInterface(jsInterface, "AndroidInterface")
+
+                            webChromeClient = object : WebChromeClient() {
+                                override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                                    progress = newProgress
+                                    if (newProgress >= 90) {
+                                        isLoading = false
+                                    }
+                                }
+                            }
+
+                            webViewClient = object : WebViewClient() {
+                                private val okHttpClient = OkHttpClient.Builder().build()
+                                private val proxyBaseUrl = "https://shimmering-stroopwafel-51675e.netlify.app"
+
+                                override fun shouldInterceptRequest(
+                                    view: WebView,
+                                    request: WebResourceRequest
+                                ): WebResourceResponse? {
+                                    if (!isApiBypassEnabled) return super.shouldInterceptRequest(view, request)
+
+                                    val originalUrl = request.url.toString()
+                                    if (request.method != "GET") return super.shouldInterceptRequest(view, request)
+
+                                    var targetProxyUrl: String? = null
+                                    if (originalUrl.startsWith("https://verify.proton.me")) {
+                                        targetProxyUrl = originalUrl.replace("https://verify.proton.me", "$proxyBaseUrl/verify")
+                                    } else if (originalUrl.startsWith("https://verify-api.proton.me")) {
+                                        targetProxyUrl = originalUrl.replace("https://verify-api.proton.me", "$proxyBaseUrl/verify-api")
+                                    }
+
+                                    if (targetProxyUrl != null) {
+                                        try {
+                                            val okRequest = Request.Builder()
+                                                .url(targetProxyUrl)
+                                                .apply {
+                                                    request.requestHeaders?.forEach { (key, value) ->
+                                                        if (!key.equals("Host", ignoreCase = true)) {
+                                                            addHeader(key, value)
+                                                        }
+                                                    }
+                                                }
+                                                .build()
+
+                                            val response = okHttpClient.newCall(okRequest).execute()
+                                            val contentTypeHeader = response.header("Content-Type", "application/octet-stream") ?: "application/octet-stream"
+                                            val mimeType = contentTypeHeader.substringBefore(";").trim()
+                                            val encoding = if (contentTypeHeader.contains("charset=")) {
+                                                contentTypeHeader.substringAfter("charset=").substringBefore(";").trim()
+                                            } else {
+                                                "utf-8"
+                                            }
+
+                                            val responseHeaders = response.headers.toMap().toMutableMap()
+                                            responseHeaders.keys.filter { it.equals("Content-Security-Policy", ignoreCase = true) }
+                                                .forEach { responseHeaders.remove(it) }
+                                            responseHeaders["Access-Control-Allow-Origin"] = "*"
+
+                                            var bodyStream = response.body.byteStream()
+                                            if (mimeType.contains("text/html", ignoreCase = true)) {
+                                                val html = response.body.string()
+                                                val jsInject = """
+                                                    <script>
+                                                    (function() {
+                                                        var proxyBase = '$proxyBaseUrl';
+                                                        function rewriteUrl(url) {
+                                                            if (typeof url !== 'string') return url;
+                                                            if (url.startsWith('https://verify-api.proton.me')) {
+                                                                return url.replace('https://verify-api.proton.me', proxyBase + '/verify-api');
+                                                            }
+                                                            if (url.startsWith('https://verify.proton.me')) {
+                                                                return url.replace('https://verify.proton.me', proxyBase + '/verify');
+                                                            }
+                                                            return url;
+                                                        }
+                                                        var origFetch = window.fetch;
+                                                        window.fetch = function() {
+                                                            if (arguments[0] instanceof Request) {
+                                                                var newUrl = rewriteUrl(arguments[0].url);
+                                                                if (newUrl !== arguments[0].url) {
+                                                                    arguments[0] = new Request(newUrl, arguments[0]);
+                                                                }
+                                                            } else {
+                                                                arguments[0] = rewriteUrl(arguments[0]);
+                                                            }
+                                                            return origFetch.apply(this, arguments);
+                                                        };
+                                                        var origOpen = XMLHttpRequest.prototype.open;
+                                                        XMLHttpRequest.prototype.open = function() {
+                                                            arguments[1] = rewriteUrl(arguments[1]);
+                                                            return origOpen.apply(this, arguments);
+                                                        };
+                                                    })();
+                                                    </script>
+                                                """.trimIndent()
+
+                                                val injectedHtml = if (html.contains("<head>", ignoreCase = true)) {
+                                                    html.replaceFirst(Regex("<head>", RegexOption.IGNORE_CASE), "<head>\n$jsInject")
+                                                } else {
+                                                    jsInject + html
+                                                }
+                                                bodyStream = ByteArrayInputStream(injectedHtml.toByteArray())
+                                            }
+
+                                            return WebResourceResponse(mimeType, encoding, 200, "OK", responseHeaders, bodyStream)
+                                        } catch (e: Exception) {
+                                            ProtonLogger.e("CaptchaScreen", "Proxy Error", e)
+                                        }
+                                    }
+                                    return super.shouldInterceptRequest(view, request)
+                                }
+                            }
+
+                            val optimizedUrl = buildString {
+                                append(webUrl)
+                                if (!webUrl.contains("?")) append("?") else append("&")
+                                append("embed=true&theme=1&vpn=true")
+                            }
+
+                            val extraHeaders = mutableMapOf(
+                                "x-pm-appversion" to "android-vpn@${DeviceInfoProvider.SPOOFED_APP_VERSION}-dev+play",
+                                "x-pm-apiversion" to "4",
+                                "Accept" to "application/vnd.protonmail.v1+json"
+                            )
+                            if (sessionId != null) {
+                                extraHeaders["x-pm-uid"] = sessionId
+                            }
+                            loadUrl(optimizedUrl, extraHeaders)
                         }
-                    }
+                    },
+                    update = { /* No-op */ }
+                )
 
-                    // Keep the original Proton URL so relative JS logic doesn't break.
-                    // Our shouldInterceptRequest will catch it and proxy it.
-                    val optimizedUrl = buildString {
-                        append(webUrl)
-                        if (!webUrl.contains("?")) append("?") else append("&")
-                        append("embed=true&theme=1&vpn=true")
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = isLoading,
+                    exit = fadeOut(),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(colors.backgroundNorm),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = colors.brandNorm)
                     }
-
-                    // Use constants from DeviceInfoProvider to keep headers perfectly synchronized
-                    val extraHeaders = mutableMapOf(
-                        "x-pm-appversion" to "android-vpn@${DeviceInfoProvider.SPOOFED_APP_VERSION}-dev+play",
-                        "x-pm-apiversion" to "4",
-                        "Accept" to "application/vnd.protonmail.v1+json"
-                    )
-                    if (sessionId != null) {
-                        extraHeaders["x-pm-uid"] = sessionId
-                    }
-
-                    loadUrl(optimizedUrl, extraHeaders)
                 }
-            },
-            update = { webView ->
-                // WebView doesn't need to be updated with every state change in this simple case
             }
-        )
+        }
     }
 }

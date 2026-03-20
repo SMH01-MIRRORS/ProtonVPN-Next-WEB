@@ -318,5 +318,7 @@
 
     <!-- Captcha Screen -->
     <string name="captcha_title">Проверка безопасности</string>
+    <string name="captcha_message">Для обеспечения безопасности аккаунта, пожалуйста, пройдите проверку ниже.</string>
+    <string name="captcha_proxy_active">Антиблокировочный прокси активен</string>
     <string name="desc_close">Закрыть</string>
 </resources>

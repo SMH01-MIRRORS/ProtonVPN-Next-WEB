@@ -59,6 +59,7 @@ fun WelcomeScreen(
 ) {
     val colors = ProtonNextTheme.colors
     val uiState by viewModel.uiState.collectAsState()
+    val isApiBypassEnabled by viewModel.isApiBypassEnabled.collectAsState()
 
     var isVisible by remember { mutableStateOf(false) }
 
@@ -85,6 +86,7 @@ fun WelcomeScreen(
             CaptchaScreen(
                 webUrl = currentCaptcha.webUrl,
                 sessionId = currentCaptcha.sessionId,
+                isApiBypassEnabled = isApiBypassEnabled,
                 onDismiss = { viewModel.resetError() },
                 onCaptchaSolved = { verifiedToken ->
                     viewModel.retryWithCaptcha(currentCaptcha, verifiedToken)
