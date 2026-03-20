@@ -284,9 +284,10 @@ fun EditProfileScreen(
     if (showPortDialog) {
         PortSelectionDialog(
             currentPort = selectedPort,
-            onDismiss = {  },
+            onDismiss = { showPortDialog = false },
             onPortSelected = {
                 selectedPort = it
+                showPortDialog = false
             }
         )
     }
