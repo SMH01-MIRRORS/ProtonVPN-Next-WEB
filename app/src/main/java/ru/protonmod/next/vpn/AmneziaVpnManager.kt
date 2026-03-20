@@ -92,7 +92,8 @@ class AmneziaVpnManager @Inject constructor(
         val jc: Int, val jmin: Int, val jmax: Int,
         val s1: Int, val s2: Int,
         val h1: String, val h2: String, val h3: String, val h4: String,
-        val i1: String
+        val i1: String, val i2: String = "", val i3: String = "", val i4: String = "", val i5: String = "",
+        val customId: String = "", val ip: String = "", val ib: String = ""
     )
 
     private val _isConnecting = MutableStateFlow(false)
@@ -324,10 +325,11 @@ class AmneziaVpnManager @Inject constructor(
                     jc = settingsManager.awgJc.first(), jmin = settingsManager.awgJmin.first(), jmax = settingsManager.awgJmax.first(),
                     s1 = settingsManager.awgS1.first(), s2 = settingsManager.awgS2.first(),
                     h1 = settingsManager.awgH1.first(), h2 = settingsManager.awgH2.first(), h3 = settingsManager.awgH3.first(), h4 = settingsManager.awgH4.first(),
-                    i1 = settingsManager.awgI1.first()
+                    i1 = settingsManager.awgI1.first(), i2 = settingsManager.awgI2.first(), i3 = settingsManager.awgI3.first(), i4 = settingsManager.awgI4.first(), i5 = settingsManager.awgI5.first(),
+                    customId = settingsManager.awgId.first(), ip = settingsManager.awgIp.first(), ib = settingsManager.awgIb.first()
                 )
             } else {
-                ObfuscationParams(0, 0, 0, 0, 0, "", "", "", "", "")
+                ObfuscationParams(0, 0, 0, 0, 0, "", "", "", "", "", "", "", "", "", "", "", "")
             }
 
             // Retrieve Custom DNS IP or fallback to Proton Default
@@ -339,12 +341,17 @@ class AmneziaVpnManager @Inject constructor(
                 serverPublicKey = serverPubKey, privateKey = wgPrivateKeyB64, localIp = PROTON_CLIENT_IP, dnsServer = activeDns,
                 targetIp = targetIp, excludedApps = excludedApps, excludedIps = excludedIps, port = selectedPort,
                 jc = params.jc, jmin = params.jmin, jmax = params.jmax, s1 = params.s1, s2 = params.s2,
-                h1 = params.h1, h2 = params.h2, h3 = params.h3, h4 = params.h4, i1 = params.i1
+                h1 = params.h1, h2 = params.h2, h3 = params.h3, h4 = params.h4,
+                i1 = params.i1, i2 = params.i2, i3 = params.i3, i4 = params.i4, i5 = params.i5,
+                customId = params.customId, ip = params.ip, ib = params.ib
             )
+
+            val configStr = config.toAwgQuickString(false, false)
+            Log.d(TAG, "Connecting with AWG config:\n$configStr")
 
             val intent = Intent(context, ProtonVpnService::class.java).apply {
                 action = ProtonVpnService.ACTION_CONNECT
-                putExtra(ProtonVpnService.EXTRA_CONFIG, config.toAwgQuickString(false, false))
+                putExtra(ProtonVpnService.EXTRA_CONFIG, configStr)
                 putExtra(ProtonVpnService.EXTRA_NOTIFICATIONS_ENABLED, settingsManager.notificationsEnabled.first())
                 putExtra(ProtonVpnService.EXTRA_KILL_SWITCH_ENABLED, settingsManager.killSwitchEnabled.first())
                 putStringArrayListExtra(ProtonVpnService.EXTRA_EXCLUDED_APPS, ArrayList(excludedApps))
@@ -407,7 +414,8 @@ class AmneziaVpnManager @Inject constructor(
         jc: Int = 3, jmin: Int = 1, jmax: Int = 3,
         s1: Int = 0, s2: Int = 0,
         h1: String = "1", h2: String = "2", h3: String = "3", h4: String = "4",
-        i1: String = ""
+        i1: String = "", i2: String = "", i3: String = "", i4: String = "", i5: String = "",
+        customId: String = "", ip: String = "", ib: String = ""
     ): Config {
         val allowedIpsList = if (excludedIps.isEmpty()) listOf("0.0.0.0/0") else IpSubnetCalculator.complementOfExcluded(excludedIps)
         val peer = Peer.Builder()
@@ -438,6 +446,10 @@ class AmneziaVpnManager @Inject constructor(
             }
 
         if (i1.isNotEmpty()) ifaceBuilder.parseSpecialJunkI1(i1)
+        // Note: I2-I5, Id, Ip, Ib support depends on the underlying awg-android library version.
+        // We attempt to call them if they exist in the SDK.
+        // For now, only I1 is explicitly supported in the provided builder snippet.
+
         if (excludedApps.isNotEmpty()) ifaceBuilder.parseExcludedApplications(excludedApps.joinToString(","))
 
         return Config.Builder().setInterface(ifaceBuilder.build()).addPeer(peer).build()

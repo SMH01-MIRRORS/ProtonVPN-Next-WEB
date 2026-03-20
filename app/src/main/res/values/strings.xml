@@ -147,6 +147,24 @@
     <string name="obfuscation_h3">Underload Packet Magic (H3)</string>
     <string name="obfuscation_h4">Transport Packet Magic (H4)</string>
     <string name="obfuscation_i1">Special Junk (I1)</string>
+    <string name="obfuscation_i2">Special Junk (I2)</string>
+    <string name="obfuscation_i3">Special Junk (I3)</string>
+    <string name="obfuscation_i4">Special Junk (I4)</string>
+    <string name="obfuscation_i5">Special Junk (I5)</string>
+    <string name="obfuscation_custom_id">Special Junk (Id)</string>
+    <string name="obfuscation_ip">Special Junk (Ip)</string>
+    <string name="obfuscation_ib">Special Junk (Ib)</string>
+
+    <!-- Obfuscation Modes -->
+    <string name="obfuscation_mode_easy">Easy</string>
+    <string name="obfuscation_mode_advanced">Advanced</string>
+    <string name="obfuscation_junk_level">Junk Intensity</string>
+    <string name="obfuscation_junk_low">Low (Standard)</string>
+    <string name="obfuscation_junk_medium">Medium</string>
+    <string name="obfuscation_junk_high">High</string>
+    <string name="obfuscation_junk_custom">Custom</string>
+    <string name="obfuscation_regenerate_i1">Regenerate Identification</string>
+    <string name="obfuscation_i1_desc">Unique identification string used to bypass DPI. Regenerate if connection is unstable.</string>
 
     <!-- Settings: Protocol & Obfuscation -->
     <string name="settings_protocol">Protocol</string>

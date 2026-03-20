@@ -219,6 +219,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 updateNotification(STATE_CONNECTING)
 
                 if (configStr != null) {
+                    Log.d(TAG, "Received connection config:\n$configStr")
                     serviceScope.launch(Dispatchers.IO) {
                         try {
                             val configStream = ByteArrayInputStream(configStr.toByteArray())

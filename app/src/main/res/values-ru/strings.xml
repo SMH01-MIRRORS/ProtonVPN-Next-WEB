@@ -147,6 +147,24 @@
     <string name="obfuscation_h3">Magic Underload пакета (H3)</string>
     <string name="obfuscation_h4">Magic Transport пакета (H4)</string>
     <string name="obfuscation_i1">Специальный мусор (I1)</string>
+    <string name="obfuscation_i2">Специальный мусор (I2)</string>
+    <string name="obfuscation_i3">Специальный мусор (I3)</string>
+    <string name="obfuscation_i4">Специальный мусор (I4)</string>
+    <string name="obfuscation_i5">Специальный мусор (I5)</string>
+    <string name="obfuscation_custom_id">Специальный мусор (Id)</string>
+    <string name="obfuscation_ip">Специальный мусор (Ip)</string>
+    <string name="obfuscation_ib">Специальный мусор (Ib)</string>
+
+    <!-- Obfuscation Modes -->
+    <string name="obfuscation_mode_easy">Простой</string>
+    <string name="obfuscation_mode_advanced">Продвинутый</string>
+    <string name="obfuscation_junk_level">Интенсивность мусора</string>
+    <string name="obfuscation_junk_low">Низкая (Стандарт)</string>
+    <string name="obfuscation_junk_medium">Средняя</string>
+    <string name="obfuscation_junk_high">Высокая</string>
+    <string name="obfuscation_junk_custom">Своя</string>
+    <string name="obfuscation_regenerate_i1">Обновить идентификацию</string>
+    <string name="obfuscation_i1_desc">Уникальная строка идентификации для обхода DPI. Обновите, если соединение нестабильно.</string>
 
     <!-- Settings: Protocol & Obfuscation -->
     <string name="settings_protocol">Протокол</string>
