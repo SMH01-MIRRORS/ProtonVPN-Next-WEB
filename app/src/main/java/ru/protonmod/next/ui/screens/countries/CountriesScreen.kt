@@ -56,6 +56,8 @@ import ru.protonmod.next.R
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.LiquidGlassBottomBar
+import ru.protonmod.next.ui.components.LoadIndicator
+import ru.protonmod.next.ui.components.LoadProgressBar
 import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.CountryUtils
@@ -130,105 +132,127 @@ fun CountriesScreen(
         },
         bottomBar = {}
     ) { paddingValues ->
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxSize()
                 .background(colors.backgroundNorm)
                 .padding(paddingValues)
         ) {
-            AnimatedContent(
-                targetState = uiState,
-                label = "countries_state",
-                modifier = Modifier.fillMaxSize()
-            ) { state ->
-                when (state) {
-                    is CountriesUiState.Loading -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = colors.brandNorm)
+            if (isTablet) {
+                LiquidGlassBottomBar(
+                    selectedTarget = currentTarget,
+                    navigateTo = { target ->
+                        when (target) {
+                            MainTarget.Home -> onNavigateToHome()
+                            MainTarget.Settings -> onNavigateToSettings()
+                            MainTarget.Profiles -> onNavigateToProfiles()
+                            MainTarget.Countries -> { }
                         }
-                    }
-                    is CountriesUiState.Error -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(state.message, color = colors.notificationError)
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Button(
-                                    onClick = { viewModel.loadServers() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = colors.interactionNorm)
-                                ) {
-                                    Text(stringResource(R.string.btn_retry), color = colors.textInverted)
-                                }
-                            }
-                        }
-                    }
-                    is CountriesUiState.CountriesList -> {
-                        CountriesListContent(
-                            countries = state.countries,
-                            connectedServer = connectedServer,
-                            isTablet = isTablet,
-                            onCountryClick = { country ->
-                                checkVpnAndConnect {
-                                    viewModel.selectCountry(country.code)
-                                    onNavigateToHome()
-                                }
-                            },
-                            onCountryMore = { country ->
-                                viewModel.expandCitiesForCountry(country.code)
-                            }
-                        )
-                    }
-                    is CountriesUiState.CitiesList -> {
-                        CitiesListContent(
-                            countryName = state.country,
-                            cities = state.cities,
-                            connectedServer = connectedServer,
-                            isTablet = isTablet,
-                            onBack = { viewModel.backToCountries() },
-                            onCityClick = { city ->
-                                checkVpnAndConnect {
-                                    viewModel.selectCity(city.name)
-                                    onNavigateToHome()
-                                }
-                            },
-                            onCityMore = { city ->
-                                viewModel.expandServersForCity(city.name)
-                            }
-                        )
-                    }
-                    is CountriesUiState.ServersList -> {
-                        ServersListContent(
-                            countryName = state.country,
-                            cityName = state.city,
-                            servers = state.servers,
-                            connectedServer = connectedServer,
-                            isTablet = isTablet,
-                            onBack = { viewModel.backToCities() },
-                            onServerClick = { server ->
-                                checkVpnAndConnect {
-                                    viewModel.selectServer(server)
-                                    onNavigateToHome()
-                                }
-                            }
-                        )
-                    }
-                }
+                    },
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(100.dp)
+                        .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Vertical + WindowInsetsSides.Start))
+                )
             }
 
-            LiquidGlassBottomBar(
-                selectedTarget = currentTarget,
-                navigateTo = { target ->
-                    when (target) {
-                        MainTarget.Home -> onNavigateToHome()
-                        MainTarget.Settings -> onNavigateToSettings()
-                        MainTarget.Profiles -> onNavigateToProfiles()
-                        MainTarget.Countries -> { }
+            Box(modifier = Modifier.weight(1f)) {
+                AnimatedContent(
+                    targetState = uiState,
+                    label = "countries_state",
+                    modifier = Modifier.fillMaxSize()
+                ) { state ->
+                    when (state) {
+                        is CountriesUiState.Loading -> {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(color = colors.brandNorm)
+                            }
+                        }
+                        is CountriesUiState.Error -> {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(state.message, color = colors.notificationError)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Button(
+                                        onClick = { viewModel.loadServers() },
+                                        colors = ButtonDefaults.buttonColors(containerColor = colors.interactionNorm)
+                                    ) {
+                                        Text(stringResource(R.string.btn_retry), color = colors.textInverted)
+                                    }
+                                }
+                            }
+                        }
+                        is CountriesUiState.CountriesList -> {
+                            CountriesListContent(
+                                countries = state.countries,
+                                connectedServer = connectedServer,
+                                isTablet = isTablet,
+                                onCountryClick = { country ->
+                                    checkVpnAndConnect {
+                                        viewModel.selectCountry(country.code)
+                                        onNavigateToHome()
+                                    }
+                                },
+                                onCountryMore = { country ->
+                                    viewModel.expandCitiesForCountry(country.code)
+                                }
+                            )
+                        }
+                        is CountriesUiState.CitiesList -> {
+                            CitiesListContent(
+                                countryName = state.country,
+                                cities = state.cities,
+                                connectedServer = connectedServer,
+                                isTablet = isTablet,
+                                onBack = { viewModel.backToCountries() },
+                                onCityClick = { city ->
+                                    checkVpnAndConnect {
+                                        viewModel.selectCity(city.name)
+                                        onNavigateToHome()
+                                    }
+                                },
+                                onCityMore = { city ->
+                                    viewModel.expandServersForCity(city.name)
+                                }
+                            )
+                        }
+                        is CountriesUiState.ServersList -> {
+                            ServersListContent(
+                                countryName = state.country,
+                                cityName = state.city,
+                                servers = state.servers,
+                                connectedServer = connectedServer,
+                                isTablet = isTablet,
+                                onBack = { viewModel.backToCities() },
+                                onServerClick = { server ->
+                                    checkVpnAndConnect {
+                                        viewModel.selectServer(server)
+                                        onNavigateToHome()
+                                    }
+                                }
+                            )
+                        }
                     }
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-            )
+                }
+
+                if (!isTablet) {
+                    LiquidGlassBottomBar(
+                        selectedTarget = currentTarget,
+                        navigateTo = { target ->
+                            when (target) {
+                                MainTarget.Home -> onNavigateToHome()
+                                MainTarget.Settings -> onNavigateToSettings()
+                                MainTarget.Profiles -> onNavigateToProfiles()
+                                MainTarget.Countries -> { }
+                            }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .windowInsetsPadding(WindowInsets.navigationBars)
+                    )
+                }
+            }
         }
     }
 }
@@ -712,49 +736,4 @@ fun ServerItemCard(
             }
         }
     }
-}
-
-@Composable
-fun LoadIndicator(load: Int) {
-    val colors = ProtonNextTheme.colors
-    val color = when {
-        load < 40 -> colors.notificationSuccess
-        load < 70 -> colors.notificationWarning
-        else -> colors.notificationError
-    }
-
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            imageVector = Icons.Rounded.Public,
-            contentDescription = null,
-            tint = color,
-            modifier = Modifier.size(16.dp)
-        )
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(
-            text = "$load%",
-            style = MaterialTheme.typography.labelMedium,
-            color = color,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@Composable
-fun LoadProgressBar(load: Int) {
-    val colors = ProtonNextTheme.colors
-    val color = when {
-        load < 40 -> colors.notificationSuccess
-        load < 70 -> colors.notificationWarning
-        else -> colors.notificationError
-    }
-
-    LinearProgressIndicator(
-        progress = { load / 100f },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(4.dp),
-        color = color,
-        trackColor = color.copy(alpha = 0.1f)
-    )
 }

@@ -20,6 +20,7 @@ package ru.protonmod.next.ui.screens.profiles
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -28,8 +29,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -42,6 +46,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -50,15 +55,17 @@ import ru.protonmod.next.R
 import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.FlagIcon
+import ru.protonmod.next.ui.components.LoadIndicator
+import ru.protonmod.next.ui.components.LoadProgressBar
 import ru.protonmod.next.ui.screens.countries.CityDisplayItem
 import ru.protonmod.next.ui.screens.countries.CountryDisplayItem
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.CountryUtils
+import ru.protonmod.next.ui.utils.isTablet
 import java.util.Locale
 import java.util.UUID
 
 // Helper function to dynamically localize city names based on string resources
-// For example: "New York" -> looks for R.string.city_new_york
 private fun getLocalizedCityName(context: Context, cityName: String): String {
     if (cityName.isBlank()) return cityName
     val resourceName = "city_${cityName.lowercase(Locale.ROOT).replace(" ", "_").replace("-", "_")}"
@@ -78,6 +85,7 @@ fun EditProfileScreen(
     val profiles by viewModel.profiles.collectAsState()
     val countries by viewModel.countries.collectAsState()
     val customObfuscationConfigs by viewModel.customObfuscationConfigs.collectAsState()
+    val isTablet = isTablet()
 
     val editingProfile = remember(profileId, profiles) {
         profiles.find { it.id == profileId }
@@ -126,7 +134,7 @@ fun EditProfileScreen(
                     containerColor = colors.backgroundNorm,
                     titleContentColor = colors.textNorm
                 ),
-                title = { Text(if (profileId == null) stringResource(R.string.title_create_profile) else stringResource(R.string.title_edit_profile)) },
+                title = { Text(if (profileId == null) stringResource(R.string.title_create_profile) else stringResource(R.string.title_edit_profile), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = colors.textNorm)
@@ -160,9 +168,11 @@ fun EditProfileScreen(
                             viewModel.saveProfile(newProfile)
                             onNavigateBack()
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
+                        colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.padding(end = 8.dp)
                     ) {
-                        Text(stringResource(R.string.btn_save), color = Color.White)
+                        Text(stringResource(R.string.btn_save), color = Color.White, fontWeight = FontWeight.Bold)
                     }
                 }
             )
@@ -172,11 +182,14 @@ fun EditProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
+            horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start,
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            val contentModifier = if (isTablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
+
             item {
-                Category(title = stringResource(R.string.category_general)) {
+                Category(modifier = contentModifier, title = stringResource(R.string.category_general)) {
                     SettingTextFieldRow(
                         label = stringResource(R.string.label_profile_name),
                         value = profileName,
@@ -186,7 +199,7 @@ fun EditProfileScreen(
             }
 
             item {
-                Category(title = stringResource(R.string.category_connection)) {
+                Category(modifier = contentModifier, title = stringResource(R.string.category_connection)) {
                     val locationSubtitle = when {
                         targetServerId != null -> stringResource(R.string.location_server, (targetServerName ?: targetServerId) as Any)
                         targetCity != null -> "🏙️ ${getLocalizedCityName(context, targetCity!!)}, ${CountryUtils.getCountryName(context, targetCountry)}"
@@ -218,7 +231,7 @@ fun EditProfileScreen(
             }
 
             item {
-                Category(title = stringResource(R.string.category_advanced)) {
+                Category(modifier = contentModifier, title = stringResource(R.string.category_advanced)) {
                     SettingToggleRow(
                         icon = Icons.Rounded.VisibilityOff,
                         title = stringResource(R.string.label_obfuscation),
@@ -243,7 +256,7 @@ fun EditProfileScreen(
             }
 
             item {
-                Category(title = stringResource(R.string.category_automation)) {
+                Category(modifier = contentModifier, title = stringResource(R.string.category_automation)) {
                     SettingRowWithIcon(
                         icon = Icons.Rounded.OpenInBrowser,
                         title = stringResource(R.string.label_connect_go_website),
@@ -256,7 +269,7 @@ fun EditProfileScreen(
                     text = stringResource(R.string.automation_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.textWeak,
-                    modifier = Modifier.padding(start = 12.dp, top = 8.dp, end = 12.dp)
+                    modifier = contentModifier.padding(start = 12.dp, top = 8.dp, end = 12.dp)
                 )
             }
 
@@ -268,13 +281,13 @@ fun EditProfileScreen(
                             viewModel.deleteProfile(profileId)
                             onNavigateBack()
                         },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = contentModifier.height(56.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.1f)),
                         shape = RoundedCornerShape(16.dp)
                     ) {
                         Icon(Icons.Rounded.Delete, contentDescription = null, tint = Color.Red)
                         Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.btn_delete), color = Color.Red)
+                        Text(stringResource(R.string.btn_delete), color = Color.Red, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -364,7 +377,6 @@ fun EditProfileScreen(
     }
 }
 
-// Reusable card for the selection dialog to match CountriesScreen styling
 @Composable
 fun SelectionCard(
     title: String,
@@ -377,65 +389,49 @@ fun SelectionCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = colors.backgroundSecondary.copy(alpha = 0.5f)) // Lighter card on a darker background
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = colors.backgroundSecondary.copy(alpha = 0.5f)
+        )
     ) {
         Column {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Box(
-                    modifier = Modifier.size(36.dp, 24.dp),
-                    contentAlignment = Alignment.Center
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    icon()
+                    Box(
+                        modifier = Modifier.size(36.dp, 24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        icon()
+                    }
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.textNorm,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
 
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = colors.textNorm,
-                    modifier = Modifier.weight(1f)
-                )
-
                 if (load != null) {
-                    val loadColor = CountryUtils.getColorForLoad(load)
-                    Surface(
-                        color = loadColor.copy(alpha = 0.2f),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = "$load%",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = loadColor,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
+                    LoadIndicator(load = load)
                 }
             }
 
-            // Premium Load Progress Bar at the bottom of the card
             if (load != null) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(4.dp)
-                        .background(colors.textNorm.copy(alpha = 0.05f))
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(load / 100f)
-                            .fillMaxHeight()
-                            .background(CountryUtils.getColorForLoad(load))
-                    )
-                }
+                LoadProgressBar(load = load)
             }
         }
     }
@@ -465,21 +461,51 @@ fun LocationSelectionDialog(
     Dialog(onDismissRequest = onDismiss) {
         Card(
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = colors.backgroundNorm) // Darker dialog background
+            colors = CardDefaults.cardColors(containerColor = colors.backgroundNorm),
+            border = BorderStroke(1.dp, colors.shade100.copy(alpha = 0.05f))
         ) {
             Column(
-                modifier = Modifier.padding(vertical = 16.dp).fillMaxWidth().fillMaxHeight(0.7f)
+                modifier = Modifier
+                    .padding(vertical = 16.dp)
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.85f)
             ) {
-                Text(
-                    text = when(step) {
-                        0 -> stringResource(R.string.title_select_country)
-                        1 -> stringResource(R.string.title_select_city)
-                        else -> stringResource(R.string.title_select_server)
-                    },
-                    style = MaterialTheme.typography.titleLarge,
-                    color = colors.textNorm,
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (step > 0) {
+                        IconButton(onClick = { step-- }, enabled = !isTransitioning) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = colors.textNorm
+                            )
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    
+                    Text(
+                        text = when(step) {
+                            0 -> stringResource(R.string.title_select_country)
+                            1 -> stringResource(R.string.title_select_city)
+                            else -> stringResource(R.string.title_select_server)
+                        },
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.textNorm,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = colors.iconWeak)
+                    }
+                }
+
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = colors.shade20.copy(alpha = 0.5f))
 
                 AnimatedContent(
                     targetState = step,
@@ -488,8 +514,8 @@ fun LocationSelectionDialog(
                 ) { currentStep ->
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         item {
                             SelectionCard(
@@ -532,15 +558,12 @@ fun LocationSelectionDialog(
                                             } else {
                                                 Box(
                                                     modifier = Modifier
-                                                        .fillMaxSize()
+                                                        .size(36.dp, 24.dp)
                                                         .clip(RoundedCornerShape(6.dp))
                                                         .background(colors.backgroundNorm),
                                                     contentAlignment = Alignment.Center
                                                 ) {
-                                                    Text(
-                                                        text = CountryUtils.getFlagForCountry(countryItem.code),
-                                                        style = MaterialTheme.typography.bodyLarge
-                                                    )
+                                                    Icon(imageVector = Icons.Rounded.Public, contentDescription = null, tint = colors.iconNorm, modifier = Modifier.size(20.dp))
                                                 }
                                             }
                                         },
@@ -567,12 +590,12 @@ fun LocationSelectionDialog(
                                         icon = {
                                             Box(
                                                 modifier = Modifier
-                                                    .fillMaxSize()
+                                                    .size(36.dp, 24.dp)
                                                     .clip(RoundedCornerShape(6.dp))
                                                     .background(colors.backgroundNorm),
                                                 contentAlignment = Alignment.Center
                                             ) {
-                                                Text(text = "🏙️", style = MaterialTheme.typography.bodyLarge)
+                                                Icon(imageVector = Icons.Default.LocationCity, contentDescription = null, tint = colors.iconNorm, modifier = Modifier.size(20.dp))
                                             }
                                         },
                                         load = cityItem.averageLoad,
@@ -597,16 +620,16 @@ fun LocationSelectionDialog(
                                         icon = {
                                             Box(
                                                 modifier = Modifier
-                                                    .fillMaxSize()
+                                                    .size(36.dp, 24.dp)
                                                     .clip(RoundedCornerShape(6.dp))
-                                                    .background(colors.backgroundNorm), // Match CountriesScreen styling
+                                                    .background(colors.backgroundNorm),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Rounded.Public,
                                                     contentDescription = null,
                                                     tint = colors.iconNorm,
-                                                    modifier = Modifier.size(18.dp)
+                                                    modifier = Modifier.size(20.dp)
                                                 )
                                             }
                                         },
@@ -620,22 +643,6 @@ fun LocationSelectionDialog(
                                 }
                             }
                         }
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    if (step > 0) {
-                        TextButton(onClick = { step-- }, enabled = !isTransitioning) {
-                            Text(stringResource(R.string.desc_back_button), color = colors.brandNorm)
-                        }
-                    } else {
-                        Spacer(modifier = Modifier.width(1.dp))
-                    }
-                    TextButton(onClick = onDismiss, enabled = !isTransitioning) {
-                        Text(stringResource(android.R.string.cancel), color = colors.brandNorm)
                     }
                 }
             }
