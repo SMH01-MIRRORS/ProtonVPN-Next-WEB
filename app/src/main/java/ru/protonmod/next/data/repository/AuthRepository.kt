@@ -17,9 +17,7 @@
 
 package ru.protonmod.next.data.repository
 
-import android.util.Base64
 import ru.protonmod.next.utils.ProtonLogger
-import com.proton.gopenpgp.srp.Srp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -30,6 +28,8 @@ import ru.protonmod.next.data.network.*
 import ru.protonmod.next.ui.screens.CaptchaRequiredException
 import ru.protonmod.next.ui.screens.ProtonErrorResponse
 import ru.protonmod.next.utils.DeviceInfoProvider
+import ru.protonmod.next.utils.coroutines.DispatcherProvider
+import ru.protonmod.next.utils.crypto.CryptoWrapper
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -38,7 +38,9 @@ class AuthRepository @Inject constructor(
     private val authApi: ProtonAuthApi,
     private val vpnRepository: VpnRepository,
     private val sessionDao: SessionDao,
-    private val deviceInfoProvider: DeviceInfoProvider
+    private val deviceInfoProvider: DeviceInfoProvider,
+    private val cryptoWrapper: CryptoWrapper,
+    private val dispatcherProvider: DispatcherProvider
 ) {
     companion object {
         private const val TAG = "AuthRepository"
@@ -70,7 +72,7 @@ class AuthRepository @Inject constructor(
      * Main login flow using SRP (Secure Remote Password) protocol.
      * Handles Captcha verification by refreshing sessions if a token is provided.
      */
-    suspend fun login(username: String, passwordRaw: String, captchaToken: String? = null): Result<LoginResponse> = withContext(Dispatchers.IO) {
+    suspend fun login(username: String, passwordRaw: String, captchaToken: String? = null): Result<LoginResponse> = withContext(dispatcherProvider.io()) {
         try {
             if (pendingUsername != username) {
                 clearPendingAuth()
@@ -104,13 +106,18 @@ class AuthRepository @Inject constructor(
             }
 
             val authInfo = pendingAuthInfo!!
-            val auth = Srp.newAuth(4L, username, passwordRaw.toByteArray(), authInfo.salt ?: "", authInfo.modulus ?: "", authInfo.serverEphemeral ?: "")
-            val proofs = auth.generateProofs(2048L)
+            val proofs = cryptoWrapper.generateSrpProofs(
+                username = username,
+                passwordRaw = passwordRaw.toByteArray(),
+                salt = authInfo.salt ?: "",
+                modulus = authInfo.modulus ?: "",
+                serverEphemeral = authInfo.serverEphemeral ?: ""
+            )
 
             val loginRequest = LoginRequest(
                 username = username,
-                clientEphemeral = Base64.encodeToString(proofs.clientEphemeral, Base64.NO_WRAP),
-                clientProof = Base64.encodeToString(proofs.clientProof, Base64.NO_WRAP),
+                clientEphemeral = proofs.clientEphemeral,
+                clientProof = proofs.clientProof,
                 srpSession = authInfo.srpSession ?: "",
                 payload = challengePayload["Payload"]?.jsonObject
             )
@@ -159,7 +166,7 @@ class AuthRepository @Inject constructor(
     /**
      * Anonymous login flow (Guest login).
      */
-    suspend fun loginAnonymous(captchaToken: String? = null): Result<LoginResponse> = withContext(Dispatchers.IO) {
+    suspend fun loginAnonymous(captchaToken: String? = null): Result<LoginResponse> = withContext(dispatcherProvider.io()) {
         try {
             val tokenType = if (captchaToken != null) "captcha" else null
 
@@ -220,7 +227,7 @@ class AuthRepository @Inject constructor(
         tempAccessToken: String,
         refreshToken: String,
         totpCode: String
-    ): Result<LoginResponse> = withContext(Dispatchers.IO) {
+    ): Result<LoginResponse> = withContext(dispatcherProvider.io()) {
         try {
             val bearer = "Bearer $tempAccessToken"
             val response2fa = authApi.performSecondFactor(bearer, sessionId, SecondFactorRequest(totpCode))
@@ -283,9 +290,9 @@ class AuthRepository @Inject constructor(
 
     private suspend fun registerAndGetVpnKeys(accessToken: String, sessionId: String): Triple<String, String, String>? {
         return try {
-            val keyPair = com.proton.gopenpgp.ed25519.KeyPair()
-            val publicKeyPem = keyPair.publicKeyPKIXPem()
-            val wgPrivateKeyB64 = keyPair.toX25519Base64()
+            val vpnKeyPair = cryptoWrapper.generateVpnKeyPair()
+            val publicKeyPem = vpnKeyPair.publicKeyPem
+            val wgPrivateKeyB64 = vpnKeyPair.privateKeyX25519
 
             val regResult = vpnRepository.registerWireGuardKey(accessToken, sessionId, publicKeyPem)
 

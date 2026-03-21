@@ -48,6 +48,9 @@ import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.network.PhysicalServer
 import ru.protonmod.next.data.repository.VpnRepository
 import ru.protonmod.next.di.ApplicationScope
+import ru.protonmod.next.utils.coroutines.DispatcherProvider
+import ru.protonmod.next.utils.crypto.CryptoWrapper
+import ru.protonmod.next.utils.system.SystemContextWrapper
 import java.io.ByteArrayInputStream
 import java.net.InetAddress
 import java.security.cert.CertificateFactory
@@ -62,6 +65,10 @@ class AmneziaVpnManager @Inject constructor(
     private val settingsManager: SettingsManager,
     private val vpnRepositoryProvider: Provider<VpnRepository>,
     private val sessionDao: SessionDao,
+    private val systemContextWrapper: SystemContextWrapper,
+    private val cryptoWrapper: CryptoWrapper,
+    private val amneziaConfigGenerator: AmneziaConfigGenerator,
+    private val dispatcherProvider: DispatcherProvider,
     @ApplicationScope private val applicationScope: CoroutineScope
 ) {
     companion object {
@@ -181,10 +188,12 @@ class AmneziaVpnManager @Inject constructor(
         _certState.value = CertificateState.Refreshing
         ProtonLogger.d(TAG, "Refreshing certificate (previous state: $previousState)")
 
+        val keyPair = cryptoWrapper.generateVpnKeyPair()
+
         val result = vpnRepositoryProvider.get().registerWireGuardKey(
             accessToken = currentSession.accessToken,
             sessionId = currentSession.sessionId,
-            publicKeyPem = currentSession.wgPublicKeyPem ?: ""
+            publicKeyPem = keyPair.publicKeyPem
         )
         return if (result.isSuccess) {
             val newCert = result.getOrNull()?.certificate
@@ -243,12 +252,10 @@ class AmneziaVpnManager @Inject constructor(
     }
 
     private suspend fun updateServiceSettings() {
-        val intent = Intent(ProtonVpnService.ACTION_UPDATE_SETTINGS).apply {
-            setPackage(context.packageName)
-            putExtra(ProtonVpnService.EXTRA_NOTIFICATIONS_ENABLED, settingsManager.notificationsEnabled.first())
-            putExtra(ProtonVpnService.EXTRA_KILL_SWITCH_ENABLED, settingsManager.killSwitchEnabled.first())
-        }
-        context.sendBroadcast(intent)
+        systemContextWrapper.updateVpnSettings(
+            notificationsEnabled = settingsManager.notificationsEnabled.first(),
+            killSwitchEnabled = settingsManager.killSwitchEnabled.first()
+        )
     }
 
     fun connect(
@@ -260,7 +267,7 @@ class AmneziaVpnManager @Inject constructor(
         obfuscationParams: ObfuscationParams? = null
     ) {
         connectionJob?.cancel()
-        connectionJob = applicationScope.launch {
+        connectionJob = applicationScope.launch(dispatcherProvider.io()) {
             connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams)
         }
     }
@@ -272,7 +279,7 @@ class AmneziaVpnManager @Inject constructor(
         overridePort: Int? = null,
         overrideObfuscation: Boolean? = null,
         obfuscationParams: ObfuscationParams? = null
-    ): Result<Unit> = withContext(Dispatchers.IO) {
+    ): Result<Unit> = withContext(dispatcherProvider.io()) {
         try {
             _isConnecting.value = true
             var currentSession = session
@@ -337,27 +344,26 @@ class AmneziaVpnManager @Inject constructor(
             val activeDns = if (userDns.isNotEmpty()) userDns else PROTON_DNS_IP
             ProtonLogger.d(TAG, "Using DNS Server: $activeDns")
 
-            val config = buildAwgConfig(
-                serverPublicKey = serverPubKey, privateKey = wgPrivateKeyB64, localIp = PROTON_CLIENT_IP, dnsServer = activeDns,
-                targetIp = targetIp, excludedApps = excludedApps, excludedIps = excludedIps, port = selectedPort,
-                jc = params.jc, jmin = params.jmin, jmax = params.jmax, s1 = params.s1, s2 = params.s2,
-                h1 = params.h1, h2 = params.h2, h3 = params.h3, h4 = params.h4,
-                i1 = params.i1, i2 = params.i2, i3 = params.i3, i4 = params.i4, i5 = params.i5,
-                customId = params.customId, ip = params.ip, ib = params.ib
+            val configStr = amneziaConfigGenerator.buildConfig(
+                serverPublicKey = serverPubKey,
+                privateKey = wgPrivateKeyB64,
+                localIp = PROTON_CLIENT_IP,
+                dnsServer = activeDns,
+                targetIp = targetIp,
+                excludedApps = excludedApps,
+                excludedIps = excludedIps,
+                port = selectedPort,
+                obfuscationParams = params
             )
-
-            val configStr = config.toAwgQuickString(false, false)
             ProtonLogger.d(TAG, "Connecting with AWG config:\n$configStr")
 
-            val intent = Intent(context, ProtonVpnService::class.java).apply {
-                action = ProtonVpnService.ACTION_CONNECT
-                putExtra(ProtonVpnService.EXTRA_CONFIG, configStr)
-                putExtra(ProtonVpnService.EXTRA_NOTIFICATIONS_ENABLED, settingsManager.notificationsEnabled.first())
-                putExtra(ProtonVpnService.EXTRA_KILL_SWITCH_ENABLED, settingsManager.killSwitchEnabled.first())
-                putStringArrayListExtra(ProtonVpnService.EXTRA_EXCLUDED_APPS, ArrayList(excludedApps))
-                putStringArrayListExtra(ProtonVpnService.EXTRA_EXCLUDED_IPS, ArrayList(excludedIps))
-            }
-            context.startService(intent)
+            systemContextWrapper.startVpnService(
+                configStr = configStr,
+                notificationsEnabled = settingsManager.notificationsEnabled.first(),
+                killSwitchEnabled = settingsManager.killSwitchEnabled.first(),
+                excludedApps = excludedApps,
+                excludedIps = excludedIps
+            )
 
             Result.success(Unit)
         } catch (e: Exception) {
@@ -395,63 +401,7 @@ class AmneziaVpnManager @Inject constructor(
         }
     }
 
-    private suspend fun disconnectInternal() = withContext(Dispatchers.IO) {
-        val intent = Intent(context, ProtonVpnService::class.java).apply {
-            action = ProtonVpnService.ACTION_DISCONNECT
-        }
-        context.startService(intent)
-    }
-
-    private fun buildAwgConfig(
-        serverPublicKey: String,
-        privateKey: String,
-        localIp: String,
-        dnsServer: String,
-        targetIp: String,
-        excludedApps: Set<String> = emptySet(),
-        excludedIps: Set<String> = emptySet(),
-        port: Int = 1194,
-        jc: Int = 3, jmin: Int = 1, jmax: Int = 3,
-        s1: Int = 0, s2: Int = 0,
-        h1: String = "1", h2: String = "2", h3: String = "3", h4: String = "4",
-        i1: String = "", i2: String = "", i3: String = "", i4: String = "", i5: String = "",
-        customId: String = "", ip: String = "", ib: String = ""
-    ): Config {
-        val allowedIpsList = if (excludedIps.isEmpty()) listOf("0.0.0.0/0") else IpSubnetCalculator.complementOfExcluded(excludedIps)
-        val peer = Peer.Builder()
-            .parsePublicKey(serverPublicKey)
-            .parseEndpoint("$targetIp:$port")
-            .apply {
-                if (allowedIpsList.isEmpty()) parseAllowedIPs("0.0.0.0/0") else allowedIpsList.forEach { parseAllowedIPs(it) }
-            }
-            .setPersistentKeepalive(60)
-            .build()
-
-        val ifaceBuilder = Interface.Builder()
-            .parsePrivateKey(privateKey)
-            .parseAddresses("$localIp/32")
-            // WireGuard accepts the custom DNS directly here
-            .parseDnsServers(dnsServer)
-            .setMtu(1280)
-            .setJunkPacketCount(jc)
-            .setJunkPacketMinSize(jmin)
-            .setJunkPacketMaxSize(jmax)
-            .setInitPacketJunkSize(s1)
-            .setResponsePacketJunkSize(s2)
-            .apply {
-                if (h1.isNotEmpty()) setInitPacketMagicHeader(h1)
-                if (h2.isNotEmpty()) setResponsePacketMagicHeader(h2)
-                if (h3.isNotEmpty()) setUnderloadPacketMagicHeader(h3)
-                if (h4.isNotEmpty()) setTransportPacketMagicHeader(h4)
-            }
-
-        if (i1.isNotEmpty()) ifaceBuilder.parseSpecialJunkI1(i1)
-        // Note: I2-I5, Id, Ip, Ib support depends on the underlying awg-android library version.
-        // We attempt to call them if they exist in the SDK.
-        // For now, only I1 is explicitly supported in the provided builder snippet.
-
-        if (excludedApps.isNotEmpty()) ifaceBuilder.parseExcludedApplications(excludedApps.joinToString(","))
-
-        return Config.Builder().setInterface(ifaceBuilder.build()).addPeer(peer).build()
+    private suspend fun disconnectInternal() = withContext(dispatcherProvider.io()) {
+        systemContextWrapper.stopVpnService()
     }
 }

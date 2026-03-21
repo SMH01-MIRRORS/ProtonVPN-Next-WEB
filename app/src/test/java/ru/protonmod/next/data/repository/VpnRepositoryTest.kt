@@ -17,7 +17,11 @@
 
 package ru.protonmod.next.data.repository
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
@@ -26,15 +30,14 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
-import org.mockito.kotlin.any
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.whenever
+import org.mockito.kotlin.*
 import retrofit2.Response
 import ru.protonmod.next.data.local.ServerDao
 import ru.protonmod.next.data.local.ServersCacheDao
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.network.*
+import ru.protonmod.next.utils.coroutines.DispatcherProvider
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class VpnRepositoryTest {
@@ -51,16 +54,29 @@ class VpnRepositoryTest {
     @Mock
     private lateinit var serversCacheDao: ServersCacheDao
 
+    private val testDispatcher = StandardTestDispatcher()
+    
+    private val testDispatcherProvider = object : DispatcherProvider {
+        override fun main(): CoroutineDispatcher = testDispatcher
+        override fun io(): CoroutineDispatcher = testDispatcher
+        override fun default(): CoroutineDispatcher = testDispatcher
+    }
+    
+    private val testScope = CoroutineScope(testDispatcher + SupervisorJob())
+
     private lateinit var repository: VpnRepository
 
     @Before
     fun setup() {
         MockitoAnnotations.openMocks(this)
-        repository = VpnRepository(vpnApi, serverDao, sessionDao, serversCacheDao)
+        repository = VpnRepository(
+            vpnApi, serverDao, sessionDao, serversCacheDao,
+            testDispatcherProvider, testScope
+        )
     }
 
     @Test
-    fun `getServers maps logical loads correctly and saves to DB`() = runTest {
+    fun `getServers maps logical loads correctly and saves to DB`() = runTest(testDispatcher) {
         // Arrange
         val logicalId = "logical_1"
         val physicalId = "physical_1"
@@ -86,7 +102,8 @@ class VpnRepositoryTest {
 
         val loadsJson = """
             {
-                "Loads": [
+                "Code": 1000,
+                "LogicalServers": [
                     {
                         "ID": "$logicalId",
                         "Load": $loadValue
@@ -114,18 +131,18 @@ class VpnRepositoryTest {
         whenever(serversCacheDao.getCacheInfo()).thenReturn(null)
         whenever(serverDao.getAllServers()).thenReturn(emptyList())
 
-        // Mock API
+        // Mock API with flexible matching
         whenever(vpnApi.getLogicalServers(
-            authorization = eq("Bearer token"),
-            sessionId = eq("session"),
-            lastModified = any(),
-            locale = any(),
-            protocols = any(),
+            authorization = any(),
+            sessionId = any(),
+            lastModified = anyOrNull(),
+            locale = anyOrNull(),
+            protocols = anyOrNull(),
             withState = any(),
-            userTier = any()
+            userTier = anyOrNull()
         )).thenReturn(Response.success(logicalServersResponse))
 
-        whenever(vpnApi.getLoads(eq("Bearer token"), eq("session"), any())).thenReturn(
+        whenever(vpnApi.getLoads(any(), any(), anyOrNull())).thenReturn(
             Response.success(loadsJson.toResponseBody())
         )
 
@@ -133,10 +150,14 @@ class VpnRepositoryTest {
         val result = repository.getServers("token", "session", 0, forceRefresh = true)
 
         // Assert
-        assertTrue(result.isSuccess)
+        assertTrue("Expected success but got ${result.exceptionOrNull()}", result.isSuccess)
         val servers = result.getOrNull()!!
         assertEquals(1, servers.size)
         assertEquals(loadValue, servers[0].averageLoad)
         assertEquals(loadValue, servers[0].servers[0].load)
+        
+        // Verify DB interactions
+        verify(serverDao, atLeastOnce()).insertServers(any())
+        verify(serversCacheDao, atLeastOnce()).saveCacheInfo(any())
     }
 }

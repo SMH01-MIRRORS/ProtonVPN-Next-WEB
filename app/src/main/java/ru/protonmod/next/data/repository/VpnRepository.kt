@@ -30,6 +30,8 @@ import ru.protonmod.next.data.local.ServerMapper
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.ServersCacheDao
 import ru.protonmod.next.data.local.ServersCacheEntity
+import ru.protonmod.next.di.ApplicationScope
+import ru.protonmod.next.utils.coroutines.DispatcherProvider
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -39,9 +41,10 @@ class VpnRepository @Inject constructor(
     private val vpnApi: ProtonVpnApi,
     private val serverDao: ServerDao,
     private val sessionDao: SessionDao,
-    private val serversCacheDao: ServersCacheDao
+    private val serversCacheDao: ServersCacheDao,
+    private val dispatcherProvider: DispatcherProvider,
+    @ApplicationScope private val managerScope: CoroutineScope
 ) {
-    private val managerScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var autoUpdateJob: Job? = null
     private val fetchMutex = Mutex()
 
@@ -133,7 +136,7 @@ class VpnRepository @Inject constructor(
         sessionId: String,
         userTier: Int,
         forceRefresh: Boolean
-    ): Result<List<LogicalServer>> = withContext(Dispatchers.IO) {
+    ): Result<List<LogicalServer>> = withContext(dispatcherProvider.io()) {
         try {
             val now = System.currentTimeMillis()
             val cacheInfo = serversCacheDao.getCacheInfo()
@@ -241,7 +244,7 @@ class VpnRepository @Inject constructor(
         }
     }
 
-    suspend fun getUserLocation(accessToken: String, sessionId: String): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun getUserLocation(accessToken: String, sessionId: String): Result<String> = withContext(dispatcherProvider.io()) {
         try {
             val response = vpnApi.getUserLocation("Bearer $accessToken", sessionId)
             val body = response.body()?.string()
@@ -255,7 +258,7 @@ class VpnRepository @Inject constructor(
         }
     }
 
-    suspend fun getVpnInfo(accessToken: String, sessionId: String): Result<VpnInfoResponse> = withContext(Dispatchers.IO) {
+    suspend fun getVpnInfo(accessToken: String, sessionId: String): Result<VpnInfoResponse> = withContext(dispatcherProvider.io()) {
         try {
             val bearer = "Bearer $accessToken"
             val response = vpnApi.getVpnInfo(bearer, sessionId)
@@ -277,7 +280,7 @@ class VpnRepository @Inject constructor(
         accessToken: String,
         sessionId: String,
         publicKeyPem: String
-    ): Result<CreateCertificateResponse> = withContext(Dispatchers.IO) {
+    ): Result<CreateCertificateResponse> = withContext(dispatcherProvider.io()) {
         try {
             val bearer = "Bearer $accessToken"
             val request = CreateCertificateRequest(clientPublicKey = publicKeyPem)
