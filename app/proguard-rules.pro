@@ -33,3 +33,7 @@
 
 # Preserve line numbers for non-obfuscated stack traces (optional, increases size slightly)
 #-keepattributes SourceFile,LineNumberTable
+
+# --- WindowManager Extensions (OEM provided) ---
+-dontwarn androidx.window.extensions.**
+-dontwarn androidx.window.sidecar.**

@@ -259,7 +259,7 @@ class DashboardViewModel @Inject constructor(
 
             client.newCall(request).execute().use { response ->
                 if (response.isSuccessful) {
-                    val body = response.body?.string() ?: ""
+                    val body = response.body.string()
                     if (body.isNotBlank()) {
                         val json = JSONObject(body)
                         val ip = json.optString("ip", "")

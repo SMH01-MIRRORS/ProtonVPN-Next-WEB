@@ -379,7 +379,7 @@ private fun WelcomeButtons(
 
         if (uiState is LoginUiState.Error) {
             Text(
-                text = (uiState as LoginUiState.Error).message,
+                text = uiState.message,
                 color = colors.notificationError,
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Center,
