@@ -207,13 +207,13 @@ class DashboardViewModel @Inject constructor(
             val location = fetchRealLocation()
             if (location != null) {
                 // Safeguard against literal "null" strings
-                val cleanCode = location.countryCode.takeIf { it.isNotBlank() } ?: "US"
+                val cleanCode = location.countryCode.trim().uppercase().takeIf { it.isNotBlank() && it != "NULL" } ?: "US"
                 val localizedCountry = CountryUtils.getCountryName(context, cleanCode)
                     .takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) } ?: cleanCode
                 _originalLocationText.value = LocationText(localizedCountry, cleanCode, location.ip)
             } else {
                 // Fallback if API completely fails on boot
-                _originalLocationText.value = LocationText("Unknown", null, "127.0.0.1")
+                _originalLocationText.value = LocationText(context.getString(R.string.status_disconnected), null, "0.0.0.0")
             }
         }
     }
@@ -224,15 +224,15 @@ class DashboardViewModel @Inject constructor(
             val location = fetchRealLocation(useProxy = false)
 
             // Prioritize API country code if valid, otherwise use the server's declared country code
-            val apiCountryCode = location?.countryCode?.takeIf { it.isNotBlank() }
-            val fallbackCountryCode = countryCode.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) } ?: "US"
+            val apiCountryCode = location?.countryCode?.trim()?.uppercase()?.takeIf { it.isNotBlank() && it != "NULL" }
+            val fallbackCountryCode = countryCode.trim().uppercase().takeIf { it.isNotBlank() && it != "NULL" } ?: "US"
             val finalCountryCode = apiCountryCode ?: fallbackCountryCode
 
             val localizedCountry = CountryUtils.getCountryName(context, finalCountryCode)
                 .takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) } ?: finalCountryCode
 
             // If API failed to fetch IP, generate a simulated IP to keep the UI looking alive
-            val safeIp = location?.ip?.takeIf { it.isNotBlank() }
+            val safeIp = location?.ip?.takeIf { it.isNotBlank() && it != "null" }
                 ?: "185.201.${(10..250).random()}.${(10..250).random()}"
 
             _vpnLocationText.value = LocationText(localizedCountry, finalCountryCode, safeIp)

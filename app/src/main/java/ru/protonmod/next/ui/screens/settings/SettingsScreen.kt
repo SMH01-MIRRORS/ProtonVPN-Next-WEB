@@ -180,6 +180,7 @@ fun SettingsContent(
                         )
 
                         FeatureCategory(
+                            isTablet = true,
                             state = state,
                             onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
                             onNavigateToProtocol = onNavigateToProtocol
@@ -227,6 +228,7 @@ fun SettingsContent(
             item {
                 FeatureCategory(
                     modifier = contentModifier,
+                    isTablet = false,
                     state = state,
                     onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
                     onNavigateToProtocol = onNavigateToProtocol
@@ -522,6 +524,7 @@ fun PortSelectionDialog(
 @Composable
 private fun FeatureCategory(
     modifier: Modifier = Modifier,
+    isTablet: Boolean = false,
     state: SettingsUiState,
     onNavigateToSplitTunnelingMain: (() -> Unit)?,
     onNavigateToProtocol: (() -> Unit)?
@@ -530,11 +533,14 @@ private fun FeatureCategory(
         modifier = modifier
             .fillMaxWidth()
             .padding(bottom = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = if (isTablet) Arrangement.Start else Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        val tileModifier = if (isTablet) Modifier.size(160.dp) else Modifier.weight(1f)
+
         // Split Tunneling Tile
         FeatureTile(
-            modifier = Modifier.weight(1f),
+            modifier = tileModifier,
             title = stringResource(id = R.string.settings_split_tunneling),
             subtitle = if (state.splitTunnelingEnabled) stringResource(R.string.settings_on) else stringResource(R.string.settings_off),
             icon = Icons.AutoMirrored.Rounded.AltRoute,
@@ -542,9 +548,11 @@ private fun FeatureCategory(
             onClick = { onNavigateToSplitTunnelingMain?.invoke() }
         )
 
+        if (isTablet) Spacer(modifier = Modifier.width(16.dp))
+
         // Protocol Tile
         FeatureTile(
-            modifier = Modifier.weight(1f),
+            modifier = tileModifier,
             title = stringResource(id = R.string.settings_protocol),
             subtitle = "AmneziaWG",
             icon = Icons.Rounded.Security,

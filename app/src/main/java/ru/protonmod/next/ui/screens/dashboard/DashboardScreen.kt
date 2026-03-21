@@ -311,8 +311,13 @@ private fun LocationTextElement(
             .clickable(onClick = onClick) // Makes the entire IP block clickable to toggle privacy mode
     ) {
         // Safe fallbacks to absolutely guarantee no null strings
-        val safeCountry = if (locationText.country.isBlank() || locationText.country == "null") "Unknown" else locationText.country
-        val safeIp = if (locationText.ip.isBlank() || locationText.ip == "null") "000.000.000.000" else locationText.ip
+        val safeCountry = if (locationText.country.isBlank() || locationText.country.equals("null", ignoreCase = true)) {
+            stringResource(R.string.status_not_connected)
+        } else locationText.country
+        
+        val safeIp = if (locationText.ip.isBlank() || locationText.ip.equals("null", ignoreCase = true)) {
+            "0.0.0.0"
+        } else locationText.ip
 
         val country = BidiFormatter.getInstance().unicodeWrap(safeCountry)
         val fullText = "$country • $safeIp"
@@ -837,10 +842,10 @@ fun ConnectionStatusCard(
                     isConnected && vpnLocationText == null -> {
                         // Provide a dummy IP string while waiting for the real one.
                         val rawCountry = connectedServer?.exitCountry?.let { CountryUtils.getCountryName(context, it) }
-                        val safeCountry = rawCountry?.takeIf { it.isNotBlank() && it != "null" } ?: "VPN"
-                        LocationText(country = safeCountry, countryCode = connectedServer?.exitCountry, ip = "000.000.000.000")
+                        val safeCountry = rawCountry?.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) } ?: "VPN"
+                        LocationText(country = safeCountry, countryCode = connectedServer?.exitCountry, ip = "0.0.0.0")
                     }
-                    else -> originalLocationText ?: LocationText(country = stringResource(R.string.status_connecting), ip = "000.000.000.000")
+                    else -> originalLocationText ?: LocationText(country = stringResource(R.string.status_connecting), ip = "0.0.0.0")
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -1035,8 +1040,8 @@ fun ServerCard(
 
             Column(modifier = Modifier.weight(1f)) {
                 val rawCountry = CountryUtils.getCountryName(context, server.exitCountry)
-                val safeCountry = rawCountry.takeIf { it.isNotBlank() && it != "null" } ?: "VPN"
-                val safeCity = server.city.takeIf { it.isNotBlank() && it != "null" } ?: ""
+                val safeCountry = rawCountry.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) } ?: "VPN"
+                val safeCity = server.city.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) } ?: ""
                 val locationTitle = if (safeCity.isNotEmpty()) "$safeCountry, $safeCity" else safeCountry
 
                 Text(

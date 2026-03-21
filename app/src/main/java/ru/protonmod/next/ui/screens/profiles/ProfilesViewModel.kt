@@ -70,7 +70,6 @@ class ProfilesViewModel @Inject constructor(
         vpnRepository.getServersFlow()
     ) { entities, servers ->
         entities.map { entity ->
-            // Resolve the human-readable name from the cached servers list
             val serverName = servers.find { it.id == entity.targetServerId }?.name
             VpnProfileUiModel(
                 id = entity.id,
@@ -92,17 +91,26 @@ class ProfilesViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
-    // Changed from List<String> to List<CountryDisplayItem> to support load indicators
     private val _countries = MutableStateFlow<List<CountryDisplayItem>>(emptyList())
     val countries: StateFlow<List<CountryDisplayItem>> = _countries.asStateFlow()
 
     init {
-        loadCountries()
+        observeServersForCountries()
     }
 
-    private fun loadCountries() {
+    private fun observeServersForCountries() {
         viewModelScope.launch {
-            _countries.value = getAvailableCountries()
+            vpnRepository.getServersFlow().collect { servers ->
+                if (servers.isNotEmpty()) {
+                    _countries.value = servers
+                        .groupBy { it.exitCountry }
+                        .map { (countryCode, countryServers) ->
+                            val avgLoad = if (countryServers.isEmpty()) 0 else countryServers.map { it.averageLoad }.average().toInt()
+                            CountryDisplayItem(code = countryCode, averageLoad = avgLoad)
+                        }
+                        .sortedBy { it.code }
+                }
+            }
         }
     }
 
@@ -170,7 +178,10 @@ class ProfilesViewModel @Inject constructor(
                 return@launch
             }
 
-            val physicalServer = targetServer.servers.firstOrNull { it.status == 1 }
+            // Reliable server selection: Fallback to any server with min load if status == 1 is absent.
+            val physicalServer = targetServer.servers.filter { it.status == 1 }.minByOrNull { it.load }
+                ?: targetServer.servers.minByOrNull { it.load }
+
             if (physicalServer == null) {
                 ProtonLogger.e(TAG, "Cannot connect: Selected server is currently unavailable.")
                 return@launch
@@ -282,24 +293,12 @@ class ProfilesViewModel @Inject constructor(
         }
     }
 
-    // Now computes average load for countries to be displayed in the UI
-    suspend fun getAvailableCountries(): List<CountryDisplayItem> {
-        return vpnRepository.getCachedServers()
-            .groupBy { it.exitCountry }
-            .map { (countryCode, servers) ->
-                val avgLoad = if (servers.isEmpty()) 0 else servers.map { it.averageLoad }.average().toInt()
-                CountryDisplayItem(code = countryCode, averageLoad = avgLoad)
-            }
-            .sortedBy { it.code }
-    }
-
-    // Now computes average load for cities to be displayed in the UI
     suspend fun getCitiesForCountry(countryCode: String): List<CityDisplayItem> {
         return vpnRepository.getCachedServers()
             .filter { it.exitCountry == countryCode }
             .groupBy { it.city }
-            .map { (cityName, servers) ->
-                val avgLoad = if (servers.isEmpty()) 0 else servers.map { it.averageLoad }.average().toInt()
+            .map { (cityName, cityServers) ->
+                val avgLoad = if (cityServers.isEmpty()) 0 else cityServers.map { it.averageLoad }.average().toInt()
                 CityDisplayItem(name = cityName, averageLoad = avgLoad)
             }
             .sortedBy { it.name }

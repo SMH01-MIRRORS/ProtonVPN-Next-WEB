@@ -21,10 +21,12 @@ import ru.protonmod.next.utils.ProtonLogger
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.amnezia.awg.backend.Tunnel
@@ -53,6 +55,12 @@ sealed class CountriesUiState {
     data class Error(val message: String) : CountriesUiState()
 }
 
+sealed class NavigationState {
+    data object Countries : NavigationState()
+    data class Cities(val countryCode: String) : NavigationState()
+    data class Servers(val countryCode: String, val cityName: String) : NavigationState()
+}
+
 @HiltViewModel
 class CountriesViewModel @Inject constructor(
     private val vpnRepository: VpnRepository,
@@ -65,65 +73,75 @@ class CountriesViewModel @Inject constructor(
         private const val TAG = "CountriesViewModel"
     }
 
-    private val _uiState = MutableStateFlow<CountriesUiState>(CountriesUiState.Loading)
-    val uiState: StateFlow<CountriesUiState> = _uiState.asStateFlow()
+    private val _navState = MutableStateFlow<NavigationState>(NavigationState.Countries)
+    private val _isLoading = MutableStateFlow(true)
+    private val _error = MutableStateFlow<String?>(null)
+
+    val uiState: StateFlow<CountriesUiState> = combine(
+        vpnRepository.getServersFlow(),
+        _navState,
+        _isLoading,
+        _error
+    ) { servers, nav, loading, error ->
+        if (loading && servers.isEmpty()) {
+            return@combine CountriesUiState.Loading
+        }
+        if (error != null && servers.isEmpty()) {
+            return@combine CountriesUiState.Error(error)
+        }
+
+        when (nav) {
+            is NavigationState.Countries -> {
+                val countries = servers.groupBy { it.exitCountry }
+                    .map { (code, countryServers) ->
+                        val avg = if (countryServers.isEmpty()) 0 else countryServers.map { it.averageLoad }.average().toInt()
+                        CountryDisplayItem(code, avg)
+                    }
+                    .sortedBy { it.code }
+                CountriesUiState.CountriesList(countries)
+            }
+            is NavigationState.Cities -> {
+                val cities = servers.filter { it.exitCountry == nav.countryCode }
+                    .groupBy { it.city }
+                    .map { (name, cityServers) ->
+                        val avg = if (cityServers.isEmpty()) 0 else cityServers.map { it.averageLoad }.average().toInt()
+                        CityDisplayItem(name, avg)
+                    }
+                    .sortedBy { it.name }
+                CountriesUiState.CitiesList(nav.countryCode, cities)
+            }
+            is NavigationState.Servers -> {
+                val cityServers = servers.filter { it.exitCountry == nav.countryCode && it.city == nav.cityName }
+                    .sortedBy { it.name }
+                CountriesUiState.ServersList(nav.countryCode, nav.cityName, cityServers)
+            }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CountriesUiState.Loading)
 
     val connectedServer: StateFlow<LogicalServer?> = connectedServerState.connectedServer
 
-    private var allServers: List<LogicalServer> = emptyList()
-    private var serversGroupedByCountry: Map<String, List<LogicalServer>> = emptyMap()
-    private var serversGroupedByCityInCountry: Map<String, Map<String, List<LogicalServer>>> = emptyMap()
-
     init {
-        observeServers()
         initialFetch()
-    }
-
-    private fun observeServers() {
-        viewModelScope.launch {
-            vpnRepository.getServersFlow().collect { servers ->
-                if (servers.isNotEmpty()) {
-                    allServers = servers
-                    processServers(servers)
-                }
-            }
-        }
     }
 
     private fun initialFetch() {
         viewModelScope.launch {
-            val session = sessionDao.getSession() ?: return@launch
+            _isLoading.value = true
+            _error.value = null
+            val session = sessionDao.getSession()
+            if (session == null) {
+                _error.value = "Session not found"
+                _isLoading.value = false
+                return@launch
+            }
             vpnRepository.getServers(session.accessToken, session.sessionId, session.userTier, forceRefresh = false)
-        }
-    }
-
-    private suspend fun processServers(servers: List<LogicalServer>) {
-        withContext(Dispatchers.Default) {
-            serversGroupedByCountry = servers
-                .groupBy { it.exitCountry }
-                .toSortedMap()
-
-            serversGroupedByCityInCountry = serversGroupedByCountry.mapValues { (_, serversByCountry) ->
-                serversByCountry
-                    .groupBy { it.city }
-                    .toSortedMap()
-            }
-        }
-
-        if (_uiState.value is CountriesUiState.Loading || _uiState.value is CountriesUiState.CountriesList) {
-            val countries = serversGroupedByCountry.map { (code, servers) ->
-                val avg = if (servers.isEmpty()) 0 else servers.map { it.averageLoad }.average().toInt()
-                CountryDisplayItem(code, avg)
-            }
-            _uiState.value = CountriesUiState.CountriesList(countries)
+                .onFailure { _error.value = it.localizedMessage }
+            _isLoading.value = false
         }
     }
 
     fun loadServers() {
-        if (_uiState.value is CountriesUiState.Error) {
-            _uiState.value = CountriesUiState.Loading
-            initialFetch()
-        }
+        initialFetch()
     }
 
     private suspend fun connectToServer(server: LogicalServer) {
@@ -133,9 +151,9 @@ class CountriesViewModel @Inject constructor(
             return
         }
 
-        val physicalServer = server.servers
-            .filter { it.status == 1 }
-            .minByOrNull { it.load }
+        // Reliable server selection: Fallback to any server with min load if status == 1 is absent.
+        val physicalServer = server.servers.filter { it.status == 1 }.minByOrNull { it.load }
+            ?: server.servers.minByOrNull { it.load }
 
         if (physicalServer != null) {
             connectedServerState.setConnectedServer(server)
@@ -147,19 +165,19 @@ class CountriesViewModel @Inject constructor(
                 amneziaVpnManager.connect(server.id, physicalServer, session)
             }
         } else {
-            _uiState.value = CountriesUiState.Error("Selected server is currently unavailable.")
+            _error.value = "Selected server is currently unavailable."
         }
     }
 
     fun selectCountry(country: String) {
         viewModelScope.launch {
-            val serversInCountry = serversGroupedByCountry[country] ?: emptyList()
+            val servers = vpnRepository.getCachedServers()
+            val serversInCountry = servers.filter { it.exitCountry == country }
             if (serversInCountry.isNotEmpty()) {
-                // Find the least loaded server in the country
                 val bestServer = serversInCountry
                     .filter { it.servers.any { s -> s.status == 1 } }
                     .minByOrNull { it.averageLoad } 
-                    ?: serversInCountry.firstOrNull()
+                    ?: serversInCountry.minByOrNull { it.averageLoad }
                 
                 bestServer?.let { connectToServer(it) }
             }
@@ -167,39 +185,25 @@ class CountriesViewModel @Inject constructor(
     }
 
     fun expandCitiesForCountry(country: String) {
-        viewModelScope.launch {
-            val citiesInCountry = serversGroupedByCityInCountry[country]?.map { (name, servers) ->
-                val avg = if (servers.isEmpty()) 0 else servers.map { it.averageLoad }.average().toInt()
-                CityDisplayItem(name, avg)
-            } ?: emptyList()
-
-            if (citiesInCountry.isNotEmpty()) {
-                _uiState.value = CountriesUiState.CitiesList(country, citiesInCountry)
-            }
-        }
+        _navState.value = NavigationState.Cities(country)
     }
 
     fun backToCountries() {
-        val countries = serversGroupedByCountry.map { (code, servers) ->
-            val avg = if (servers.isEmpty()) 0 else servers.map { it.averageLoad }.average().toInt()
-            CountryDisplayItem(code, avg)
-        }
-        _uiState.value = CountriesUiState.CountriesList(countries)
+        _navState.value = NavigationState.Countries
     }
 
     fun selectCity(city: String) {
         viewModelScope.launch {
-            val currentState = _uiState.value
-            if (currentState !is CountriesUiState.CitiesList) return@launch
+            val nav = _navState.value
+            if (nav !is NavigationState.Cities) return@launch
 
-            val country = currentState.country
-            val serversInCity = serversGroupedByCityInCountry[country]?.get(city) ?: emptyList()
+            val servers = vpnRepository.getCachedServers()
+            val serversInCity = servers.filter { it.exitCountry == nav.countryCode && it.city == city }
             if (serversInCity.isNotEmpty()) {
-                // Find the least loaded server in the city
                 val bestServer = serversInCity
                     .filter { it.servers.any { s -> s.status == 1 } }
                     .minByOrNull { it.averageLoad }
-                    ?: serversInCity.firstOrNull()
+                    ?: serversInCity.minByOrNull { it.averageLoad }
                     
                 bestServer?.let { connectToServer(it) }
             }
@@ -207,29 +211,16 @@ class CountriesViewModel @Inject constructor(
     }
 
     fun expandServersForCity(city: String) {
-        viewModelScope.launch {
-            val currentState = _uiState.value
-            if (currentState !is CountriesUiState.CitiesList) return@launch
-
-            val country = currentState.country
-            val serversInCity = serversGroupedByCityInCountry[country]?.get(city) ?: emptyList()
-            if (serversInCity.isNotEmpty()) {
-                _uiState.value = CountriesUiState.ServersList(country, city, serversInCity)
-            }
+        val nav = _navState.value
+        if (nav is NavigationState.Cities) {
+            _navState.value = NavigationState.Servers(nav.countryCode, city)
         }
     }
 
     fun backToCities() {
-        viewModelScope.launch {
-            val currentState = _uiState.value
-            if (currentState !is CountriesUiState.ServersList) return@launch
-
-            val citiesInCountry = serversGroupedByCityInCountry[currentState.country]?.map { (name, servers) ->
-                val avg = if (servers.isEmpty()) 0 else servers.map { it.averageLoad }.average().toInt()
-                CityDisplayItem(name, avg)
-            } ?: emptyList()
-
-            _uiState.value = CountriesUiState.CitiesList(currentState.country, citiesInCountry)
+        val nav = _navState.value
+        if (nav is NavigationState.Servers) {
+            _navState.value = NavigationState.Cities(nav.countryCode)
         }
     }
 

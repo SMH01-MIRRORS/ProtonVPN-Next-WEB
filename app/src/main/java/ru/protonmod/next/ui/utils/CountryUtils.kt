@@ -56,17 +56,19 @@ object CountryUtils {
      * Returns the localized country name.
      */
     fun getCountryName(context: Context, countryCode: String?): String {
-        if (countryCode == null) return ""
+        if (countryCode == null || countryCode.equals("null", ignoreCase = true) || countryCode.isBlank()) return ""
 
         val locale = Locale.Builder().setRegion(countryCode.uppercase()).build()
         val displayName = locale.getDisplayCountry(Locale.getDefault())
         
-        return if (displayName.isNotEmpty() && displayName != countryCode) {
+        return if (displayName.isNotEmpty() && !displayName.equals(countryCode, ignoreCase = true)) {
             displayName
         } else {
             val resourceName = "country_${countryCode.lowercase()}"
             val resourceId = context.resources.getIdentifier(resourceName, "string", context.packageName)
-            if (resourceId != 0) context.getString(resourceId) else countryCode
+            if (resourceId != 0) {
+                context.getString(resourceId).takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) } ?: countryCode
+            } else countryCode
         }
     }
 

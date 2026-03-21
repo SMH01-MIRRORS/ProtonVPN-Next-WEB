@@ -61,9 +61,9 @@ object ServerMapper {
     fun toEntity(server: LogicalServer): ServerEntity {
         return ServerEntity(
             id = server.id,
-            name = server.name,
-            city = server.city,
-            exitCountry = server.exitCountry,
+            name = server.name.takeIf { !it.equals("null", ignoreCase = true) } ?: "",
+            city = server.city.takeIf { !it.equals("null", ignoreCase = true) } ?: "",
+            exitCountry = server.exitCountry.takeIf { !it.equals("null", ignoreCase = true) } ?: "",
             tier = server.tier,
             features = server.features,
             averageLoad = server.averageLoad,
