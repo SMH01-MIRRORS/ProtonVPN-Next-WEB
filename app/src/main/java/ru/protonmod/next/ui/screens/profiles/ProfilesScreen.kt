@@ -50,7 +50,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.FlagIcon
-import ru.protonmod.next.ui.components.LiquidGlassBottomBar
 import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.CountryUtils
@@ -60,14 +59,11 @@ import ru.protonmod.next.ui.utils.isTablet
 @Composable
 fun ProfilesScreen(
     onNavigateToHome: () -> Unit,
-    onNavigateToCountries: () -> Unit,
-    onNavigateToSettings: () -> Unit,
     onCreateNewProfile: () -> Unit,
     onEditProfile: (String) -> Unit,
     viewModel: ProfilesViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
-    val currentTarget = MainTarget.Profiles
     val context = LocalContext.current
     val isTablet = isTablet()
 
@@ -228,23 +224,6 @@ fun ProfilesScreen(
                     }
                 }
             }
-
-            // Bottom Navigation
-            LiquidGlassBottomBar(
-                selectedTarget = currentTarget,
-                navigateTo = { target ->
-                    when (target) {
-                        MainTarget.Home -> onNavigateToHome()
-                        MainTarget.Countries -> onNavigateToCountries()
-                        MainTarget.Profiles -> { /* Already here */ }
-                        MainTarget.Settings -> onNavigateToSettings()
-                    }
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-            )
         }
     }
 }

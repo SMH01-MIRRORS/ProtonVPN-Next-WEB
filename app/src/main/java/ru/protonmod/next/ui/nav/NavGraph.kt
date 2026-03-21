@@ -63,37 +63,12 @@ fun NavGraphBuilder.appNavGraph(
     navController: NavHostController,
 ) {
     composable(Screen.Home.route) {
-        DashboardScreen(
-            onNavigateToCountries = { navController.navigate(Screen.Countries.route) },
-            onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
-            onNavigateToProfiles = { navController.navigate(Screen.Profiles.route) }
-        )
+        DashboardScreen()
     }
 
     composable(Screen.Settings.route) {
         SettingsScreen(
             onBack = { navController.popBackStack() },
-            onNavigateToHome = {
-                navController.navigate(Screen.Home.route) {
-                    popUpTo(Screen.Home.route) { inclusive = false }
-                    launchSingleTop = true
-                }
-            },
-            onNavigateToApiBypass = {
-                navController.navigate(Screen.ApiBypass.route)
-            },
-            onNavigateToCountries = {
-                navController.navigate(Screen.Countries.route) {
-                    popUpTo(Screen.Home.route)
-                    launchSingleTop = true
-                }
-            },
-            onNavigateToProfiles = {
-                navController.navigate(Screen.Profiles.route) {
-                    popUpTo(Screen.Home.route)
-                    launchSingleTop = true
-                }
-            },
             onNavigateToSplitTunnelingMain = {
                 navController.navigate(Screen.SplitTunnelingMain.route)
             },
@@ -108,6 +83,9 @@ fun NavGraphBuilder.appNavGraph(
             },
             onNavigateToErrorReporting = {
                 navController.navigate(Screen.ErrorReporting.route)
+            },
+            onNavigateToApiBypass = {
+                navController.navigate(Screen.ApiBypass.route)
             }
         )
     }
@@ -187,18 +165,6 @@ fun NavGraphBuilder.appNavGraph(
                     launchSingleTop = true
                 }
             },
-            onNavigateToSettings = {
-                navController.navigate(Screen.Settings.route) {
-                    popUpTo(Screen.Home.route)
-                    launchSingleTop = true
-                }
-            },
-            onNavigateToProfiles = {
-                navController.navigate(Screen.Profiles.route) {
-                    popUpTo(Screen.Home.route)
-                    launchSingleTop = true
-                }
-            },
             onBack = { navController.popBackStack() }
         )
     }
@@ -208,18 +174,6 @@ fun NavGraphBuilder.appNavGraph(
             onNavigateToHome = {
                 navController.navigate(Screen.Home.route) {
                     popUpTo(Screen.Home.route) { inclusive = false }
-                    launchSingleTop = true
-                }
-            },
-            onNavigateToCountries = {
-                navController.navigate(Screen.Countries.route) {
-                    popUpTo(Screen.Home.route)
-                    launchSingleTop = true
-                }
-            },
-            onNavigateToSettings = {
-                navController.navigate(Screen.Settings.route) {
-                    popUpTo(Screen.Home.route)
                     launchSingleTop = true
                 }
             },

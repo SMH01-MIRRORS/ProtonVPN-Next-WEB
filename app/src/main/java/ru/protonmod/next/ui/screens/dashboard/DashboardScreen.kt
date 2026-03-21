@@ -66,8 +66,6 @@ import kotlinx.coroutines.delay
 import ru.protonmod.next.R
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.FlagIcon
-import ru.protonmod.next.ui.components.LiquidGlassBottomBar
-import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.theme.ProtonColors
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.CountryUtils
@@ -335,9 +333,6 @@ private fun LocationTextElement(
 
 @Composable
 fun DashboardScreen(
-    onNavigateToCountries: (() -> Unit)? = null,
-    onNavigateToSettings: (() -> Unit)? = null,
-    onNavigateToProfiles: (() -> Unit)? = null,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
@@ -398,8 +393,6 @@ fun DashboardScreen(
             viewModel.quickConnect()
         }
     }
-
-    val currentTarget = MainTarget.Home
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -494,24 +487,6 @@ fun DashboardScreen(
                     }
                 }
             }
-
-            // Bottom Navigation (Centered for both Phone and Tablet now)
-            LiquidGlassBottomBar(
-                selectedTarget = currentTarget,
-                showCountries = true,
-                showGateways = false,
-                navigateTo = { target ->
-                    when (target) {
-                        MainTarget.Countries -> onNavigateToCountries?.invoke()
-                        MainTarget.Settings -> onNavigateToSettings?.invoke()
-                        MainTarget.Profiles -> onNavigateToProfiles?.invoke()
-                        else -> {}
-                    }
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-            )
         }
     }
 }

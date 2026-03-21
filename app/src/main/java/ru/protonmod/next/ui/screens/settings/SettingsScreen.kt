@@ -44,7 +44,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
-import ru.protonmod.next.ui.components.LiquidGlassBottomBar
 import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.isTablet
@@ -53,9 +52,6 @@ import ru.protonmod.next.ui.utils.isTablet
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit = {},
-    onNavigateToHome: (() -> Unit)? = null,
-    onNavigateToCountries: (() -> Unit)? = null,
-    onNavigateToProfiles: (() -> Unit)? = null,
     onNavigateToSplitTunnelingMain: (() -> Unit)? = null,
     onNavigateToProtocol: (() -> Unit)? = null,
     onNavigateToKillSwitch: (() -> Unit)? = null,
@@ -66,7 +62,6 @@ fun SettingsScreen(
 ) {
     val colors = ProtonNextTheme.colors
     val uiState by viewModel.uiState.collectAsState()
-    val currentTarget = MainTarget.Settings
     val isTablet = isTablet()
 
     Scaffold(
@@ -111,24 +106,6 @@ fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.statusBars)
-            )
-
-            LiquidGlassBottomBar(
-                selectedTarget = currentTarget,
-                showCountries = true,
-                showGateways = false,
-                navigateTo = { target ->
-                    when (target) {
-                        MainTarget.Home -> onNavigateToHome?.invoke()
-                        MainTarget.Countries -> onNavigateToCountries?.invoke()
-                        MainTarget.Profiles -> onNavigateToProfiles?.invoke()
-                        MainTarget.Settings -> { /* Already here */ }
-                    }
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.navigationBars)
             )
         }
     }

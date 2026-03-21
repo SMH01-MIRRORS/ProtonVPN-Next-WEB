@@ -27,10 +27,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
@@ -38,6 +42,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -48,6 +53,8 @@ import kotlinx.coroutines.launch
 import ru.protonmod.next.data.local.SessionDao
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import ru.protonmod.next.ui.components.LiquidGlassBottomBar
+import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.nav.Screen
 import ru.protonmod.next.ui.nav.appNavGraph
 import ru.protonmod.next.ui.screens.LoginScreen
@@ -122,38 +129,74 @@ class MainActivity : ComponentActivity() {
 fun ProtonNextAppNavHost(viewModel: MainViewModel = hiltViewModel()) {
     val navController = rememberNavController()
     val startDestination by viewModel.startDestination.collectAsState()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    val currentTarget = when (currentRoute) {
+        Screen.Home.route -> MainTarget.Home
+        Screen.Countries.route -> MainTarget.Countries
+        Screen.Profiles.route -> MainTarget.Profiles
+        Screen.Settings.route -> MainTarget.Settings
+        else -> null
+    }
 
     if (startDestination.isEmpty()) return
 
-    NavHost(navController = navController, startDestination = startDestination) {
-        composable("welcome") {
-            WelcomeScreen(
-                onNavigateToLogin = { navController.navigate("login") },
-                onNavigateToRegister = { /* TODO: Registration flow */ },
-                onNavigateToHome = {
-                    // Clear the entire backstack and navigate to home (dashboard)
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(0)
+    Box(modifier = Modifier.fillMaxSize()) {
+        NavHost(navController = navController, startDestination = startDestination) {
+            composable("welcome") {
+                WelcomeScreen(
+                    onNavigateToLogin = { navController.navigate("login") },
+                    onNavigateToRegister = { /* TODO: Registration flow */ },
+                    onNavigateToHome = {
+                        // Clear the entire backstack and navigate to home (dashboard)
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(0)
+                        }
+                    },
+                    onNavigateToApiBypassSettings = {
+                        navController.navigate(Screen.ApiBypass.route)
+                    }
+                )
+            }
+
+            composable("login") {
+                LoginScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onLoginSuccess = {
+                        // Clear the entire backstack and navigate to home (dashboard)
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(0)
+                        }
+                    }
+                )
+            }
+
+            appNavGraph(navController = navController)
+        }
+
+        if (currentTarget != null) {
+            LiquidGlassBottomBar(
+                selectedTarget = currentTarget,
+                navigateTo = { target ->
+                    val route = when (target) {
+                        MainTarget.Home -> Screen.Home.route
+                        MainTarget.Countries -> Screen.Countries.route
+                        MainTarget.Profiles -> Screen.Profiles.route
+                        MainTarget.Settings -> Screen.Settings.route
+                    }
+                    if (currentRoute != route) {
+                        navController.navigate(route) {
+                            popUpTo(Screen.Home.route) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 },
-                onNavigateToApiBypassSettings = {
-                    navController.navigate(Screen.ApiBypass.route)
-                }
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .windowInsetsPadding(WindowInsets.navigationBars)
             )
         }
-
-        composable("login") {
-            LoginScreen(
-                onBackClick = { navController.popBackStack() },
-                onLoginSuccess = {
-                    // Clear the entire backstack and navigate to home (dashboard)
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(0)
-                    }
-                }
-            )
-        }
-
-        appNavGraph(navController = navController)
     }
 }
