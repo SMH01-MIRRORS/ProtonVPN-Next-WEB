@@ -42,6 +42,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.R
 import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
 import java.util.UUID
 
@@ -80,12 +81,12 @@ fun ObfuscationSettingsScreen(
             // Background gradient
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.4f)
+                    .fillMaxSize()
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                colors.brandNorm.copy(alpha = 0.2f),
+                                colors.brandNorm.copy(alpha = 0.25f),
+                                colors.backgroundNorm.copy(alpha = 0.1f),
                                 colors.backgroundNorm
                             )
                         )
@@ -142,18 +143,17 @@ fun ObfuscationSettingsScreen(
 
                     // Master Toggle
                     item {
-                        Card(
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (uiState.isObfuscationEnabled) colors.brandNorm.copy(alpha = 0.15f)
-                                else colors.backgroundSecondary.copy(alpha = 0.5f)
-                            ),
+                        Box(
                             modifier = contentModifier
+                                .liquidGlass(
+                                    shape = RoundedCornerShape(20.dp),
+                                    alpha = if (uiState.isObfuscationEnabled) 0.3f else 0.5f
+                                )
+                                .clickable { viewModel.setObfuscationEnabled(!uiState.isObfuscationEnabled) }
                         ) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { viewModel.setObfuscationEnabled(!uiState.isObfuscationEnabled) }
                                     .padding(16.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
@@ -603,10 +603,10 @@ fun ObfuscationSettingsScreen(
 @Composable
 fun InfoCard(text: String) {
     val colors = ProtonNextTheme.colors
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = colors.brandNorm.copy(alpha = 0.1f)),
-        modifier = Modifier.fillMaxWidth()
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .liquidGlass(shape = RoundedCornerShape(16.dp), alpha = 0.3f, shadowElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -640,10 +640,10 @@ fun CategoryHeader(title: String) {
 
 @Composable
 fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
-    Card(
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = ProtonNextTheme.colors.backgroundSecondary.copy(alpha = 0.5f)),
-        modifier = Modifier.fillMaxWidth()
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.4f, shadowElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)

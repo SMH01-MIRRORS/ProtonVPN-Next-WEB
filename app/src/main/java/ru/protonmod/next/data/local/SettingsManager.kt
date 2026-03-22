@@ -44,6 +44,8 @@ class SettingsManager @Inject constructor(
         private val AUTO_CONNECT = booleanPreferencesKey("auto_connect")
         private val NOTIFICATIONS = booleanPreferencesKey("notifications")
 
+        private val APP_THEME = stringPreferencesKey("app_theme")
+
         private val SPLIT_TUNNELING_ENABLED = booleanPreferencesKey("split_tunneling_enabled")
         private val EXCLUDED_APPS = stringSetPreferencesKey("excluded_apps")
         private val EXCLUDED_IPS = stringSetPreferencesKey("excluded_ips")
@@ -90,6 +92,15 @@ class SettingsManager @Inject constructor(
     val killSwitchEnabled: Flow<Boolean> = context.dataStore.data.map { it[KILL_SWITCH] ?: false }
     val autoConnectEnabled: Flow<Boolean> = context.dataStore.data.map { it[AUTO_CONNECT] ?: true }
     val notificationsEnabled: Flow<Boolean> = context.dataStore.data.map { it[NOTIFICATIONS] ?: true }
+
+    val appTheme: Flow<ru.protonmod.next.ui.theme.AppTheme> = context.dataStore.data.map { preferences ->
+        val themeString = preferences[APP_THEME] ?: ru.protonmod.next.ui.theme.AppTheme.DARK.name
+        try {
+            ru.protonmod.next.ui.theme.AppTheme.valueOf(themeString)
+        } catch (e: Exception) {
+            ru.protonmod.next.ui.theme.AppTheme.DARK
+        }
+    }
 
     val splitTunnelingEnabled: Flow<Boolean> = context.dataStore.data.map { it[SPLIT_TUNNELING_ENABLED] ?: false }
     val excludedApps: Flow<Set<String>> = context.dataStore.data.map { it[EXCLUDED_APPS] ?: emptySet() }
@@ -176,6 +187,10 @@ class SettingsManager @Inject constructor(
 
     suspend fun setNotifications(enabled: Boolean) {
         context.dataStore.edit { it[NOTIFICATIONS] = enabled }
+    }
+
+    suspend fun setAppTheme(theme: ru.protonmod.next.ui.theme.AppTheme) {
+        context.dataStore.edit { it[APP_THEME] = theme.name }
     }
 
     suspend fun setSplitTunnelingEnabled(enabled: Boolean) {

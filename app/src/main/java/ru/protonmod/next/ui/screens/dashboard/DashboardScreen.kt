@@ -68,6 +68,7 @@ import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.theme.ProtonColors
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.CountryUtils
 import ru.protonmod.next.ui.utils.isTablet
 import ru.protonmod.next.vpn.AmneziaVpnManager
@@ -397,17 +398,32 @@ fun DashboardScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        containerColor = colors.backgroundNorm,
         bottomBar = {}
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(colors.backgroundNorm)
         ) {
             val successState = uiState as? DashboardUiState.Success
             val isConnected = successState?.isConnected == true
             val isConnecting = successState?.isConnecting == true
+
+            // Background gradient decoration (immersive)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                colors.brandNorm.copy(alpha = 0.25f),
+                                colors.backgroundNorm.copy(alpha = 0.1f),
+                                colors.backgroundNorm
+                            )
+                        )
+                    )
+            )
 
             HomeMap(
                 modifier = Modifier
@@ -772,25 +788,18 @@ fun ConnectionStatusCard(
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
-    val cardContainerColor = when {
-        isConnected -> colors.notificationSuccess.copy(alpha = 0.18f)
-        isConnecting -> colors.backgroundSecondary
-        else -> colors.backgroundSecondary.copy(alpha = 0.92f)
-    }
 
     val contentColor = colors.textNorm
 
-    Card(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(32.dp),
-        colors = CardDefaults.cardColors(containerColor = cardContainerColor),
-        border = BorderStroke(
-            1.dp,
-            if (isConnected) colors.notificationSuccess.copy(alpha = 0.25f)
-            else colors.shade100.copy(alpha = 0.08f)
-        )
+            .padding(horizontal = 16.dp)
+            .liquidGlass(
+                shape = RoundedCornerShape(32.dp),
+                alpha = if (isConnected) 0.2f else 0.4f,
+                shadowElevation = 0.dp
+            )
     ) {
         Column(
             modifier = Modifier
@@ -956,18 +965,16 @@ fun ServerCard(
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
-    Card(
+    
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(enabled = !isConnecting) { onClick() },
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isConnected) colors.brandNorm.copy(alpha = 0.12f) else colors.backgroundSecondary.copy(alpha = 0.8f)
-        ),
-        border = BorderStroke(
-            1.dp,
-            if (isConnected) colors.brandNorm.copy(alpha = 0.2f) else colors.shade100.copy(alpha = 0.05f)
-        )
+            .liquidGlass(
+                shape = RoundedCornerShape(24.dp),
+                alpha = if (isConnected) 0.3f else 0.4f,
+                shadowElevation = 0.dp
+            )
+            .clickable(enabled = !isConnecting) { onClick() }
     ) {
         Row(
             modifier = Modifier

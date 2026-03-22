@@ -50,6 +50,8 @@ sealed class Screen(val route: String) {
     data object KillSwitch : Screen("kill_switch")
     data object ErrorReporting : Screen("error_reporting")
 
+    data object ThemeSelection : Screen("theme_selection")
+
     data object AboutApp : Screen("about_app")
     data object Licenses : Screen("licenses")
 }
@@ -86,6 +88,9 @@ fun NavGraphBuilder.appNavGraph(
             },
             onNavigateToApiBypass = {
                 navController.navigate(Screen.ApiBypass.route)
+            },
+            onNavigateToThemeSelection = {
+                navController.navigate(Screen.ThemeSelection.route)
             }
         )
     }
@@ -117,6 +122,12 @@ fun NavGraphBuilder.appNavGraph(
 
     composable(Screen.ErrorReporting.route) {
         ErrorReportingScreen(
+            onBack = { navController.popBackStack() }
+        )
+    }
+
+    composable(Screen.ThemeSelection.route) {
+        ThemeSelectionScreen(
             onBack = { navController.popBackStack() }
         )
     }

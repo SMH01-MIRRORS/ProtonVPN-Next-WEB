@@ -48,6 +48,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.delay
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
 
 @Composable
@@ -146,8 +147,8 @@ private fun WelcomePhoneContent(
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                Color(0x6611D8CC),
-                                Color(0x006E4BFF)
+                                colors.brandNorm.copy(alpha = 0.4f),
+                                Color.Transparent
                             )
                         )
                     )
@@ -254,8 +255,8 @@ private fun WelcomeTabletContent(
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                Color(0x6611D8CC),
-                                Color(0x006E4BFF)
+                                colors.brandNorm.copy(alpha = 0.4f),
+                                Color.Transparent
                             )
                         )
                     )
@@ -401,7 +402,7 @@ private fun ApiBypassButton(
     ) {
         IconButton(
             onClick = onClick,
-            modifier = Modifier.background(colors.backgroundSecondary.copy(alpha = 0.6f), CircleShape)
+            modifier = Modifier.liquidGlass(shape = CircleShape, alpha = 0.4f, shadowElevation = 0.dp)
         ) {
             Icon(
                 imageVector = Icons.Rounded.CloudSync,

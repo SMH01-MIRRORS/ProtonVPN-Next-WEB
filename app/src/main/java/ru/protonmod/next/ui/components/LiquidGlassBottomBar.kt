@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
 
 @Composable
@@ -57,18 +58,9 @@ fun LiquidGlassBottomBar(
     navigateTo: (MainTarget) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colors = ProtonNextTheme.colors
     val isTablet = isTablet()
 
     val glassShape = RoundedCornerShape(32.dp)
-    val glassBackgroundColor = colors.backgroundNorm.copy(alpha = 0.85f)
-
-    val glassBorderBrush = Brush.verticalGradient(
-        colors = listOf(
-            Color.White.copy(alpha = 0.2f),
-            Color.White.copy(alpha = 0.05f)
-        )
-    )
 
     val targets = mutableListOf(MainTarget.Home)
     if (showCountries) targets.add(MainTarget.Countries)
@@ -86,17 +78,10 @@ fun LiquidGlassBottomBar(
             modifier = Modifier
                 .padding(horizontal = 24.dp)
                 .widthIn(max = if (isTablet) 400.dp else 600.dp) // Limit width on tablets
-                .shadow(
-                    elevation = 15.dp,
+                .liquidGlass(
                     shape = glassShape,
-                    spotColor = Color.Black.copy(alpha = 0.5f)
-                )
-                .clip(glassShape)
-                .background(glassBackgroundColor)
-                .border(
-                    width = 1.dp,
-                    brush = glassBorderBrush,
-                    shape = glassShape
+                    alpha = 0.85f,
+                    shadowElevation = 15.dp
                 )
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },

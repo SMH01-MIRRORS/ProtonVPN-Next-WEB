@@ -60,6 +60,7 @@ import ru.protonmod.next.ui.components.LoadProgressBar
 import ru.protonmod.next.ui.screens.countries.CityDisplayItem
 import ru.protonmod.next.ui.screens.countries.CountryDisplayItem
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.CountryUtils
 import ru.protonmod.next.ui.utils.isTablet
 import java.util.Locale
@@ -385,14 +386,11 @@ fun SelectionCard(
     onClick: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
-    Card(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colors.backgroundSecondary.copy(alpha = 0.5f)
-        )
+            .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.5f)
+            .clickable(onClick = onClick)
     ) {
         Column {
             Row(
@@ -668,13 +666,10 @@ fun Category(
         )
     }
 
-    Card(
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colors.backgroundSecondary.copy(alpha = 0.5f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = modifier.fillMaxWidth()
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.5f)
     ) {
         Column(modifier = Modifier.padding(vertical = 4.dp)) {
             content()
@@ -1264,11 +1259,10 @@ private fun EditCategoryHeader(title: String) {
 
 @Composable
 private fun EditSettingsCard(content: @Composable ColumnScope.() -> Unit) {
-    val colors = ProtonNextTheme.colors
-    Card(
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = colors.backgroundSecondary.copy(alpha = 0.5f)),
-        modifier = Modifier.fillMaxWidth()
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.5f)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),

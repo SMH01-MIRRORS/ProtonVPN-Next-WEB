@@ -19,7 +19,6 @@ package ru.protonmod.next.ui.screens.countries
 
 import android.app.Activity
 import android.net.VpnService
-import ru.protonmod.next.utils.ProtonLogger
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -45,6 +44,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -57,10 +57,11 @@ import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.LoadIndicator
 import ru.protonmod.next.ui.components.LoadProgressBar
-import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.CountryUtils
 import ru.protonmod.next.ui.utils.isTablet
+import ru.protonmod.next.utils.ProtonLogger
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,104 +110,154 @@ fun CountriesScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.countries_title), fontWeight = FontWeight.Bold, color = colors.textNorm) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.desc_back_button),
-                            tint = colors.textNorm
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colors.backgroundNorm
-                )
-            )
-        },
-        containerColor = colors.backgroundNorm
+        containerColor = colors.backgroundNorm,
+        bottomBar = {}
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            AnimatedContent(
-                targetState = uiState,
-                label = "countries_state",
-                modifier = Modifier.fillMaxSize()
-            ) { state ->
-                when (state) {
-                    is CountriesUiState.Loading -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = colors.brandNorm)
+            // Background gradient
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                colors.brandNorm.copy(alpha = 0.25f),
+                                colors.backgroundNorm.copy(alpha = 0.1f),
+                                colors.backgroundNorm
+                            )
+                        )
+                    )
+            )
+
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Immersive Navigation Header
+                AnimatedContent(
+                    targetState = uiState,
+                    label = "navigation_header"
+                ) { state ->
+                    val navigationModifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+
+                    when (state) {
+                        is CountriesUiState.CountriesList -> {
+                            Text(
+                                text = stringResource(R.string.countries_title),
+                                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                                color = colors.textNorm,
+                                modifier = navigationModifier.padding(start = 8.dp, top = 12.dp, bottom = 12.dp)
+                            )
+                        }
+                        else -> {
+                            Row(
+                                modifier = navigationModifier,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                IconButton(onClick = {
+                                    when (uiState) {
+                                        is CountriesUiState.CitiesList -> viewModel.backToCountries()
+                                        is CountriesUiState.ServersList -> viewModel.backToCities()
+                                        else -> onBack()
+                                    }
+                                }) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = stringResource(R.string.desc_back_button),
+                                        tint = colors.textNorm
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                val title = when (state) {
+                                    is CountriesUiState.CitiesList -> state.country
+                                    is CountriesUiState.ServersList -> "${state.country}, ${state.city}"
+                                    else -> ""
+                                }
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                    color = colors.textNorm
+                                )
+                            }
                         }
                     }
-                    is CountriesUiState.Error -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(state.message, color = colors.notificationError)
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Button(
-                                    onClick = { viewModel.loadServers() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = colors.interactionNorm)
-                                ) {
-                                    Text(stringResource(R.string.btn_retry), color = colors.textInverted)
+                }
+
+                AnimatedContent(
+                    targetState = uiState,
+                    label = "countries_state",
+                    modifier = Modifier.weight(1f)
+                ) { state ->
+                    when (state) {
+                        is CountriesUiState.Loading -> {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(color = colors.brandNorm)
+                            }
+                        }
+                        is CountriesUiState.Error -> {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(state.message, color = colors.notificationError)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Button(
+                                        onClick = { viewModel.loadServers() },
+                                        colors = ButtonDefaults.buttonColors(containerColor = colors.interactionNorm)
+                                    ) {
+                                        Text(stringResource(R.string.btn_retry), color = colors.textInverted)
+                                    }
                                 }
                             }
                         }
-                    }
-                    is CountriesUiState.CountriesList -> {
-                        CountriesListContent(
-                            countries = state.countries,
-                            connectedServer = connectedServer,
-                            isTablet = isTablet,
-                            onCountryClick = { country ->
-                                checkVpnAndConnect {
-                                    viewModel.selectCountry(country.code)
-                                    onNavigateToHome()
+                        is CountriesUiState.CountriesList -> {
+                            CountriesListContent(
+                                countries = state.countries,
+                                connectedServer = connectedServer,
+                                isTablet = isTablet,
+                                onCountryClick = { country ->
+                                    checkVpnAndConnect {
+                                        viewModel.selectCountry(country.code)
+                                        onNavigateToHome()
+                                    }
+                                },
+                                onCountryMore = { country ->
+                                    viewModel.expandCitiesForCountry(country.code)
                                 }
-                            },
-                            onCountryMore = { country ->
-                                viewModel.expandCitiesForCountry(country.code)
-                            }
-                        )
-                    }
-                    is CountriesUiState.CitiesList -> {
-                        CitiesListContent(
-                            countryName = state.country,
-                            cities = state.cities,
-                            connectedServer = connectedServer,
-                            isTablet = isTablet,
-                            onBack = { viewModel.backToCountries() },
-                            onCityClick = { city ->
-                                checkVpnAndConnect {
-                                    viewModel.selectCity(city.name)
-                                    onNavigateToHome()
+                            )
+                        }
+                        is CountriesUiState.CitiesList -> {
+                            CitiesListContent(
+                                countryName = state.country,
+                                cities = state.cities,
+                                connectedServer = connectedServer,
+                                isTablet = isTablet,
+                                onCityClick = { city ->
+                                    checkVpnAndConnect {
+                                        viewModel.selectCity(city.name)
+                                        onNavigateToHome()
+                                    }
+                                },
+                                onCityMore = { city ->
+                                    viewModel.expandServersForCity(city.name)
                                 }
-                            },
-                            onCityMore = { city ->
-                                viewModel.expandServersForCity(city.name)
-                            }
-                        )
-                    }
-                    is CountriesUiState.ServersList -> {
-                        ServersListContent(
-                            countryName = state.country,
-                            cityName = state.city,
-                            servers = state.servers,
-                            connectedServer = connectedServer,
-                            isTablet = isTablet,
-                            onBack = { viewModel.backToCities() },
-                            onServerClick = { server ->
-                                checkVpnAndConnect {
-                                    viewModel.selectServer(server)
-                                    onNavigateToHome()
+                            )
+                        }
+                        is CountriesUiState.ServersList -> {
+                            ServersListContent(
+                                servers = state.servers,
+                                connectedServer = connectedServer,
+                                isTablet = isTablet,
+                                onServerClick = { server ->
+                                    checkVpnAndConnect {
+                                        viewModel.selectServer(server)
+                                        onNavigateToHome()
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
             }
@@ -229,7 +280,7 @@ fun CountriesListContent(
         LazyVerticalGrid(
             columns = GridCells.Fixed(columns),
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 120.dp),
+            contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 140.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -247,9 +298,9 @@ fun CountriesListContent(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 start = 16.dp,
-                top = 16.dp,
+                top = 8.dp,
                 end = 16.dp,
-                bottom = 120.dp
+                bottom = 140.dp
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -278,18 +329,19 @@ fun CountryCard(
     val localizedName = CountryUtils.getCountryName(context, country.code)
     val interactionSource = remember { MutableInteractionSource() }
 
-    Card(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
+            .liquidGlass(
+                shape = RoundedCornerShape(20.dp),
+                alpha = if (isConnected) 0.2f else 0.4f,
+                shadowElevation = 0.dp
+            )
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick
-            ),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isConnected) colors.brandNorm.copy(alpha = 0.1f) else colors.backgroundSecondary.copy(alpha = 0.5f)
-        )
+            )
     ) {
         Column {
             Row(
@@ -370,7 +422,6 @@ fun CitiesListContent(
     cities: List<CityDisplayItem>,
     connectedServer: LogicalServer?,
     isTablet: Boolean = false,
-    onBack: () -> Unit,
     onCityClick: (CityDisplayItem) -> Unit,
     onCityMore: (CityDisplayItem) -> Unit
 ) {
@@ -379,12 +430,10 @@ fun CitiesListContent(
         val columns = (configuration.screenWidthDp / 300).coerceAtLeast(2)
 
         Column(modifier = Modifier.fillMaxSize()) {
-            CityHeader(countryName, onBack)
-            
             LazyVerticalGrid(
                 columns = GridCells.Fixed(columns),
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 120.dp),
+                contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 140.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -403,16 +452,12 @@ fun CitiesListContent(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 start = 16.dp,
-                top = 16.dp,
+                top = 8.dp,
                 end = 16.dp,
-                bottom = 120.dp
+                bottom = 140.dp
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item {
-                CityHeader(countryName, onBack)
-            }
-
             items(cities) { city ->
                 CityCard(
                     city = city,
@@ -421,40 +466,6 @@ fun CitiesListContent(
                     onMoreClick = { onCityMore(city) }
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun CityHeader(countryName: String, onBack: () -> Unit) {
-    val backInteractionSource = remember { MutableInteractionSource() }
-    val colors = ProtonNextTheme.colors
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        Row(
-            modifier = Modifier.clickable(
-                interactionSource = backInteractionSource,
-                indication = null,
-                onClick = onBack
-            ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = stringResource(R.string.desc_back_button),
-                tint = colors.textNorm
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = countryName,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = colors.textNorm
-            )
         }
     }
 }
@@ -469,18 +480,19 @@ fun CityCard(
     val colors = ProtonNextTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
 
-    Card(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
+            .liquidGlass(
+                shape = RoundedCornerShape(20.dp),
+                alpha = if (isConnected) 0.2f else 0.4f,
+                shadowElevation = 0.dp
+            )
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick
-            ),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isConnected) colors.brandNorm.copy(alpha = 0.1f) else colors.backgroundSecondary.copy(alpha = 0.5f)
-        )
+            )
     ) {
         Column {
             Row(
@@ -550,12 +562,9 @@ fun CityCard(
 
 @Composable
 fun ServersListContent(
-    countryName: String,
-    cityName: String,
     servers: List<LogicalServer>,
     connectedServer: LogicalServer?,
     isTablet: Boolean = false,
-    onBack: () -> Unit,
     onServerClick: (LogicalServer) -> Unit
 ) {
     if (isTablet) {
@@ -563,12 +572,10 @@ fun ServersListContent(
         val columns = (configuration.screenWidthDp / 300).coerceAtLeast(2)
 
         Column(modifier = Modifier.fillMaxSize()) {
-            ServerHeader(countryName, cityName, onBack)
-
             LazyVerticalGrid(
                 columns = GridCells.Fixed(columns),
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 120.dp),
+                contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 140.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -586,16 +593,12 @@ fun ServersListContent(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 start = 16.dp,
-                top = 16.dp,
+                top = 8.dp,
                 end = 16.dp,
-                bottom = 120.dp
+                bottom = 140.dp
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item {
-                ServerHeader(countryName, cityName, onBack)
-            }
-
             items(servers) { server ->
                 ServerItemCard(
                     server = server,
@@ -603,40 +606,6 @@ fun ServersListContent(
                     onClick = { onServerClick(server) }
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun ServerHeader(countryName: String, cityName: String, onBack: () -> Unit) {
-    val backInteractionSource = remember { MutableInteractionSource() }
-    val colors = ProtonNextTheme.colors
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        Row(
-            modifier = Modifier.clickable(
-                interactionSource = backInteractionSource,
-                indication = null,
-                onClick = onBack
-            ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = stringResource(R.string.desc_back_button),
-                tint = colors.textNorm
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "$countryName, $cityName",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = colors.textNorm
-            )
         }
     }
 }
@@ -650,47 +619,50 @@ fun ServerItemCard(
     val colors = ProtonNextTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
 
-    Card(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
+            .liquidGlass(
+                shape = RoundedCornerShape(20.dp),
+                alpha = if (isConnected) 0.2f else 0.4f,
+                shadowElevation = 0.dp
+            )
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick
-            ),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isConnected) colors.brandNorm.copy(alpha = 0.1f) else colors.backgroundSecondary.copy(alpha = 0.5f)
-        )
+            )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = server.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = colors.textNorm
-                )
-                // Removed the exitIp Text to avoid confusion since these are entry IPs
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                LoadIndicator(load = server.averageLoad)
-                if (isConnected) {
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .background(colors.notificationSuccess, CircleShape)
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = server.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.textNorm
                     )
                 }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    LoadIndicator(load = server.averageLoad)
+                    if (isConnected) {
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .background(colors.notificationSuccess, CircleShape)
+                        )
+                    }
+                }
             }
+            LoadProgressBar(load = server.averageLoad)
         }
     }
 }

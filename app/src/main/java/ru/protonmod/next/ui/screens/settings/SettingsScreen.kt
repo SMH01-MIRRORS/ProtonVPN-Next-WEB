@@ -44,8 +44,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
-import ru.protonmod.next.ui.nav.MainTarget
+import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,6 +59,7 @@ fun SettingsScreen(
     onNavigateToApiBypass: (() -> Unit)? = null,
     onNavigateToAbout: (() -> Unit)? = null,
     onNavigateToErrorReporting: (() -> Unit)? = null,
+    onNavigateToThemeSelection: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
@@ -78,12 +80,12 @@ fun SettingsScreen(
             // Background gradient decoration (immersive)
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.4f)
+                    .fillMaxSize()
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                colors.brandNorm.copy(alpha = 0.2f),
+                                colors.brandNorm.copy(alpha = 0.25f),
+                                colors.backgroundNorm.copy(alpha = 0.1f),
                                 colors.backgroundNorm
                             )
                         )
@@ -103,6 +105,7 @@ fun SettingsScreen(
                 onNavigateToApiBypass = onNavigateToApiBypass,
                 onNavigateToAbout = onNavigateToAbout,
                 onNavigateToErrorReporting = onNavigateToErrorReporting,
+                onNavigateToThemeSelection = onNavigateToThemeSelection,
                 modifier = Modifier
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.statusBars)
@@ -125,6 +128,7 @@ fun SettingsContent(
     onNavigateToApiBypass: (() -> Unit)? = null,
     onNavigateToAbout: (() -> Unit)? = null,
     onNavigateToErrorReporting: (() -> Unit)? = null,
+    onNavigateToThemeSelection: (() -> Unit)? = null,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
@@ -168,6 +172,11 @@ fun SettingsContent(
                             onAutoConnectChange = onAutoConnectChange,
                             onNavigateToApiBypass = onNavigateToApiBypass,
                             onPortChange = onPortChange
+                        )
+
+                        CustomizationSettingsSection(
+                            state = state,
+                            onNavigateToThemeSelection = onNavigateToThemeSelection
                         )
                     }
 
@@ -219,6 +228,14 @@ fun SettingsContent(
                     onAutoConnectChange = onAutoConnectChange,
                     onNavigateToApiBypass = onNavigateToApiBypass,
                     onPortChange = onPortChange
+                )
+            }
+
+            item {
+                CustomizationSettingsSection(
+                    modifier = contentModifier,
+                    state = state,
+                    onNavigateToThemeSelection = onNavigateToThemeSelection
                 )
             }
 
@@ -284,6 +301,31 @@ private fun ConnectionSettingsSection(
                 }
             )
         }
+    }
+}
+
+@Composable
+private fun CustomizationSettingsSection(
+    modifier: Modifier = Modifier,
+    state: SettingsUiState,
+    onNavigateToThemeSelection: (() -> Unit)?
+) {
+    Category(modifier = modifier, title = stringResource(R.string.settings_customization)) {
+        val currentThemeName = when (state.appTheme) {
+            AppTheme.LIGHT -> stringResource(R.string.theme_light)
+            AppTheme.DARK -> stringResource(R.string.theme_dark)
+            AppTheme.AMOLED -> stringResource(R.string.theme_amoled)
+            AppTheme.GOLD_LIGHT -> stringResource(R.string.theme_gold_light)
+            AppTheme.GOLD_DARK -> stringResource(R.string.theme_gold_dark)
+            AppTheme.GOLD_AMOLED -> stringResource(R.string.theme_gold_amoled)
+        }
+
+        SettingRowWithIcon(
+            title = stringResource(R.string.settings_app_theme),
+            subtitle = currentThemeName,
+            icon = Icons.Rounded.Palette,
+            onClick = { onNavigateToThemeSelection?.invoke() }
+        )
     }
 }
 
@@ -549,13 +591,15 @@ fun FeatureTile(
     onClick: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
-    Card(
-        onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colors.backgroundSecondary.copy(alpha = 0.8f)
-        ),
-        modifier = modifier.aspectRatio(1f)
+    Box(
+        modifier = modifier
+            .aspectRatio(1f)
+            .liquidGlass(
+                shape = RoundedCornerShape(16.dp),
+                alpha = if (isActive) 0.3f else 0.4f,
+                shadowElevation = 0.dp
+            )
+            .clickable(onClick = onClick)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(

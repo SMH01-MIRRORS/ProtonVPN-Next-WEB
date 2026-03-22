@@ -33,6 +33,7 @@ import kotlinx.coroutines.launch
 import org.amnezia.awg.backend.Tunnel
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.model.ObfuscationProfile
+import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import javax.inject.Inject
 
@@ -51,6 +52,9 @@ data class SettingsUiState(
     val apiBypassEnabled: Boolean = false,
     val apiBypassStrategy: String = "netlify",
     val isAnyVpnActive: Boolean = false,
+
+    // Customization
+    val appTheme: AppTheme = AppTheme.DARK,
 
     // AWG low-level params
     val awgJc: Int = 3,
@@ -163,6 +167,7 @@ class SettingsViewModel @Inject constructor(
         settingsManager.crashReportsEnabled,
         settingsManager.apiBypassEnabled,
         settingsManager.apiBypassStrategy,
+        settingsManager.appTheme,
         _isAnyVpnActive
     ) { args: Array<Any?> ->
         SettingsUiState(
@@ -201,7 +206,8 @@ class SettingsViewModel @Inject constructor(
             isCrashReportsEnabled = args[32] as Boolean,
             apiBypassEnabled = args[33] as Boolean,
             apiBypassStrategy = args[34] as String,
-            isAnyVpnActive = args[35] as Boolean
+            appTheme = args[35] as AppTheme,
+            isAnyVpnActive = args[36] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -218,6 +224,12 @@ class SettingsViewModel @Inject constructor(
     fun setNotifications(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setNotifications(enabled)
+        }
+    }
+
+    fun setAppTheme(theme: AppTheme) {
+        viewModelScope.launch {
+            settingsManager.setAppTheme(theme)
         }
     }
 

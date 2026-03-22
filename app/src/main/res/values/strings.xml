@@ -119,6 +119,16 @@
     <string name="settings_custom_dns_reset">Reset Default</string>
     <string name="settings_custom_dns_placeholder">e.g. 1.1.1.1 or 2606:4700:4700::1111</string>
 
+    <!-- Customization -->
+    <string name="settings_customization">Customization</string>
+    <string name="settings_app_theme">App Theme</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_amoled">AMOLED</string>
+    <string name="theme_gold_light">Gold Light</string>
+    <string name="theme_gold_dark">Gold Dark</string>
+    <string name="theme_gold_amoled">Gold AMOLED</string>
+
     <!-- Error Reporting Settings -->
     <string name="settings_error_reporting">Error Reporting</string>
     <string name="settings_error_reporting_desc">Manage crash reports and analytics</string>

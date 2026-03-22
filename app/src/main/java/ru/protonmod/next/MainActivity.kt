@@ -49,8 +49,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import ru.protonmod.next.data.local.SessionDao
+import ru.protonmod.next.data.local.SettingsManager
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import ru.protonmod.next.ui.components.LiquidGlassBottomBar
@@ -59,16 +62,25 @@ import ru.protonmod.next.ui.nav.Screen
 import ru.protonmod.next.ui.nav.appNavGraph
 import ru.protonmod.next.ui.screens.LoginScreen
 import ru.protonmod.next.ui.screens.WelcomeScreen
+import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.ProvideDeviceType
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val sessionDao: SessionDao
+    private val sessionDao: SessionDao,
+    private val settingsManager: SettingsManager
 ) : ViewModel() {
     private val _startDestination = MutableStateFlow<String>("")
     val startDestination: StateFlow<String> = _startDestination.asStateFlow()
+
+    val appTheme: StateFlow<AppTheme> = settingsManager.appTheme
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = AppTheme.DARK
+        )
 
     init {
         viewModelScope.launch {
@@ -97,7 +109,10 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val windowSizeClass = calculateWindowSizeClass(this)
-            ProtonNextTheme {
+            val viewModel: MainViewModel = hiltViewModel()
+            val appTheme by viewModel.appTheme.collectAsState()
+
+            ProtonNextTheme(appTheme = appTheme) {
                 ProvideDeviceType(windowSizeClass.widthSizeClass) {
                     Box(
                         modifier = Modifier.fillMaxSize()
@@ -105,7 +120,7 @@ class MainActivity : ComponentActivity() {
                         LaunchedEffect(Unit) {
                             checkAndRequestNotificationPermission()
                         }
-                        ProtonNextAppNavHost()
+                        ProtonNextAppNavHost(viewModel = viewModel)
                     }
                 }
             }

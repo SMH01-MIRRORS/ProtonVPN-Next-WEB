@@ -119,6 +119,16 @@
     <string name="settings_custom_dns_reset">Сбросить</string>
     <string name="settings_custom_dns_placeholder">напр. 1.1.1.1 или 94.140.14.14</string>
 
+    <!-- Customization -->
+    <string name="settings_customization">Кастомизация</string>
+    <string name="settings_app_theme">Тема приложения</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Темная</string>
+    <string name="theme_amoled">AMOLED</string>
+    <string name="theme_gold_light">Золото светлый</string>
+    <string name="theme_gold_dark">Золото темный</string>
+    <string name="theme_gold_amoled">Золото AMOLED</string>
+
     <!-- Error Reporting Settings -->
     <string name="settings_error_reporting">Отчеты об ошибках</string>
     <string name="settings_error_reporting_desc">Управление отчетами о сбоях и аналитикой</string>
