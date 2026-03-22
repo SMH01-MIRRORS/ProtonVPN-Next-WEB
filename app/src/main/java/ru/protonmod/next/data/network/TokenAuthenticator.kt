@@ -103,11 +103,11 @@ class TokenAuthenticator @Inject constructor(
                         .header("Authorization", "Bearer $newAccessToken")
                         .build()
                 } else {
-                    ProtonLogger.e(TAG, "Refresh API returned unexpected code (${refreshResponse.code}) or null access token.")
+                    ProtonLogger.e(TAG, "Refresh API returned unexpected code (${refreshResponse.code}) or null access token. Session might be invalid.")
                 }
             } catch (e: Exception) {
                 // Refresh failed (e.g., network error or refresh token itself is expired)
-                ProtonLogger.e(TAG, "Exception occurred during token refresh: ${e.message}", e)
+                ProtonLogger.e(TAG, "Exception occurred during token refresh: ${e.message}. Forcing logout might be needed.", e)
             }
 
             ProtonLogger.e(TAG, "Returning null from Authenticator. The 401/402 error will be passed down to the caller.")

@@ -69,6 +69,16 @@ class AuthRepository @Inject constructor(
     fun getPendingUid(): String? = pendingAnonUid
 
     /**
+     * Clears local session and stops background tasks.
+     */
+    suspend fun logout() = withContext(dispatcherProvider.io()) {
+        ProtonLogger.d(TAG, "Logging out user...")
+        vpnRepository.stopAutoUpdate()
+        sessionDao.clearSession()
+        clearPendingAuth()
+    }
+
+    /**
      * Main login flow using SRP (Secure Remote Password) protocol.
      * Handles Captcha verification by refreshing sessions if a token is provided.
      */

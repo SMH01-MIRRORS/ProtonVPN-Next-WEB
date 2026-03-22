@@ -54,3 +54,18 @@ steps:
         - app/build/outputs/apk/release/*.apk
       note: changelog.txt
       title: "Release ${CI_COMMIT_TAG}"
+
+  upload-telegram:
+    image: python:3.11-slim
+    environment:
+      TG_API_ID:
+        from_secret: TG_API_ID
+      TG_API_HASH:
+        from_secret: TG_API_HASH
+      TG_SESSION:
+        from_secret: TG_SESSION
+      TG_CHAT_ID:
+        from_secret: TG_CHAT_ID
+    commands:
+      - pip install telethon
+      - python scripts/upload_telegram.py
