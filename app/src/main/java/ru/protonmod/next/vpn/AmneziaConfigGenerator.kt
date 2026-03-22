@@ -34,6 +34,7 @@ interface AmneziaConfigGenerator {
         selectedApps: Set<String> = emptySet(),
         selectedIps: Set<String> = emptySet(),
         port: Int = 1194,
+        certificate: String? = null,
         obfuscationParams: AmneziaVpnManager.ObfuscationParams
     ): String
 }
@@ -50,7 +51,8 @@ class AmneziaConfigGeneratorImpl @Inject constructor() : AmneziaConfigGenerator 
         selectedApps: Set<String>,
         selectedIps: Set<String>,
         port: Int,
-obfuscationParams: AmneziaVpnManager.ObfuscationParams
+        certificate: String?,
+        obfuscationParams: AmneziaVpnManager.ObfuscationParams
     ): String {
         val allowedIpsList = when {
             isIncludeMode -> if (selectedIps.isEmpty()) listOf("0.0.0.0/0") else selectedIps.toList()

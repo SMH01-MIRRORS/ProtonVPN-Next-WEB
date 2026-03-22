@@ -168,6 +168,7 @@ class DebugSettingsViewModel @Inject constructor(
                     dnsServer = activeDns,
                     targetIp = targetIp,
                     port = selectedPort,
+                    certificate = session.wgCertificate,
                     obfuscationParams = params
                 )
 

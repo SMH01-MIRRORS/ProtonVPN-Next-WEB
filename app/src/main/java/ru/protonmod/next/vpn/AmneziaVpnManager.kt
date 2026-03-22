@@ -198,7 +198,11 @@ class AmneziaVpnManager @Inject constructor(
         return if (result.isSuccess) {
             val newCert = result.getOrNull()?.certificate
             if (newCert != null) {
-                sessionDao.updateCertificate(newCert)
+                sessionDao.updateVpnKeys(
+                    privateKey = keyPair.privateKeyX25519,
+                    publicKeyPem = keyPair.publicKeyPem,
+                    certificate = newCert
+                )
                 updateCertificateState(newCert)
                 Result.success(newCert)
             } else {
@@ -360,7 +364,8 @@ class AmneziaVpnManager @Inject constructor(
                 selectedApps = selectedApps,
                 selectedIps = selectedIps,
                 port = selectedPort,
-obfuscationParams = params
+                certificate = currentSession.wgCertificate,
+                obfuscationParams = params
             )
             ProtonLogger.d(TAG, "Connecting with AWG config:\n$configStr")
 

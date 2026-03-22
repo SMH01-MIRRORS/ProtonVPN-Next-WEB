@@ -66,6 +66,9 @@ interface SessionDao {
 
     @Query("UPDATE session SET wgCertificate = :certificate WHERE id = 1")
     suspend fun updateCertificate(certificate: String)
+
+    @Query("UPDATE session SET wgPrivateKey = :privateKey, wgPublicKeyPem = :publicKeyPem, wgCertificate = :certificate WHERE id = 1")
+    suspend fun updateVpnKeys(privateKey: String, publicKeyPem: String, certificate: String)
 }
 
 @Dao
