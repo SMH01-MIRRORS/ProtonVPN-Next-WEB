@@ -30,8 +30,9 @@ interface AmneziaConfigGenerator {
         localIp: String,
         dnsServer: String,
         targetIp: String,
-        excludedApps: Set<String> = emptySet(),
-        excludedIps: Set<String> = emptySet(),
+        isIncludeMode: Boolean = false,
+        selectedApps: Set<String> = emptySet(),
+        selectedIps: Set<String> = emptySet(),
         port: Int = 1194,
         obfuscationParams: AmneziaVpnManager.ObfuscationParams
     ): String
@@ -45,17 +46,22 @@ class AmneziaConfigGeneratorImpl @Inject constructor() : AmneziaConfigGenerator 
         localIp: String,
         dnsServer: String,
         targetIp: String,
-        excludedApps: Set<String>,
-        excludedIps: Set<String>,
+        isIncludeMode: Boolean,
+        selectedApps: Set<String>,
+        selectedIps: Set<String>,
         port: Int,
-        obfuscationParams: AmneziaVpnManager.ObfuscationParams
+obfuscationParams: AmneziaVpnManager.ObfuscationParams
     ): String {
-        val allowedIpsList = if (excludedIps.isEmpty()) listOf("0.0.0.0/0") else IpSubnetCalculator.complementOfExcluded(excludedIps)
+        val allowedIpsList = when {
+            isIncludeMode -> if (selectedIps.isEmpty()) listOf("0.0.0.0/0") else selectedIps.toList()
+            else -> if (selectedIps.isEmpty()) listOf("0.0.0.0/0") else IpSubnetCalculator.complementOfExcluded(selectedIps)
+        }
+        
         val peer = Peer.Builder()
             .parsePublicKey(serverPublicKey)
             .parseEndpoint("$targetIp:$port")
             .apply {
-                if (allowedIpsList.isEmpty()) parseAllowedIPs("0.0.0.0/0") else allowedIpsList.forEach { parseAllowedIPs(it) }
+                allowedIpsList.forEach { parseAllowedIPs(it) }
             }
             .setPersistentKeepalive(60)
             .build()
@@ -78,7 +84,17 @@ class AmneziaConfigGeneratorImpl @Inject constructor() : AmneziaConfigGenerator 
             }
 
         if (obfuscationParams.i1.isNotEmpty()) ifaceBuilder.parseSpecialJunkI1(obfuscationParams.i1)
-        if (excludedApps.isNotEmpty()) ifaceBuilder.parseExcludedApplications(excludedApps.joinToString(","))
+
+        if (selectedApps.isNotEmpty()) {
+            if (isIncludeMode) {
+                // If the library doesn't support parseIncludedApplications, 
+                // we might need a different approach, but let's try if it exists.
+                // Note: Standard WG Android uses 'IncludedApplications' in config
+                ifaceBuilder.parseIncludedApplications(selectedApps.joinToString(","))
+            } else {
+                ifaceBuilder.parseExcludedApplications(selectedApps.joinToString(","))
+            }
+        }
 
         val config = Config.Builder().setInterface(ifaceBuilder.build()).addPeer(peer).build()
         return config.toAwgQuickString(false, false)

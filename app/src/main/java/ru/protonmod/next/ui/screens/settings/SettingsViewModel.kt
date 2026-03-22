@@ -44,6 +44,7 @@ data class SettingsUiState(
 
     // Connection configs
     val splitTunnelingEnabled: Boolean = false,
+    val splitTunnelingMode: String = "exclude",
     val excludedApps: Set<String> = emptySet(),
     val excludedIps: Set<String> = emptySet(),
     val vpnPort: Int = 1194,
@@ -136,6 +137,7 @@ class SettingsViewModel @Inject constructor(
         settingsManager.autoConnectEnabled,
         settingsManager.notificationsEnabled,
         settingsManager.splitTunnelingEnabled,
+        settingsManager.splitTunnelingMode,
         settingsManager.excludedApps,
         settingsManager.excludedIps,
         settingsManager.vpnPort,
@@ -175,39 +177,40 @@ class SettingsViewModel @Inject constructor(
             autoConnectEnabled = args[1] as Boolean,
             notificationsEnabled = args[2] as Boolean,
             splitTunnelingEnabled = args[3] as Boolean,
-            excludedApps = args[4] as Set<String>,
-            excludedIps = args[5] as Set<String>,
-            vpnPort = args[6] as Int,
-            awgJc = args[7] as Int,
-            awgJmin = args[8] as Int,
-            awgJmax = args[9] as Int,
-            awgS1 = args[10] as Int,
-            awgS2 = args[11] as Int,
-            awgH1 = args[12] as String,
-            awgH2 = args[13] as String,
-            awgH3 = args[14] as String,
-            awgH4 = args[15] as String,
-            awgI1 = args[16] as String,
-            awgI2 = args[17] as String,
-            awgI3 = args[18] as String,
-            awgI4 = args[19] as String,
-            awgI5 = args[20] as String,
-            awgId = args[21] as String,
-            awgIp = args[22] as String,
-            awgIb = args[23] as String,
-            awgJunkLevel = args[24] as Int,
-            isVpnConnected = args[25] == Tunnel.State.UP,
-            isObfuscationEnabled = args[26] as Boolean,
-            isObfuscationAdvancedMode = args[27] as Boolean,
-            customObfuscationProfiles = args[28] as List<ObfuscationProfile>,
-            selectedProfileId = args[29] as String,
-            customDns = args[30] as String,
-            isAnalyticsEnabled = args[31] as Boolean,
-            isCrashReportsEnabled = args[32] as Boolean,
-            apiBypassEnabled = args[33] as Boolean,
-            apiBypassStrategy = args[34] as String,
-            appTheme = args[35] as AppTheme,
-            isAnyVpnActive = args[36] as Boolean
+            splitTunnelingMode = args[4] as String,
+            excludedApps = args[5] as Set<String>,
+            excludedIps = args[6] as Set<String>,
+            vpnPort = args[7] as Int,
+            awgJc = args[8] as Int,
+            awgJmin = args[9] as Int,
+            awgJmax = args[10] as Int,
+            awgS1 = args[11] as Int,
+            awgS2 = args[12] as Int,
+            awgH1 = args[13] as String,
+            awgH2 = args[14] as String,
+            awgH3 = args[15] as String,
+            awgH4 = args[16] as String,
+            awgI1 = args[17] as String,
+            awgI2 = args[18] as String,
+            awgI3 = args[19] as String,
+            awgI4 = args[20] as String,
+            awgI5 = args[21] as String,
+            awgId = args[22] as String,
+            awgIp = args[23] as String,
+            awgIb = args[24] as String,
+            awgJunkLevel = args[25] as Int,
+            isVpnConnected = args[26] == Tunnel.State.UP,
+            isObfuscationEnabled = args[27] as Boolean,
+            isObfuscationAdvancedMode = args[28] as Boolean,
+            customObfuscationProfiles = args[29] as List<ObfuscationProfile>,
+            selectedProfileId = args[30] as String,
+            customDns = args[31] as String,
+            isAnalyticsEnabled = args[32] as Boolean,
+            isCrashReportsEnabled = args[33] as Boolean,
+            apiBypassEnabled = args[34] as Boolean,
+            apiBypassStrategy = args[35] as String,
+            appTheme = args[36] as AppTheme,
+            isAnyVpnActive = args[37] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -236,6 +239,12 @@ class SettingsViewModel @Inject constructor(
     fun setSplitTunneling(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setSplitTunnelingEnabled(enabled)
+        }
+    }
+
+    fun setSplitTunnelingMode(mode: String) {
+        viewModelScope.launch {
+            settingsManager.setSplitTunnelingMode(mode)
         }
     }
 

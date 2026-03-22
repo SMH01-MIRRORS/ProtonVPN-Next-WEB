@@ -92,7 +92,10 @@ fun SplitTunnelingIpsScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            stringResource(R.string.settings_excluded_ips),
+                            stringResource(
+                                if (uiState.splitTunnelingMode == "exclude") R.string.settings_excluded_ips
+                                else R.string.settings_included_ips
+                            ),
                             fontWeight = FontWeight.Bold,
                             color = colors.textNorm
                         )
@@ -221,7 +224,11 @@ fun SplitTunnelingIpsScreen(
                             if (uiState.ips.isNotEmpty()) {
                                 item {
                                     Text(
-                                        text = stringResource(R.string.st_excluded_ips_header, uiState.ips.size),
+                                        text = stringResource(
+                                            if (uiState.splitTunnelingMode == "exclude") R.string.st_excluded_ips_header
+                                            else R.string.st_included_ips_header, 
+                                            uiState.ips.size
+                                        ),
                                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                                         color = colors.brandNorm,
                                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)

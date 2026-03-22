@@ -246,9 +246,13 @@ class AmneziaVpnManager @Inject constructor(
         }
     }
 
-    private fun isEffectivelyExpired(): Boolean {
+    fun isEffectivelyExpired(): Boolean {
         val state = _certState.value
         return state is CertificateState.Expired || (state is CertificateState.RefreshFailed && state.isFullyExpired)
+    }
+
+    suspend fun forceRefreshCertificate(): Result<String> {
+        return performCertificateRefresh()
     }
 
     private suspend fun updateServiceSettings() {
@@ -320,8 +324,10 @@ class AmneziaVpnManager @Inject constructor(
 
             val serverPubKey = server.wgPublicKey ?: throw Exception("Missing WG Public Key for Server")
             val splitTunnelingEnabled = settingsManager.splitTunnelingEnabled.first()
-            val excludedApps = if (splitTunnelingEnabled) settingsManager.excludedApps.first() else emptySet()
-            val excludedIps = if (splitTunnelingEnabled) settingsManager.excludedIps.first() else emptySet()
+            val stMode = settingsManager.splitTunnelingMode.first()
+            val isIncludeMode = stMode == "include"
+            val selectedApps = if (splitTunnelingEnabled) settingsManager.excludedApps.first() else emptySet()
+            val selectedIps = if (splitTunnelingEnabled) settingsManager.excludedIps.first() else emptySet()
             val selectedPort = overridePort?.takeIf { it != 0 } ?: settingsManager.vpnPort.first().let { port ->
                 if (port == 0) listOf(443, 123, 1194, 51820).random() else port
             }
@@ -350,10 +356,11 @@ class AmneziaVpnManager @Inject constructor(
                 localIp = PROTON_CLIENT_IP,
                 dnsServer = activeDns,
                 targetIp = targetIp,
-                excludedApps = excludedApps,
-                excludedIps = excludedIps,
+                isIncludeMode = isIncludeMode,
+                selectedApps = selectedApps,
+                selectedIps = selectedIps,
                 port = selectedPort,
-                obfuscationParams = params
+obfuscationParams = params
             )
             ProtonLogger.d(TAG, "Connecting with AWG config:\n$configStr")
 
@@ -361,8 +368,8 @@ class AmneziaVpnManager @Inject constructor(
                 configStr = configStr,
                 notificationsEnabled = settingsManager.notificationsEnabled.first(),
                 killSwitchEnabled = settingsManager.killSwitchEnabled.first(),
-                excludedApps = excludedApps,
-                excludedIps = excludedIps
+                excludedApps = selectedApps,
+                excludedIps = selectedIps
             )
 
             Result.success(Unit)

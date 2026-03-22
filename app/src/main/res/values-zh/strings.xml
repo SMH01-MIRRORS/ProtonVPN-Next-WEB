@@ -216,7 +216,14 @@
     <string name="license_amneziawg_title">AmneziaWG Android</string>
 
     <!-- Split Tunneling -->
-    <string name="st_enabled_subtitle">VPN 连接将绕过选定的应用和 IP</string>
+    <string name="settings_st_mode">拆分隧道模式</string>
+    <string name="st_mode_exclude">排除模式</string>
+    <string name="st_mode_exclude_desc">选定的应用和 IP 将绕过 VPN</string>
+    <string name="st_mode_include">包含模式</string>
+    <string name="st_mode_include_desc">仅选定的应用和 IP 将使用 VPN</string>
+    <string name="st_enabled_subtitle">VPN 连接将遵循拆分隧道规则</string>
+    <string name="settings_included_apps">仅限 VPN 的应用</string>
+    <string name="settings_included_ips">仅限 VPN 的 IP 地址</string>
     <string name="st_disabled_subtitle">所有流量都通过 VPN</string>
     <plurals name="st_apps_selected">
         <item quantity="other">已选择 %1$d 个应用</item>
@@ -239,6 +246,7 @@
     <string name="st_add_ip_desc">添加 IP</string>
     <string name="st_invalid_ip_error">无效的 IP 地址格式</string>
     <string name="st_excluded_ips_header">排除的 IP (%1$d)</string>
+    <string name="st_included_ips_header">包含的 IP (%1$d)</string>
     <string name="st_no_ips_added">尚未添加 IP 地址</string>
     <string name="st_remove_ip_desc">移除 IP</string>
 

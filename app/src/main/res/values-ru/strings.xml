@@ -85,7 +85,9 @@
     <string name="settings_split_tunneling">Раздельное туннелирование</string>
     <string name="settings_split_tunneling_desc">Исключить приложения или IP из VPN</string>
     <string name="settings_excluded_apps">Исключенные приложения</string>
+    <string name="settings_included_apps">Приложения через VPN</string>
     <string name="settings_excluded_ips">Исключенные IP-адреса</string>
+    <string name="settings_included_ips">IP-адреса через VPN</string>
     <string name="settings_privacy">Приватность и уведомления</string>
     <string name="settings_notifications">Уведомления</string>
     <string name="settings_notifications_desc">Получать уведомления о статусе VPN</string>
@@ -216,7 +218,12 @@
     <string name="license_amneziawg_title">AmneziaWG Android</string>
 
     <!-- Split Tunneling -->
-    <string name="st_enabled_subtitle">VPN будет обходить выбранные приложения и IP</string>
+    <string name="settings_st_mode">Режим раздельного туннелирования</string>
+    <string name="st_mode_exclude">Режим исключения</string>
+    <string name="st_mode_exclude_desc">Выбранные приложения и IP будут обходить VPN</string>
+    <string name="st_mode_include">Режим включения</string>
+    <string name="st_mode_include_desc">Только выбранные приложения и IP будут использовать VPN</string>
+    <string name="st_enabled_subtitle">VPN соединение будет следовать правилам раздельного туннелирования</string>
     <string name="st_disabled_subtitle">Весь трафик идет через VPN</string>
     <plurals name="st_apps_selected">
         <item quantity="one">%1$d приложение выбрано</item>
@@ -251,6 +258,7 @@
     <string name="st_add_ip_desc">Добавить IP</string>
     <string name="st_invalid_ip_error">Неверный формат IP-адреса</string>
     <string name="st_excluded_ips_header">Исключенные IP (%1$d)</string>
+    <string name="st_included_ips_header">Включенные IP (%1$d)</string>
     <string name="st_no_ips_added">IP-адреса еще не добавлены</string>
     <string name="st_remove_ip_desc">Удалить IP</string>
 
@@ -326,7 +334,22 @@
     <string name="title_edit_obfuscation_config">Редактировать конфиг обфускации</string>
     <string name="error_empty_profile_name">Название профиля не может быть пустым</string>
 
-    <!-- Captcha Screen -->
+    <!-- Debug Tools -->
+    <string name="settings_debug">Инструменты отладки</string>
+    <string name="debug_title">Панель отладки</string>
+    <string name="debug_session_header">VPN Сессия и Сертификат</string>
+    <string name="debug_cert_id">ID серт.: %1$s</string>
+    <string name="debug_cert_issued">Выдан: %1$s</string>
+    <string name="debug_cert_expires">Истекает: %1$s</string>
+    <string name="debug_btn_refresh_cert">Обновить сертификат принудительно</string>
+    <string name="debug_exports_header">Экспорт и Диагностика</string>
+    <string name="debug_btn_export_logs">Экспорт Logcat в Downloads</string>
+    <string name="debug_btn_export_config">Экспорт WG конфига (.conf)</string>
+    <string name="debug_danger_header">Опасная зона</string>
+    <string name="debug_btn_nuke">Сброс всех данных (Factory Reset)</string>
+    <string name="debug_nuke_confirm">Вы уверены? Все настройки, аккаунты и кэш серверов будут безвозвратно удалены.</string>
+    <string name="debug_device_header">Информация об устройстве</string>
+    <string name="debug_select_server">Выберите сервер для экспорта конфига</string>
     <string name="captcha_title">Проверка безопасности</string>
     <string name="captcha_message">Для обеспечения безопасности аккаунта, пожалуйста, пройдите проверку ниже.</string>
     <string name="captcha_proxy_active">Антиблокировочный прокси активен</string>

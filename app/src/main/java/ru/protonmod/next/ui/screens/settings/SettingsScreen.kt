@@ -60,6 +60,7 @@ fun SettingsScreen(
     onNavigateToAbout: (() -> Unit)? = null,
     onNavigateToErrorReporting: (() -> Unit)? = null,
     onNavigateToThemeSelection: (() -> Unit)? = null,
+    onNavigateToDebug: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
@@ -106,6 +107,7 @@ fun SettingsScreen(
                 onNavigateToAbout = onNavigateToAbout,
                 onNavigateToErrorReporting = onNavigateToErrorReporting,
                 onNavigateToThemeSelection = onNavigateToThemeSelection,
+                onNavigateToDebug = onNavigateToDebug,
                 modifier = Modifier
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.statusBars)
@@ -129,6 +131,7 @@ fun SettingsContent(
     onNavigateToAbout: (() -> Unit)? = null,
     onNavigateToErrorReporting: (() -> Unit)? = null,
     onNavigateToThemeSelection: (() -> Unit)? = null,
+    onNavigateToDebug: (() -> Unit)? = null,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
@@ -193,7 +196,8 @@ fun SettingsContent(
                         )
 
                         AboutSettingsSection(
-                            onNavigateToAbout = onNavigateToAbout
+                            onNavigateToAbout = onNavigateToAbout,
+                            onNavigateToDebug = onNavigateToDebug
                         )
                     }
                 }
@@ -253,7 +257,8 @@ fun SettingsContent(
             item {
                 AboutSettingsSection(
                     modifier = contentModifier,
-                    onNavigateToAbout = onNavigateToAbout
+                    onNavigateToAbout = onNavigateToAbout,
+                    onNavigateToDebug = onNavigateToDebug
                 )
             }
         }
@@ -389,7 +394,8 @@ private fun PrivacySettingsSection(
 @Composable
 private fun AboutSettingsSection(
     modifier: Modifier = Modifier,
-    onNavigateToAbout: (() -> Unit)?
+    onNavigateToAbout: (() -> Unit)?,
+    onNavigateToDebug: (() -> Unit)? = null
 ) {
     Category(modifier = modifier, title = stringResource(R.string.settings_about)) {
         SettingRowWithIcon(
@@ -398,6 +404,15 @@ private fun AboutSettingsSection(
             subtitle = stringResource(R.string.settings_version, BuildConfig.VERSION_NAME),
             onClick = onNavigateToAbout
         )
+
+        if (BuildConfig.DEBUG) {
+            SettingRowWithIcon(
+                icon = Icons.Rounded.BugReport,
+                title = stringResource(R.string.settings_debug),
+                subtitle = stringResource(R.string.debug_title),
+                onClick = onNavigateToDebug
+            )
+        }
     }
 }
 

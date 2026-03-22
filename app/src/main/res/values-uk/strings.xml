@@ -216,8 +216,14 @@
     <string name="license_amneziawg_title">AmneziaWG Android</string>
 
     <!-- Split Tunneling -->
-    <string name="st_enabled_subtitle">VPN-підключення обходитиме вибрані додатки та IP-адреси</string>
-    <string name="st_disabled_subtitle">Весь трафік йде через VPN</string>
+    <string name="settings_st_mode">Режим роздільного тунелювання</string>
+    <string name="st_mode_exclude">Режим виключення</string>
+    <string name="st_mode_exclude_desc">Вибрані додатки та IP будуть обходити VPN</string>
+    <string name="st_mode_include">Режим включення</string>
+    <string name="st_mode_include_desc">Тільки вибрані додатки та IP будуть використовувати VPN</string>
+    <string name="st_enabled_subtitle">VPN з\'єднання буде слідувати правилам роздільного тунелювання</string>
+    <string name="settings_included_apps">Додатки через VPN</string>
+    <string name="settings_included_ips">IP-адреси через VPN</string>
     <plurals name="st_apps_selected">
         <item quantity="one">Вибрано %1$d додаток</item>
         <item quantity="few">Вибрано %1$d додатки</item>
@@ -251,6 +257,7 @@
     <string name="st_add_ip_desc">Додати IP</string>
     <string name="st_invalid_ip_error">Неправильний формат IP-адреси</string>
     <string name="st_excluded_ips_header">Виключені IP (%1$d)</string>
+    <string name="st_included_ips_header">Включені IP (%1$d)</string>
     <string name="st_no_ips_added">IP-адреси ще не додано</string>
     <string name="st_remove_ip_desc">Видалити IP</string>
 

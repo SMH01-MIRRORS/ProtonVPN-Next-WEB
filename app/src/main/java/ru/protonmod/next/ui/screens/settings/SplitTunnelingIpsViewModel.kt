@@ -36,7 +36,8 @@ data class IpEntry(
 
 data class SplitTunnelingIpsUiState(
     val ips: List<IpEntry> = emptyList(),
-    val newIpInput: String = ""
+    val newIpInput: String = "",
+    val splitTunnelingMode: String = "exclude"
 )
 
 @HiltViewModel
@@ -45,12 +46,13 @@ class SplitTunnelingIpsViewModel @Inject constructor(
 ) : ViewModel() {
 
     val uiState: StateFlow<SplitTunnelingIpsUiState> = combine(
-        settingsManager.excludedIps
-    ) { args ->
-        val excludedIps = args[0]
+        settingsManager.excludedIps,
+        settingsManager.splitTunnelingMode
+    ) { excludedIps, mode ->
         SplitTunnelingIpsUiState(
             ips = excludedIps.map { IpEntry(ip = it, isValid = true) }
-                .sortedBy { it.ip }
+                .sortedBy { it.ip },
+            splitTunnelingMode = mode
         )
     }.stateIn(
         scope = viewModelScope,

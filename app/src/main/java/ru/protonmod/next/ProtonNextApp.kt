@@ -48,6 +48,8 @@ class ProtonNextApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         
+        instance = this
+        
         // Initialize OkHttp with context to avoid "Unable to load PublicSuffixDatabase"
         // in multi-process environments when using DnsOverHttps.
         try {
@@ -66,5 +68,10 @@ class ProtonNextApp : Application(), Configuration.Provider {
     override fun onTerminate() {
         super.onTerminate()
         vpnRepository.stopAutoUpdate()
+    }
+
+    companion object {
+        lateinit var instance: ProtonNextApp
+            private set
     }
 }

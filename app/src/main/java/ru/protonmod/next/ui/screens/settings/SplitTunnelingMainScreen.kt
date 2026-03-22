@@ -23,6 +23,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -197,9 +198,41 @@ fun SplitTunnelingMainScreen(
                                     color = colors.separatorNorm.copy(alpha = 0.5f)
                                 )
 
+                                // Mode Selection Section
+                                Text(
+                                    text = stringResource(R.string.settings_st_mode).uppercase(),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = colors.textWeak,
+                                    modifier = Modifier.padding(start = 24.dp, top = 16.dp, bottom = 8.dp)
+                                )
+
+                                SplitTunnelingModeRow(
+                                    title = stringResource(R.string.st_mode_exclude),
+                                    description = stringResource(R.string.st_mode_exclude_desc),
+                                    isSelected = uiState.splitTunnelingMode == "exclude",
+                                    onClick = { viewModel.setSplitTunnelingMode("exclude") }
+                                )
+
+                                SplitTunnelingModeRow(
+                                    title = stringResource(R.string.st_mode_include),
+                                    description = stringResource(R.string.st_mode_include_desc),
+                                    isSelected = uiState.splitTunnelingMode == "include",
+                                    onClick = { viewModel.setSplitTunnelingMode("include") }
+                                )
+
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                    color = colors.separatorNorm.copy(alpha = 0.5f)
+                                )
+
+                                val isExcludeMode = uiState.splitTunnelingMode == "exclude"
+
                                 SettingRowWithIcon(
                                     icon = Icons.Rounded.Apps,
-                                    title = stringResource(R.string.settings_excluded_apps),
+                                    title = stringResource(
+                                        if (isExcludeMode) R.string.settings_excluded_apps 
+                                        else R.string.settings_included_apps
+                                    ),
                                     subtitle = pluralStringResource(
                                         R.plurals.st_apps_selected,
                                         uiState.excludedApps.size,
@@ -215,7 +248,10 @@ fun SplitTunnelingMainScreen(
 
                                 SettingRowWithIcon(
                                     icon = Icons.Rounded.Dns,
-                                    title = stringResource(R.string.settings_excluded_ips),
+                                    title = stringResource(
+                                        if (isExcludeMode) R.string.settings_excluded_ips
+                                        else R.string.settings_included_ips
+                                    ),
                                     subtitle = pluralStringResource(
                                         R.plurals.st_ips_selected,
                                         uiState.excludedIps.size,
@@ -231,5 +267,46 @@ fun SplitTunnelingMainScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
+    }
+}
+
+@Composable
+private fun SplitTunnelingModeRow(
+    title: String,
+    description: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val colors = ProtonNextTheme.colors
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                color = colors.textNorm
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.textWeak
+            )
+        }
+
+        RadioButton(
+            selected = isSelected,
+            onClick = null,
+            colors = RadioButtonDefaults.colors(
+                selectedColor = colors.brandNorm,
+                unselectedColor = colors.iconWeak
+            )
+        )
     }
 }

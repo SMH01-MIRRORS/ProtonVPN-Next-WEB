@@ -51,6 +51,7 @@ sealed class Screen(val route: String) {
     data object ErrorReporting : Screen("error_reporting")
 
     data object ThemeSelection : Screen("theme_selection")
+    data object DebugSettings : Screen("debug_settings")
 
     data object AboutApp : Screen("about_app")
     data object Licenses : Screen("licenses")
@@ -91,6 +92,9 @@ fun NavGraphBuilder.appNavGraph(
             },
             onNavigateToThemeSelection = {
                 navController.navigate(Screen.ThemeSelection.route)
+            },
+            onNavigateToDebug = {
+                navController.navigate(Screen.DebugSettings.route)
             }
         )
     }
@@ -128,6 +132,12 @@ fun NavGraphBuilder.appNavGraph(
 
     composable(Screen.ThemeSelection.route) {
         ThemeSelectionScreen(
+            onBack = { navController.popBackStack() }
+        )
+    }
+
+    composable(Screen.DebugSettings.route) {
+        DebugSettingsScreen(
             onBack = { navController.popBackStack() }
         )
     }

@@ -216,7 +216,14 @@
     <string name="license_amneziawg_title">AmneziaWG Android</string>
 
     <!-- Split Tunneling -->
-    <string name="st_enabled_subtitle">اتصال VPN از برنامه‌ها و IPهای انتخاب شده عبور نخواهد کرد</string>
+    <string name="settings_st_mode">حالت تونل‌زنی تقسیم‌شده</string>
+    <string name="st_mode_exclude">حالت حذف (Exclude)</string>
+    <string name="st_mode_exclude_desc">برنامه‌ها و IPهای انتخاب شده از VPN عبور نمی‌کنند</string>
+    <string name="st_mode_include">حالت گنجاندن (Include)</string>
+    <string name="st_mode_include_desc">فقط برنامه‌ها و IPهای انتخاب شده از VPN استفاده می‌کنند</string>
+    <string name="st_enabled_subtitle">اتصال VPN از قوانین تونل‌زنی تقسیم‌شده پیروی می‌کند</string>
+    <string name="settings_included_apps">برنامه‌های اختصاصی VPN</string>
+    <string name="settings_included_ips">آدرس‌های IP اختصاصی VPN</string>
     <string name="st_disabled_subtitle">تمام ترافیک از طریق VPN عبور می‌کند</string>
     <plurals name="st_apps_selected">
         <item quantity="one">%1$d برنامه انتخاب شد</item>
@@ -243,6 +250,7 @@
     <string name="st_add_ip_desc">افزودن IP</string>
     <string name="st_invalid_ip_error">فرمت آدرس IP نامعتبر است</string>
     <string name="st_excluded_ips_header">IPهای حذف شده (%1$d)</string>
+    <string name="st_included_ips_header">IPهای گنجانده شده (%1$d)</string>
     <string name="st_no_ips_added">هنوز هیچ آدرس IP اضافه نشده است</string>
     <string name="st_remove_ip_desc">حذف IP</string>
 

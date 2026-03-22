@@ -89,7 +89,10 @@ fun SplitTunnelingAppsScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            stringResource(R.string.settings_excluded_apps),
+                            stringResource(
+                                if (uiState.splitTunnelingMode == "exclude") R.string.settings_excluded_apps
+                                else R.string.settings_included_apps
+                            ),
                             fontWeight = FontWeight.Bold,
                             color = colors.textNorm
                         )

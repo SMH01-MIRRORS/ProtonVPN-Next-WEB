@@ -1,0 +1,324 @@
+/*
+ * Copyright (C) 2026 SMH01
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package ru.protonmod.next.ui.screens.settings
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.BugReport
+import androidx.compose.material.icons.rounded.CleaningServices
+import androidx.compose.material.icons.rounded.FileDownload
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import ru.protonmod.next.R
+import ru.protonmod.next.data.network.LogicalServer
+import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.theme.liquidGlass
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DebugSettingsScreen(
+    onBack: () -> Unit,
+    viewModel: DebugSettingsViewModel = hiltViewModel()
+) {
+    val colors = ProtonNextTheme.colors
+    val uiState by viewModel.uiState.collectAsState()
+    var showNukeConfirm by remember { mutableStateOf(false) }
+    var showServerSelect by remember { mutableStateOf(false) }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearMessage()
+        }
+    }
+
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        containerColor = colors.backgroundNorm,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Background gradient decoration (immersive)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Red.copy(alpha = 0.15f), // Red highlight for Debug
+                                colors.backgroundNorm.copy(alpha = 0.1f),
+                                colors.backgroundNorm
+                            )
+                        )
+                    )
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                // Header
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = stringResource(R.string.desc_back_button),
+                            tint = colors.textNorm
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.debug_title),
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = colors.textNorm
+                    )
+                }
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Session & Certificate Info
+                    item {
+                        DebugSection(title = stringResource(R.string.debug_session_header)) {
+                            uiState.session?.let { session ->
+                                DebugInfoRow("User ID", session.userId)
+                                DebugInfoRow("Tier", when(session.userTier) {
+                                    1 -> "Basic"
+                                    2 -> "Plus"
+                                    else -> "Free"
+                                })
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = colors.separatorNorm.copy(alpha = 0.3f))
+                                DebugInfoRow("Cert ID", session.sessionId)
+
+                                Button(
+                                    onClick = { viewModel.forceRefreshCertificate() },
+                                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
+                                    shape = RoundedCornerShape(12.dp),
+                                    enabled = !uiState.isLoading
+                                ) {
+                                    Icon(Icons.Rounded.Refresh, contentDescription = null)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(stringResource(R.string.debug_btn_refresh_cert))
+                                }
+                            } ?: Text("No active session", color = colors.textWeak, modifier = Modifier.padding(16.dp))
+                        }
+                    }
+
+                    // Exports
+                    item {
+                        DebugSection(title = stringResource(R.string.debug_exports_header)) {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                DebugActionRow(
+                                    icon = Icons.Rounded.History,
+                                    title = stringResource(R.string.debug_btn_export_logs),
+                                    onClick = { viewModel.exportLogs() }
+                                )
+                                DebugActionRow(
+                                    icon = Icons.Rounded.FileDownload,
+                                    title = stringResource(R.string.debug_btn_export_config),
+                                    onClick = { showServerSelect = true }
+                                )
+                            }
+                        }
+                    }
+
+                    // Device Info
+                    item {
+                        DebugSection(title = stringResource(R.string.debug_device_header)) {
+                            Text(
+                                text = viewModel.getDeviceInfo(),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = colors.textWeak,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    }
+
+                    // Danger Zone
+                    item {
+                        DebugSection(
+                            title = stringResource(R.string.debug_danger_header),
+                            titleColor = colors.notificationError
+                        ) {
+                            Button(
+                                onClick = { showNukeConfirm = true },
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = colors.notificationError),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Rounded.CleaningServices, contentDescription = null)
+                                Spacer(Modifier.width(8.dp))
+                                Text(stringResource(R.string.debug_btn_nuke))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Nuke Confirmation Dialog
+    if (showNukeConfirm) {
+        AlertDialog(
+            onDismissRequest = { showNukeConfirm = false },
+            title = { Text(stringResource(R.string.debug_btn_nuke)) },
+            text = { Text(stringResource(R.string.debug_nuke_confirm)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showNukeConfirm = false
+                        viewModel.nukeEverything()
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = colors.notificationError)
+                ) {
+                    Text(stringResource(R.string.btn_disconnect)) // Using "Disconnect" as "Confirm" if better string not found, or just HARD reset
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showNukeConfirm = false }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            }
+        )
+    }
+
+    // Server Selection for Config Export
+    if (showServerSelect) {
+        ModalBottomSheet(
+            onDismissRequest = { showServerSelect = false },
+            containerColor = colors.backgroundNorm,
+            dragHandle = { BottomSheetDefaults.DragHandle(color = colors.iconWeak) }
+        ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)) {
+                Text(
+                    text = stringResource(R.string.debug_select_server),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = colors.textNorm,
+                    modifier = Modifier.padding(16.dp)
+                )
+                LazyColumn(modifier = Modifier.fillMaxHeight(0.6f)) {
+                    items(uiState.servers) { server ->
+                        ListItem(
+                            headlineContent = { Text(server.name, color = colors.textNorm) },
+                            supportingContent = { Text(server.exitCountry, color = colors.textWeak) },
+                            modifier = Modifier.clickable {
+                                viewModel.exportConfig(server)
+                                showServerSelect = false
+                            },
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    if (uiState.isLoading) {
+        Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = colors.brandNorm)
+        }
+    }
+}
+
+@Composable
+private fun DebugSection(
+    title: String,
+    titleColor: Color = ProtonNextTheme.colors.brandNorm,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val colors = ProtonNextTheme.colors
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = title.uppercase(),
+            style = MaterialTheme.typography.labelLarge,
+            color = titleColor,
+            modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .liquidGlass(shape = RoundedCornerShape(16.dp), alpha = 0.3f)
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                content()
+            }
+        }
+    }
+}
+
+@Composable
+private fun DebugInfoRow(label: String, value: String) {
+    val colors = ProtonNextTheme.colors
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = colors.textWeak)
+        Text(value, style = MaterialTheme.typography.bodyMedium, color = colors.textNorm, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun DebugActionRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    onClick: () -> Unit
+) {
+    val colors = ProtonNextTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, contentDescription = null, tint = colors.brandNorm)
+        Spacer(Modifier.width(16.dp))
+        Text(title, style = MaterialTheme.typography.bodyLarge, color = colors.textNorm)
+    }
+}

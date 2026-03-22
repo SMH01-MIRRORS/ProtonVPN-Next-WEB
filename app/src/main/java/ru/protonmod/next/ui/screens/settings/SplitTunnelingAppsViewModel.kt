@@ -45,6 +45,7 @@ data class SplitTunnelingAppsUiState(
     val selectedApps: List<AppInfo> = emptyList(),
     val availableApps: List<AppInfo> = emptyList(),
     val searchQuery: String = "",
+    val splitTunnelingMode: String = "exclude",
     val isLoading: Boolean = true
 )
 
@@ -61,8 +62,9 @@ class SplitTunnelingAppsViewModel @Inject constructor(
     val uiState: StateFlow<SplitTunnelingAppsUiState> = combine(
         _allApps,
         settingsManager.excludedApps,
+        settingsManager.splitTunnelingMode,
         _searchQuery
-    ) { allApps, excludedApps, query ->
+    ) { allApps, excludedApps, mode, query ->
         val isLoading = allApps.isEmpty()
 
         // Filter apps by search query
@@ -90,6 +92,7 @@ class SplitTunnelingAppsViewModel @Inject constructor(
             selectedApps = selected,
             availableApps = available,
             searchQuery = query,
+            splitTunnelingMode = mode,
             isLoading = isLoading
         )
     }.stateIn(

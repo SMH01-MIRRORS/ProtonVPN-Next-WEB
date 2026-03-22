@@ -47,6 +47,7 @@ class SettingsManager @Inject constructor(
         private val APP_THEME = stringPreferencesKey("app_theme")
 
         private val SPLIT_TUNNELING_ENABLED = booleanPreferencesKey("split_tunneling_enabled")
+        private val SPLIT_TUNNELING_MODE = stringPreferencesKey("split_tunneling_mode") // "exclude" or "include"
         private val EXCLUDED_APPS = stringSetPreferencesKey("excluded_apps")
         private val EXCLUDED_IPS = stringSetPreferencesKey("excluded_ips")
 
@@ -103,6 +104,7 @@ class SettingsManager @Inject constructor(
     }
 
     val splitTunnelingEnabled: Flow<Boolean> = context.dataStore.data.map { it[SPLIT_TUNNELING_ENABLED] ?: false }
+    val splitTunnelingMode: Flow<String> = context.dataStore.data.map { it[SPLIT_TUNNELING_MODE] ?: "exclude" }
     val excludedApps: Flow<Set<String>> = context.dataStore.data.map { it[EXCLUDED_APPS] ?: emptySet() }
     val excludedIps: Flow<Set<String>> = context.dataStore.data.map { it[EXCLUDED_IPS] ?: emptySet() }
 
@@ -195,6 +197,10 @@ class SettingsManager @Inject constructor(
 
     suspend fun setSplitTunnelingEnabled(enabled: Boolean) {
         context.dataStore.edit { it[SPLIT_TUNNELING_ENABLED] = enabled }
+    }
+
+    suspend fun setSplitTunnelingMode(mode: String) {
+        context.dataStore.edit { it[SPLIT_TUNNELING_MODE] = mode }
     }
 
     suspend fun setExcludedApps(apps: Set<String>) {
@@ -298,5 +304,9 @@ class SettingsManager @Inject constructor(
             it[AWG_IB] = ib
             it[AWG_JUNK_LEVEL] = junkLevel
         }
+    }
+
+    suspend fun clearAll() {
+        context.dataStore.edit { it.clear() }
     }
 }
