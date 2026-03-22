@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (C) 2026 SMH01
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
 <resources>
     <string name="app_name">Proton VPN-Next</string>
 
@@ -103,6 +119,16 @@
     <string name="settings_custom_dns_reset">重置默认</string>
     <string name="settings_custom_dns_placeholder">例如 1.1.1.1 或 2606:4700:4700::1111</string>
 
+    <!-- Customization -->
+    <string name="settings_customization">个性化</string>
+    <string name="settings_app_theme">应用主题</string>
+    <string name="theme_light">浅色</string>
+    <string name="theme_dark">深色</string>
+    <string name="theme_amoled">AMOLED</string>
+    <string name="theme_gold_light">金色浅色</string>
+    <string name="theme_gold_dark">金色深色</string>
+    <string name="theme_gold_amoled">金色 AMOLED</string>
+
     <!-- Error Reporting Settings -->
     <string name="settings_error_reporting">错误报告</string>
     <string name="settings_error_reporting_desc">管理崩溃报告和分析</string>
@@ -131,6 +157,24 @@
     <string name="obfuscation_h3">Underload 包 Magic (H3)</string>
     <string name="obfuscation_h4">Transport 包 Magic (H4)</string>
     <string name="obfuscation_i1">特殊垃圾 (I1)</string>
+    <string name="obfuscation_i2">特殊垃圾 (I2)</string>
+    <string name="obfuscation_i3">特殊垃圾 (I3)</string>
+    <string name="obfuscation_i4">特殊垃圾 (I4)</string>
+    <string name="obfuscation_i5">特殊垃圾 (I5)</string>
+    <string name="obfuscation_custom_id">特殊垃圾 (Id)</string>
+    <string name="obfuscation_ip">特殊垃圾 (Ip)</string>
+    <string name="obfuscation_ib">特殊垃圾 (Ib)</string>
+
+    <!-- Obfuscation Modes -->
+    <string name="obfuscation_mode_easy">简单</string>
+    <string name="obfuscation_mode_advanced">高级</string>
+    <string name="obfuscation_junk_level">垃圾强度</string>
+    <string name="obfuscation_junk_low">低（标准）</string>
+    <string name="obfuscation_junk_medium">中</string>
+    <string name="obfuscation_junk_high">高</string>
+    <string name="obfuscation_junk_custom">自定义</string>
+    <string name="obfuscation_regenerate_i1">重新生成身份识别</string>
+    <string name="obfuscation_i1_desc">用于绕过 DPI 的唯一身份识别字符串。如果连接不稳定，请重新生成。</string>
 
     <!-- Settings: Protocol & Obfuscation -->
     <string name="settings_protocol">协议</string>
@@ -272,5 +316,7 @@
 
     <!-- Captcha Screen -->
     <string name="captcha_title">人机身份验证</string>
+    <string name="captcha_message">为了您的账户安全，请完成下方验证。</string>
+    <string name="captcha_proxy_active">防封锁代理已激活</string>
     <string name="desc_close">关闭</string>
 </resources>

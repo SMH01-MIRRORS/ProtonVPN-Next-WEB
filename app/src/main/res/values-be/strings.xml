@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (C) 2026 SMH01
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
 <resources>
     <string name="app_name">Proton VPN-Next</string>
 
@@ -103,6 +119,16 @@
     <string name="settings_custom_dns_reset">Скінуць</string>
     <string name="settings_custom_dns_placeholder">напр. 1.1.1.1 або 94.140.14.14</string>
 
+    <!-- Customization -->
+    <string name="settings_customization">Кастамізацыя</string>
+    <string name="settings_app_theme">Тэма прыкладання</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Цёмная</string>
+    <string name="theme_amoled">AMOLED</string>
+    <string name="theme_gold_light">Золата светлая</string>
+    <string name="theme_gold_dark">Золата цёмная</string>
+    <string name="theme_gold_amoled">Золата AMOLED</string>
+
     <!-- Error Reporting Settings -->
     <string name="settings_error_reporting">Справаздачы аб памылках</string>
     <string name="settings_error_reporting_desc">Кіраванне справаздачамі аб збоях і аналітыкай</string>
@@ -130,7 +156,25 @@
     <string name="obfuscation_h2">Response Packet Magic (H2)</string>
     <string name="obfuscation_h3">Underload Packet Magic (H3)</string>
     <string name="obfuscation_h4">Transport Packet Magic (H4)</string>
-    <string name="obfuscation_i1">Special Junk (I1)</string>
+    <string name="obfuscation_i1">Спецыяльнае смецце (I1)</string>
+    <string name="obfuscation_i2">Спецыяльнае смецце (I2)</string>
+    <string name="obfuscation_i3">Спецыяльнае смецце (I3)</string>
+    <string name="obfuscation_i4">Спецыяльнае смецце (I4)</string>
+    <string name="obfuscation_i5">Спецыяльнае смецце (I5)</string>
+    <string name="obfuscation_custom_id">Спецыяльнае смецце (Id)</string>
+    <string name="obfuscation_ip">Спецыяльнае смецце (Ip)</string>
+    <string name="obfuscation_ib">Спецыяльнае смецце (Ib)</string>
+
+    <!-- Obfuscation Modes -->
+    <string name="obfuscation_mode_easy">Просты</string>
+    <string name="obfuscation_mode_advanced">Пашыраны</string>
+    <string name="obfuscation_junk_level">Інтэнсіўнасць смецця</string>
+    <string name="obfuscation_junk_low">Нізкая (Стандарт)</string>
+    <string name="obfuscation_junk_medium">Сярэдняя</string>
+    <string name="obfuscation_junk_high">Высокая</string>
+    <string name="obfuscation_junk_custom">Свая</string>
+    <string name="obfuscation_regenerate_i1">Абнавіць ідэнтыфікацыю</string>
+    <string name="obfuscation_i1_desc">Унікальная радок ідэнтыфікацыі для абыходу DPI. Абнавіце, калі злучэнне нестабільнае.</string>
 
     <!-- Settings: Protocol & Obfuscation -->
     <string name="settings_protocol">Пратакол</string>
@@ -284,5 +328,7 @@
 
     <!-- Captcha Screen -->
     <string name="captcha_title">Праверка на чалавечнасць</string>
+    <string name="captcha_message">Для забеспячэння бяспекі акаўнта, калі ласка, прайдзіце праверку ніжэй.</string>
+    <string name="captcha_proxy_active">Антыблакіровачны проксі актыўны</string>
     <string name="desc_close">Закрыць</string>
 </resources>

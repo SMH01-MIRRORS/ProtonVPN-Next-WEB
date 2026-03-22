@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (C) 2026 SMH01
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
 <resources>
     <string name="app_name">Proton VPN-Next</string>
 
@@ -103,6 +119,16 @@
     <string name="settings_custom_dns_reset">بازنشانی پیش‌فرض</string>
     <string name="settings_custom_dns_placeholder">مثلاً 1.1.1.1 یا 2606:4700:4700::1111</string>
 
+    <!-- Customization -->
+    <string name="settings_customization">شخصی‌سازی</string>
+    <string name="settings_app_theme">تم برنامه</string>
+    <string name="theme_light">روشن</string>
+    <string name="theme_dark">تیره</string>
+    <string name="theme_amoled">AMOLED</string>
+    <string name="theme_gold_light">طلایی روشن</string>
+    <string name="theme_gold_dark">طلایی تیره</string>
+    <string name="theme_gold_amoled">طلایی AMOLED</string>
+
     <!-- Error Reporting Settings -->
     <string name="settings_error_reporting">گزارش خطا</string>
     <string name="settings_error_reporting_desc">مدیریت گزارش‌های خرابی و تجزیه و تحلیل</string>
@@ -131,6 +157,24 @@
     <string name="obfuscation_h3">جادوی بسته Underload (H3)</string>
     <string name="obfuscation_h4">جادوی بسته Transport (H4)</string>
     <string name="obfuscation_i1">بیهوده خاص (I1)</string>
+    <string name="obfuscation_i2">بیهوده خاص (I2)</string>
+    <string name="obfuscation_i3">بیهوده خاص (I3)</string>
+    <string name="obfuscation_i4">بیهوده خاص (I4)</string>
+    <string name="obfuscation_i5">بیهوده خاص (I5)</string>
+    <string name="obfuscation_custom_id">بیهوده خاص (Id)</string>
+    <string name="obfuscation_ip">بیهوده خاص (Ip)</string>
+    <string name="obfuscation_ib">بیهوده خاص (Ib)</string>
+
+    <!-- Obfuscation Modes -->
+    <string name="obfuscation_mode_easy">آسان</string>
+    <string name="obfuscation_mode_advanced">پیشرفته</string>
+    <string name="obfuscation_junk_level">شدت زباله</string>
+    <string name="obfuscation_junk_low">کم (استاندارد)</string>
+    <string name="obfuscation_junk_medium">متوسط</string>
+    <string name="obfuscation_junk_high">زیاد</string>
+    <string name="obfuscation_junk_custom">سفارشی</string>
+    <string name="obfuscation_regenerate_i1">بازسازی شناسه</string>
+    <string name="obfuscation_i1_desc">رشته شناسه منحصر به فرد مورد استفاده برای دور زدن DPI. اگر اتصال ناپایدار است، دوباره تولید کنید.</string>
 
     <!-- Settings: Protocol & Obfuscation -->
     <string name="settings_protocol">پروتکل</string>
@@ -276,5 +320,7 @@
 
     <!-- Captcha Screen -->
     <string name="captcha_title">تایید انسانی</string>
+    <string name="captcha_message">برای ایمن نگه داشتن حساب خود، لطفاً تأیید زیر را کامل کنید.</string>
+    <string name="captcha_proxy_active">پراکسی ضد مسدودسازی فعال است</string>
     <string name="desc_close">بستن</string>
 </resources>

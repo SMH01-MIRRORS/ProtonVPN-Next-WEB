@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (C) 2026 SMH01
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
 <resources>
     <string name="app_name">Proton VPN-Next</string>
 
@@ -103,6 +119,16 @@
     <string name="settings_custom_dns_reset">Скинути</string>
     <string name="settings_custom_dns_placeholder">напр. 1.1.1.1 або 94.140.14.14</string>
 
+    <!-- Customization -->
+    <string name="settings_customization">Кастомізація</string>
+    <string name="settings_app_theme">Тема додатка</string>
+    <string name="theme_light">Світла</string>
+    <string name="theme_dark">Темна</string>
+    <string name="theme_amoled">AMOLED</string>
+    <string name="theme_gold_light">Золото світла</string>
+    <string name="theme_gold_dark">Золото темна</string>
+    <string name="theme_gold_amoled">Золото AMOLED</string>
+
     <!-- Error Reporting Settings -->
     <string name="settings_error_reporting">Звіти про помилки</string>
     <string name="settings_error_reporting_desc">Керування звітами про збої та аналітикою</string>
@@ -126,11 +152,29 @@
     <string name="obfuscation_jmax">Макс. розмір сміттєвого пакета (Jmax)</string>
     <string name="obfuscation_s1">Розмір сміття в Init пакеті (S1)</string>
     <string name="obfuscation_s2">Розмір сміття в Response пакеті (S2)</string>
-    <string name="obfuscation_h1">Init Packet Magic (H1)</string>
-    <string name="obfuscation_h2">Response Packet Magic (H2)</string>
-    <string name="obfuscation_h3">Underload Packet Magic (H3)</string>
-    <string name="obfuscation_h4">Transport Packet Magic (H4)</string>
-    <string name="obfuscation_i1">Special Junk (I1)</string>
+    <string name="obfuscation_h1">Magic Init пакета (H1)</string>
+    <string name="obfuscation_h2">Magic Response пакета (H2)</string>
+    <string name="obfuscation_h3">Magic Underload пакета (H3)</string>
+    <string name="obfuscation_h4">Magic Transport пакета (H4)</string>
+    <string name="obfuscation_i1">Спеціальне сміття (I1)</string>
+    <string name="obfuscation_i2">Спеціальне сміття (I2)</string>
+    <string name="obfuscation_i3">Спеціальне сміття (I3)</string>
+    <string name="obfuscation_i4">Спеціальне сміття (I4)</string>
+    <string name="obfuscation_i5">Спеціальне сміття (I5)</string>
+    <string name="obfuscation_custom_id">Спеціальне сміття (Id)</string>
+    <string name="obfuscation_ip">Спеціальне сміття (Ip)</string>
+    <string name="obfuscation_ib">Спеціальне сміття (Ib)</string>
+
+    <!-- Obfuscation Modes -->
+    <string name="obfuscation_mode_easy">Простий</string>
+    <string name="obfuscation_mode_advanced">Розширений</string>
+    <string name="obfuscation_junk_level">Інтенсивність сміття</string>
+    <string name="obfuscation_junk_low">Низька (Стандарт)</string>
+    <string name="obfuscation_junk_medium">Середня</string>
+    <string name="obfuscation_junk_high">Висока</string>
+    <string name="obfuscation_junk_custom">Своя</string>
+    <string name="obfuscation_regenerate_i1">Оновити ідентифікацію</string>
+    <string name="obfuscation_i1_desc">Унікальний рядок ідентифікації для обходу DPI. Оновіть, якщо з\'єднання нестабільне.</string>
 
     <!-- Settings: Protocol & Obfuscation -->
     <string name="settings_protocol">Протокол</string>
@@ -139,7 +183,7 @@
     <string name="protocol_amneziawg_desc">Покращений протокол WireGuard з обфускацією</string>
     <string name="obfuscation_title">Обфускація</string>
     <string name="obfuscation_enable">Увімкнути обфускацію</string>
-    <string name="obfuscation_enable_desc">Обихід DPI та блокувань VPN</string>
+    <string name="obfuscation_enable_desc">Обіхід DPI та блокувань VPN</string>
     <string name="obfuscation_info_desc">Налаштуйте параметри AmneziaWG, щоб приховати VPN-трафік та обійти блокування в мережах з обмеженнями.</string>
     <string name="obfuscation_config">Конфігурація</string>
     <string name="obfuscation_config_standard">Стандартна конфігурація Proton VPN-Next</string>
@@ -258,7 +302,7 @@
     <string name="label_port">Порт</string>
     <string name="category_advanced">Розширені</string>
     <string name="label_obfuscation">Обфускація</string>
-    <string name="obfuscation_desc">Обихід глибокого аналізу пакетів (DPI)</string>
+    <string name="obfuscation_desc">Обіхід глибокого аналізу пакетів (DPI)</string>
     <string name="label_obfuscation_config">Конфігурація обфускації</string>
     <string name="category_automation">Автоматизація</string>
     <string name="label_connect_go_website">Connect &amp; Go (Веб-сайт)</string>
@@ -284,5 +328,7 @@
 
     <!-- Captcha Screen -->
     <string name="captcha_title">Перевірка на людяність</string>
+    <string name="captcha_message">Для забезпечення безпеки акаунта, будь ласка, пройдіть перевірку нижче.</string>
+    <string name="captcha_proxy_active">Антиблокувальний проксі активний</string>
     <string name="desc_close">Закрити</string>
 </resources>
