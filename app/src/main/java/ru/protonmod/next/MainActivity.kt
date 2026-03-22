@@ -25,6 +25,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.WindowInsets
@@ -190,7 +191,12 @@ fun ProtonNextAppNavHost(viewModel: MainViewModel = hiltViewModel()) {
             appNavGraph(navController = navController)
         }
 
-        if (currentTarget != null) {
+        AnimatedVisibility(
+            visible = currentTarget != null,
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) {
             LiquidGlassBottomBar(
                 selectedTarget = currentTarget,
                 navigateTo = { target ->
@@ -208,9 +214,7 @@ fun ProtonNextAppNavHost(viewModel: MainViewModel = hiltViewModel()) {
                         }
                     }
                 },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .windowInsetsPadding(WindowInsets.navigationBars)
+                modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)
             )
         }
     }
