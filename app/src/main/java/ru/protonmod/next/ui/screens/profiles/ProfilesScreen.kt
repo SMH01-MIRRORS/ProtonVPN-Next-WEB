@@ -27,6 +27,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
@@ -143,37 +144,15 @@ fun ProfilesScreen(
             )
 
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .windowInsetsPadding(WindowInsets.statusBars)
+                modifier = Modifier.fillMaxSize()
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 24.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.profiles_title),
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        color = colors.textNorm
-                    )
-
-                    if (isTablet) {
-                        Button(
-                            onClick = onCreateNewProfile,
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
-                        ) {
-                            Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(stringResource(R.string.desc_create_profile))
-                        }
-                    }
-                }
-
                 if (profiles.isEmpty()) {
+                    // Header for empty state
+                    ProfilesHeader(
+                        isTablet = isTablet,
+                        onCreateNewProfile = onCreateNewProfile,
+                        colors = colors
+                    )
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -188,6 +167,14 @@ fun ProfilesScreen(
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            ProfilesHeader(
+                                isTablet = true,
+                                onCreateNewProfile = onCreateNewProfile,
+                                colors = colors
+                            )
+                        }
+
                         items(profiles, key = { it.id }) { profile ->
                             ProfileCardItem(
                                 profile = profile,
@@ -211,6 +198,14 @@ fun ProfilesScreen(
                         ),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        item {
+                            ProfilesHeader(
+                                isTablet = false,
+                                onCreateNewProfile = onCreateNewProfile,
+                                colors = colors
+                            )
+                        }
+
                         items(profiles, key = { it.id }) { profile ->
                             ProfileCardItem(
                                 profile = profile,
@@ -225,6 +220,40 @@ fun ProfilesScreen(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProfilesHeader(
+    isTablet: Boolean,
+    onCreateNewProfile: () -> Unit,
+    colors: ru.protonmod.next.ui.theme.ProtonColors
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .padding(horizontal = 24.dp, vertical = 24.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.profiles_title),
+            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+            color = colors.textNorm
+        )
+
+        if (isTablet) {
+            Button(
+                onClick = onCreateNewProfile,
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
+            ) {
+                Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.desc_create_profile))
             }
         }
     }

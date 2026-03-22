@@ -134,122 +134,124 @@ fun SettingsContent(
 ) {
     val colors = ProtonNextTheme.colors
 
-    Column(modifier = modifier.windowInsetsPadding(WindowInsets.statusBars)) {
-        // Uniform Header
-        Text(
-            text = stringResource(R.string.settings_title),
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-            color = colors.textNorm,
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 24.dp)
+    LazyColumn(
+        modifier = modifier,
+        horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start,
+        contentPadding = PaddingValues(
+            start = 16.dp,
+            end = 16.dp,
+            top = 0.dp,
+            bottom = if (isTablet) 140.dp else 120.dp
         )
-
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start,
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = 0.dp,
-                bottom = if (isTablet) 140.dp else 120.dp
+    ) {
+        item {
+            // Header is now part of the scrollable list
+            Text(
+                text = stringResource(R.string.settings_title),
+                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                color = colors.textNorm,
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(horizontal = 12.dp, vertical = 24.dp)
             )
-        ) {
-            if (isTablet) {
-                item {
-                    Row(
-                        modifier = Modifier
-                            .widthIn(max = 1000.dp)
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(32.dp)
-                    ) {
-                        // Left Column: Main Settings & Connection
-                        Column(modifier = Modifier.weight(1f)) {
-                            FeatureCategory(
-                                isTablet = true,
-                                state = state,
-                                onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
-                                onNavigateToProtocol = onNavigateToProtocol
-                            )
+        }
 
-                            ConnectionSettingsSection(
-                                state = state,
-                                onAutoConnectChange = onAutoConnectChange,
-                                onNavigateToApiBypass = onNavigateToApiBypass,
-                                onPortChange = onPortChange
-                            )
+        if (isTablet) {
+            item {
+                Row(
+                    modifier = Modifier
+                        .widthIn(max = 1000.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(32.dp)
+                ) {
+                    // Left Column: Main Settings & Connection
+                    Column(modifier = Modifier.weight(1f)) {
+                        FeatureCategory(
+                            isTablet = true,
+                            state = state,
+                            onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
+                            onNavigateToProtocol = onNavigateToProtocol
+                        )
 
-                            CustomizationSettingsSection(
-                                state = state,
-                                onNavigateToThemeSelection = onNavigateToThemeSelection
-                            )
-                        }
+                        ConnectionSettingsSection(
+                            state = state,
+                            onAutoConnectChange = onAutoConnectChange,
+                            onNavigateToApiBypass = onNavigateToApiBypass,
+                            onPortChange = onPortChange
+                        )
 
-                        // Right Column: Privacy, Notifications & About
-                        Column(modifier = Modifier.weight(1f)) {
-                            PrivacySettingsSection(
-                                state = state,
-                                onCustomDnsChange = onCustomDnsChange,
-                                onNavigateToKillSwitch = onNavigateToKillSwitch,
-                                onNavigateToErrorReporting = onNavigateToErrorReporting,
-                                onNotificationsChange = onNotificationsChange
-                            )
+                        CustomizationSettingsSection(
+                            state = state,
+                            onNavigateToThemeSelection = onNavigateToThemeSelection
+                        )
+                    }
 
-                            AboutSettingsSection(
-                                onNavigateToAbout = onNavigateToAbout,
-                                onNavigateToDebug = onNavigateToDebug
-                            )
-                        }
+                    // Right Column: Privacy, Notifications & About
+                    Column(modifier = Modifier.weight(1f)) {
+                        PrivacySettingsSection(
+                            state = state,
+                            onCustomDnsChange = onCustomDnsChange,
+                            onNavigateToKillSwitch = onNavigateToKillSwitch,
+                            onNavigateToErrorReporting = onNavigateToErrorReporting,
+                            onNotificationsChange = onNotificationsChange
+                        )
+
+                        AboutSettingsSection(
+                            onNavigateToAbout = onNavigateToAbout,
+                            onNavigateToDebug = onNavigateToDebug
+                        )
                     }
                 }
-            } else {
-                // Phone Layout
-                val contentModifier = Modifier.fillMaxWidth()
+            }
+        } else {
+            // Phone Layout
+            val contentModifier = Modifier.fillMaxWidth()
 
-                item {
-                    FeatureCategory(
-                        modifier = contentModifier,
-                        isTablet = false,
-                        state = state,
-                        onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
-                        onNavigateToProtocol = onNavigateToProtocol
-                    )
-                }
+            item {
+                FeatureCategory(
+                    modifier = contentModifier,
+                    isTablet = false,
+                    state = state,
+                    onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
+                    onNavigateToProtocol = onNavigateToProtocol
+                )
+            }
 
-                item {
-                    ConnectionSettingsSection(
-                        modifier = contentModifier,
-                        state = state,
-                        onAutoConnectChange = onAutoConnectChange,
-                        onNavigateToApiBypass = onNavigateToApiBypass,
-                        onPortChange = onPortChange
-                    )
-                }
+            item {
+                ConnectionSettingsSection(
+                    modifier = contentModifier,
+                    state = state,
+                    onAutoConnectChange = onAutoConnectChange,
+                    onNavigateToApiBypass = onNavigateToApiBypass,
+                    onPortChange = onPortChange
+                )
+            }
 
-                item {
-                    CustomizationSettingsSection(
-                        modifier = contentModifier,
-                        state = state,
-                        onNavigateToThemeSelection = onNavigateToThemeSelection
-                    )
-                }
+            item {
+                CustomizationSettingsSection(
+                    modifier = contentModifier,
+                    state = state,
+                    onNavigateToThemeSelection = onNavigateToThemeSelection
+                )
+            }
 
-                item {
-                    PrivacySettingsSection(
-                        modifier = contentModifier,
-                        state = state,
-                        onCustomDnsChange = onCustomDnsChange,
-                        onNavigateToKillSwitch = onNavigateToKillSwitch,
-                        onNavigateToErrorReporting = onNavigateToErrorReporting,
-                        onNotificationsChange = onNotificationsChange
-                    )
-                }
+            item {
+                PrivacySettingsSection(
+                    modifier = contentModifier,
+                    state = state,
+                    onCustomDnsChange = onCustomDnsChange,
+                    onNavigateToKillSwitch = onNavigateToKillSwitch,
+                    onNavigateToErrorReporting = onNavigateToErrorReporting,
+                    onNotificationsChange = onNotificationsChange
+                )
+            }
 
-                item {
-                    AboutSettingsSection(
-                        modifier = contentModifier,
-                        onNavigateToAbout = onNavigateToAbout,
-                        onNavigateToDebug = onNavigateToDebug
-                    )
-                }
+            item {
+                AboutSettingsSection(
+                    modifier = contentModifier,
+                    onNavigateToAbout = onNavigateToAbout,
+                    onNavigateToDebug = onNavigateToDebug
+                )
             }
         }
     }
@@ -636,7 +638,7 @@ fun FeatureTile(
 
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,

@@ -29,6 +29,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
@@ -134,59 +135,6 @@ fun CountriesScreen(
             )
 
             Column(modifier = Modifier.fillMaxSize()) {
-                // Immersive Navigation Header
-                AnimatedContent(
-                    targetState = uiState,
-                    label = "navigation_header"
-                ) { state ->
-                    val navigationModifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
-
-                    when (state) {
-                        is CountriesUiState.CountriesList -> {
-                            Text(
-                                text = stringResource(R.string.countries_title),
-                                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                                color = colors.textNorm,
-                                modifier = navigationModifier.padding(start = 8.dp, top = 12.dp, bottom = 12.dp)
-                            )
-                        }
-                        else -> {
-                            Row(
-                                modifier = navigationModifier,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                IconButton(onClick = {
-                                    when (uiState) {
-                                        is CountriesUiState.CitiesList -> viewModel.backToCountries()
-                                        is CountriesUiState.ServersList -> viewModel.backToCities()
-                                        else -> onBack()
-                                    }
-                                }) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = stringResource(R.string.desc_back_button),
-                                        tint = colors.textNorm
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(8.dp))
-                                val title = when (state) {
-                                    is CountriesUiState.CitiesList -> state.country
-                                    is CountriesUiState.ServersList -> "${state.country}, ${state.city}"
-                                    else -> ""
-                                }
-                                Text(
-                                    text = title,
-                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                    color = colors.textNorm
-                                )
-                            }
-                        }
-                    }
-                }
-
                 AnimatedContent(
                     targetState = uiState,
                     label = "countries_state",
@@ -234,6 +182,7 @@ fun CountriesScreen(
                                 cities = state.cities,
                                 connectedServer = connectedServer,
                                 isTablet = isTablet,
+                                onBack = { viewModel.backToCountries() },
                                 onCityClick = { city ->
                                     checkVpnAndConnect {
                                         viewModel.selectCity(city.name)
@@ -247,9 +196,12 @@ fun CountriesScreen(
                         }
                         is CountriesUiState.ServersList -> {
                             ServersListContent(
+                                countryName = state.country,
+                                cityName = state.city,
                                 servers = state.servers,
                                 connectedServer = connectedServer,
                                 isTablet = isTablet,
+                                onBack = { viewModel.backToCities() },
                                 onServerClick = { server ->
                                     checkVpnAndConnect {
                                         viewModel.selectServer(server)
@@ -273,6 +225,8 @@ fun CountriesListContent(
     onCountryClick: (CountryDisplayItem) -> Unit,
     onCountryMore: (CountryDisplayItem) -> Unit
 ) {
+    val colors = ProtonNextTheme.colors
+
     if (isTablet) {
         val configuration = LocalConfiguration.current
         val columns = (configuration.screenWidthDp / 300).coerceAtLeast(2)
@@ -284,6 +238,17 @@ fun CountriesListContent(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Text(
+                    text = stringResource(R.string.countries_title),
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    color = colors.textNorm,
+                    modifier = Modifier
+                        .statusBarsPadding()
+                        .padding(horizontal = 8.dp, vertical = 24.dp)
+                )
+            }
+
             items(countries) { country ->
                 CountryCard(
                     country = country,
@@ -298,12 +263,23 @@ fun CountriesListContent(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 start = 16.dp,
-                top = 8.dp,
+                top = 0.dp,
                 end = 16.dp,
                 bottom = 140.dp
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            item {
+                Text(
+                    text = stringResource(R.string.countries_title),
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    color = colors.textNorm,
+                    modifier = Modifier
+                        .statusBarsPadding()
+                        .padding(horizontal = 8.dp, vertical = 24.dp)
+                )
+            }
+
             items(countries) { country ->
                 CountryCard(
                     country = country,
@@ -422,29 +398,34 @@ fun CitiesListContent(
     cities: List<CityDisplayItem>,
     connectedServer: LogicalServer?,
     isTablet: Boolean = false,
+    onBack: () -> Unit,
     onCityClick: (CityDisplayItem) -> Unit,
     onCityMore: (CityDisplayItem) -> Unit
 ) {
+    val colors = ProtonNextTheme.colors
+
     if (isTablet) {
         val configuration = LocalConfiguration.current
         val columns = (configuration.screenWidthDp / 300).coerceAtLeast(2)
 
-        Column(modifier = Modifier.fillMaxSize()) {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(columns),
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 140.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(cities) { city ->
-                    CityCard(
-                        city = city,
-                        isConnected = (connectedServer?.city == city.name && connectedServer.exitCountry == countryName),
-                        onClick = { onCityClick(city) },
-                        onMoreClick = { onCityMore(city) }
-                    )
-                }
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(columns),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 140.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                NavigationHeader(title = countryName, onBack = onBack, colors = colors)
+            }
+
+            items(cities) { city ->
+                CityCard(
+                    city = city,
+                    isConnected = (connectedServer?.city == city.name && connectedServer.exitCountry == countryName),
+                    onClick = { onCityClick(city) },
+                    onMoreClick = { onCityMore(city) }
+                )
             }
         }
     } else {
@@ -452,12 +433,16 @@ fun CitiesListContent(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 start = 16.dp,
-                top = 8.dp,
+                top = 0.dp,
                 end = 16.dp,
                 bottom = 140.dp
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            item {
+                NavigationHeader(title = countryName, onBack = onBack, colors = colors)
+            }
+
             items(cities) { city ->
                 CityCard(
                     city = city,
@@ -562,30 +547,37 @@ fun CityCard(
 
 @Composable
 fun ServersListContent(
+    countryName: String,
+    cityName: String,
     servers: List<LogicalServer>,
     connectedServer: LogicalServer?,
     isTablet: Boolean = false,
+    onBack: () -> Unit,
     onServerClick: (LogicalServer) -> Unit
 ) {
+    val colors = ProtonNextTheme.colors
+
     if (isTablet) {
         val configuration = LocalConfiguration.current
         val columns = (configuration.screenWidthDp / 300).coerceAtLeast(2)
 
-        Column(modifier = Modifier.fillMaxSize()) {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(columns),
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 140.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(servers) { server ->
-                    ServerItemCard(
-                        server = server,
-                        isConnected = connectedServer?.id == server.id,
-                        onClick = { onServerClick(server) }
-                    )
-                }
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(columns),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 140.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                NavigationHeader(title = "$countryName, $cityName", onBack = onBack, colors = colors)
+            }
+
+            items(servers) { server ->
+                ServerItemCard(
+                    server = server,
+                    isConnected = connectedServer?.id == server.id,
+                    onClick = { onServerClick(server) }
+                )
             }
         }
     } else {
@@ -599,6 +591,10 @@ fun ServersListContent(
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            item {
+                NavigationHeader(title = "$countryName, $cityName", onBack = onBack, colors = colors)
+            }
+
             items(servers) { server ->
                 ServerItemCard(
                     server = server,
@@ -607,6 +603,35 @@ fun ServersListContent(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun NavigationHeader(
+    title: String,
+    onBack: () -> Unit,
+    colors: ru.protonmod.next.ui.theme.ProtonColors
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .padding(horizontal = 8.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = onBack) {
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(R.string.desc_back_button),
+                tint = colors.textNorm
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+            color = colors.textNorm
+        )
     }
 }
 
