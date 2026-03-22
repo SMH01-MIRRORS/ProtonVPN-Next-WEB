@@ -108,9 +108,7 @@ fun SettingsScreen(
                 onNavigateToErrorReporting = onNavigateToErrorReporting,
                 onNavigateToThemeSelection = onNavigateToThemeSelection,
                 onNavigateToDebug = onNavigateToDebug,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .windowInsetsPadding(WindowInsets.statusBars)
+                modifier = Modifier.fillMaxSize()
             )
         }
     }
@@ -136,130 +134,122 @@ fun SettingsContent(
 ) {
     val colors = ProtonNextTheme.colors
 
-    LazyColumn(
-        modifier = modifier,
-        horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start,
-        contentPadding = PaddingValues(
-            start = 16.dp,
-            end = 16.dp,
-            top = 16.dp,
-            bottom = if (isTablet) 140.dp else 120.dp
+    Column(modifier = modifier.windowInsetsPadding(WindowInsets.statusBars)) {
+        // Uniform Header
+        Text(
+            text = stringResource(R.string.settings_title),
+            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+            color = colors.textNorm,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 24.dp)
         )
-    ) {
-        if (isTablet) {
-            item {
-                Row(
-                    modifier = Modifier
-                        .widthIn(max = 1000.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(32.dp)
-                ) {
-                    // Left Column: Main Settings & Connection
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = stringResource(R.string.settings_title),
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                            color = colors.textNorm,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 24.dp)
-                        )
 
-                        FeatureCategory(
-                            isTablet = true,
-                            state = state,
-                            onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
-                            onNavigateToProtocol = onNavigateToProtocol
-                        )
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start,
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = 0.dp,
+                bottom = if (isTablet) 140.dp else 120.dp
+            )
+        ) {
+            if (isTablet) {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .widthIn(max = 1000.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(32.dp)
+                    ) {
+                        // Left Column: Main Settings & Connection
+                        Column(modifier = Modifier.weight(1f)) {
+                            FeatureCategory(
+                                isTablet = true,
+                                state = state,
+                                onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
+                                onNavigateToProtocol = onNavigateToProtocol
+                            )
 
-                        ConnectionSettingsSection(
-                            state = state,
-                            onAutoConnectChange = onAutoConnectChange,
-                            onNavigateToApiBypass = onNavigateToApiBypass,
-                            onPortChange = onPortChange
-                        )
+                            ConnectionSettingsSection(
+                                state = state,
+                                onAutoConnectChange = onAutoConnectChange,
+                                onNavigateToApiBypass = onNavigateToApiBypass,
+                                onPortChange = onPortChange
+                            )
 
-                        CustomizationSettingsSection(
-                            state = state,
-                            onNavigateToThemeSelection = onNavigateToThemeSelection
-                        )
-                    }
+                            CustomizationSettingsSection(
+                                state = state,
+                                onNavigateToThemeSelection = onNavigateToThemeSelection
+                            )
+                        }
 
-                    // Right Column: Privacy, Notifications & About
-                    Column(modifier = Modifier.weight(1f)) {
-                        Spacer(modifier = Modifier.height(80.dp)) // Alignment offset
+                        // Right Column: Privacy, Notifications & About
+                        Column(modifier = Modifier.weight(1f)) {
+                            PrivacySettingsSection(
+                                state = state,
+                                onCustomDnsChange = onCustomDnsChange,
+                                onNavigateToKillSwitch = onNavigateToKillSwitch,
+                                onNavigateToErrorReporting = onNavigateToErrorReporting,
+                                onNotificationsChange = onNotificationsChange
+                            )
 
-                        PrivacySettingsSection(
-                            state = state,
-                            onCustomDnsChange = onCustomDnsChange,
-                            onNavigateToKillSwitch = onNavigateToKillSwitch,
-                            onNavigateToErrorReporting = onNavigateToErrorReporting,
-                            onNotificationsChange = onNotificationsChange
-                        )
-
-                        AboutSettingsSection(
-                            onNavigateToAbout = onNavigateToAbout,
-                            onNavigateToDebug = onNavigateToDebug
-                        )
+                            AboutSettingsSection(
+                                onNavigateToAbout = onNavigateToAbout,
+                                onNavigateToDebug = onNavigateToDebug
+                            )
+                        }
                     }
                 }
-            }
-        } else {
-            // Phone Layout
-            val contentModifier = Modifier.fillMaxWidth()
+            } else {
+                // Phone Layout
+                val contentModifier = Modifier.fillMaxWidth()
 
-            item {
-                Text(
-                    text = stringResource(R.string.settings_title),
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                    color = colors.textNorm,
-                    modifier = contentModifier.padding(horizontal = 12.dp, vertical = 24.dp)
-                )
-            }
+                item {
+                    FeatureCategory(
+                        modifier = contentModifier,
+                        isTablet = false,
+                        state = state,
+                        onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
+                        onNavigateToProtocol = onNavigateToProtocol
+                    )
+                }
 
-            item {
-                FeatureCategory(
-                    modifier = contentModifier,
-                    isTablet = false,
-                    state = state,
-                    onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
-                    onNavigateToProtocol = onNavigateToProtocol
-                )
-            }
+                item {
+                    ConnectionSettingsSection(
+                        modifier = contentModifier,
+                        state = state,
+                        onAutoConnectChange = onAutoConnectChange,
+                        onNavigateToApiBypass = onNavigateToApiBypass,
+                        onPortChange = onPortChange
+                    )
+                }
 
-            item {
-                ConnectionSettingsSection(
-                    modifier = contentModifier,
-                    state = state,
-                    onAutoConnectChange = onAutoConnectChange,
-                    onNavigateToApiBypass = onNavigateToApiBypass,
-                    onPortChange = onPortChange
-                )
-            }
+                item {
+                    CustomizationSettingsSection(
+                        modifier = contentModifier,
+                        state = state,
+                        onNavigateToThemeSelection = onNavigateToThemeSelection
+                    )
+                }
 
-            item {
-                CustomizationSettingsSection(
-                    modifier = contentModifier,
-                    state = state,
-                    onNavigateToThemeSelection = onNavigateToThemeSelection
-                )
-            }
+                item {
+                    PrivacySettingsSection(
+                        modifier = contentModifier,
+                        state = state,
+                        onCustomDnsChange = onCustomDnsChange,
+                        onNavigateToKillSwitch = onNavigateToKillSwitch,
+                        onNavigateToErrorReporting = onNavigateToErrorReporting,
+                        onNotificationsChange = onNotificationsChange
+                    )
+                }
 
-            item {
-                PrivacySettingsSection(
-                    modifier = contentModifier,
-                    state = state,
-                    onCustomDnsChange = onCustomDnsChange,
-                    onNavigateToKillSwitch = onNavigateToKillSwitch,
-                    onNavigateToErrorReporting = onNavigateToErrorReporting,
-                    onNotificationsChange = onNotificationsChange
-                )
-            }
-
-            item {
-                AboutSettingsSection(
-                    modifier = contentModifier,
-                    onNavigateToAbout = onNavigateToAbout,
-                    onNavigateToDebug = onNavigateToDebug
-                )
+                item {
+                    AboutSettingsSection(
+                        modifier = contentModifier,
+                        onNavigateToAbout = onNavigateToAbout,
+                        onNavigateToDebug = onNavigateToDebug
+                    )
+                }
             }
         }
     }
