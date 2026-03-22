@@ -262,6 +262,12 @@
     <string name="notification_title_connecting">Connecting…</string>
     <string name="notification_action_disconnect">Disconnect</string>
 
+    <!-- Speed Units -->
+    <string name="unit_kb_s">KiB/s</string>
+    <string name="unit_mb_s">MiB/s</string>
+    <string name="unit_gb_s">GiB/s</string>
+    <string name="unit_b_s">B/s</string>
+
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">Active session not found. Please log in again.</string>
     <string name="error_unknown">Unknown error</string>

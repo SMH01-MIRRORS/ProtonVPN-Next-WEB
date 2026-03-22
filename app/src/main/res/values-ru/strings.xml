@@ -270,6 +270,12 @@
     <string name="notification_title_connecting">Подключение…</string>
     <string name="notification_action_disconnect">Отключить</string>
 
+    <!-- Speed Units -->
+    <string name="unit_kb_s">КБ/с</string>
+    <string name="unit_mb_s">МБ/с</string>
+    <string name="unit_gb_s">ГБ/с</string>
+    <string name="unit_b_s">Б/с</string>
+
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">Активная сессия не найдена. Пожалуйста, войдите снова.</string>
     <string name="error_unknown">Неизвестная ошибка</string>

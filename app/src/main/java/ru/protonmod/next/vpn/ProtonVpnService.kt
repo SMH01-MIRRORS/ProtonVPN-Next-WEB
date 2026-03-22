@@ -349,15 +349,15 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
      */
     private fun formatSpeed(bytesPerSec: Long): String {
         val b = bytesPerSec.toDouble()
-        if (b <= 0.0) return "0 B/s"
+        if (b <= 0.0) return "0 ${getString(R.string.unit_b_s)}"
         val kib = 1024.0
         val mib = kib * 1024.0
         val gib = mib * 1024.0
         return when {
-            b >= gib -> String.format(Locale.US, "%.2f GiB/s", b / gib)
-            b >= mib -> String.format(Locale.US, "%.2f MiB/s", b / mib)
-            b >= kib -> String.format(Locale.US, "%.1f KiB/s", b / kib)
-            else -> String.format(Locale.US, "%.0f B/s", b)
+            b >= gib -> String.format(Locale.US, "%.2f %s", b / gib, getString(R.string.unit_gb_s))
+            b >= mib -> String.format(Locale.US, "%.2f %s", b / mib, getString(R.string.unit_mb_s))
+            b >= kib -> String.format(Locale.US, "%.1f %s", b / kib, getString(R.string.unit_kb_s))
+            else -> String.format(Locale.US, "%.0f %s", b, getString(R.string.unit_b_s))
         }
     }
 

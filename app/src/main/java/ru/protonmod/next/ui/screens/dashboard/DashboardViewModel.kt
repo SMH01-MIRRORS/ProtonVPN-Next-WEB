@@ -235,7 +235,10 @@ class DashboardViewModel @Inject constructor(
             val safeIp = location?.ip?.takeIf { it.isNotBlank() && it != "null" }
                 ?: "185.201.${(10..250).random()}.${(10..250).random()}"
 
-            _vpnLocationText.value = LocationText(localizedCountry, finalCountryCode, safeIp)
+            // Guard against race condition: check if tunnel is still active before updating UI
+            if (amneziaVpnManager.tunnelState.value == Tunnel.State.UP) {
+                _vpnLocationText.value = LocationText(localizedCountry, finalCountryCode, safeIp)
+            }
         }
     }
 

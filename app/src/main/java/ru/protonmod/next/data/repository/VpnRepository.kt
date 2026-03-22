@@ -190,9 +190,14 @@ class VpnRepository @Inject constructor(
                 return@withContext Result.failure(Exception("No servers available"))
             }
 
-            // Fetch server loads
-            val loadsResponse = vpnApi.getLoads(bearer, sessionId, userTier)
-            if (loadsResponse.isSuccessful) {
+            // Fetch server loads and merge with current list
+            val loadsResponse = try {
+                vpnApi.getLoads(bearer, sessionId, userTier)
+            } catch (e: Exception) {
+                null
+            }
+
+            if (loadsResponse?.isSuccessful == true) {
                 val loadsBody = loadsResponse.body()?.string()
                 val loadsData = loadsBody?.let {
                     try { json.decodeFromString<LoadsResponse>(it) } catch (e: Exception) { null }
@@ -216,9 +221,16 @@ class VpnRepository @Inject constructor(
                                 activeServers++
                             }
                         }
-                        logical.averageLoad = if (activeServers > 0) totalLoad / activeServers else 0
+                        if (activeServers > 0) logical.averageLoad = totalLoad / activeServers
                     }
                 }
+            } else {
+                ProtonLogger.w(TAG, "Failed to fetch fresh server loads. Keeping existing loads if available.")
+                // If we fail to get fresh loads, we might want to fill from DB, 
+                // but since we just got serversList from API (200 OK), they might have 0.
+                // An improvement would be to map DB loads to this new list.
+                val dbServers = serverDao.getAllServers().associateBy({ it.id }, { it.averageLoad })
+                serversList.forEach { it.averageLoad = dbServers[it.id] ?: 0 }
             }
 
             // Save to DB AFTER fetching loads, ensuring the DB has the latest load values

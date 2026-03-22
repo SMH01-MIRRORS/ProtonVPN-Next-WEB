@@ -311,12 +311,18 @@ class AmneziaVpnManager @Inject constructor(
 
             val wgPrivateKeyB64 = currentSession.wgPrivateKey ?: throw Exception("Offline VPN private key missing!")
             var targetIp: String? = null
+            
+            // DNS resolution with improved retry and logging
             for (i in 1..DNS_RETRY_COUNT) {
                 try {
                     targetIp = InetAddress.getByName(server.domain).hostAddress
-                    if (targetIp != null) break
+                    if (targetIp != null) {
+                        ProtonLogger.d(TAG, "DNS resolved ${server.domain} to $targetIp")
+                        break
+                    }
                 } catch (e: Exception) {
-                    if (i < DNS_RETRY_COUNT) delay(DNS_RETRY_DELAY_MS)
+                    ProtonLogger.w(TAG, "DNS retry $i failed for ${server.domain}: ${e.message}")
+                    if (i < DNS_RETRY_COUNT) delay(DNS_RETRY_DELAY_MS * i) // Exponential-ish backoff
                 }
             }
 
@@ -393,6 +399,12 @@ class AmneziaVpnManager @Inject constructor(
         overrideObfuscation: Boolean? = null,
         obfuscationParams: ObfuscationParams? = null
     ) {
+        // Prevent redundant reconnects if already connecting or already UP
+        if (_isConnecting.value || (tunnelState.value == Tunnel.State.UP && !isReconnecting)) {
+            ProtonLogger.d(TAG, "Reconnect skipped: Already in a connecting or active state.")
+            return
+        }
+
         connectionJob?.cancel()
         connectionJob = applicationScope.launch {
             isReconnecting = true

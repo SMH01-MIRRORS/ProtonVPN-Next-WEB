@@ -106,12 +106,19 @@ class AuthRepository @Inject constructor(
             }
 
             val authInfo = pendingAuthInfo!!
+            
+            // Validate SRP parameters before proceeding
+            if (authInfo.salt.isNullOrEmpty() || authInfo.modulus.isNullOrEmpty() || authInfo.serverEphemeral.isNullOrEmpty()) {
+                ProtonLogger.e(TAG, "[Login] Invalid SRP parameters from server")
+                return@withContext Result.failure(Exception("Invalid security parameters from server"))
+            }
+
             val proofs = cryptoWrapper.generateSrpProofs(
                 username = username,
                 passwordRaw = passwordRaw.toByteArray(),
-                salt = authInfo.salt ?: "",
-                modulus = authInfo.modulus ?: "",
-                serverEphemeral = authInfo.serverEphemeral ?: ""
+                salt = authInfo.salt,
+                modulus = authInfo.modulus,
+                serverEphemeral = authInfo.serverEphemeral
             )
 
             val loginRequest = LoginRequest(
