@@ -15,6 +15,38 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import java.util.concurrent.TimeUnit
+
+// Helper function to execute Git commands in the terminal
+fun getGitOutput(command: String, workingDir: java.io.File): String {
+    return try {
+        val process = ProcessBuilder(command.split(" "))
+            .directory(workingDir)
+            .redirectOutput(ProcessBuilder.Redirect.PIPE)
+            .redirectError(ProcessBuilder.Redirect.PIPE)
+            .start()
+        process.waitFor(10, TimeUnit.SECONDS)
+        process.inputStream.bufferedReader().readText().trim()
+    } catch (e: Exception) {
+        ""
+    }
+}
+
+// Dynamically generate version name based on the latest Git tag
+fun getDynamicVersionName(workingDir: java.io.File): String {
+    val gitVersion = getGitOutput("git describe --tags --always", workingDir)
+    // Fallback to "12.0.0" if Git is not available (e.g., downloaded as a ZIP)
+    return gitVersion.ifEmpty { "12.0.0" }
+}
+
+// Dynamically generate version code using commit count to ensure it strictly increases
+fun getDynamicVersionCode(workingDir: java.io.File): Int {
+    val commitCount = getGitOutput("git rev-list --count HEAD", workingDir).toIntOrNull() ?: 0
+    // Base version code prevents the number from ever dropping below your current state
+    val baseVersionCode = 605159512
+    return baseVersionCode + commitCount
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -36,8 +68,8 @@ android {
         applicationId = "ru.protonmod.next"
         minSdk = 29
         targetSdk = 36
-        versionCode = 605159512
-        versionName = "12.0.0"
+        versionCode = getDynamicVersionCode(projectDir)
+        versionName = getDynamicVersionName(projectDir)
 
         ndk {
             abiFilters.addAll(listOf("arm64-v8a", "x86_64"))
