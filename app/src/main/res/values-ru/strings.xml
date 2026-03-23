@@ -88,6 +88,8 @@
     <string name="settings_included_apps">Приложения через VPN</string>
     <string name="settings_excluded_ips">Исключенные IP-адреса</string>
     <string name="settings_included_ips">IP-адреса через VPN</string>
+    <string name="settings_excluded_domains">Исключенные домены</string>
+    <string name="settings_included_domains">Домены через VPN</string>
     <string name="settings_privacy">Приватность и уведомления</string>
     <string name="settings_notifications">Уведомления</string>
     <string name="settings_notifications_desc">Получать уведомления о статусе VPN</string>
@@ -237,6 +239,12 @@
         <item quantity="many">%1$d IP выбрано</item>
         <item quantity="other">%1$d IP выбрано</item>
     </plurals>
+    <plurals name="st_domains_selected">
+        <item quantity="one">%1$d домен выбран</item>
+        <item quantity="few">%1$d домена выбрано</item>
+        <item quantity="many">%1$d доменов выбрано</item>
+        <item quantity="other">%1$d домена выбрано</item>
+    </plurals>
 
     <plurals name="settings_apps_excluded_count">
         <item quantity="one">%1$d приложение исключено</item>
@@ -261,6 +269,14 @@
     <string name="st_included_ips_header">Включенные IP (%1$d)</string>
     <string name="st_no_ips_added">IP-адреса еще не добавлены</string>
     <string name="st_remove_ip_desc">Удалить IP</string>
+
+    <string name="st_domain_hint">например, example.com</string>
+    <string name="st_add_domain_desc">Добавить домен</string>
+    <string name="st_invalid_domain_error">Неверный формат домена</string>
+    <string name="st_excluded_domains_header">Исключенные домены (%1$d)</string>
+    <string name="st_included_domains_header">Домены через VPN (%1$d)</string>
+    <string name="st_no_domains_added">Домены еще не добавлены</string>
+    <string name="st_remove_domain_desc">Удалить домен</string>
 
     <!-- Notification -->
     <string name="notification_channel_name">Статус VPN</string>

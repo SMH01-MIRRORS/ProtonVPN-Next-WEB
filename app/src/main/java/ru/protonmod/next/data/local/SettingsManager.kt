@@ -50,6 +50,7 @@ class SettingsManager @Inject constructor(
         private val SPLIT_TUNNELING_MODE = stringPreferencesKey("split_tunneling_mode") // "exclude" or "include"
         private val EXCLUDED_APPS = stringSetPreferencesKey("excluded_apps")
         private val EXCLUDED_IPS = stringSetPreferencesKey("excluded_ips")
+        private val EXCLUDED_DOMAINS = stringSetPreferencesKey("excluded_domains")
 
         private val VPN_PORT = intPreferencesKey("vpn_port")
 
@@ -107,6 +108,7 @@ class SettingsManager @Inject constructor(
     val splitTunnelingMode: Flow<String> = context.dataStore.data.map { it[SPLIT_TUNNELING_MODE] ?: "exclude" }
     val excludedApps: Flow<Set<String>> = context.dataStore.data.map { it[EXCLUDED_APPS] ?: emptySet() }
     val excludedIps: Flow<Set<String>> = context.dataStore.data.map { it[EXCLUDED_IPS] ?: emptySet() }
+    val excludedDomains: Flow<Set<String>> = context.dataStore.data.map { it[EXCLUDED_DOMAINS] ?: emptySet() }
 
     val vpnPort: Flow<Int> = context.dataStore.data.map { it[VPN_PORT] ?: 1194 }
     val customDns: Flow<String> = context.dataStore.data.map { it[CUSTOM_DNS] ?: "" }
@@ -209,6 +211,10 @@ class SettingsManager @Inject constructor(
 
     suspend fun setExcludedIps(ips: Set<String>) {
         context.dataStore.edit { it[EXCLUDED_IPS] = ips }
+    }
+
+    suspend fun setExcludedDomains(domains: Set<String>) {
+        context.dataStore.edit { it[EXCLUDED_DOMAINS] = domains }
     }
 
     suspend fun setVpnPort(port: Int) {

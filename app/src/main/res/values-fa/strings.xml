@@ -86,6 +86,8 @@
     <string name="settings_split_tunneling_desc">حذف برنامه‌ها یا IPها از VPN</string>
     <string name="settings_excluded_apps">برنامه‌های حذف شده</string>
     <string name="settings_excluded_ips">آدرس‌های IP حذف شده</string>
+    <string name="settings_excluded_domains">دامنه‌های حذف شده</string>
+    <string name="settings_included_domains">دامنه‌های اختصاصی VPN</string>
     <string name="settings_privacy">حریم خصوصی و اعلان‌ها</string>
     <string name="settings_notifications">اعلان‌ها</string>
     <string name="settings_notifications_desc">دریافت اعلان‌های وضعیت VPN</string>
@@ -233,6 +235,10 @@
         <item quantity="one">%1$d IP انتخاب شد</item>
         <item quantity="other">%1$d IP انتخاب شدند</item>
     </plurals>
+    <plurals name="st_domains_selected">
+        <item quantity="one">%1$d دامنه انتخاب شد</item>
+        <item quantity="other">%1$d دامنه انتخاب شدند</item>
+    </plurals>
 
     <plurals name="settings_apps_excluded_count">
         <item quantity="one">%1$d برنامه حذف شد</item>
@@ -253,6 +259,14 @@
     <string name="st_included_ips_header">IPهای گنجانده شده (%1$d)</string>
     <string name="st_no_ips_added">هنوز هیچ آدرس IP اضافه نشده است</string>
     <string name="st_remove_ip_desc">حذف IP</string>
+
+    <string name="st_domain_hint">مثلاً example.com</string>
+    <string name="st_add_domain_desc">افزودن دامنه</string>
+    <string name="st_invalid_domain_error">فرمت دامنه نامعتبر است</string>
+    <string name="st_excluded_domains_header">دامنه‌های حذف شده (%1$d)</string>
+    <string name="st_included_domains_header">دامنه‌های گنجانده شده (%1$d)</string>
+    <string name="st_no_domains_added">هنوز هیچ دامنه‌ای اضافه نشده است</string>
+    <string name="st_remove_domain_desc">حذف دامنه</string>
 
     <!-- Notification -->
     <string name="notification_channel_name">وضعیت VPN</string>

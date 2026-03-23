@@ -34,6 +34,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.AltRoute
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.Dns
+import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -63,6 +64,7 @@ fun SplitTunnelingMainScreen(
     onBack: () -> Unit = {},
     onNavigateToApps: () -> Unit,
     onNavigateToIps: () -> Unit,
+    onNavigateToDomains: () -> Unit,
     // We reuse SettingsViewModel because it already holds the splitTunneling state perfectly
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -258,6 +260,25 @@ fun SplitTunnelingMainScreen(
                                         uiState.excludedIps.size
                                     ),
                                     onClick = onNavigateToIps
+                                )
+
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    color = colors.separatorNorm.copy(alpha = 0.5f)
+                                )
+
+                                SettingRowWithIcon(
+                                    icon = Icons.Rounded.Public,
+                                    title = stringResource(
+                                        if (isExcludeMode) R.string.settings_excluded_domains
+                                        else R.string.settings_included_domains
+                                    ),
+                                    subtitle = pluralStringResource(
+                                        R.plurals.st_domains_selected,
+                                        uiState.excludedDomains.size,
+                                        uiState.excludedDomains.size
+                                    ),
+                                    onClick = onNavigateToDomains
                                 )
                             }
                         }

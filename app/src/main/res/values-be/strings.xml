@@ -86,6 +86,8 @@
     <string name="settings_split_tunneling_desc">Выключыць прыкладанні або IP з VPN</string>
     <string name="settings_excluded_apps">Выключаныя прыкладанні</string>
     <string name="settings_excluded_ips">Выключаныя IP-адрасы</string>
+    <string name="settings_excluded_domains">Выключаныя дамены</string>
+    <string name="settings_included_domains">Дамены праз VPN</string>
     <string name="settings_privacy">Прыватнасць і апавяшчэнні</string>
     <string name="settings_notifications">Апавяшчэнні</string>
     <string name="settings_notifications_desc">Атрымліваць апавяшчэнні аб статусе VPN</string>
@@ -237,6 +239,12 @@
         <item quantity="many">Выбрана %1$d IP-адрасоў</item>
         <item quantity="other">Выбрана %1$d IP-адрасоў</item>
     </plurals>
+    <plurals name="st_domains_selected">
+        <item quantity="one">Выбраны %1$d дамен</item>
+        <item quantity="few">Выбрана %1$d дамены</item>
+        <item quantity="many">Выбрана %1$d даменаў</item>
+        <item quantity="other">Выбрана %1$d даменаў</item>
+    </plurals>
 
     <plurals name="settings_apps_excluded_count">
         <item quantity="one">Выключана %1$d прыкладанне</item>
@@ -261,6 +269,14 @@
     <string name="st_included_ips_header">Уключаныя IP (%1$d)</string>
     <string name="st_no_ips_added">IP-адрасы яшчэ не дададзены</string>
     <string name="st_remove_ip_desc">Выдаліць IP</string>
+
+    <string name="st_domain_hint">напр. example.com</string>
+    <string name="st_add_domain_desc">Дадаць дамен</string>
+    <string name="st_invalid_domain_error">Няправільны фармат дамена</string>
+    <string name="st_excluded_domains_header">Выключаныя дамены (%1$d)</string>
+    <string name="st_included_domains_header">Уключаныя дамены (%1$d)</string>
+    <string name="st_no_domains_added">Дамены яшчэ не дададзены</string>
+    <string name="st_remove_domain_desc">Выдаліць дамен</string>
 
     <!-- Notification -->
     <string name="notification_channel_name">Статус VPN</string>

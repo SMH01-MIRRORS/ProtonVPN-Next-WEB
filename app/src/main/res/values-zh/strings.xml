@@ -86,6 +86,8 @@
     <string name="settings_split_tunneling_desc">从 VPN 中排除应用或 IP</string>
     <string name="settings_excluded_apps">排除的应用</string>
     <string name="settings_excluded_ips">排除的 IP 地址</string>
+    <string name="settings_excluded_domains">排除的域名</string>
+    <string name="settings_included_domains">仅限 VPN 的域名</string>
     <string name="settings_privacy">隐私与通知</string>
     <string name="settings_notifications">通知</string>
     <string name="settings_notifications_desc">接收 VPN 状态通知</string>
@@ -231,6 +233,9 @@
     <plurals name="st_ips_selected">
         <item quantity="other">已选择 %1$d 个 IP</item>
     </plurals>
+    <plurals name="st_domains_selected">
+        <item quantity="other">已选择 %1$d 个域名</item>
+    </plurals>
 
     <plurals name="settings_apps_excluded_count">
         <item quantity="other">已排除 %1$d 个应用</item>
@@ -249,6 +254,14 @@
     <string name="st_included_ips_header">包含的 IP (%1$d)</string>
     <string name="st_no_ips_added">尚未添加 IP 地址</string>
     <string name="st_remove_ip_desc">移除 IP</string>
+
+    <string name="st_domain_hint">例如 example.com</string>
+    <string name="st_add_domain_desc">添加域名</string>
+    <string name="st_invalid_domain_error">无效的域名格式</string>
+    <string name="st_excluded_domains_header">排除的域名 (%1$d)</string>
+    <string name="st_included_domains_header">包含的域名 (%1$d)</string>
+    <string name="st_no_domains_added">尚未添加域名</string>
+    <string name="st_remove_domain_desc">移除域名</string>
 
     <!-- Notification -->
     <string name="notification_channel_name">VPN 状态</string>

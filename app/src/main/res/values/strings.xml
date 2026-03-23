@@ -88,6 +88,8 @@
     <string name="settings_included_apps">VPN-only Apps</string>
     <string name="settings_excluded_ips">Excluded IP Addresses</string>
     <string name="settings_included_ips">VPN-only IP Addresses</string>
+    <string name="settings_excluded_domains">Excluded Domains</string>
+    <string name="settings_included_domains">VPN-only Domains</string>
     <string name="settings_privacy">Privacy &amp; Notifications</string>
     <string name="settings_notifications">Notifications</string>
     <string name="settings_notifications_desc">Receive VPN status notifications</string>
@@ -233,6 +235,10 @@
         <item quantity="one">%1$d IP selected</item>
         <item quantity="other">%1$d IPs selected</item>
     </plurals>
+    <plurals name="st_domains_selected">
+        <item quantity="one">%1$d domain selected</item>
+        <item quantity="other">%1$d domains selected</item>
+    </plurals>
 
     <plurals name="settings_apps_excluded_count">
         <item quantity="one">%1$d app excluded</item>
@@ -253,6 +259,14 @@
     <string name="st_included_ips_header">Included IPs (%1$d)</string>
     <string name="st_no_ips_added">No IP addresses added yet</string>
     <string name="st_remove_ip_desc">Remove IP</string>
+
+    <string name="st_domain_hint">e.g., example.com</string>
+    <string name="st_add_domain_desc">Add Domain</string>
+    <string name="st_invalid_domain_error">Invalid domain format</string>
+    <string name="st_excluded_domains_header">Excluded Domains (%1$d)</string>
+    <string name="st_included_domains_header">Included Domains (%1$d)</string>
+    <string name="st_no_domains_added">No domains added yet</string>
+    <string name="st_remove_domain_desc">Remove Domain</string>
 
     <!-- Notification -->
     <string name="notification_channel_name">VPN Status</string>

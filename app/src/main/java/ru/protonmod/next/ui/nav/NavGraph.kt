@@ -43,6 +43,7 @@ sealed class Screen(val route: String) {
     data object SplitTunnelingMain : Screen("split_tunneling_main")
     data object SplitTunnelingApps : Screen("split_tunneling_apps")
     data object SplitTunnelingIps : Screen("split_tunneling_ips")
+    data object SplitTunnelingDomains : Screen("split_tunneling_domains")
 
     // Connection Screens
     data object Protocol : Screen("protocol")
@@ -161,7 +162,8 @@ fun NavGraphBuilder.appNavGraph(
         SplitTunnelingMainScreen(
             onBack = { navController.popBackStack() },
             onNavigateToApps = { navController.navigate(Screen.SplitTunnelingApps.route) },
-            onNavigateToIps = { navController.navigate(Screen.SplitTunnelingIps.route) }
+            onNavigateToIps = { navController.navigate(Screen.SplitTunnelingIps.route) },
+            onNavigateToDomains = { navController.navigate(Screen.SplitTunnelingDomains.route) }
         )
     }
 
@@ -174,6 +176,12 @@ fun NavGraphBuilder.appNavGraph(
 
     composable(Screen.SplitTunnelingIps.route) {
         SplitTunnelingIpsScreen(
+            onBack = { navController.popBackStack() }
+        )
+    }
+
+    composable(Screen.SplitTunnelingDomains.route) {
+        SplitTunnelingDomainsScreen(
             onBack = { navController.popBackStack() }
         )
     }

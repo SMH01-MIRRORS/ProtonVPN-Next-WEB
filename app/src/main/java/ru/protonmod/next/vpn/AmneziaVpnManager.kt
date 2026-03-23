@@ -42,6 +42,7 @@ import org.amnezia.awg.backend.Tunnel
 import org.amnezia.awg.config.Config
 import org.amnezia.awg.config.Interface
 import org.amnezia.awg.config.Peer
+import java.net.InetAddress
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.local.SessionDao
@@ -52,7 +53,6 @@ import ru.protonmod.next.utils.coroutines.DispatcherProvider
 import ru.protonmod.next.utils.crypto.CryptoWrapper
 import ru.protonmod.next.utils.system.SystemContextWrapper
 import java.io.ByteArrayInputStream
-import java.net.InetAddress
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import javax.inject.Inject
@@ -337,7 +337,28 @@ class AmneziaVpnManager @Inject constructor(
             val stMode = settingsManager.splitTunnelingMode.first()
             val isIncludeMode = stMode == "include"
             val selectedApps = if (splitTunnelingEnabled) settingsManager.excludedApps.first() else emptySet()
-            val selectedIps = if (splitTunnelingEnabled) settingsManager.excludedIps.first() else emptySet()
+            val selectedIps = if (splitTunnelingEnabled) settingsManager.excludedIps.first().toMutableSet() else mutableSetOf()
+            val selectedDomains = if (splitTunnelingEnabled) settingsManager.excludedDomains.first() else emptySet()
+
+            // Resolve split tunneling domains
+            if (splitTunnelingEnabled && selectedDomains.isNotEmpty()) {
+                ProtonLogger.d(TAG, "Resolving ${selectedDomains.size} split-tunneling domains...")
+                selectedDomains.forEach { domain ->
+                    try {
+                        val addresses = InetAddress.getAllByName(domain)
+                        addresses.forEach { addr ->
+                            val ip = addr.hostAddress
+                            if (ip != null) {
+                                selectedIps.add(if (ip.contains(":")) "$ip/128" else "$ip/32")
+                                ProtonLogger.v(TAG, "Domain $domain resolved to $ip for split tunneling")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        ProtonLogger.w(TAG, "Failed to resolve split-tunneling domain $domain: ${e.message}")
+                    }
+                }
+            }
+
             val selectedPort = overridePort?.takeIf { it != 0 } ?: settingsManager.vpnPort.first().let { port ->
                 if (port == 0) listOf(443, 123, 1194, 51820).random() else port
             }
