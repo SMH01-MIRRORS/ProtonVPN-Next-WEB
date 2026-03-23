@@ -42,9 +42,12 @@ import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.utils.ProtonLogger
 import ru.protonmod.next.vpn.AmneziaConfigGenerator
 import ru.protonmod.next.vpn.AmneziaVpnManager
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.net.InetAddress
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -53,6 +56,8 @@ import kotlin.system.exitProcess
 
 data class DebugUiState(
     val session: SessionEntity? = null,
+    val certIssued: String? = null,
+    val certExpires: String? = null,
     val isLoading: Boolean = false,
     val message: String? = null,
     val servers: List<LogicalServer> = emptyList()
@@ -78,21 +83,59 @@ class DebugSettingsViewModel @Inject constructor(
 
     fun refreshData() {
         viewModelScope.launch {
-            val session = sessionDao.getSession()
-            val servers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
-            _uiState.value = _uiState.value.copy(session = session, servers = servers)
+            loadCurrentData()
         }
+    }
+
+    private suspend fun loadCurrentData() {
+        val session = sessionDao.getSession()
+        val servers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
+        
+        var issued: String? = null
+        var expires: String? = null
+        
+        session?.wgCertificate?.let { certPem ->
+            try {
+                val cf = CertificateFactory.getInstance("X.509")
+                val x509 = cf.generateCertificate(ByteArrayInputStream(certPem.toByteArray())) as X509Certificate
+                val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                issued = sdf.format(x509.notBefore)
+                expires = sdf.format(x509.notAfter)
+            } catch (e: Exception) {
+                ProtonLogger.e("DebugVM", "Failed to parse cert", e)
+            }
+        }
+
+        _uiState.value = _uiState.value.copy(
+            session = session, 
+            servers = servers,
+            certIssued = issued,
+            certExpires = expires
+        )
     }
 
     fun forceRefreshCertificate() {
         viewModelScope.launch {
+            ProtonLogger.d("DebugVM", "Force refreshing certificate...")
             _uiState.value = _uiState.value.copy(isLoading = true)
             val result = vpnManager.forceRefreshCertificate()
+            
+            val message = if (result.isSuccess) {
+                ProtonLogger.i("DebugVM", "Certificate refreshed successfully")
+                "Certificate refreshed successfully"
+            } else {
+                val error = result.exceptionOrNull()?.message ?: "Unknown error"
+                ProtonLogger.e("DebugVM", "Failed to refresh certificate: $error")
+                "Failed: $error"
+            }
+            
+            // Reload data BEFORE hiding the loader to avoid flickering old data
+            loadCurrentData()
+            
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                message = if (result.isSuccess) "Certificate refreshed" else "Failed: ${result.exceptionOrNull()?.message}"
+                message = message
             )
-            refreshData()
         }
     }
 

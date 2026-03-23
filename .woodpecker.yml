@@ -27,7 +27,7 @@ steps:
       - echo $SIGNING_KEY_BASE64 | base64 -d > app/release.keystore
       - chmod +x gradlew
       - export SIGNING_KEY_FILE=release.keystore
-      - ./gradlew assembleRelease
+      - ./gradlew assembleDebug assembleRelease
 
   generate-changelog:
     image: alpine/git

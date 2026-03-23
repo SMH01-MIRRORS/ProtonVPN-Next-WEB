@@ -176,11 +176,11 @@ class AmneziaVpnManager @Inject constructor(
         }
     }
 
-    private suspend fun performCertificateRefresh(): Result<String> = refreshMutex.withLock {
+    private suspend fun performCertificateRefresh(force: Boolean = false): Result<String> = refreshMutex.withLock {
         val currentSession = sessionDao.getSession() ?: return Result.failure(Exception("No session"))
         updateCertificateState(currentSession.wgCertificate)
 
-        if (_certState.value is CertificateState.Valid) {
+        if (!force && _certState.value is CertificateState.Valid) {
             return Result.success(currentSession.wgCertificate ?: "")
         }
 
@@ -234,7 +234,7 @@ class AmneziaVpnManager @Inject constructor(
                 }
 
                 ProtonLogger.d(TAG, "Proactive refresh starting (cert state: ${_certState.value})")
-                val result = performCertificateRefresh()
+                val result = performCertificateRefresh(force = false)
                 
                 if (result.isSuccess) {
                     currentRetryDelay = 5000L
@@ -256,7 +256,7 @@ class AmneziaVpnManager @Inject constructor(
     }
 
     suspend fun forceRefreshCertificate(): Result<String> {
-        return performCertificateRefresh()
+        return performCertificateRefresh(force = true)
     }
 
     private suspend fun updateServiceSettings() {

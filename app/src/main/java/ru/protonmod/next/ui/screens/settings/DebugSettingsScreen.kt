@@ -132,7 +132,14 @@ fun DebugSettingsScreen(
                                     else -> "Free"
                                 })
                                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = colors.separatorNorm.copy(alpha = 0.3f))
-                                DebugInfoRow("Cert ID", session.sessionId)
+                                
+                                val idLabel = stringResource(R.string.debug_cert_id, "").trim().removeSuffix(":").trim()
+                                val issuedLabel = stringResource(R.string.debug_cert_issued, "").trim().removeSuffix(":").trim()
+                                val expiresLabel = stringResource(R.string.debug_cert_expires, "").trim().removeSuffix(":").trim()
+
+                                DebugInfoRow(idLabel, session.sessionId)
+                                uiState.certIssued?.let { DebugInfoRow(issuedLabel, it) }
+                                uiState.certExpires?.let { DebugInfoRow(expiresLabel, it) }
 
                                 Button(
                                     onClick = { viewModel.forceRefreshCertificate() },
