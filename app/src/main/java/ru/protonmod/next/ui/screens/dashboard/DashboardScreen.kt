@@ -161,11 +161,15 @@ private fun annotatedCountryHighlight(
     append(displayText)
     val startIndex = text.indexOf(highlight)
     if (startIndex >= 0) {
-        addStyle(
-            style = SpanStyle(color = ProtonNextTheme.colors.textNorm, fontWeight = FontWeight.SemiBold),
-            start = startIndex,
-            end = startIndex + highlight.length
-        )
+        val styleStart = startIndex.coerceAtMost(displayText.length)
+        val styleEnd = (startIndex + highlight.length).coerceAtMost(displayText.length)
+        if (styleStart < styleEnd) {
+            addStyle(
+                style = SpanStyle(color = ProtonNextTheme.colors.textNorm, fontWeight = FontWeight.SemiBold),
+                start = styleStart,
+                end = styleEnd
+            )
+        }
     }
 }
 
