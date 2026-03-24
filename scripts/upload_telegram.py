@@ -27,9 +27,8 @@ EVENT = os.environ.get('CI_PIPELINE_EVENT', 'manual')
 TAG = os.environ.get('CI_COMMIT_TAG')
 
 async def main():
-    # Check for BOT_TOKEN instead of SESSION
     if not all([API_ID, API_HASH, BOT_TOKEN, CHAT_ID]):
-        print("Error: Missing Telegram configuration secrets!")
+        print("Error: Missing Telegram configuration secrets (API_ID, API_HASH, BOT_TOKEN, TG_CHAT_ID)!")
         return
 
     # Find all APK files (release and debug)
@@ -45,15 +44,6 @@ async def main():
 
     # Authenticate using the Bot Token
     await client.start(bot_token=BOT_TOKEN)
-
-    try:
-        # Resolve the chat entity. The bot must be a member of the chat/channel.
-        entity = await client.get_entity(CHAT_ID)
-    except Exception as e:
-        print(f"Error: Could not find Telegram entity for {CHAT_ID}: {e}")
-        print("Make sure the Bot is added to the channel/group!")
-        await client.disconnect()
-        return
 
     for apk_path in apk_files:
         file_name = os.path.basename(apk_path)
@@ -72,9 +62,10 @@ async def main():
         )
 
         try:
-            print(f"Uploading {file_name}...")
+            print(f"Uploading {file_name} to {CHAT_ID}...")
+            # We try to send directly using the CHAT_ID (int or str)
             await client.send_file(
-                entity,
+                CHAT_ID,
                 apk_path,
                 caption=caption,
                 parse_mode='md'
@@ -82,8 +73,11 @@ async def main():
             print(f"Upload successful: {file_name}")
         except Exception as e:
             print(f"Error during upload of {file_name}: {e}")
+            print("\n💡 Troubleshooting:")
+            print("1. If CHAT_ID is a user, they MUST send /start to the bot first.")
+            print("2. If CHAT_ID is a channel, use its @username (for public) or full ID starting with -100 (for private).")
+            print("3. Ensure the Bot is an administrator in the channel/group with 'Post Messages' permission.")
 
-    # Properly disconnect after tasks are done
     await client.disconnect()
 
 if __name__ == '__main__':
