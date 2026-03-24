@@ -42,6 +42,7 @@ import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.utils.ProtonLogger
 import ru.protonmod.next.vpn.AmneziaConfigGenerator
 import ru.protonmod.next.vpn.AmneziaVpnManager
+import io.sentry.Sentry
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -52,6 +53,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
+import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 
 data class DebugUiState(
@@ -274,5 +276,60 @@ class DebugSettingsViewModel @Inject constructor(
             Android: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})
             App Version: ${ru.protonmod.next.BuildConfig.VERSION_NAME} (${ru.protonmod.next.BuildConfig.VERSION_CODE})
         """.trimIndent()
+    }
+
+    // --- Sentry Test Functions ---
+
+    fun triggerJavaCrash() {
+        throw RuntimeException("Debug: Test Java Crash from DebugSettingsViewModel")
+    }
+
+    fun triggerNativeCrash() {
+        // Since we don't have a native method exported, we can use Sentry's own test method if available,
+        // or just throw a signal-like exception.
+        // On Android, Sentry provides a way to test native crashes if the native SDK is linked.
+        Sentry.captureMessage("Debug: Triggering Native Crash manually (if linked)")
+        // This is a common way to trigger a crash that looks like a native one in some contexts
+        // But for true native we'd need JNI. Let's just do a hard crash.
+        val x: String? = null
+        x!!.length
+    }
+
+    fun triggerAnr() {
+        ProtonLogger.w("DebugVM", "Triggering ANR (5 seconds)... UI will freeze.")
+        Thread.sleep(5000)
+    }
+
+    fun triggerOom() {
+        ProtonLogger.w("DebugVM", "Triggering OutOfMemoryError...")
+        val list = mutableListOf<ByteArray>()
+        while (true) {
+            list.add(ByteArray(1024 * 1024 * 10)) // 10MB chunks
+        }
+    }
+
+    fun triggerBackgroundCrash() {
+        thread {
+            throw RuntimeException("Debug: Test Background Thread Crash")
+        }
+    }
+
+    fun triggerArithmeticException() {
+        val x = 10 / 0
+        ProtonLogger.d("DebugVM", "Result: $x")
+    }
+
+    fun triggerNullPointer() {
+        val s: String? = null
+        println(s!!.length)
+    }
+
+    fun captureNonFatal() {
+        try {
+            throw Exception("Debug: This is a non-fatal test exception")
+        } catch (e: Exception) {
+            Sentry.captureException(e)
+            _uiState.value = _uiState.value.copy(message = "Non-fatal exception captured in Sentry")
+        }
     }
 }

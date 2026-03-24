@@ -372,6 +372,18 @@
     <string name="debug_nuke_confirm">Вы уверены? Все настройки, аккаунты и кэш серверов будут безвозвратно удалены.</string>
     <string name="debug_device_header">Информация об устройстве</string>
     <string name="debug_select_server">Выберите сервер для экспорта конфига</string>
+
+    <!-- Sentry Debug -->
+    <string name="debug_sentry_header">Тестирование Sentry SDK</string>
+    <string name="debug_btn_crash_java">Вызвать Java Crash</string>
+    <string name="debug_btn_crash_native">Вызвать Native Crash</string>
+    <string name="debug_btn_anr">Вызвать ANR (5 сек)</string>
+    <string name="debug_btn_oom">Вызвать OutOfMemory</string>
+    <string name="debug_btn_background_crash">Краш в фоновом потоке</string>
+    <string name="debug_btn_capture_exception">Отправить ошибку (Non-fatal)</string>
+    <string name="debug_btn_arithmetic_error">Арифметическая ошибка (1/0)</string>
+    <string name="debug_btn_null_pointer">NullPointer Exception</string>
+
     <string name="captcha_title">Проверка безопасности</string>
     <string name="captcha_message">Для обеспечения безопасности аккаунта, пожалуйста, пройдите проверку ниже.</string>
     <string name="captcha_proxy_active">Антиблокировочный прокси активен</string>

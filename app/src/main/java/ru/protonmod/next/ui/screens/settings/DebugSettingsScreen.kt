@@ -186,6 +186,49 @@ fun DebugSettingsScreen(
                         }
                     }
 
+                    // Sentry Tests
+                    item {
+                        DebugSection(title = stringResource(R.string.debug_sentry_header), titleColor = Color.Magenta) {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                DebugActionRow(
+                                    icon = Icons.Rounded.BugReport,
+                                    title = stringResource(R.string.debug_btn_crash_java),
+                                    onClick = { viewModel.triggerJavaCrash() }
+                                )
+                                DebugActionRow(
+                                    icon = Icons.Rounded.BugReport,
+                                    title = stringResource(R.string.debug_btn_arithmetic_error),
+                                    onClick = { viewModel.triggerArithmeticException() }
+                                )
+                                DebugActionRow(
+                                    icon = Icons.Rounded.BugReport,
+                                    title = stringResource(R.string.debug_btn_null_pointer),
+                                    onClick = { viewModel.triggerNullPointer() }
+                                )
+                                DebugActionRow(
+                                    icon = Icons.Rounded.BugReport,
+                                    title = stringResource(R.string.debug_btn_background_crash),
+                                    onClick = { viewModel.triggerBackgroundCrash() }
+                                )
+                                DebugActionRow(
+                                    icon = Icons.Rounded.History,
+                                    title = stringResource(R.string.debug_btn_anr),
+                                    onClick = { viewModel.triggerAnr() }
+                                )
+                                DebugActionRow(
+                                    icon = Icons.Rounded.CleaningServices,
+                                    title = stringResource(R.string.debug_btn_oom),
+                                    onClick = { viewModel.triggerOom() }
+                                )
+                                DebugActionRow(
+                                    icon = Icons.Rounded.Info,
+                                    title = stringResource(R.string.debug_btn_capture_exception),
+                                    onClick = { viewModel.captureNonFatal() }
+                                )
+                            }
+                        }
+                    }
+
                     // Danger Zone
                     item {
                         DebugSection(

@@ -362,6 +362,18 @@
     <string name="debug_nuke_confirm">Are you sure? All settings, accounts, and server caches will be permanently deleted.</string>
     <string name="debug_device_header">Device Information</string>
     <string name="debug_select_server">Select server for config export</string>
+
+    <!-- Sentry Debug -->
+    <string name="debug_sentry_header">Sentry SDK Testing</string>
+    <string name="debug_btn_crash_java">Trigger Java Crash</string>
+    <string name="debug_btn_crash_native">Trigger Native Crash</string>
+    <string name="debug_btn_anr">Trigger ANR (5s)</string>
+    <string name="debug_btn_oom">Trigger OutOfMemory</string>
+    <string name="debug_btn_background_crash">Background Thread Crash</string>
+    <string name="debug_btn_capture_exception">Capture Non-fatal Exception</string>
+    <string name="debug_btn_arithmetic_error">Arithmetic Error (1/0)</string>
+    <string name="debug_btn_null_pointer">NullPointer Exception</string>
+
     <string name="captcha_title">Security Check</string>
     <string name="captcha_message">To keep your account secure, please complete the verification below.</string>
     <string name="captcha_proxy_active">Anti-blocking proxy is active</string>
