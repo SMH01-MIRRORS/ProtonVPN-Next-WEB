@@ -7,7 +7,8 @@ from telethon.sessions import StringSession
 # Environment variables from Woodpecker secrets
 API_ID = int(os.environ.get('TG_API_ID', 0))
 API_HASH = os.environ.get('TG_API_HASH')
-SESSION = os.environ.get('TG_SESSION')
+# Use Bot Token instead of User Session
+BOT_TOKEN = os.environ.get('TG_BOT_TOKEN')
 TG_CHAT_ID = os.environ.get('TG_CHAT_ID', '0')
 
 # Try to parse CHAT_ID as int, otherwise keep as string (for usernames)
@@ -26,7 +27,8 @@ EVENT = os.environ.get('CI_PIPELINE_EVENT', 'manual')
 TAG = os.environ.get('CI_COMMIT_TAG')
 
 async def main():
-    if not all([API_ID, API_HASH, SESSION, CHAT_ID]):
+    # Check for BOT_TOKEN instead of SESSION
+    if not all([API_ID, API_HASH, BOT_TOKEN, CHAT_ID]):
         print("Error: Missing Telegram configuration secrets!")
         return
 
@@ -36,22 +38,20 @@ async def main():
         print("Error: No APK files found!")
         return
 
-    print(f"Connecting to Telegram and uploading {len(apk_files)} APK(s)...")
+    print(f"Connecting to Telegram via Bot and uploading {len(apk_files)} APK(s)...")
 
-    client = TelegramClient(StringSession(SESSION), API_ID, API_HASH)
-    await client.connect()
+    # Use an empty StringSession to keep the session strictly in-memory
+    client = TelegramClient(StringSession(''), API_ID, API_HASH)
 
-    # Telethon needs to "see" the entity before it can send to it by ID.
-    # Getting dialogs populates the internal cache.
-    if isinstance(CHAT_ID, int):
-        print("Fetching dialogs to resolve numeric Chat ID...")
-        await client.get_dialogs()
+    # Authenticate using the Bot Token
+    await client.start(bot_token=BOT_TOKEN)
 
     try:
-        # Explicitly get the entity to ensure it's resolved correctly
+        # Resolve the chat entity. The bot must be a member of the chat/channel.
         entity = await client.get_entity(CHAT_ID)
     except Exception as e:
         print(f"Error: Could not find Telegram entity for {CHAT_ID}: {e}")
+        print("Make sure the Bot is added to the channel/group!")
         await client.disconnect()
         return
 
@@ -83,6 +83,7 @@ async def main():
         except Exception as e:
             print(f"Error during upload of {file_name}: {e}")
 
+    # Properly disconnect after tasks are done
     await client.disconnect()
 
 if __name__ == '__main__':

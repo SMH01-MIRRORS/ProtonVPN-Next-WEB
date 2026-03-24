@@ -62,8 +62,8 @@ steps:
         from_secret: TG_API_ID
       TG_API_HASH:
         from_secret: TG_API_HASH
-      TG_SESSION:
-        from_secret: TG_SESSION
+      TG_BOT_TOKEN:
+        from_secret: TG_BOT_TOKEN
       TG_CHAT_ID:
         from_secret: TG_CHAT_ID
     commands:
