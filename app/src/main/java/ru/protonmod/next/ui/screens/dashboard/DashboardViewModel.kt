@@ -83,7 +83,6 @@ class DashboardViewModel @Inject constructor(
 
     private val prefs = context.getSharedPreferences("dashboard_ui_prefs", Context.MODE_PRIVATE)
 
-    private val _isLoading = MutableStateFlow(true)
     private val _errorMessage = MutableStateFlow<String?>(null)
 
     // Store original unprotected location
@@ -96,7 +95,7 @@ class DashboardViewModel @Inject constructor(
 
     val uiState: StateFlow<DashboardUiState> = combine(
         vpnRepository.getServersFlow(),
-        _isLoading,
+        vpnRepository.isUpdating,
         _errorMessage,
         amneziaVpnManager.tunnelState,
         amneziaVpnManager.isConnecting,
@@ -109,7 +108,7 @@ class DashboardViewModel @Inject constructor(
     ) { args: Array<Any?> ->
         @Suppress("UNCHECKED_CAST")
         val servers = args[0] as List<LogicalServer>
-        val isLoading = args[1] as Boolean
+        val isUpdating = args[1] as Boolean
         val error = args[2] as String?
         val tunnelState = args[3] as Tunnel.State
         val isConnecting = args[4] as Boolean
@@ -121,7 +120,7 @@ class DashboardViewModel @Inject constructor(
         val vpnLocationText = args[9] as LocationText?
         val isIpHidden = args[10] as Boolean
 
-        if (isLoading && servers.isEmpty()) {
+        if (isUpdating && servers.isEmpty()) {
             DashboardUiState.Loading
         } else if (error != null && servers.isEmpty()) {
             DashboardUiState.Error(error)
@@ -286,16 +285,11 @@ class DashboardViewModel @Inject constructor(
     private data class LocationData(val ip: String, val countryCode: String)
 
     fun loadServers() {
-        if (uiState.value is DashboardUiState.Error) {
-            _isLoading.value = true
-        }
         viewModelScope.launch {
-            _isLoading.value = true
             _errorMessage.value = null
             val session = sessionDao.getSession()
             if (session == null) {
                 _errorMessage.value = context.getString(R.string.error_session_not_found)
-                _isLoading.value = false
                 return@launch
             }
 
@@ -306,7 +300,6 @@ class DashboardViewModel @Inject constructor(
                         _errorMessage.value = error.localizedMessage ?: context.getString(R.string.error_unknown)
                     }
                 }
-            _isLoading.value = false
         }
     }
 

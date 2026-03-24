@@ -74,16 +74,15 @@ class CountriesViewModel @Inject constructor(
     }
 
     private val _navState = MutableStateFlow<NavigationState>(NavigationState.Countries)
-    private val _isLoading = MutableStateFlow(true)
     private val _error = MutableStateFlow<String?>(null)
 
     val uiState: StateFlow<CountriesUiState> = combine(
         vpnRepository.getServersFlow(),
         _navState,
-        _isLoading,
+        vpnRepository.isUpdating,
         _error
-    ) { servers, nav, loading, error ->
-        if (loading && servers.isEmpty()) {
+    ) { servers, nav, isUpdating, error ->
+        if (isUpdating && servers.isEmpty()) {
             return@combine CountriesUiState.Loading
         }
         if (error != null && servers.isEmpty()) {
@@ -126,17 +125,14 @@ class CountriesViewModel @Inject constructor(
 
     private fun initialFetch() {
         viewModelScope.launch {
-            _isLoading.value = true
             _error.value = null
             val session = sessionDao.getSession()
             if (session == null) {
                 _error.value = "Session not found"
-                _isLoading.value = false
                 return@launch
             }
             vpnRepository.getServers(session.accessToken, session.sessionId, session.userTier, forceRefresh = false)
                 .onFailure { _error.value = it.localizedMessage }
-            _isLoading.value = false
         }
     }
 

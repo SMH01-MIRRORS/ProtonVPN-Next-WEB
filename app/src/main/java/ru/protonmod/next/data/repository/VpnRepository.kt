@@ -20,6 +20,9 @@ package ru.protonmod.next.data.repository
 import ru.protonmod.next.utils.ProtonLogger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -51,6 +54,9 @@ class VpnRepository @Inject constructor(
     // Variable for storing the currently executing fetch request
     private var activeFetch: Deferred<Result<List<LogicalServer>>>? = null
     private var cachedServers: List<LogicalServer> = emptyList()
+
+    private val _isUpdating = MutableStateFlow(false)
+    val isUpdating: StateFlow<Boolean> = _isUpdating.asStateFlow()
 
     companion object {
         private const val TAG = "VpnRepository"
@@ -112,8 +118,16 @@ class VpnRepository @Inject constructor(
                 ProtonLogger.d(TAG, "Joining existing servers fetch request")
                 activeFetch!!
             } else {
+                _isUpdating.value = true
                 val newFetch = managerScope.async {
-                    performGetServers(accessToken, sessionId, userTier, forceRefresh)
+                    try {
+                        performGetServers(accessToken, sessionId, userTier, forceRefresh)
+                    } finally {
+                        fetchMutex.withLock {
+                            activeFetch = null
+                            _isUpdating.value = false
+                        }
+                    }
                 }
                 activeFetch = newFetch
                 newFetch
@@ -122,12 +136,20 @@ class VpnRepository @Inject constructor(
 
         return try {
             deferred.await()
-        } finally {
-            fetchMutex.withLock {
-                if (activeFetch == deferred) {
-                    activeFetch = null
-                }
-            }
+        } catch (e: CancellationException) {
+            // Re-throw CancellationException so caller knows they were cancelled,
+            // but the background async task in managerScope continues.
+            throw e
+        }
+    }
+
+    /**
+     * Triggers a server update in the application-level background scope.
+     * Use this when you don't need to wait for the result immediately (e.g., during login).
+     */
+    fun refreshServersBackground(accessToken: String, sessionId: String, userTier: Int) {
+        managerScope.launch {
+            getServers(accessToken, sessionId, userTier)
         }
     }
 

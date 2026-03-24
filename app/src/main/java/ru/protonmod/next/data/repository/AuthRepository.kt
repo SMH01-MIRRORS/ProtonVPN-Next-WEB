@@ -166,6 +166,8 @@ class AuthRepository @Inject constructor(
                     wgPublicKeyPem = keys?.second,
                     wgCertificate = keys?.third
                 )
+                
+                vpnRepository.refreshServersBackground(finalAccessToken, finalUid, userTier)
             }
 
             ProtonLogger.d(TAG, "[Login] Success. Scopes: ${loginResponse.scopes}")
@@ -226,6 +228,8 @@ class AuthRepository @Inject constructor(
                     wgPublicKeyPem = keys?.second,
                     wgCertificate = keys?.third
                 )
+
+                vpnRepository.refreshServersBackground(finalAccessToken, finalUid, 0)
                 Result.success(response.copy(accessToken = finalAccessToken, sessionId = finalUid))
             } else {
                 Result.failure(Exception("Guest login failed: Code ${response.code}"))
@@ -274,6 +278,7 @@ class AuthRepository @Inject constructor(
                 wgCertificate = keys?.third
             )
 
+            vpnRepository.refreshServersBackground(fullToken, sessionId, userTier)
             Result.success(response2fa.copy(userId = finalUserId))
         } catch (e: Exception) {
             if (e !is HttpException) ProtonLogger.e(TAG, "[verify2FA] Exception thrown", e)
