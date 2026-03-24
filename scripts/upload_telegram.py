@@ -73,9 +73,12 @@ async def main():
             print(f"Upload successful: {file_name}")
         except Exception as e:
             print(f"Error during upload of {file_name}: {e}")
+            if isinstance(CHAT_ID, int) and CHAT_ID > 0:
+                print(f"💡 IMPORTANT: Your Chat ID {CHAT_ID} looks like a Channel ID.")
+                print(f"Try changing TG_CHAT_ID to -100{CHAT_ID} in your Woodpecker CI secrets.")
             print("\n💡 Troubleshooting:")
             print("1. If CHAT_ID is a user, they MUST send /start to the bot first.")
-            print("2. If CHAT_ID is a channel, use its @username (for public) or full ID starting with -100 (for private).")
+            print("2. If CHAT_ID is a channel/group, ensure it starts with '-' or '-100'.")
             print("3. Ensure the Bot is an administrator in the channel/group with 'Post Messages' permission.")
 
     await client.disconnect()
