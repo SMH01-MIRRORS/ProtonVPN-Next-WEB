@@ -8,7 +8,13 @@ from telethon.sessions import StringSession
 API_ID = int(os.environ.get('TG_API_ID', 0))
 API_HASH = os.environ.get('TG_API_HASH')
 SESSION = os.environ.get('TG_SESSION')
-CHAT_ID = int(os.environ.get('TG_CHAT_ID', 0))
+TG_CHAT_ID = os.environ.get('TG_CHAT_ID', '0')
+
+# Try to parse CHAT_ID as int, otherwise keep as string (for usernames)
+try:
+    CHAT_ID = int(TG_CHAT_ID)
+except ValueError:
+    CHAT_ID = TG_CHAT_ID
 
 # Woodpecker default environment variables
 COMMIT_MESSAGE = os.environ.get('CI_COMMIT_MESSAGE', 'No message')
@@ -35,6 +41,20 @@ async def main():
     client = TelegramClient(StringSession(SESSION), API_ID, API_HASH)
     await client.connect()
 
+    # Telethon needs to "see" the entity before it can send to it by ID.
+    # Getting dialogs populates the internal cache.
+    if isinstance(CHAT_ID, int):
+        print("Fetching dialogs to resolve numeric Chat ID...")
+        await client.get_dialogs()
+
+    try:
+        # Explicitly get the entity to ensure it's resolved correctly
+        entity = await client.get_entity(CHAT_ID)
+    except Exception as e:
+        print(f"Error: Could not find Telegram entity for {CHAT_ID}: {e}")
+        await client.disconnect()
+        return
+
     for apk_path in apk_files:
         file_name = os.path.basename(apk_path)
         is_debug = "debug" in apk_path.lower()
@@ -54,7 +74,7 @@ async def main():
         try:
             print(f"Uploading {file_name}...")
             await client.send_file(
-                CHAT_ID,
+                entity,
                 apk_path,
                 caption=caption,
                 parse_mode='md'
