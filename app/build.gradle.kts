@@ -106,6 +106,21 @@ android {
             isMinifyEnabled = false
             buildConfigField("boolean", "ALLOW_LOGCAT", "true")
             signingConfig = signingConfigs.getByName("debug")
+            packaging {
+                jniLibs {
+                    keepDebugSymbols.addAll(listOf(
+                        "**/libam-go.so",
+                        "**/libam-quick.so",
+                        "**/libam.so",
+                        "**/libandroidx.graphics.path.so",
+                        "**/libdatastore_shared_counter.so",
+                        "**/libgojni.so",
+                        "**/libhev-socks5-tunnel.so",
+                        "**/libsentry-android.so",
+                        "**/libsentry.so"
+                    ))
+                }
+            }
         }
         getByName("release") {
             isMinifyEnabled = true
@@ -142,19 +157,6 @@ android {
     }
 
     packaging {
-        jniLibs {
-            keepDebugSymbols.addAll(listOf(
-                "**/libam-go.so",
-                "**/libam-quick.so",
-                "**/libam.so",
-                "**/libandroidx.graphics.path.so",
-                "**/libdatastore_shared_counter.so",
-                "**/libgojni.so",
-                "**/libhev-socks5-tunnel.so",
-                "**/libsentry-android.so",
-                "**/libsentry.so"
-            ))
-        }
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "/META-INF/DEPENDENCIES"
