@@ -81,6 +81,9 @@ go-vpn-lib = { module = "me.proton.vpn:go-vpn-lib", version.ref = "goVpnLib" }
 
 # Sentry
 sentry-android = { group = "io.sentry", name = "sentry-android", version.ref = "sentryAndroid" }
+sentry-compose = { group = "io.sentry", name = "sentry-compose-android", version.ref = "sentryAndroid" }
+sentry-okhttp = { group = "io.sentry", name = "sentry-android-okhttp", version.ref = "sentryAndroid" }
+sentry-replay = { group = "io.sentry", name = "sentry-android-replay", version.ref = "sentryAndroid" }
 
 # Debug
 leakcanary-android = { group = "com.squareup.leakcanary", name = "leakcanary-android", version.ref = "leakcanary" }

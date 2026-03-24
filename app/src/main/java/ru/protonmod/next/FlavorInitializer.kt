@@ -18,7 +18,6 @@
 package ru.protonmod.next
 
 import android.content.Context
-import io.sentry.SentryLevel
 import io.sentry.android.core.SentryAndroid
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -33,32 +32,36 @@ object FlavorInitializer {
     fun initialize(context: Context) {
         // Read settings synchronously for app startup
         val settingsManager = SettingsManager(context)
-        val isCrashReportsEnabled = runBlocking { settingsManager.crashReportsEnabled.first() }
         val isAnalyticsEnabled = runBlocking { settingsManager.analyticsEnabled.first() }
 
         // Sentry initialization
         SentryAndroid.init(context) { options ->
             options.dsn = "https://7b74cef88678ecb3e6047ac6b4abf139@o4510986952310784.ingest.de.sentry.io/4510986956374096"
             
-            // Only send if user enabled crash reporting
+            // Allow all errors if crash reporting is enabled
             options.setBeforeSend { event, _ ->
                 val currentCrashEnabled = runBlocking { settingsManager.crashReportsEnabled.first() }
-                if (!currentCrashEnabled) return@setBeforeSend null
-                
-                // Extra filter: Only allow FATAL and ERROR levels to save quota
-                if (event.level != SentryLevel.FATAL && event.level != SentryLevel.ERROR) {
-                    null
-                } else {
-                    event
-                }
+                if (!currentCrashEnabled) null else event
             }
 
-            // Performance monitoring (Analytics)
-            options.tracesSampleRate = if (isAnalyticsEnabled) 0.05 else 0.0
+            // Utilize 100M Spans and 6K Profile Hours quota when analytics is on
+            options.tracesSampleRate = if (isAnalyticsEnabled) 1.0 else 0.0
+            options.profilesSampleRate = if (isAnalyticsEnabled) 1.0 else 0.0
             
-            // Collect more context for errors
             options.isEnableAutoSessionTracking = isAnalyticsEnabled
             options.isAnrEnabled = true
+            options.isEnableAppStartProfiling = true
+            options.isEnableUserInteractionTracing = true
+            
+            // Advanced Debugging (Attachments & Screenshots, 10 GB quota)
+            options.isAttachScreenshot = true
+            options.isAttachViewHierarchy = true
+            
+            // Session Replay (100K replays quota)
+            if (isAnalyticsEnabled) {
+                options.sessionReplay.sessionSampleRate = 1.0
+                options.sessionReplay.onErrorSampleRate = 1.0
+            }
         }
     }
 }

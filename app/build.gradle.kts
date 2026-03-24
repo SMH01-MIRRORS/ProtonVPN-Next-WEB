@@ -180,6 +180,7 @@ sentry {
     autoUploadProguardMapping = true
     uploadNativeSymbols = true
     includeNativeSources = true
+    tracingInstrumentation.enabled = true
 }
 
 dependencies {
@@ -235,6 +236,9 @@ dependencies {
 
     // Sentry
     implementation(libs.sentry.android)
+    implementation(libs.sentry.compose)
+    implementation(libs.sentry.okhttp)
+    implementation(libs.sentry.replay)
 
     // Testing
     testImplementation(libs.junit)
