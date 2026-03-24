@@ -111,6 +111,7 @@ class AmneziaVpnManager @Inject constructor(
 
     private val _rawTunnelState = MutableStateFlow(Tunnel.State.DOWN)
     private var isReconnecting = false
+    private var currentServerId: String? = null
     private var connectionJob: Job? = null
     private var refreshJob: Job? = null
     private val refreshMutex = Mutex()
@@ -127,11 +128,12 @@ class AmneziaVpnManager @Inject constructor(
                         val newState = Tunnel.State.valueOf(it)
                         _rawTunnelState.value = newState
                         _isConnecting.value = false
-                        if (!(isReconnecting && newState == Tunnel.State.DOWN)) {
-                            _tunnelState.value = newState
-                            if (newState == Tunnel.State.UP) {
-                                checkAndRefreshCertificateProactively()
-                            }
+                        
+                        _tunnelState.value = newState
+                        if (newState == Tunnel.State.UP) {
+                            checkAndRefreshCertificateProactively()
+                        } else if (newState == Tunnel.State.DOWN && !isReconnecting) {
+                            currentServerId = null
                         }
                     }
                 }
@@ -274,8 +276,14 @@ class AmneziaVpnManager @Inject constructor(
         overrideObfuscation: Boolean? = null,
         obfuscationParams: ObfuscationParams? = null
     ) {
+        if (currentServerId == logicalServerId && _tunnelState.value == Tunnel.State.UP) {
+            ProtonLogger.d(TAG, "Already connected to $logicalServerId")
+            return
+        }
+        
         connectionJob?.cancel()
         connectionJob = applicationScope.launch(dispatcherProvider.io()) {
+            currentServerId = logicalServerId
             connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams)
         }
     }
@@ -420,21 +428,30 @@ class AmneziaVpnManager @Inject constructor(
         overrideObfuscation: Boolean? = null,
         obfuscationParams: ObfuscationParams? = null
     ) {
-        // Prevent redundant reconnects if already connecting or already UP
-        if (_isConnecting.value || (tunnelState.value == Tunnel.State.UP && !isReconnecting)) {
-            ProtonLogger.d(TAG, "Reconnect skipped: Already in a connecting or active state.")
+        // Only skip if we're already connecting (to avoid multiple rapid clicks)
+        if (_isConnecting.value) {
+            ProtonLogger.d(TAG, "Reconnect skipped: Already in a connecting state.")
             return
         }
 
         connectionJob?.cancel()
         connectionJob = applicationScope.launch {
-            isReconnecting = true
-            _isConnecting.value = true
-            disconnectInternal()
-            try { withTimeout(5000) { _rawTunnelState.first { it == Tunnel.State.DOWN } } } catch (_: Exception) {}
-            delay(500)
-            isReconnecting = false
-            connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams)
+            try {
+                isReconnecting = true
+                _isConnecting.value = true
+                currentServerId = logicalServerId
+                disconnectInternal()
+                try {
+                    withTimeout(5000) {
+                        _rawTunnelState.first { it == Tunnel.State.DOWN }
+                    }
+                } catch (_: Exception) {
+                }
+                delay(500)
+                connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams)
+            } finally {
+                isReconnecting = false
+            }
         }
     }
 
@@ -442,6 +459,7 @@ class AmneziaVpnManager @Inject constructor(
         connectionJob?.cancel()
         applicationScope.launch {
             isReconnecting = false
+            currentServerId = null
             disconnectInternal()
         }
     }
