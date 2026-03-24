@@ -192,8 +192,18 @@ fun DebugSettingsScreen(
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 DebugActionRow(
                                     icon = Icons.Rounded.BugReport,
+                                    title = stringResource(R.string.debug_btn_fake_crash),
+                                    onClick = { viewModel.triggerJavaCrash() }
+                                )
+                                DebugActionRow(
+                                    icon = Icons.Rounded.BugReport,
                                     title = stringResource(R.string.debug_btn_crash_java),
                                     onClick = { viewModel.triggerJavaCrash() }
+                                )
+                                DebugActionRow(
+                                    icon = Icons.Rounded.BugReport,
+                                    title = stringResource(R.string.debug_btn_crash_native),
+                                    onClick = { viewModel.triggerNativeCrash() }
                                 )
                                 DebugActionRow(
                                     icon = Icons.Rounded.BugReport,

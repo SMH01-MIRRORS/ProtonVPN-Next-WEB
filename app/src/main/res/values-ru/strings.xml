@@ -384,6 +384,8 @@
     <string name="debug_btn_arithmetic_error">Арифметическая ошибка (1/0)</string>
     <string name="debug_btn_null_pointer">NullPointer Exception</string>
 
+    <string name="debug_btn_fake_crash">Фейковый краш приложения</string>
+
     <string name="captcha_title">Проверка безопасности</string>
     <string name="captcha_message">Для обеспечения безопасности аккаунта, пожалуйста, пройдите проверку ниже.</string>
     <string name="captcha_proxy_active">Антиблокировочный прокси активен</string>
