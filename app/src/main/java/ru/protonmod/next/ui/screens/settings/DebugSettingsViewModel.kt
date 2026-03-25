@@ -183,12 +183,12 @@ class DebugSettingsViewModel @Inject constructor(
                     AmneziaVpnManager.ObfuscationParams(
                         jc = settingsManager.awgJc.first(), jmin = settingsManager.awgJmin.first(), jmax = settingsManager.awgJmax.first(),
                         s1 = settingsManager.awgS1.first(), s2 = settingsManager.awgS2.first(),
+                        s3 = settingsManager.awgS3.first(), s4 = settingsManager.awgS4.first(),
                         h1 = settingsManager.awgH1.first(), h2 = settingsManager.awgH2.first(), h3 = settingsManager.awgH3.first(), h4 = settingsManager.awgH4.first(),
-                        i1 = settingsManager.awgI1.first(), i2 = settingsManager.awgI2.first(), i3 = settingsManager.awgI3.first(), i4 = settingsManager.awgI4.first(), i5 = settingsManager.awgI5.first(),
-                        customId = settingsManager.awgId.first(), ip = settingsManager.awgIp.first(), ib = settingsManager.awgIb.first()
+                        i1 = settingsManager.awgI1.first(), i2 = settingsManager.awgI2.first(), i3 = settingsManager.awgI3.first(), i4 = settingsManager.awgI4.first(), i5 = settingsManager.awgI5.first()
                     )
                 } else {
-                    AmneziaVpnManager.ObfuscationParams(0, 0, 0, 0, 0, "", "", "", "", "", "", "", "", "", "", "", "")
+                    AmneziaVpnManager.ObfuscationParams(0, 0, 0, 0, 0, 0, 0, "", "", "", "", "", "", "", "", "")
                 }
                 
                 val userDns = settingsManager.customDns.first().trim()

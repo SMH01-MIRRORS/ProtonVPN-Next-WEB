@@ -100,10 +100,9 @@ class AmneziaVpnManager @Inject constructor(
 
     data class ObfuscationParams(
         val jc: Int, val jmin: Int, val jmax: Int,
-        val s1: Int, val s2: Int,
+        val s1: Int, val s2: Int, val s3: Int = 0, val s4: Int = 0,
         val h1: String, val h2: String, val h3: String, val h4: String,
-        val i1: String, val i2: String = "", val i3: String = "", val i4: String = "", val i5: String = "",
-        val customId: String = "", val ip: String = "", val ib: String = ""
+        val i1: String, val i2: String = "", val i3: String = "", val i4: String = "", val i5: String = ""
     )
 
     private val _isConnecting = MutableStateFlow(false)
@@ -390,12 +389,12 @@ class AmneziaVpnManager @Inject constructor(
                 obfuscationParams ?: ObfuscationParams(
                     jc = settingsManager.awgJc.first(), jmin = settingsManager.awgJmin.first(), jmax = settingsManager.awgJmax.first(),
                     s1 = settingsManager.awgS1.first(), s2 = settingsManager.awgS2.first(),
+                    s3 = settingsManager.awgS3.first(), s4 = settingsManager.awgS4.first(),
                     h1 = settingsManager.awgH1.first(), h2 = settingsManager.awgH2.first(), h3 = settingsManager.awgH3.first(), h4 = settingsManager.awgH4.first(),
-                    i1 = settingsManager.awgI1.first(), i2 = settingsManager.awgI2.first(), i3 = settingsManager.awgI3.first(), i4 = settingsManager.awgI4.first(), i5 = settingsManager.awgI5.first(),
-                    customId = settingsManager.awgId.first(), ip = settingsManager.awgIp.first(), ib = settingsManager.awgIb.first()
+                    i1 = settingsManager.awgI1.first(), i2 = settingsManager.awgI2.first(), i3 = settingsManager.awgI3.first(), i4 = settingsManager.awgI4.first(), i5 = settingsManager.awgI5.first()
                 )
             } else {
-                ObfuscationParams(0, 0, 0, 0, 0, "", "", "", "", "", "", "", "", "", "", "", "")
+                ObfuscationParams(0, 0, 0, 0, 0, 0, 0, "", "", "", "", "", "", "", "", "")
             }
 
             // Retrieve Custom DNS IP or fallback to Proton Default

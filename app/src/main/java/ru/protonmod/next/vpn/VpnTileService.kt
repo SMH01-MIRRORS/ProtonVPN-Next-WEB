@@ -38,6 +38,7 @@ import ru.protonmod.next.data.local.ProfileDao
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.local.VpnProfileEntity
+import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.repository.VpnRepository
 import ru.protonmod.next.data.state.ConnectedServerState
@@ -163,7 +164,31 @@ class VpnTileService : TileService() {
                             ?: targetServer.servers.minByOrNull { it.load }
                         
                         if (physicalServer != null) {
-                            amneziaVpnManager.connect(targetServer.id, physicalServer, session, logicalServer = targetServer)
+                            var obfuscationParams: AmneziaVpnManager.ObfuscationParams? = null
+                            if (profile.isObfuscationEnabled && profile.obfuscationProfileId != null) {
+                                val customProfiles = settingsManager.customProfiles.first()
+                                val selectedConfig = customProfiles.find { it.id == profile.obfuscationProfileId }
+                                    ?: if (profile.obfuscationProfileId == "standard_1") {
+                                        ObfuscationProfile.getStandardProfile()
+                                    } else null
+
+                                selectedConfig?.let {
+                                    obfuscationParams = AmneziaVpnManager.ObfuscationParams(
+                                        jc = it.jc, jmin = it.jmin, jmax = it.jmax,
+                                        s1 = it.s1, s2 = it.s2, s3 = it.s3, s4 = it.s4,
+                                        h1 = it.h1, h2 = it.h2, h3 = it.h3, h4 = it.h4,
+                                        i1 = it.i1, i2 = it.i2, i3 = it.i3, i4 = it.i4, i5 = it.i5
+                                    )
+                                }
+                            }
+
+                            amneziaVpnManager.connect(
+                                targetServer.id, physicalServer, session,
+                                overridePort = profile.port,
+                                overrideObfuscation = profile.isObfuscationEnabled,
+                                obfuscationParams = obfuscationParams,
+                                logicalServer = targetServer
+                            )
                         }
                     }
                 } else {

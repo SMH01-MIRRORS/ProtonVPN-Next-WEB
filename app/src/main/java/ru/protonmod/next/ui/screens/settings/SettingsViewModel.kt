@@ -6,7 +6,9 @@
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it under the terms of the
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
@@ -65,6 +67,8 @@ data class SettingsUiState(
     val awgJmax: Int = 3,
     val awgS1: Int = 0,
     val awgS2: Int = 0,
+    val awgS3: Int = 0,
+    val awgS4: Int = 0,
     val awgH1: String = "1",
     val awgH2: String = "2",
     val awgH3: String = "3",
@@ -74,9 +78,6 @@ data class SettingsUiState(
     val awgI3: String = "",
     val awgI4: String = "",
     val awgI5: String = "",
-    val awgId: String = "",
-    val awgIp: String = "",
-    val awgIb: String = "",
     val awgJunkLevel: Int = 0, // 0: Low, 1: Medium, 2: High, 3: Custom
 
     // States
@@ -149,6 +150,8 @@ class SettingsViewModel @Inject constructor(
         settingsManager.awgJmax,
         settingsManager.awgS1,
         settingsManager.awgS2,
+        settingsManager.awgS3,
+        settingsManager.awgS4,
         settingsManager.awgH1,
         settingsManager.awgH2,
         settingsManager.awgH3,
@@ -158,9 +161,6 @@ class SettingsViewModel @Inject constructor(
         settingsManager.awgI3,
         settingsManager.awgI4,
         settingsManager.awgI5,
-        settingsManager.awgId,
-        settingsManager.awgIp,
-        settingsManager.awgIb,
         settingsManager.awgJunkLevel,
         amneziaVpnManager.tunnelState,
         settingsManager.obfuscationEnabled,
@@ -190,31 +190,30 @@ class SettingsViewModel @Inject constructor(
             awgJmax = args[11] as Int,
             awgS1 = args[12] as Int,
             awgS2 = args[13] as Int,
-            awgH1 = args[14] as String,
-            awgH2 = args[15] as String,
-            awgH3 = args[16] as String,
-            awgH4 = args[17] as String,
-            awgI1 = args[18] as String,
-            awgI2 = args[19] as String,
-            awgI3 = args[20] as String,
-            awgI4 = args[21] as String,
-            awgI5 = args[22] as String,
-            awgId = args[23] as String,
-            awgIp = args[24] as String,
-            awgIb = args[25] as String,
-            awgJunkLevel = args[26] as Int,
-            isVpnConnected = args[27] == Tunnel.State.UP,
-            isObfuscationEnabled = args[28] as Boolean,
-            isObfuscationAdvancedMode = args[29] as Boolean,
-            customObfuscationProfiles = args[30] as List<ObfuscationProfile>,
-            selectedProfileId = args[31] as String,
-            customDns = args[32] as String,
-            isAnalyticsEnabled = args[33] as Boolean,
-            isCrashReportsEnabled = args[34] as Boolean,
-            apiBypassEnabled = args[35] as Boolean,
-            apiBypassStrategy = args[36] as String,
-            appTheme = args[37] as AppTheme,
-            isAnyVpnActive = args[38] as Boolean
+            awgS3 = args[14] as Int,
+            awgS4 = args[15] as Int,
+            awgH1 = args[16] as String,
+            awgH2 = args[17] as String,
+            awgH3 = args[18] as String,
+            awgH4 = args[19] as String,
+            awgI1 = args[20] as String,
+            awgI2 = args[21] as String,
+            awgI3 = args[22] as String,
+            awgI4 = args[23] as String,
+            awgI5 = args[24] as String,
+            awgJunkLevel = args[25] as Int,
+            isVpnConnected = args[26] == Tunnel.State.UP,
+            isObfuscationEnabled = args[27] as Boolean,
+            isObfuscationAdvancedMode = args[28] as Boolean,
+            customObfuscationProfiles = args[29] as List<ObfuscationProfile>,
+            selectedProfileId = args[30] as String,
+            customDns = args[31] as String,
+            isAnalyticsEnabled = args[32] as Boolean,
+            isCrashReportsEnabled = args[33] as Boolean,
+            apiBypassEnabled = args[34] as Boolean,
+            apiBypassStrategy = args[35] as String,
+            appTheme = args[36] as AppTheme,
+            isAnyVpnActive = args[37] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -301,13 +300,13 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setAwgParams(
-        jc: Int, jmin: Int, jmax: Int, s1: Int, s2: Int,
+        jc: Int, jmin: Int, jmax: Int, s1: Int, s2: Int, s3: Int = 0, s4: Int = 0,
         h1: String, h2: String, h3: String, h4: String,
         i1: String, i2: String = "", i3: String = "", i4: String = "", i5: String = "",
-        customId: String = "", ip: String = "", ib: String = "", junkLevel: Int = 3
+        junkLevel: Int = 3
     ) {
         viewModelScope.launch {
-            settingsManager.setAwgParams(jc, jmin, jmax, s1, s2, h1, h2, h3, h4, i1, i2, i3, i4, i5, customId, ip, ib, junkLevel)
+            settingsManager.setAwgParams(jc, jmin, jmax, s1, s2, s3, s4, h1, h2, h3, h4, i1, i2, i3, i4, i5, junkLevel)
         }
     }
 
@@ -316,10 +315,10 @@ class SettingsViewModel @Inject constructor(
             settingsManager.setSelectedProfileId(profile.id)
             setAwgParams(
                 jc = profile.jc, jmin = profile.jmin, jmax = profile.jmax,
-                s1 = profile.s1, s2 = profile.s2,
+                s1 = profile.s1, s2 = profile.s2, s3 = profile.s3, s4 = profile.s4,
                 h1 = profile.h1, h2 = profile.h2, h3 = profile.h3, h4 = profile.h4,
                 i1 = profile.i1, i2 = profile.i2, i3 = profile.i3, i4 = profile.i4, i5 = profile.i5,
-                customId = profile.customId, ip = profile.ip, ib = profile.ib, junkLevel = profile.junkLevel
+                junkLevel = profile.junkLevel
             )
         }
     }
@@ -353,9 +352,10 @@ class SettingsViewModel @Inject constructor(
         setAwgParams(
             jc = jc, jmin = jmin, jmax = jmax,
             s1 = currentState.awgS1, s2 = currentState.awgS2,
+            s3 = currentState.awgS3, s4 = currentState.awgS4,
             h1 = currentState.awgH1, h2 = currentState.awgH2, h3 = currentState.awgH3, h4 = currentState.awgH4,
             i1 = currentState.awgI1, i2 = currentState.awgI2, i3 = currentState.awgI3, i4 = currentState.awgI4, i5 = currentState.awgI5,
-            customId = currentState.awgId, ip = currentState.awgIp, ib = currentState.awgIb, junkLevel = level
+            junkLevel = level
         )
     }
 
@@ -372,10 +372,10 @@ class SettingsViewModel @Inject constructor(
         val currentState = uiState.value
         setAwgParams(
             jc = currentState.awgJc, jmin = currentState.awgJmin, jmax = currentState.awgJmax,
-            s1 = currentState.awgS1, s2 = currentState.awgS2,
+            s1 = currentState.awgS1, s2 = currentState.awgS2, s3 = currentState.awgS3, s4 = currentState.awgS4,
             h1 = currentState.awgH1, h2 = currentState.awgH2, h3 = currentState.awgH3, h4 = currentState.awgH4,
             i1 = randomHex, i2 = currentState.awgI2, i3 = currentState.awgI3, i4 = currentState.awgI4, i5 = currentState.awgI5,
-            customId = currentState.awgId, ip = currentState.awgIp, ib = currentState.awgIb, junkLevel = currentState.awgJunkLevel
+            junkLevel = currentState.awgJunkLevel
         )
     }
 
@@ -385,10 +385,10 @@ class SettingsViewModel @Inject constructor(
             val currentState = uiState.value
             setAwgParams(
                 jc = currentState.awgJc, jmin = currentState.awgJmin, jmax = currentState.awgJmax,
-                s1 = currentState.awgS1, s2 = currentState.awgS2,
+                s1 = currentState.awgS1, s2 = currentState.awgS2, s3 = currentState.awgS3, s4 = currentState.awgS4,
                 h1 = currentState.awgH1, h2 = currentState.awgH2, h3 = currentState.awgH3, h4 = currentState.awgH4,
                 i1 = i1, i2 = currentState.awgI2, i3 = currentState.awgI3, i4 = currentState.awgI4, i5 = currentState.awgI5,
-                customId = currentState.awgId, ip = currentState.awgIp, ib = currentState.awgIb, junkLevel = currentState.awgJunkLevel
+                junkLevel = currentState.awgJunkLevel
             )
         }
     }

@@ -156,6 +156,8 @@
     <string name="obfuscation_jmax">Junk Packet Max Size (Jmax)</string>
     <string name="obfuscation_s1">Init Packet Junk Size (S1)</string>
     <string name="obfuscation_s2">Response Packet Junk Size (S2)</string>
+    <string name="obfuscation_s3">Cookie Reply Junk Size (S3)</string>
+    <string name="obfuscation_s4">Transport Packet Junk Size (S4)</string>
     <string name="obfuscation_h1">Init Packet Magic (H1)</string>
     <string name="obfuscation_h2">Response Packet Magic (H2)</string>
     <string name="obfuscation_h3">Underload Packet Magic (H3)</string>
@@ -165,9 +167,6 @@
     <string name="obfuscation_i3">Special Junk (I3)</string>
     <string name="obfuscation_i4">Special Junk (I4)</string>
     <string name="obfuscation_i5">Special Junk (I5)</string>
-    <string name="obfuscation_custom_id">Special Junk (Id)</string>
-    <string name="obfuscation_ip">Special Junk (Ip)</string>
-    <string name="obfuscation_ib">Special Junk (Ib)</string>
 
     <!-- Obfuscation Modes -->
     <string name="obfuscation_mode_easy">Easy</string>

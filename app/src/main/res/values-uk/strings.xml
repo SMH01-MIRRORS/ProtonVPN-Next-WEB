@@ -154,6 +154,8 @@
     <string name="obfuscation_jmax">Макс. розмір сміттєвого пакета (Jmax)</string>
     <string name="obfuscation_s1">Розмір сміття в Init пакеті (S1)</string>
     <string name="obfuscation_s2">Розмір сміття в Response пакеті (S2)</string>
+    <string name="obfuscation_s3">Розмір сміття в Cookie Reply (S3)</string>
+    <string name="obfuscation_s4">Розмір сміття в Transport (S4)</string>
     <string name="obfuscation_h1">Magic Init пакета (H1)</string>
     <string name="obfuscation_h2">Magic Response пакета (H2)</string>
     <string name="obfuscation_h3">Magic Underload пакета (H3)</string>

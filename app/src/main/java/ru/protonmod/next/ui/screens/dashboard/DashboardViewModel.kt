@@ -53,7 +53,6 @@ import java.net.Proxy
 import javax.inject.Inject
 import androidx.core.content.edit
 import kotlinx.coroutines.flow.first
-import java.util.UUID
 
 data class LocationText(
     val country: String,
@@ -440,9 +439,9 @@ class DashboardViewModel @Inject constructor(
             selectedConfig?.let {
                 obfuscationParams = AmneziaVpnManager.ObfuscationParams(
                     jc = it.jc, jmin = it.jmin, jmax = it.jmax,
-                    s1 = it.s1, s2 = it.s2,
+                    s1 = it.s1, s2 = it.s2, s3 = it.s3, s4 = it.s4,
                     h1 = it.h1, h2 = it.h2, h3 = it.h3, h4 = it.h4,
-                    i1 = it.i1
+                    i1 = it.i1, i2 = it.i2, i3 = it.i3, i4 = it.i4, i5 = it.i5
                 )
             }
         }
@@ -456,14 +455,16 @@ class DashboardViewModel @Inject constructor(
                 targetServer.id, physicalServer, session,
                 overridePort = profile.port,
                 overrideObfuscation = profile.isObfuscationEnabled,
-                obfuscationParams = obfuscationParams
+                obfuscationParams = obfuscationParams,
+                logicalServer = targetServer
             )
         } else {
             amneziaVpnManager.connect(
                 targetServer.id, physicalServer, session,
                 overridePort = profile.port,
                 overrideObfuscation = profile.isObfuscationEnabled,
-                obfuscationParams = obfuscationParams
+                obfuscationParams = obfuscationParams,
+                logicalServer = targetServer
             )
         }
     }
@@ -505,9 +506,9 @@ class DashboardViewModel @Inject constructor(
             val tunnelState = amneziaVpnManager.tunnelState.value
             val isConnecting = amneziaVpnManager.isConnecting.value
             if (tunnelState == Tunnel.State.UP || isConnecting) {
-                amneziaVpnManager.reconnect(server.id, physicalServer, session)
+                amneziaVpnManager.reconnect(server.id, physicalServer, session, logicalServer = server)
             } else {
-                amneziaVpnManager.connect(server.id, physicalServer, session)
+                amneziaVpnManager.connect(server.id, physicalServer, session, logicalServer = server)
             }
         } else {
             _errorMessage.value = context.getString(R.string.label_server_unavailable)

@@ -78,6 +78,8 @@ class AmneziaConfigGeneratorImpl @Inject constructor() : AmneziaConfigGenerator 
             .setJunkPacketMaxSize(obfuscationParams.jmax)
             .setInitPacketJunkSize(obfuscationParams.s1)
             .setResponsePacketJunkSize(obfuscationParams.s2)
+            .setCookieReplyPacketJunkSize(obfuscationParams.s3)
+            .setTransportPacketJunkSize(obfuscationParams.s4)
             .apply {
                 if (obfuscationParams.h1.isNotEmpty()) setInitPacketMagicHeader(obfuscationParams.h1)
                 if (obfuscationParams.h2.isNotEmpty()) setResponsePacketMagicHeader(obfuscationParams.h2)
@@ -86,6 +88,14 @@ class AmneziaConfigGeneratorImpl @Inject constructor() : AmneziaConfigGenerator 
             }
 
         if (obfuscationParams.i1.isNotEmpty()) ifaceBuilder.parseSpecialJunkI1(obfuscationParams.i1)
+        if (obfuscationParams.i2.isNotEmpty()) ifaceBuilder.parseSpecialJunkI2(obfuscationParams.i2)
+        if (obfuscationParams.i3.isNotEmpty()) ifaceBuilder.parseSpecialJunkI3(obfuscationParams.i3)
+        if (obfuscationParams.i4.isNotEmpty()) ifaceBuilder.parseSpecialJunkI4(obfuscationParams.i4)
+        if (obfuscationParams.i5.isNotEmpty()) ifaceBuilder.parseSpecialJunkI5(obfuscationParams.i5)
+        if (obfuscationParams.i2.isNotEmpty()) ifaceBuilder.parseSpecialJunkI2(obfuscationParams.i2)
+        if (obfuscationParams.i3.isNotEmpty()) ifaceBuilder.parseSpecialJunkI3(obfuscationParams.i3)
+        if (obfuscationParams.i4.isNotEmpty()) ifaceBuilder.parseSpecialJunkI4(obfuscationParams.i4)
+        if (obfuscationParams.i5.isNotEmpty()) ifaceBuilder.parseSpecialJunkI5(obfuscationParams.i5)
 
         if (selectedApps.isNotEmpty()) {
             if (isIncludeMode) {

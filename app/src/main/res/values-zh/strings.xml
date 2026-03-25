@@ -154,6 +154,8 @@
     <string name="obfuscation_jmax">垃圾包最大尺寸 (Jmax)</string>
     <string name="obfuscation_s1">Init 包垃圾尺寸 (S1)</string>
     <string name="obfuscation_s2">Response 包垃圾尺寸 (S2)</string>
+    <string name="obfuscation_s3">Cookie Reply 垃圾尺寸 (S3)</string>
+    <string name="obfuscation_s4">Transport 包垃圾尺寸 (S4)</string>
     <string name="obfuscation_h1">Init 包 Magic (H1)</string>
     <string name="obfuscation_h2">Response 包 Magic (H2)</string>
     <string name="obfuscation_h3">Underload 包 Magic (H3)</string>

@@ -12,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program.  See <https://www.gnu.org/licenses/>.
  */
 
 package ru.protonmod.next.ui.screens.settings
@@ -421,7 +421,7 @@ fun ObfuscationSettingsScreen(
                                             label = stringResource(R.string.obfuscation_jc),
                                             value = uiState.awgJc.toString(),
                                             isEnabled = !selectedProfile.isReadOnly,
-                                            onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(v, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, uiState.awgId, uiState.awgIp, uiState.awgIb, 3) }
+                                            onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(v, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
                                         )
                                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = colors.shade20.copy(alpha = 0.5f))
                                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -430,14 +430,14 @@ fun ObfuscationSettingsScreen(
                                                 label = stringResource(R.string.obfuscation_jmin),
                                                 value = uiState.awgJmin.toString(),
                                                 isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, v, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, uiState.awgId, uiState.awgIp, uiState.awgIb, 3) }
+                                                onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, v, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
                                             )
                                             ObfuscationParamField(
                                                 modifier = Modifier.weight(1f),
                                                 label = stringResource(R.string.obfuscation_jmax),
                                                 value = uiState.awgJmax.toString(),
                                                 isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, v, uiState.awgS1, uiState.awgS2, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, uiState.awgId, uiState.awgIp, uiState.awgIb, 3) }
+                                                onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, v, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
                                             )
                                         }
                                     }
@@ -451,14 +451,31 @@ fun ObfuscationSettingsScreen(
                                                 label = stringResource(R.string.obfuscation_s1),
                                                 value = uiState.awgS1.toString(),
                                                 isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, v, uiState.awgS2, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, uiState.awgId, uiState.awgIp, uiState.awgIb, 3) }
+                                                onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, v, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
                                             )
                                             ObfuscationParamField(
                                                 modifier = Modifier.weight(1f),
                                                 label = stringResource(R.string.obfuscation_s2),
                                                 value = uiState.awgS2.toString(),
                                                 isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, v, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, uiState.awgId, uiState.awgIp, uiState.awgIb, 3) }
+                                                onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, v, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                            ObfuscationParamField(
+                                                modifier = Modifier.weight(1f),
+                                                label = stringResource(R.string.obfuscation_s3),
+                                                value = uiState.awgS3.toString(),
+                                                isEnabled = !selectedProfile.isReadOnly,
+                                                onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, v, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
+                                            )
+                                            ObfuscationParamField(
+                                                modifier = Modifier.weight(1f),
+                                                label = stringResource(R.string.obfuscation_s4),
+                                                value = uiState.awgS4.toString(),
+                                                isEnabled = !selectedProfile.isReadOnly,
+                                                onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, v, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
                                             )
                                         }
                                     }
@@ -471,7 +488,7 @@ fun ObfuscationSettingsScreen(
                                             value = uiState.awgH1,
                                             isNumeric = false,
                                             isEnabled = !selectedProfile.isReadOnly,
-                                            onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, it, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, uiState.awgId, uiState.awgIp, uiState.awgIb, 3) }
+                                            onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, it, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
                                         )
                                         Spacer(modifier = Modifier.height(12.dp))
                                         ObfuscationParamField(
@@ -479,7 +496,7 @@ fun ObfuscationSettingsScreen(
                                             value = uiState.awgH2,
                                             isNumeric = false,
                                             isEnabled = !selectedProfile.isReadOnly,
-                                            onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgH1, it, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, uiState.awgId, uiState.awgIp, uiState.awgIb, 3) }
+                                            onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, it, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
                                         )
                                         Spacer(modifier = Modifier.height(12.dp))
                                         ObfuscationParamField(
@@ -487,7 +504,7 @@ fun ObfuscationSettingsScreen(
                                             value = uiState.awgH3,
                                             isNumeric = false,
                                             isEnabled = !selectedProfile.isReadOnly,
-                                            onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgH1, uiState.awgH2, it, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, uiState.awgId, uiState.awgIp, uiState.awgIb, 3) }
+                                            onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, it, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
                                         )
                                         Spacer(modifier = Modifier.height(12.dp))
                                         ObfuscationParamField(
@@ -495,7 +512,7 @@ fun ObfuscationSettingsScreen(
                                             value = uiState.awgH4,
                                             isNumeric = false,
                                             isEnabled = !selectedProfile.isReadOnly,
-                                            onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgH1, uiState.awgH2, uiState.awgH3, it, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, uiState.awgId, uiState.awgIp, uiState.awgIb, 3) }
+                                            onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, it, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
                                         )
                                     }
 
@@ -508,56 +525,35 @@ fun ObfuscationSettingsScreen(
                                                 value = uiState.awgI1,
                                                 isNumeric = false,
                                                 isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, it, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, uiState.awgId, uiState.awgIp, uiState.awgIb, 3) }
+                                                onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, it, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
                                             )
                                             ObfuscationParamField(
                                                 label = stringResource(R.string.obfuscation_i2),
                                                 value = uiState.awgI2,
                                                 isNumeric = false,
                                                 isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, it, uiState.awgI3, uiState.awgI4, uiState.awgI5, uiState.awgId, uiState.awgIp, uiState.awgIb, 3) }
+                                                onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, it, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
                                             )
                                             ObfuscationParamField(
                                                 label = stringResource(R.string.obfuscation_i3),
                                                 value = uiState.awgI3,
                                                 isNumeric = false,
                                                 isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, it, uiState.awgI4, uiState.awgI5, uiState.awgId, uiState.awgIp, uiState.awgIb, 3) }
+                                                onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, it, uiState.awgI4, uiState.awgI5, 3) }
                                             )
                                             ObfuscationParamField(
                                                 label = stringResource(R.string.obfuscation_i4),
                                                 value = uiState.awgI4,
                                                 isNumeric = false,
                                                 isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, it, uiState.awgI5, uiState.awgId, uiState.awgIp, uiState.awgIb, 3) }
+                                                onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, it, uiState.awgI5, 3) }
                                             )
                                             ObfuscationParamField(
                                                 label = stringResource(R.string.obfuscation_i5),
                                                 value = uiState.awgI5,
                                                 isNumeric = false,
                                                 isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, it, uiState.awgId, uiState.awgIp, uiState.awgIb, 3) }
-                                            )
-                                            ObfuscationParamField(
-                                                label = stringResource(R.string.obfuscation_custom_id),
-                                                value = uiState.awgId,
-                                                isNumeric = false,
-                                                isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, it, uiState.awgIp, uiState.awgIb, 3) }
-                                            )
-                                            ObfuscationParamField(
-                                                label = stringResource(R.string.obfuscation_ip),
-                                                value = uiState.awgIp,
-                                                isNumeric = false,
-                                                isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, uiState.awgId, it, uiState.awgIb, 3) }
-                                            )
-                                            ObfuscationParamField(
-                                                label = stringResource(R.string.obfuscation_ib),
-                                                value = uiState.awgIb,
-                                                isNumeric = false,
-                                                isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, uiState.awgId, uiState.awgIp, it, 3) }
+                                                onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, it, 3) }
                                             )
                                         }
                                     }
@@ -569,10 +565,9 @@ fun ObfuscationSettingsScreen(
                                         onClick = {
                                             val updatedProfile = selectedProfile.copy(
                                                 jc = uiState.awgJc, jmin = uiState.awgJmin, jmax = uiState.awgJmax,
-                                                s1 = uiState.awgS1, s2 = uiState.awgS2,
+                                                s1 = uiState.awgS1, s2 = uiState.awgS2, s3 = uiState.awgS3, s4 = uiState.awgS4,
                                                 h1 = uiState.awgH1, h2 = uiState.awgH2, h3 = uiState.awgH3, h4 = uiState.awgH4,
                                                 i1 = uiState.awgI1, i2 = uiState.awgI2, i3 = uiState.awgI3, i4 = uiState.awgI4, i5 = uiState.awgI5,
-                                                customId = uiState.awgId, ip = uiState.awgIp, ib = uiState.awgIb,
                                                 junkLevel = uiState.awgJunkLevel
                                             )
                                             viewModel.saveObfuscationProfile(updatedProfile)
@@ -621,14 +616,13 @@ fun ObfuscationSettingsScreen(
                                                 onClick = {
                                                     if (newProfileName.isNotBlank()) {
                                                         val newProfile = ObfuscationProfile(
-                                                            id = UUID.randomUUID().toString(),
+                                                            id = java.util.UUID.randomUUID().toString(),
                                                             name = newProfileName,
                                                             isReadOnly = false,
                                                             jc = uiState.awgJc, jmin = uiState.awgJmin, jmax = uiState.awgJmax,
-                                                            s1 = uiState.awgS1, s2 = uiState.awgS2,
+                                                            s1 = uiState.awgS1, s2 = uiState.awgS2, s3 = uiState.awgS3, s4 = uiState.awgS4,
                                                             h1 = uiState.awgH1, h2 = uiState.awgH2, h3 = uiState.awgH3, h4 = uiState.awgH4,
                                                             i1 = uiState.awgI1, i2 = uiState.awgI2, i3 = uiState.awgI3, i4 = uiState.awgI4, i5 = uiState.awgI5,
-                                                            customId = uiState.awgId, ip = uiState.awgIp, ib = uiState.awgIb,
                                                             junkLevel = uiState.awgJunkLevel
                                                         )
                                                         viewModel.saveObfuscationProfile(newProfile)
