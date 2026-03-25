@@ -340,6 +340,60 @@
     <string name="title_edit_obfuscation_config">ویرایش پیکربندی مبهم‌سازی</string>
     <string name="error_empty_profile_name">نام پروفایل نمی‌تواند خالی باشد</string>
 
+    <!-- Debug Tools -->
+    <string name="settings_debug">ابزارهای عیب‌یابی</string>
+    <string name="debug_title">داشبورد عیب‌یابی</string>
+    <string name="debug_session_header">نشست و گواهی VPN</string>
+    <string name="debug_cert_id">شناسه گواهی: %1$s</string>
+    <string name="debug_cert_issued">صادر شده: %1$s</string>
+    <string name="debug_cert_expires">انقضا: %1$s</string>
+    <string name="debug_btn_refresh_cert">تازه‌سازی اجباری گواهی</string>
+    <string name="debug_exports_header">خروجی‌ها و تشخیص</string>
+    <string name="debug_btn_export_logs">خروجی Logcat به Downloads</string>
+    <string name="debug_btn_export_config">خروجی پیکربندی WG (.conf)</string>
+    <string name="debug_danger_header">منطقه خطر</string>
+    <string name="debug_btn_nuke">پاکسازی تمام داده‌ها (تنظیمات کارخانه)</string>
+    <string name="debug_nuke_confirm">آیا مطمئن هستید؟ تمام تنظیمات، حساب‌ها و کش سرورها برای همیشه پاک خواهند شد.</string>
+    <string name="debug_device_header">اطلاعات دستگاه</string>
+    <string name="debug_select_server">انتخاب سرور برای خروجی پیکربندی</string>
+
+    <!-- Sentry Debug -->
+    <string name="debug_sentry_header">تست SDK Sentry</string>
+    <string name="debug_btn_crash_java">ایجاد کرش جاوا</string>
+    <string name="debug_btn_crash_native">ایجاد کرش نیتیو</string>
+    <string name="debug_btn_anr">ایجاد ANR (۵ ثانیه)</string>
+    <string name="debug_btn_oom">ایجاد خطای کمبود حافظه</string>
+    <string name="debug_btn_background_crash">کرش در ترد پس‌زمینه</string>
+    <string name="debug_btn_capture_exception">ثبت استثنای غیر بحرانی</string>
+    <string name="debug_btn_arithmetic_error">خطای محاسباتی (1/0)</string>
+    <string name="debug_btn_null_pointer">استثنای اشاره‌گر تهی</string>
+
+    <string name="debug_btn_fake_crash">کرش نمایشی برنامه</string>
+
+    <string name="title_quick_connect_config">پیکربندی اتصال سریع</string>
+    <string name="qc_strategy_fastest">سریع‌ترین سرور</string>
+    <string name="qc_strategy_fastest_desc">همیشه به سریع‌ترین سرور در دسترس متصل شوید.</string>
+    <string name="qc_strategy_recent">آخرین اتصال</string>
+    <string name="qc_strategy_recent_desc">به سرور آخرین نشست خود متصل شوید.</string>
+    <string name="qc_header_profiles">استفاده از پروفایل</string>
+    <string name="qc_header_recent">سرورهای اخیر</string>
+    <string name="qc_strategy_profile_desc">با تنظیمات پروفایل خاص متصل شوید.</string>
+
+    <string name="tile_subtitle_connected">متصل: %s</string>
+    <string name="tile_subtitle_fastest">اتصال سریع: سریع‌ترین</string>
+    <string name="tile_subtitle_last">اتصال سریع: آخرین بار</string>
+    <string name="tile_subtitle_specific">اتصال سریع: %s</string>
+
+    <string name="obfuscation_btn_generate_from_domain">تولید از دامنه</string>
+    <string name="obfuscation_dialog_domain_title">ورود دامنه</string>
+    <string name="obfuscation_dialog_domain_desc">یک دامنه وارد کنید (مثلاً google.com) تا یک رشته شناسایی مبتنی بر QUIC تولید شود.</string>
+
+    <!-- Speed Units -->
+    <string name="unit_kb_s">کیلوبایت بر ثانیه</string>
+    <string name="unit_mb_s">مگابایت بر ثانیه</string>
+    <string name="unit_gb_s">گیگابایت بر ثانیه</string>
+    <string name="unit_b_s">بایت بر ثانیه</string>
+
     <!-- Captcha Screen -->
     <string name="captcha_title">تایید انسانی</string>
     <string name="captcha_message">برای ایمن نگه داشتن حساب خود، لطفاً تأیید زیر را کامل کنید.</string>
