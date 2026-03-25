@@ -34,6 +34,7 @@ import org.amnezia.awg.backend.Tunnel
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.ui.theme.AppTheme
+import ru.protonmod.next.utils.crypto.QuicI1Generator
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import javax.inject.Inject
 
@@ -376,6 +377,20 @@ class SettingsViewModel @Inject constructor(
             i1 = randomHex, i2 = currentState.awgI2, i3 = currentState.awgI3, i4 = currentState.awgI4, i5 = currentState.awgI5,
             customId = currentState.awgId, ip = currentState.awgIp, ib = currentState.awgIb, junkLevel = currentState.awgJunkLevel
         )
+    }
+
+    fun generateI1FromDomain(domain: String) {
+        viewModelScope.launch {
+            val i1 = QuicI1Generator.generateI1(domain)
+            val currentState = uiState.value
+            setAwgParams(
+                jc = currentState.awgJc, jmin = currentState.awgJmin, jmax = currentState.awgJmax,
+                s1 = currentState.awgS1, s2 = currentState.awgS2,
+                h1 = currentState.awgH1, h2 = currentState.awgH2, h3 = currentState.awgH3, h4 = currentState.awgH4,
+                i1 = i1, i2 = currentState.awgI2, i3 = currentState.awgI3, i4 = currentState.awgI4, i5 = currentState.awgI5,
+                customId = currentState.awgId, ip = currentState.awgIp, ib = currentState.awgIb, junkLevel = currentState.awgJunkLevel
+            )
+        }
     }
 
     fun resetToStandard() {

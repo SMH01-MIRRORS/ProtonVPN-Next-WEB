@@ -18,6 +18,7 @@
 package ru.protonmod.next.ui.screens.settings
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -351,6 +352,63 @@ fun ObfuscationSettingsScreen(
                                                 Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
                                                 Spacer(modifier = Modifier.width(8.dp))
                                                 Text(stringResource(R.string.obfuscation_regenerate_i1))
+                                            }
+
+                                            var showDomainDialog by remember { mutableStateOf(false) }
+                                            OutlinedButton(
+                                                onClick = { showDomainDialog = true },
+                                                enabled = !selectedProfile.isReadOnly,
+                                                modifier = Modifier.fillMaxWidth(),
+                                                shape = RoundedCornerShape(12.dp),
+                                                border = BorderStroke(1.dp, colors.brandNorm.copy(alpha = 0.5f))
+                                            ) {
+                                                Icon(Icons.Rounded.Public, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.brandNorm)
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(stringResource(R.string.obfuscation_btn_generate_from_domain), color = colors.brandNorm)
+                                            }
+
+                                            if (showDomainDialog) {
+                                                var domainInput by remember { mutableStateOf("") }
+                                                AlertDialog(
+                                                    onDismissRequest = { showDomainDialog = false },
+                                                    title = { Text(stringResource(R.string.obfuscation_dialog_domain_title), color = colors.textNorm) },
+                                                    text = {
+                                                        Column {
+                                                            Text(stringResource(R.string.obfuscation_dialog_domain_desc), style = MaterialTheme.typography.bodySmall, color = colors.textWeak)
+                                                            Spacer(modifier = Modifier.height(16.dp))
+                                                            OutlinedTextField(
+                                                                value = domainInput,
+                                                                onValueChange = { domainInput = it },
+                                                                placeholder = { Text("google.com", color = colors.textWeak.copy(alpha = 0.5f)) },
+                                                                singleLine = true,
+                                                                modifier = Modifier.fillMaxWidth(),
+                                                                colors = OutlinedTextFieldDefaults.colors(
+                                                                    focusedBorderColor = colors.brandNorm,
+                                                                    focusedTextColor = colors.textNorm,
+                                                                    unfocusedTextColor = colors.textNorm
+                                                                )
+                                                            )
+                                                        }
+                                                    },
+                                                    confirmButton = {
+                                                        TextButton(
+                                                            onClick = {
+                                                                if (domainInput.isNotBlank()) {
+                                                                    viewModel.generateI1FromDomain(domainInput.trim())
+                                                                }
+                                                                showDomainDialog = false
+                                                            }
+                                                        ) {
+                                                            Text(stringResource(android.R.string.ok), color = colors.brandNorm)
+                                                        }
+                                                    },
+                                                    dismissButton = {
+                                                        TextButton(onClick = { showDomainDialog = false }) {
+                                                            Text(stringResource(android.R.string.cancel), color = colors.textWeak)
+                                                        }
+                                                    },
+                                                    containerColor = colors.backgroundSecondary
+                                                )
                                             }
                                         }
                                     }

@@ -394,6 +394,10 @@
     <string name="qc_header_profiles">ИСПОЛЬЗОВАТЬ ПРОФИЛЬ</string>
     <string name="qc_strategy_profile_desc">Подключиться с настройками профиля.</string>
 
+    <string name="obfuscation_btn_generate_from_domain">Генерация по домену</string>
+    <string name="obfuscation_dialog_domain_title">Введите домен</string>
+    <string name="obfuscation_dialog_domain_desc">Введите домен (например, google.com) для генерации идентификатора на основе QUIC.</string>
+
     <string name="captcha_title">Проверка безопасности</string>
     <string name="captcha_message">Для обеспечения безопасности аккаунта, пожалуйста, пройдите проверку ниже.</string>
     <string name="captcha_proxy_active">Антиблокировочный прокси активен</string>
