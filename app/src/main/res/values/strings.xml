@@ -376,6 +376,14 @@
 
     <string name="debug_btn_fake_crash">Fake App Crash</string>
 
+    <string name="title_quick_connect_config">Quick Connect Configuration</string>
+    <string name="qc_strategy_fastest">Fastest Server</string>
+    <string name="qc_strategy_fastest_desc">Always connect to the fastest available server.</string>
+    <string name="qc_strategy_recent">Last Connected</string>
+    <string name="qc_strategy_recent_desc">Connect to the server from your last session.</string>
+    <string name="qc_header_profiles">USE PROFILE</string>
+    <string name="qc_strategy_profile_desc">Connect with specific profile settings.</string>
+
     <string name="captcha_title">Security Check</string>
     <string name="captcha_message">To keep your account secure, please complete the verification below.</string>
     <string name="captcha_proxy_active">Anti-blocking proxy is active</string>

@@ -81,6 +81,32 @@
                 android:value="VPN connection for Proton VPN-Next" />
         </service>
 
+        <!-- Quick Settings Tile -->
+        <service
+            android:name=".vpn.VpnTileService"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:icon="@drawable/ic_proton_lock_filled"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <!-- App Widget -->
+        <receiver
+            android:name=".ui.widget.VpnWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="ru.protonmod.next.WIDGET_CLICK" />
+                <action android:name="ru.protonmod.next.vpn.STATE_CHANGED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/vpn_widget_info" />
+        </receiver>
+
         <meta-data android:name="io.sentry.dsn" android:value="https://7b74cef88678ecb3e6047ac6b4abf139@o4510986952310784.ingest.de.sentry.io/4510986956374096" />
         <meta-data android:name="io.sentry.auto-init" android:value="false" />
     </application>

@@ -386,6 +386,14 @@
 
     <string name="debug_btn_fake_crash">Фейковый краш приложения</string>
 
+    <string name="title_quick_connect_config">Настройка быстрого подключения</string>
+    <string name="qc_strategy_fastest">Самый быстрый сервер</string>
+    <string name="qc_strategy_fastest_desc">Всегда подключаться к самому быстрому серверу.</string>
+    <string name="qc_strategy_recent">Последний использованный</string>
+    <string name="qc_strategy_recent_desc">Подключиться к серверу из прошлой сессии.</string>
+    <string name="qc_header_profiles">ИСПОЛЬЗОВАТЬ ПРОФИЛЬ</string>
+    <string name="qc_strategy_profile_desc">Подключиться с настройками профиля.</string>
+
     <string name="captcha_title">Проверка безопасности</string>
     <string name="captcha_message">Для обеспечения безопасности аккаунта, пожалуйста, пройдите проверку ниже.</string>
     <string name="captcha_proxy_active">Антиблокировочный прокси активен</string>

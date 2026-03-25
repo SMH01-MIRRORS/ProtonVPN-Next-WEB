@@ -69,6 +69,9 @@ class SettingsManager @Inject constructor(
         private val ANALYTICS_ENABLED = booleanPreferencesKey("analytics_enabled")
         private val CRASH_REPORTS_ENABLED = booleanPreferencesKey("crash_reports_enabled")
 
+        private val QUICK_CONNECT_STRATEGY = stringPreferencesKey("quick_connect_strategy") // "fastest", "recent", "profile"
+        private val QUICK_CONNECT_TARGET_ID = stringPreferencesKey("quick_connect_target_id")
+
         private val AWG_JC = intPreferencesKey("awg_jc")
         private val AWG_JMIN = intPreferencesKey("awg_jmin")
         private val AWG_JMAX = intPreferencesKey("awg_jmax")
@@ -122,6 +125,9 @@ class SettingsManager @Inject constructor(
 
     val analyticsEnabled: Flow<Boolean> = context.dataStore.data.map { it[ANALYTICS_ENABLED] ?: true }
     val crashReportsEnabled: Flow<Boolean> = context.dataStore.data.map { it[CRASH_REPORTS_ENABLED] ?: true }
+
+    val quickConnectStrategy: Flow<String> = context.dataStore.data.map { it[QUICK_CONNECT_STRATEGY] ?: "fastest" }
+    val quickConnectTargetId: Flow<String?> = context.dataStore.data.map { it[QUICK_CONNECT_TARGET_ID] }
 
     val customProfiles: Flow<List<ObfuscationProfile>> = context.dataStore.data.map { preferences ->
         val jsonString = preferences[CUSTOM_PROFILES] ?: "[]"
@@ -251,6 +257,17 @@ class SettingsManager @Inject constructor(
 
     suspend fun setCrashReportsEnabled(enabled: Boolean) {
         context.dataStore.edit { it[CRASH_REPORTS_ENABLED] = enabled }
+    }
+
+    suspend fun setQuickConnectStrategy(strategy: String, targetId: String? = null) {
+        context.dataStore.edit { 
+            it[QUICK_CONNECT_STRATEGY] = strategy
+            if (targetId != null) {
+                it[QUICK_CONNECT_TARGET_ID] = targetId
+            } else {
+                it.remove(QUICK_CONNECT_TARGET_ID)
+            }
+        }
     }
 
     suspend fun saveCustomProfiles(profiles: List<ObfuscationProfile>) {

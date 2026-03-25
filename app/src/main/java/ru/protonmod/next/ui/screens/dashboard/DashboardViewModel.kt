@@ -39,8 +39,12 @@ import org.amnezia.awg.backend.Tunnel
 import org.json.JSONObject
 import ru.protonmod.next.R
 import ru.protonmod.next.data.repository.VpnRepository
+import ru.protonmod.next.data.local.ProfileDao
 import ru.protonmod.next.data.local.RecentConnectionEntity
 import ru.protonmod.next.data.local.SessionDao
+import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.data.local.VpnProfileEntity
+import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.ui.utils.CountryUtils
@@ -48,6 +52,8 @@ import ru.protonmod.next.vpn.AmneziaVpnManager
 import java.net.Proxy
 import javax.inject.Inject
 import androidx.core.content.edit
+import kotlinx.coroutines.flow.first
+import java.util.UUID
 
 data class LocationText(
     val country: String,
@@ -60,6 +66,9 @@ sealed class DashboardUiState {
     data class Success(
         val servers: List<LogicalServer>,
         val recentConnections: List<LogicalServer> = emptyList(),
+        val profiles: List<VpnProfileEntity> = emptyList(),
+        val quickConnectStrategy: String = "fastest",
+        val quickConnectTargetId: String? = null,
         val isConnected: Boolean = false,
         val connectedServer: LogicalServer? = null,
         val isConnecting: Boolean = false,
@@ -76,8 +85,10 @@ class DashboardViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val vpnRepository: VpnRepository,
     private val sessionDao: SessionDao,
+    private val settingsManager: SettingsManager,
     private val amneziaVpnManager: AmneziaVpnManager,
     private val connectedServerState: ConnectedServerState,
+    private val profileDao: ProfileDao,
     private val recentConnectionDao: ru.protonmod.next.data.local.RecentConnectionDao
 ) : ViewModel() {
 
@@ -102,6 +113,9 @@ class DashboardViewModel @Inject constructor(
         amneziaVpnManager.certState,
         connectedServerState.connectedServer,
         recentConnectionDao.getRecentConnections(),
+        profileDao.getAllProfilesFlow(),
+        settingsManager.quickConnectStrategy,
+        settingsManager.quickConnectTargetId,
         _originalLocationText,
         _vpnLocationText,
         _isIpHidden
@@ -116,9 +130,13 @@ class DashboardViewModel @Inject constructor(
         val connectedServer = args[6] as LogicalServer?
         @Suppress("UNCHECKED_CAST")
         val recentEntities = args[7] as List<RecentConnectionEntity>
-        val originalLocationText = args[8] as LocationText?
-        val vpnLocationText = args[9] as LocationText?
-        val isIpHidden = args[10] as Boolean
+        @Suppress("UNCHECKED_CAST")
+        val profiles = args[8] as List<VpnProfileEntity>
+        val qcStrategy = args[9] as String
+        val qcTargetId = args[10] as String?
+        val originalLocationText = args[11] as LocationText?
+        val vpnLocationText = args[12] as LocationText?
+        val isIpHidden = args[13] as Boolean
 
         if (isUpdating && servers.isEmpty()) {
             DashboardUiState.Loading
@@ -134,6 +152,9 @@ class DashboardViewModel @Inject constructor(
             DashboardUiState.Success(
                 servers = servers,
                 recentConnections = recentServers,
+                profiles = profiles,
+                quickConnectStrategy = qcStrategy,
+                quickConnectTargetId = qcTargetId,
                 isConnected = isConnected,
                 connectedServer = connectedServer,
                 isConnecting = isConnecting,
@@ -360,11 +381,103 @@ class DashboardViewModel @Inject constructor(
             val currentState = uiState.value
             if (currentState !is DashboardUiState.Success) return@launch
 
-            // Connect to the fastest server globally
-            val bestServer = currentState.servers.minByOrNull { it.averageLoad }
-            if (bestServer != null) {
-                initiateConnection(bestServer)
+            when (currentState.quickConnectStrategy) {
+                "recent" -> {
+                    val lastServer = currentState.recentConnections.firstOrNull()
+                    if (lastServer != null) {
+                        initiateConnection(lastServer)
+                    } else {
+                        // Fallback to fastest if no recent
+                        connectToFastest(currentState.servers)
+                    }
+                }
+                "profile" -> {
+                    val profile = currentState.profiles.find { it.id == currentState.quickConnectTargetId }
+                    if (profile != null) {
+                        connectWithProfile(profile, currentState.servers)
+                    } else {
+                        // Fallback to fastest if profile not found
+                        connectToFastest(currentState.servers)
+                    }
+                }
+                else -> {
+                    // Default: "fastest"
+                    connectToFastest(currentState.servers)
+                }
             }
+        }
+    }
+
+    private suspend fun connectToFastest(servers: List<LogicalServer>) {
+        val bestServer = servers.minByOrNull { it.averageLoad }
+        if (bestServer != null) {
+            initiateConnection(bestServer)
+        }
+    }
+
+    private suspend fun connectWithProfile(profile: VpnProfileEntity, allServers: List<LogicalServer>) {
+        val session = sessionDao.getSession() ?: return
+        
+        val targetServer = findBestServerForProfile(profile, allServers) ?: return
+        val physicalServer = targetServer.servers.filter { it.status == 1 }.minByOrNull { it.load }
+            ?: targetServer.servers.minByOrNull { it.load } ?: return
+
+        var obfuscationParams: AmneziaVpnManager.ObfuscationParams? = null
+        if (profile.isObfuscationEnabled && profile.obfuscationProfileId != null) {
+            val customProfiles = settingsManager.customProfiles.first()
+            val standardProfileName = context.getString(R.string.obfuscation_config_standard)
+            val selectedConfig = customProfiles.find { it.id == profile.obfuscationProfileId }
+                ?: if (profile.obfuscationProfileId == "standard_1") ObfuscationProfile.getStandardProfile(standardProfileName) else null
+
+            selectedConfig?.let {
+                obfuscationParams = AmneziaVpnManager.ObfuscationParams(
+                    jc = it.jc, jmin = it.jmin, jmax = it.jmax,
+                    s1 = it.s1, s2 = it.s2,
+                    h1 = it.h1, h2 = it.h2, h3 = it.h3, h4 = it.h4,
+                    i1 = it.i1
+                )
+            }
+        }
+
+        connectedServerState.setConnectedServer(targetServer)
+        val tunnelState = amneziaVpnManager.tunnelState.value
+        val isConnecting = amneziaVpnManager.isConnecting.value
+
+        if (tunnelState == Tunnel.State.UP || isConnecting) {
+            amneziaVpnManager.reconnect(
+                targetServer.id, physicalServer, session,
+                overridePort = profile.port,
+                overrideObfuscation = profile.isObfuscationEnabled,
+                obfuscationParams = obfuscationParams
+            )
+        } else {
+            amneziaVpnManager.connect(
+                targetServer.id, physicalServer, session,
+                overridePort = profile.port,
+                overrideObfuscation = profile.isObfuscationEnabled,
+                obfuscationParams = obfuscationParams
+            )
+        }
+    }
+
+    private fun findBestServerForProfile(profile: VpnProfileEntity, allServers: List<LogicalServer>): LogicalServer? {
+        if (profile.targetServerId != null) {
+            return allServers.find { it.id == profile.targetServerId }
+        }
+        if (profile.targetCity != null && profile.targetCountry != null) {
+            val cityServers = allServers.filter { it.exitCountry == profile.targetCountry && it.city == profile.targetCity }
+            if (cityServers.isNotEmpty()) return cityServers.minByOrNull { it.averageLoad }
+        }
+        if (profile.targetCountry != null) {
+            val countryServers = allServers.filter { it.exitCountry == profile.targetCountry }
+            if (countryServers.isNotEmpty()) return countryServers.minByOrNull { it.averageLoad }
+        }
+        return allServers.minByOrNull { it.averageLoad }
+    }
+
+    fun setQuickConnectStrategy(strategy: String, targetId: String? = null) {
+        viewModelScope.launch {
+            settingsManager.setQuickConnectStrategy(strategy, targetId)
         }
     }
 

@@ -347,6 +347,8 @@ fun DashboardScreen(
     var isQuickConnectPending by remember { mutableStateOf(false) }
     val isTablet = isTablet()
 
+    var showQuickConnectConfig by remember { mutableStateOf(false) }
+
     val vpnPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -501,8 +503,21 @@ fun DashboardScreen(
                                 onQuickConnect = { checkVpnAndQuickConnect() },
                                 onDisconnect = { viewModel.disconnect() },
                                 onRefreshCert = { viewModel.refreshCertificate() },
-                                onToggleIpVisibility = { viewModel.toggleIpVisibility() }
+                                onToggleIpVisibility = { viewModel.toggleIpVisibility() },
+                                onChangeQuickConnect = { showQuickConnectConfig = true }
                             )
+
+                            if (showQuickConnectConfig) {
+                                QuickConnectBottomSheet(
+                                    onDismiss = { showQuickConnectConfig = false },
+                                    currentStrategy = state.quickConnectStrategy,
+                                    currentTargetId = state.quickConnectTargetId,
+                                    profiles = state.profiles,
+                                    onStrategySelect = { strategy, targetId ->
+                                        viewModel.setQuickConnectStrategy(strategy, targetId)
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -519,7 +534,8 @@ fun DashboardContent(
     onQuickConnect: () -> Unit,
     onDisconnect: () -> Unit,
     onRefreshCert: () -> Unit,
-    onToggleIpVisibility: () -> Unit
+    onToggleIpVisibility: () -> Unit,
+    onChangeQuickConnect: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
     val configuration = LocalConfiguration.current
@@ -555,10 +571,14 @@ fun DashboardContent(
                     originalLocationText = state.originalLocationText,
                     vpnLocationText = state.vpnLocationText,
                     isIpHidden = state.isIpHidden,
+                    quickConnectStrategy = state.quickConnectStrategy,
+                    quickConnectTargetId = state.quickConnectTargetId,
+                    profiles = state.profiles,
                     onToggleIpVisibility = onToggleIpVisibility,
                     onToggleConnection = {
                         if (state.isConnected) onDisconnect() else onQuickConnect()
-                    }
+                    },
+                    onChangeQuickConnect = onChangeQuickConnect
                 )
             }
 
@@ -626,10 +646,14 @@ fun DashboardContent(
                     originalLocationText = state.originalLocationText,
                     vpnLocationText = state.vpnLocationText,
                     isIpHidden = state.isIpHidden,
+                    quickConnectStrategy = state.quickConnectStrategy,
+                    quickConnectTargetId = state.quickConnectTargetId,
+                    profiles = state.profiles,
                     onToggleIpVisibility = onToggleIpVisibility,
                     onToggleConnection = {
                         if (state.isConnected) onDisconnect() else onQuickConnect()
-                    }
+                    },
+                    onChangeQuickConnect = onChangeQuickConnect
                 )
             }
 
@@ -787,8 +811,12 @@ fun ConnectionStatusCard(
     originalLocationText: LocationText?,
     vpnLocationText: LocationText?,
     isIpHidden: Boolean,
+    quickConnectStrategy: String,
+    quickConnectTargetId: String?,
+    profiles: List<ru.protonmod.next.data.local.VpnProfileEntity>,
     onToggleIpVisibility: () -> Unit,
-    onToggleConnection: () -> Unit
+    onToggleConnection: () -> Unit,
+    onChangeQuickConnect: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
@@ -851,7 +879,7 @@ fun ConnectionStatusCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .clickable(enabled = !isConnecting) { /* TODO: Open Change Server Bottom Sheet */ }
+                    .clickable(enabled = !isConnecting) { onChangeQuickConnect() }
                     .padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -896,7 +924,12 @@ fun ConnectionStatusCard(
                     val locationTitleText = if (isConnected || isConnecting) {
                         if (safeCityName.isNotEmpty()) "$safeCountryName, $safeCityName" else safeCountryName
                     } else {
-                        stringResource(R.string.label_fastest_server)
+                        when (quickConnectStrategy) {
+                            "fastest" -> stringResource(R.string.qc_strategy_fastest)
+                            "recent" -> stringResource(R.string.qc_strategy_recent)
+                            "profile" -> profiles.find { it.id == quickConnectTargetId }?.name ?: stringResource(R.string.label_fastest_server)
+                            else -> stringResource(R.string.label_fastest_server)
+                        }
                     }
 
                     Text(
