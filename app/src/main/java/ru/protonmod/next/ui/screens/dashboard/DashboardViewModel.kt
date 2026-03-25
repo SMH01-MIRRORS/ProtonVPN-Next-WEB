@@ -248,36 +248,56 @@ class DashboardViewModel @Inject constructor(
      * @return [LocationData] object containing location info, or null in case of an error.
      */
     private suspend fun fetchRealLocation(useProxy: Boolean = true): LocationData? = withContext(Dispatchers.IO) {
-        try {
-            val clientBuilder = OkHttpClient.Builder()
-            if (useProxy) {
-                clientBuilder.proxy(Proxy.NO_PROXY)
-            }
-            val client = clientBuilder.build()
+        val client = OkHttpClient.Builder()
+            .apply { if (useProxy) proxy(Proxy.NO_PROXY) }
+            .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+            .build()
 
-            val request = Request.Builder()
-                .url("https://ipwho.is/")
-                .build()
+        val endpoints = listOf(
+            "https://ipwho.is/",
+            "https://ipapi.co/json/",
+            "https://freeipapi.com/api/json"
+        )
 
-            client.newCall(request).execute().use { response ->
-                if (response.isSuccessful) {
-                    val body = response.body.string()
-                    if (body.isNotBlank()) {
-                        val json = JSONObject(body)
-                        val ip = json.optString("ip", "")
-                        val countryCode = json.optString("country_code", "")
+        for (url in endpoints) {
+            try {
+                val request = Request.Builder().url(url).build()
+                client.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        val body = response.body.string()
+                        if (body.isNotBlank()) {
+                            val json = JSONObject(body)
+                            val ip = when {
+                                json.has("ip") -> json.optString("ip", "")
+                                json.has("ipAddress") -> json.optString("ipAddress", "")
+                                else -> ""
+                            }
+                            
+                            val countryCode = when {
+                                json.has("country_code") -> json.optString("country_code", "")
+                                json.has("countryCode") -> json.optString("countryCode", "")
+                                else -> ""
+                            }
 
-                        val cleanIp = if (ip.equals("null", ignoreCase = true)) "" else ip.trim()
-                        val cleanCountryCode = if (countryCode.equals("null", ignoreCase = true)) "" else countryCode.trim()
+                            val cleanIp = if (ip.equals("null", ignoreCase = true)) "" else ip.trim()
+                            val cleanCountryCode = if (countryCode.equals("null", ignoreCase = true)) "" else countryCode.trim()
 
-                        if (cleanIp.isNotEmpty() && cleanCountryCode.isNotEmpty()) {
-                            return@withContext LocationData(cleanIp, cleanCountryCode)
+                            if (cleanIp.isNotEmpty() && cleanCountryCode.isNotEmpty()) {
+                                return@withContext LocationData(cleanIp, cleanCountryCode)
+                            }
                         }
                     }
                 }
+            } catch (e: Exception) {
+                // Sentry HttpClientException handling (avoids reporting transient timeouts as hard errors)
+                val isTimeout = e.message?.contains("504") == true || e.message?.contains("timeout") == true
+                if (isTimeout) {
+                    ProtonLogger.w("DashboardViewModel", "Transient timeout for $url, trying fallback...")
+                } else {
+                    ProtonLogger.w("DashboardViewModel", "Failed to fetch from $url: ${e.message}")
+                }
             }
-        } catch (e: Exception) {
-            ProtonLogger.e("DashboardViewModel", "Error fetching location", e)
         }
         null
     }
