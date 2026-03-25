@@ -36,6 +36,7 @@ import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.repository.VpnRepository
+import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.di.ApplicationScope
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import ru.protonmod.next.vpn.ProtonVpnService
@@ -55,6 +56,9 @@ class VpnWidgetProvider : AppWidgetProvider() {
 
     @Inject
     lateinit var settingsManager: SettingsManager
+
+    @Inject
+    lateinit var connectedServerState: ConnectedServerState
 
     @Inject
     @ApplicationScope
@@ -93,9 +97,16 @@ class VpnWidgetProvider : AppWidgetProvider() {
         
         val currentState = amneziaVpnManager.tunnelState.value
         val isConnected = currentState == Tunnel.State.UP
+        val connectedServer = connectedServerState.connectedServer.value
         
         views.setImageViewResource(R.id.widget_icon, if (isConnected) R.drawable.ic_proton_lock_filled else R.drawable.ic_proton_lock_open_filled_2)
-        views.setTextViewText(R.id.widget_status, context.getString(if (isConnected) R.string.status_connected else R.string.status_disconnected))
+        
+        val statusText = if (isConnected && connectedServer != null) {
+            connectedServer.name
+        } else {
+            context.getString(if (isConnected) R.string.status_connected else R.string.status_disconnected)
+        }
+        views.setTextViewText(R.id.widget_status, statusText)
         
         val intent = Intent(context, VpnWidgetProvider::class.java).apply {
             action = ACTION_WIDGET_CLICK
@@ -122,6 +133,6 @@ class VpnWidgetProvider : AppWidgetProvider() {
         val physicalServer = server.servers.filter { it.status == 1 }.minByOrNull { it.load }
             ?: server.servers.minByOrNull { it.load } ?: return
 
-        amneziaVpnManager.connect(server.id, physicalServer, session)
+        amneziaVpnManager.connect(server.id, physicalServer, session, logicalServer = server)
     }
 }

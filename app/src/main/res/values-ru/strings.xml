@@ -392,7 +392,13 @@
     <string name="qc_strategy_recent">Последний использованный</string>
     <string name="qc_strategy_recent_desc">Подключиться к серверу из прошлой сессии.</string>
     <string name="qc_header_profiles">ИСПОЛЬЗОВАТЬ ПРОФИЛЬ</string>
+    <string name="qc_header_recent">НЕДАВНИЕ СЕРВЕРЫ</string>
     <string name="qc_strategy_profile_desc">Подключиться с настройками профиля.</string>
+
+    <string name="tile_subtitle_connected">Подключено: %s</string>
+    <string name="tile_subtitle_fastest">Быстрое: Самый быстрый</string>
+    <string name="tile_subtitle_last">Быстрое: Последний раз</string>
+    <string name="tile_subtitle_specific">Быстрое: %s</string>
 
     <string name="obfuscation_btn_generate_from_domain">Генерация по домену</string>
     <string name="obfuscation_dialog_domain_title">Введите домен</string>

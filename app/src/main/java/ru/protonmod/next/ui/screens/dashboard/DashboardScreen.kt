@@ -36,7 +36,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Public
+import androidx.compose.material.icons.rounded.Speed
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -183,18 +187,15 @@ private fun ObscurableText(
     targetText: String,
     highlightText: String,
     isObscured: Boolean,
-    duration: Int = 30, // animation speed per character
+    duration: Int = 30, // Animation speed per character
     targetCharacter: Char = '*',
     preserveCharacters: CharArray = charArrayOf('.', ' ', '-', ':')
 ) {
-    val obscureStartIndex = 0
-
-    // Remove targetText from remember keys so we don't instantly throw away the animation state
     var displayText by remember {
         mutableStateOf(
             if (isObscured) {
                 val chars = targetText.toCharArray()
-                for (i in obscureStartIndex until chars.size) {
+                for (i in chars.indices) {
                     if (!preserveCharacters.contains(chars[i])) chars[i] = targetCharacter
                 }
                 String(chars)
@@ -203,41 +204,37 @@ private fun ObscurableText(
             }
         )
     }
+
     var fixedWidth by remember { mutableStateOf<Int?>(null) }
+    // Track the previous target string to rebuild the base perfectly when the IP changes
+    var previousTargetText by remember { mutableStateOf(targetText) }
 
     LaunchedEffect(isObscured, targetText) {
         val targetChars = targetText.toCharArray()
         var currentChars = displayText.toCharArray()
 
-        val currentObscureStart = 0
-
-        // Check if the base string structure changed (length difference or country name change)
-        var baseChanged = currentChars.size != targetChars.size
-        if (!baseChanged) {
-            for (i in 0 until currentObscureStart) {
-                if (currentChars[i] != targetChars[i]) {
-                    baseChanged = true
-                    break
-                }
-            }
-        }
+        // Check if the underlying string itself has changed (e.g., completely new IP loaded)
+        // This is critical because if lengths match but dot positions differ, the old
+        // asterisks will remain stuck since the animation filter preserves the new dots.
+        val baseChanged = previousTargetText != targetText || currentChars.size != targetChars.size
 
         if (baseChanged) {
             // Reset fixed width to allow the layout to remeasure for the new string
             fixedWidth = null
+            previousTargetText = targetText
 
             val baseChars = targetChars.clone()
             if (isObscured) {
-                // If the new string is obscured, jump to its obscured form immediately
-                for (i in currentObscureStart until baseChars.size) {
+                // Instantly obscure the new text, applying the new dot/dash placement
+                for (i in baseChars.indices) {
                     if (!preserveCharacters.contains(baseChars[i])) baseChars[i] = targetCharacter
                 }
                 displayText = String(baseChars)
                 return@LaunchedEffect
             } else {
                 // If we are unobscuring to a NEW target, start from its obscured version
-                // and let the animation below reveal the new characters.
-                for (i in currentObscureStart until baseChars.size) {
+                // and let the animation below reveal the new characters gracefully.
+                for (i in baseChars.indices) {
                     if (!preserveCharacters.contains(baseChars[i])) baseChars[i] = targetCharacter
                 }
                 currentChars = baseChars
@@ -246,7 +243,7 @@ private fun ObscurableText(
         }
 
         // Animate the differences character by character
-        val indicesToAnimate = (currentObscureStart until targetText.length)
+        val indicesToAnimate = targetText.indices
             .filter { !preserveCharacters.contains(targetText[it]) }
             .filter {
                 if (isObscured) currentChars[it] != targetCharacter
@@ -513,6 +510,7 @@ fun DashboardScreen(
                                     currentStrategy = state.quickConnectStrategy,
                                     currentTargetId = state.quickConnectTargetId,
                                     profiles = state.profiles,
+                                    recentServers = state.recentConnections,
                                     onStrategySelect = { strategy, targetId ->
                                         viewModel.setQuickConnectStrategy(strategy, targetId)
                                     }
@@ -568,6 +566,7 @@ fun DashboardContent(
                     isConnected = state.isConnected,
                     isConnecting = state.isConnecting,
                     connectedServer = state.connectedServer,
+                    allServers = state.servers,
                     originalLocationText = state.originalLocationText,
                     vpnLocationText = state.vpnLocationText,
                     isIpHidden = state.isIpHidden,
@@ -643,6 +642,7 @@ fun DashboardContent(
                     isConnected = state.isConnected,
                     isConnecting = state.isConnecting,
                     connectedServer = state.connectedServer,
+                    allServers = state.servers,
                     originalLocationText = state.originalLocationText,
                     vpnLocationText = state.vpnLocationText,
                     isIpHidden = state.isIpHidden,
@@ -808,6 +808,7 @@ fun ConnectionStatusCard(
     isConnected: Boolean,
     isConnecting: Boolean,
     connectedServer: LogicalServer?,
+    allServers: List<LogicalServer> = emptyList(),
     originalLocationText: LocationText?,
     vpnLocationText: LocationText?,
     isIpHidden: Boolean,
@@ -908,10 +909,41 @@ fun ConnectionStatusCard(
                         }
                     }
                 } else {
-                    FlagIcon(
-                        countryFlag = R.drawable.flag_fastest,
-                        size = DpSize(48.dp, 32.dp)
-                    )
+                    val targetServer = if (quickConnectStrategy == "server") {
+                        allServers.find { it.id == quickConnectTargetId }
+                    } else null
+
+                    val flagRes = when {
+                        targetServer != null -> CountryUtils.getFlagResource(context, targetServer.exitCountry)
+                        quickConnectStrategy == "fastest" || quickConnectStrategy == "recent" -> R.drawable.flag_fastest
+                        else -> 0
+                    }
+
+                    if (flagRes != 0) {
+                        FlagIcon(
+                            countryFlag = flagRes,
+                            size = DpSize(48.dp, 32.dp)
+                        )
+                    } else {
+                        val iconVector = when (quickConnectStrategy) {
+                            "profile" -> Icons.Rounded.Star
+                            else -> Icons.Rounded.Speed
+                        }
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp, 32.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(colors.backgroundNorm),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = iconVector,
+                                contentDescription = null,
+                                tint = colors.brandNorm,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
@@ -921,6 +953,10 @@ fun ConnectionStatusCard(
                     val safeCountryName = rawCountry?.takeIf { it.isNotBlank() && it != "null" } ?: "VPN"
                     val safeCityName = connectedServer?.city?.takeIf { it.isNotBlank() && it != "null" } ?: ""
 
+                    val targetServer = if (quickConnectStrategy == "server") {
+                        allServers.find { it.id == quickConnectTargetId }
+                    } else null
+
                     val locationTitleText = if (isConnected || isConnecting) {
                         if (safeCityName.isNotEmpty()) "$safeCountryName, $safeCityName" else safeCountryName
                     } else {
@@ -928,6 +964,10 @@ fun ConnectionStatusCard(
                             "fastest" -> stringResource(R.string.qc_strategy_fastest)
                             "recent" -> stringResource(R.string.qc_strategy_recent)
                             "profile" -> profiles.find { it.id == quickConnectTargetId }?.name ?: stringResource(R.string.label_fastest_server)
+                            "server" -> targetServer?.let {
+                                val cName = CountryUtils.getCountryName(context, it.exitCountry)
+                                if (it.city.isNotBlank()) "$cName, ${it.city}" else cName
+                            } ?: stringResource(R.string.label_fastest_server)
                             else -> stringResource(R.string.label_fastest_server)
                         }
                     }
@@ -943,7 +983,10 @@ fun ConnectionStatusCard(
                     Text(
                         text = if (isConnected || isConnecting) {
                             connectedServer?.name ?: ""
-                        } else stringResource(R.string.label_select_location),
+                        } else {
+                            if (quickConnectStrategy == "server") targetServer?.name ?: ""
+                            else stringResource(R.string.label_select_location)
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         color = colors.textWeak
                     )

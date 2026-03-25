@@ -382,7 +382,13 @@
     <string name="qc_strategy_recent">Last Connected</string>
     <string name="qc_strategy_recent_desc">Connect to the server from your last session.</string>
     <string name="qc_header_profiles">USE PROFILE</string>
+    <string name="qc_header_recent">RECENT SERVERS</string>
     <string name="qc_strategy_profile_desc">Connect with specific profile settings.</string>
+
+    <string name="tile_subtitle_connected">Connected: %s</string>
+    <string name="tile_subtitle_fastest">Quick Connect: Fastest</string>
+    <string name="tile_subtitle_last">Quick Connect: Last Used</string>
+    <string name="tile_subtitle_specific">Quick Connect: %s</string>
 
     <string name="obfuscation_btn_generate_from_domain">Generate from Domain</string>
     <string name="obfuscation_dialog_domain_title">Enter Domain</string>

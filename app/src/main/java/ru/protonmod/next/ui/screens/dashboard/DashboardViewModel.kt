@@ -294,7 +294,7 @@ class DashboardViewModel @Inject constructor(
                                 json.has("ipAddress") -> json.optString("ipAddress", "")
                                 else -> ""
                             }
-                            
+
                             val countryCode = when {
                                 json.has("country_code") -> json.optString("country_code", "")
                                 json.has("countryCode") -> json.optString("countryCode", "")
@@ -400,6 +400,14 @@ class DashboardViewModel @Inject constructor(
                         connectToFastest(currentState.servers)
                     }
                 }
+                "server" -> {
+                    val targetServer = currentState.servers.find { it.id == currentState.quickConnectTargetId }
+                    if (targetServer != null) {
+                        initiateConnection(targetServer)
+                    } else {
+                        connectToFastest(currentState.servers)
+                    }
+                }
                 else -> {
                     // Default: "fastest"
                     connectToFastest(currentState.servers)
@@ -417,7 +425,7 @@ class DashboardViewModel @Inject constructor(
 
     private suspend fun connectWithProfile(profile: VpnProfileEntity, allServers: List<LogicalServer>) {
         val session = sessionDao.getSession() ?: return
-        
+
         val targetServer = findBestServerForProfile(profile, allServers) ?: return
         val physicalServer = targetServer.servers.filter { it.status == 1 }.minByOrNull { it.load }
             ?: targetServer.servers.minByOrNull { it.load } ?: return

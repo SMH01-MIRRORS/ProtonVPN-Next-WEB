@@ -46,8 +46,10 @@ import java.net.InetAddress
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.local.SessionDao
+import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.network.PhysicalServer
 import ru.protonmod.next.data.repository.VpnRepository
+import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.di.ApplicationScope
 import ru.protonmod.next.utils.coroutines.DispatcherProvider
 import ru.protonmod.next.utils.crypto.CryptoWrapper
@@ -65,6 +67,7 @@ class AmneziaVpnManager @Inject constructor(
     private val settingsManager: SettingsManager,
     private val vpnRepositoryProvider: Provider<VpnRepository>,
     private val sessionDao: SessionDao,
+    private val connectedServerState: ConnectedServerState,
     private val systemContextWrapper: SystemContextWrapper,
     private val cryptoWrapper: CryptoWrapper,
     private val amneziaConfigGenerator: AmneziaConfigGenerator,
@@ -134,6 +137,7 @@ class AmneziaVpnManager @Inject constructor(
                             checkAndRefreshCertificateProactively()
                         } else if (newState == Tunnel.State.DOWN && !isReconnecting) {
                             currentServerId = null
+                            connectedServerState.setConnectedServer(null)
                         }
                     }
                 }
@@ -274,7 +278,8 @@ class AmneziaVpnManager @Inject constructor(
         session: SessionEntity,
         overridePort: Int? = null,
         overrideObfuscation: Boolean? = null,
-        obfuscationParams: ObfuscationParams? = null
+        obfuscationParams: ObfuscationParams? = null,
+        logicalServer: LogicalServer? = null
     ) {
         if (currentServerId == logicalServerId && _tunnelState.value == Tunnel.State.UP) {
             ProtonLogger.d(TAG, "Already connected to $logicalServerId")
@@ -284,6 +289,15 @@ class AmneziaVpnManager @Inject constructor(
         connectionJob?.cancel()
         connectionJob = applicationScope.launch(dispatcherProvider.io()) {
             currentServerId = logicalServerId
+            
+            // Resolve logical server if not provided to ensure UI can show location info
+            if (logicalServer != null) {
+                connectedServerState.setConnectedServer(logicalServer)
+            } else if (connectedServerState.connectedServer.value?.id != logicalServerId) {
+                val resolved = vpnRepositoryProvider.get().getCachedServers().find { it.id == logicalServerId }
+                connectedServerState.setConnectedServer(resolved)
+            }
+
             connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams)
         }
     }
@@ -309,7 +323,7 @@ class AmneziaVpnManager @Inject constructor(
                 if (isEffectivelyExpired()) {
                     // Even if expired, we try to connect because Proton API might be reachable 
                     // and some servers might still accept the old key for a short grace period.
-                    // But we keep the UI warning.
+                    // But we keep the UI wrning.
                     ProtonLogger.w(TAG, "Certificate is expired. Proceeding with connection anyway as Proton API is accessible.")
                 }
                 
@@ -426,7 +440,8 @@ class AmneziaVpnManager @Inject constructor(
         session: SessionEntity,
         overridePort: Int? = null,
         overrideObfuscation: Boolean? = null,
-        obfuscationParams: ObfuscationParams? = null
+        obfuscationParams: ObfuscationParams? = null,
+        logicalServer: LogicalServer? = null
     ) {
         // Only skip if we're already connecting (to avoid multiple rapid clicks)
         if (_isConnecting.value) {
@@ -440,6 +455,15 @@ class AmneziaVpnManager @Inject constructor(
                 isReconnecting = true
                 _isConnecting.value = true
                 currentServerId = logicalServerId
+
+                // Resolve logical server if not provided
+                if (logicalServer != null) {
+                    connectedServerState.setConnectedServer(logicalServer)
+                } else if (connectedServerState.connectedServer.value?.id != logicalServerId) {
+                    val resolved = vpnRepositoryProvider.get().getCachedServers().find { it.id == logicalServerId }
+                    connectedServerState.setConnectedServer(resolved)
+                }
+
                 disconnectInternal()
                 try {
                     withTimeout(5000) {

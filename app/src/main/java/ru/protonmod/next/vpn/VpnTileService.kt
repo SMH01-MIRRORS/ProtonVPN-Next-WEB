@@ -22,6 +22,8 @@ import android.net.VpnService
 import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
+import androidx.core.service.quicksettings.PendingIntentActivityWrapper
+import androidx.core.service.quicksettings.TileServiceCompat
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,11 +33,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.amnezia.awg.backend.Tunnel
 import ru.protonmod.next.MainActivity
+import ru.protonmod.next.R
+import ru.protonmod.next.data.local.ProfileDao
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.local.VpnProfileEntity
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.repository.VpnRepository
+import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.di.ApplicationScope
 import ru.protonmod.next.utils.ProtonLogger
 import javax.inject.Inject
@@ -56,6 +61,12 @@ class VpnTileService : TileService() {
     lateinit var settingsManager: SettingsManager
 
     @Inject
+    lateinit var profileDao: ProfileDao
+
+    @Inject
+    lateinit var connectedServerState: ConnectedServerState
+
+    @Inject
     @ApplicationScope
     lateinit var applicationScope: CoroutineScope
 
@@ -65,11 +76,25 @@ class VpnTileService : TileService() {
         super.onStartListening()
         observationJob?.cancel()
         observationJob = applicationScope.launch(Dispatchers.Main) {
-            amneziaVpnManager.tunnelState.collect { state ->
-                updateTile(state)
+            combine(
+                amneziaVpnManager.tunnelState,
+                settingsManager.quickConnectStrategy,
+                settingsManager.quickConnectTargetId,
+                connectedServerState.connectedServer
+            ) { state, strategy, targetId, connectedServer ->
+                UpdateParams(state, strategy, targetId, connectedServer)
+            }.collect { params ->
+                updateTile(params.state, params.strategy, params.targetId, params.connectedServer)
             }
         }
     }
+
+    private data class UpdateParams(
+        val state: Tunnel.State,
+        val strategy: String,
+        val targetId: String?,
+        val connectedServer: LogicalServer?
+    )
 
     override fun onStopListening() {
         super.onStopListening()
@@ -86,21 +111,18 @@ class VpnTileService : TileService() {
         } else {
             val vpnIntent = VpnService.prepare(this)
             if (vpnIntent != null) {
-                // Need permission, open app
                 val intent = Intent(this, MainActivity::class.java).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
-                
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    val pendingIntent = android.app.PendingIntent.getActivity(
-                        this, 0, intent, 
-                        android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
-                    )
-                    startActivityAndCollapse(pendingIntent)
-                } else {
-                    @Suppress("DEPRECATION")
-                    startActivityAndCollapse(intent)
-                }
+
+                val wrapper = PendingIntentActivityWrapper(
+                    this,
+                    0,
+                    intent,
+                    android.app.PendingIntent.FLAG_UPDATE_CURRENT,
+                    false
+                )
+                TileServiceCompat.startActivityAndCollapse(this, wrapper)
             } else {
                 applicationScope.launch {
                     performQuickConnect()
@@ -110,33 +132,65 @@ class VpnTileService : TileService() {
     }
 
     private suspend fun performQuickConnect() {
-        sessionDao.getSession() ?: return
+        val session = sessionDao.getSession() ?: return
         val strategy = settingsManager.quickConnectStrategy.first()
+        val targetId = settingsManager.quickConnectTargetId.first()
         
         val servers = vpnRepository.getCachedServers()
         if (servers.isEmpty()) return
 
         when (strategy) {
             "recent" -> {
-                // For simplicity in Tile, let's use the same logic as DashboardViewModel but adapted.
+                // Connect to the very first available server
                 val bestServer = servers.minByOrNull { it.averageLoad }
-                if (bestServer != null) {
-                    initiateConnection(bestServer)
+                if (bestServer != null) initiateConnection(bestServer)
+            }
+            "server" -> {
+                val target = servers.find { it.id == targetId }
+                if (target != null) {
+                    initiateConnection(target)
+                } else {
+                    val bestServer = servers.minByOrNull { it.averageLoad }
+                    if (bestServer != null) initiateConnection(bestServer)
                 }
             }
             "profile" -> {
-                val bestServer = servers.minByOrNull { it.averageLoad }
-                if (bestServer != null) {
-                    initiateConnection(bestServer)
+                val profile = profileDao.getAllProfilesFlow().first().find { it.id == targetId }
+                if (profile != null) {
+                    val targetServer = findBestServerForProfile(profile, servers)
+                    if (targetServer != null) {
+                        val physicalServer = targetServer.servers.filter { it.status == 1 }.minByOrNull { it.load }
+                            ?: targetServer.servers.minByOrNull { it.load }
+                        
+                        if (physicalServer != null) {
+                            amneziaVpnManager.connect(targetServer.id, physicalServer, session, logicalServer = targetServer)
+                        }
+                    }
+                } else {
+                    val bestServer = servers.minByOrNull { it.averageLoad }
+                    if (bestServer != null) initiateConnection(bestServer)
                 }
             }
             else -> {
                 val bestServer = servers.minByOrNull { it.averageLoad }
-                if (bestServer != null) {
-                    initiateConnection(bestServer)
-                }
+                if (bestServer != null) initiateConnection(bestServer)
             }
         }
+    }
+
+    private fun findBestServerForProfile(profile: VpnProfileEntity, allServers: List<LogicalServer>): LogicalServer? {
+        if (profile.targetServerId != null) {
+            return allServers.find { it.id == profile.targetServerId }
+        }
+        if (profile.targetCity != null && profile.targetCountry != null) {
+            val cityServers = allServers.filter { it.exitCountry == profile.targetCountry && it.city == profile.targetCity }
+            if (cityServers.isNotEmpty()) return cityServers.minByOrNull { it.averageLoad }
+        }
+        if (profile.targetCountry != null) {
+            val countryServers = allServers.filter { it.exitCountry == profile.targetCountry }
+            if (countryServers.isNotEmpty()) return countryServers.minByOrNull { it.averageLoad }
+        }
+        return allServers.minByOrNull { it.averageLoad }
     }
 
     private suspend fun initiateConnection(server: LogicalServer) {
@@ -144,16 +198,44 @@ class VpnTileService : TileService() {
         val physicalServer = server.servers.filter { it.status == 1 }.minByOrNull { it.load }
             ?: server.servers.minByOrNull { it.load } ?: return
 
-        amneziaVpnManager.connect(server.id, physicalServer, session)
+        amneziaVpnManager.connect(server.id, physicalServer, session, logicalServer = server)
     }
 
-    private fun updateTile(state: Tunnel.State) {
+    private suspend fun updateTile(
+        state: Tunnel.State,
+        strategy: String,
+        targetId: String?,
+        connectedServer: LogicalServer?
+    ) {
         val tile = qsTile ?: return
+        
         tile.state = when (state) {
             Tunnel.State.UP -> Tile.STATE_ACTIVE
-            Tunnel.State.DOWN -> Tile.STATE_INACTIVE
             else -> Tile.STATE_INACTIVE
         }
+
+        val subtitle = if (state == Tunnel.State.UP && connectedServer != null) {
+            getString(R.string.tile_subtitle_connected, connectedServer.name)
+        } else {
+            when (strategy) {
+                "fastest" -> getString(R.string.tile_subtitle_fastest)
+                "recent" -> getString(R.string.tile_subtitle_last)
+                "server" -> {
+                    val serverName = vpnRepository.getCachedServers().find { it.id == targetId }?.name ?: "..."
+                    getString(R.string.tile_subtitle_specific, serverName)
+                }
+                "profile" -> {
+                    val profileName = profileDao.getAllProfilesFlow().first().find { it.id == targetId }?.name ?: "..."
+                    getString(R.string.tile_subtitle_specific, profileName)
+                }
+                else -> getString(R.string.tile_subtitle_fastest)
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            tile.subtitle = subtitle
+        }
+
         tile.updateTile()
     }
 }

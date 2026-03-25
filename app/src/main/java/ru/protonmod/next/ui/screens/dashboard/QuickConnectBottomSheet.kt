@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.*
@@ -34,12 +35,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.VpnProfileEntity
+import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.utils.CountryUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,9 +53,11 @@ fun QuickConnectBottomSheet(
     currentStrategy: String,
     currentTargetId: String?,
     profiles: List<VpnProfileEntity>,
+    recentServers: List<ru.protonmod.next.data.network.LogicalServer>,
     onStrategySelect: (String, String?) -> Unit
 ) {
     val colors = ProtonNextTheme.colors
+    val context = LocalContext.current
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -75,7 +82,7 @@ fun QuickConnectBottomSheet(
                     StrategyItem(
                         title = stringResource(R.string.qc_strategy_fastest),
                         description = stringResource(R.string.qc_strategy_fastest_desc),
-                        icon = Icons.Rounded.Speed,
+                        flagResId = R.drawable.flag_fastest,
                         isSelected = currentStrategy == "fastest",
                         onClick = {
                             onStrategySelect("fastest", null)
@@ -124,6 +131,38 @@ fun QuickConnectBottomSheet(
                         )
                     }
                 }
+
+                if (recentServers.isNotEmpty()) {
+                    item {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 24.dp),
+                            color = colors.separatorNorm.copy(alpha = 0.3f)
+                        )
+                        Text(
+                            text = stringResource(R.string.qc_header_recent),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = colors.brandNorm,
+                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                        )
+                    }
+
+                    items(recentServers) { server ->
+                        val countryName = CountryUtils.getCountryName(context, server.exitCountry)
+                        val flagResId = CountryUtils.getFlagResource(context, server.exitCountry)
+                        
+                        StrategyItem(
+                            title = countryName,
+                            description = "${server.city} • ${server.name}",
+                            icon = if (flagResId != 0) null else Icons.Rounded.Place,
+                            flagResId = flagResId,
+                            isSelected = currentStrategy == "server" && currentTargetId == server.id,
+                            onClick = {
+                                onStrategySelect("server", server.id)
+                                onDismiss()
+                            }
+                        )
+                    }
+                }
             }
         }
     }
@@ -133,7 +172,8 @@ fun QuickConnectBottomSheet(
 private fun StrategyItem(
     title: String,
     description: String,
-    icon: ImageVector,
+    icon: ImageVector? = null,
+    flagResId: Int = 0,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
@@ -153,12 +193,19 @@ private fun StrategyItem(
                 .background(if (isSelected) colors.brandNorm.copy(alpha = 0.1f) else colors.backgroundSecondary),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (isSelected) colors.brandNorm else colors.iconNorm,
-                modifier = Modifier.size(24.dp)
-            )
+            if (flagResId != 0) {
+                FlagIcon(
+                    countryFlag = flagResId,
+                    size = DpSize(28.dp, 20.dp)
+                )
+            } else if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = if (isSelected) colors.brandNorm else colors.iconNorm,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
 
         Spacer(modifier = Modifier.width(16.dp))
