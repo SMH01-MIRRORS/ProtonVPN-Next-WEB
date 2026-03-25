@@ -344,8 +344,8 @@ class SettingsViewModel @Inject constructor(
     fun applyJunkPreset(level: Int) {
         val (jc, jmin, jmax) = when (level) {
             0 -> Triple(3, 1, 3)     // Low (Standard)
-            1 -> Triple(30, 10, 30)  // Medium
-            2 -> Triple(128, 1279, 1280) // High
+            1 -> Triple(10, 50, 100)  // Medium
+            2 -> Triple(20, 400, 800) // High (Safer values to prevent native crash)
             else -> return
         }
 
