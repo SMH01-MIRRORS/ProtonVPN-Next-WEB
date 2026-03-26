@@ -41,13 +41,7 @@ steps:
       event: tag
     commands:
       - git fetch --tags
-      - PREVIOUS_TAG=$(git describe --tags --abbrev=0 ${CI_COMMIT_TAG}^ 2>/dev/null || echo "")
-      - |
-        if [ -z "$PREVIOUS_TAG" ]; then
-          git log --pretty=format:"* %s (%h)" > changelog.txt
-        else
-          git log ${PREVIOUS_TAG}..${CI_COMMIT_TAG} --pretty=format:"* %s (%h)" > changelog.txt
-        fi
+      - "git log -1 --pretty=format:\"%s%n%n🏷️ Tag: ${CI_COMMIT_TAG}%n🔢 Commit: %h\" > changelog.txt"
 
   publish-release:
     image: woodpeckerci/plugin-release

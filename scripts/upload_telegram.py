@@ -18,7 +18,9 @@ except ValueError:
     CHAT_ID = TG_CHAT_ID
 
 # Woodpecker default environment variables
-COMMIT_MESSAGE = os.environ.get('CI_COMMIT_MESSAGE', 'No message')
+# Get only the first line of the commit message for a cleaner description
+full_message = os.environ.get('CI_COMMIT_MESSAGE', 'No message')
+COMMIT_MESSAGE = full_message.split('\n')[0].strip()
 COMMIT_AUTHOR = os.environ.get('CI_COMMIT_AUTHOR', 'Unknown')
 COMMIT_SHA = os.environ.get('CI_COMMIT_SHA', 'none')[:8]
 REPO_NAME = os.environ.get('CI_REPO', 'ProtonVPN-Next')

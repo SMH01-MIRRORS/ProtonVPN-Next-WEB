@@ -403,6 +403,13 @@
     <string name="obfuscation_dialog_domain_title">Введите домен</string>
     <string name="obfuscation_dialog_domain_desc">Введите домен (например, google.com) для генерации идентификатора на основе QUIC.</string>
 
+    <string name="settings_widget">Виджет</string>
+    <string name="settings_widget_desc">Добавьте виджет на главный экран для быстрого управления подключением</string>
+    <string name="settings_widget_add_to_home">Добавить на главный экран</string>
+    <string name="settings_widget_add_to_home_desc">Разместить виджет VPN на рабочем столе</string>
+    <string name="widget_added_successfully">Виджет успешно добавлен!</string>
+    <string name="widget_error_not_supported">Ваш рабочий стол не поддерживает добавление виджетов.</string>
+
     <string name="captcha_title">Проверка безопасности</string>
     <string name="captcha_message">Для обеспечения безопасности аккаунта, пожалуйста, пройдите проверку ниже.</string>
     <string name="captcha_proxy_active">Антиблокировочный прокси активен</string>

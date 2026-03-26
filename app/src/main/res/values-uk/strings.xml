@@ -399,6 +399,13 @@
     <string name="obfuscation_dialog_domain_title">Введіть домен</string>
     <string name="obfuscation_dialog_domain_desc">Введіть домен (напр., google.com) для генерації ідентифікатора на основі QUIC.</string>
 
+    <string name="settings_widget">Віджет</string>
+    <string name="settings_widget_desc">Додайте віджет на головний екран для швидкого керування підключенням</string>
+    <string name="settings_widget_add_to_home">Додати на головний екран</string>
+    <string name="settings_widget_add_to_home_desc">Розмістити віджет VPN на робочому столі</string>
+    <string name="widget_added_successfully">Віджет успішно додано!</string>
+    <string name="widget_error_not_supported">Ваш робочий стіл не підтримує додавання віджетів.</string>
+
     <!-- Speed Units -->
     <string name="unit_kb_s">КБ/с</string>
     <string name="unit_mb_s">МБ/с</string>

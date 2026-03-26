@@ -27,7 +27,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Place
-import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -45,6 +44,10 @@ import ru.protonmod.next.data.local.VpnProfileEntity
 import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.CountryUtils
+
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.runtime.remember
+import ru.protonmod.next.ui.theme.liquidGlass
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,7 +80,11 @@ fun QuickConnectBottomSheet(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
             )
 
-            LazyColumn(modifier = Modifier.fillMaxWidth()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 item {
                     StrategyItem(
                         title = stringResource(R.string.qc_strategy_fastest),
@@ -106,15 +113,11 @@ fun QuickConnectBottomSheet(
 
                 if (profiles.isNotEmpty()) {
                     item {
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 24.dp),
-                            color = colors.separatorNorm.copy(alpha = 0.3f)
-                        )
                         Text(
                             text = stringResource(R.string.qc_header_profiles),
                             style = MaterialTheme.typography.labelLarge,
                             color = colors.brandNorm,
-                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
                         )
                     }
 
@@ -134,15 +137,11 @@ fun QuickConnectBottomSheet(
 
                 if (recentServers.isNotEmpty()) {
                     item {
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 24.dp),
-                            color = colors.separatorNorm.copy(alpha = 0.3f)
-                        )
                         Text(
                             text = stringResource(R.string.qc_header_recent),
                             style = MaterialTheme.typography.labelLarge,
                             color = colors.brandNorm,
-                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
                         )
                     }
 
@@ -178,59 +177,74 @@ private fun StrategyItem(
     onClick: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
+    val interactionSource = remember { MutableInteractionSource() }
 
-    Row(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .liquidGlass(
+                shape = RoundedCornerShape(20.dp),
+                alpha = if (isSelected) 0.2f else 0.4f,
+                shadowElevation = 0.dp
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(if (isSelected) colors.brandNorm.copy(alpha = 0.1f) else colors.backgroundSecondary),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (flagResId != 0) {
-                FlagIcon(
-                    countryFlag = flagResId,
-                    size = DpSize(28.dp, 20.dp)
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(if (isSelected) colors.brandNorm.copy(alpha = 0.1f) else colors.backgroundNorm),
+                contentAlignment = Alignment.Center
+            ) {
+                if (flagResId != 0) {
+                    FlagIcon(
+                        countryFlag = flagResId,
+                        size = DpSize(28.dp, 20.dp)
+                    )
+                } else if (icon != null) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = if (isSelected) colors.brandNorm else colors.iconNorm,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    color = colors.textNorm
                 )
-            } else if (icon != null) {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textWeak
+                )
+            }
+
+            if (isSelected) {
                 Icon(
-                    imageVector = icon,
+                    imageVector = Icons.Rounded.Check,
                     contentDescription = null,
-                    tint = if (isSelected) colors.brandNorm else colors.iconNorm,
+                    tint = colors.brandNorm,
                     modifier = Modifier.size(24.dp)
                 )
             }
-        }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                color = if (isSelected) colors.brandNorm else colors.textNorm
-            )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.textWeak
-            )
-        }
-
-        if (isSelected) {
-            Icon(
-                imageVector = Icons.Rounded.Check,
-                contentDescription = null,
-                tint = colors.brandNorm,
-                modifier = Modifier.size(24.dp)
-            )
         }
     }
 }

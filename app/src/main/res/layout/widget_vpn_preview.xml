@@ -16,34 +16,37 @@
   ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
   -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/widget_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
-    android:padding="12dp">
+    android:paddingLeft="12dp"
+    android:paddingRight="12dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="12dp">
 
-    <!-- Top Row: Status and IP/Location Pill -->
     <LinearLayout
-        android:id="@+id/widget_top_row"
+        android:id="@+id/preview_top_row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:layout_marginBottom="12dp">
 
         <TextView
-            android:id="@+id/widget_status_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/status_disconnected"
-            android:textColor="#E53935"
+            android:text="@string/status_connected"
+            android:textColor="#4CAF50"
             android:textSize="12sp"
             android:textStyle="bold" />
 
+        <View
+            android:layout_width="8dp"
+            android:layout_height="1dp" />
+
         <LinearLayout
-            android:id="@+id/widget_pill_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="8dp"
             android:background="@drawable/widget_location_pill_bg"
             android:paddingLeft="8dp"
             android:paddingRight="8dp"
@@ -52,10 +55,9 @@
             android:gravity="center">
 
             <TextView
-                android:id="@+id/widget_location_pill_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/status_not_connected"
+                android:text="United States"
                 android:textColor="#B3FFFFFF"
                 android:textSize="11sp"
                 android:maxLines="1"
@@ -63,24 +65,22 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Middle Row: Flag and Server Info -->
     <LinearLayout
-        android:id="@+id/widget_server_row"
+        android:id="@+id/preview_server_row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/widget_top_row"
-        android:layout_marginTop="12dp"
+        android:layout_below="@id/preview_top_row"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
 
         <ImageView
-            android:id="@+id/widget_flag"
             android:layout_width="32dp"
             android:layout_height="22dp"
-            android:src="@drawable/flag_fastest" />
+            android:scaleType="centerCrop"
+            android:src="@drawable/flag_us" />
 
         <LinearLayout
-            android:id="@+id/widget_text_container"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -88,10 +88,9 @@
             android:layout_marginLeft="12dp">
 
             <TextView
-                android:id="@+id/widget_server_country"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/qc_strategy_fastest"
+                android:text="United States"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold"
@@ -99,10 +98,9 @@
                 android:ellipsize="end" />
 
             <TextView
-                android:id="@+id/widget_server_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/label_select_location"
+                android:text="US-FREE#1"
                 android:textColor="#80FFFFFF"
                 android:textSize="11sp"
                 android:maxLines="1"
@@ -110,25 +108,21 @@
         </LinearLayout>
 
         <TextView
-            android:id="@+id/widget_arrow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="›"
             android:textColor="#4DFFFFFF"
             android:textSize="20sp"
-            android:layout_marginLeft="4dp" />
+            android:layout_marginRight="4dp" />
     </LinearLayout>
 
-    <!-- Bottom: Connection Button -->
     <TextView
-        android:id="@+id/widget_button"
         android:layout_width="match_parent"
         android:layout_height="44dp"
-        android:layout_below="@id/widget_server_row"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/widget_button_background_disconnected"
+        android:layout_below="@id/preview_server_row"
+        android:background="@drawable/widget_button_background_connected"
         android:gravity="center"
-        android:text="@string/btn_quick_connect"
+        android:text="@string/btn_disconnect"
         android:textColor="#FFFFFF"
         android:textSize="13sp"
         android:textStyle="bold" />

@@ -40,6 +40,7 @@ import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.di.ApplicationScope
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import ru.protonmod.next.vpn.ProtonVpnService
+import ru.protonmod.next.utils.ProtonLogger
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -93,28 +94,60 @@ class VpnWidgetProvider : AppWidgetProvider() {
     }
 
     private fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
+        ProtonLogger.d("VpnWidgetProvider", "Updating widget $appWidgetId")
         val views = RemoteViews(context.packageName, R.layout.widget_vpn)
         
-        val currentState = amneziaVpnManager.tunnelState.value
-        val isConnected = currentState == Tunnel.State.UP
-        val connectedServer = connectedServerState.connectedServer.value
-        
-        views.setImageViewResource(R.id.widget_icon, if (isConnected) R.drawable.ic_proton_lock_filled else R.drawable.ic_proton_lock_open_filled_2)
-        
-        val statusText = if (isConnected && connectedServer != null) {
-            connectedServer.name
-        } else {
-            context.getString(if (isConnected) R.string.status_connected else R.string.status_disconnected)
-        }
-        views.setTextViewText(R.id.widget_status, statusText)
-        
-        val intent = Intent(context, VpnWidgetProvider::class.java).apply {
-            action = ACTION_WIDGET_CLICK
-        }
-        val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        views.setOnClickPendingIntent(R.id.widget_container, pendingIntent)
+        try {
+            val currentState = amneziaVpnManager.tunnelState.value
+            val isConnected = currentState == Tunnel.State.UP
+            val connectedServer = connectedServerState.connectedServer.value
+            
+            ProtonLogger.d("VpnWidgetProvider", "Status: isConnected=$isConnected, server=${connectedServer?.name}")
+            
+            if (isConnected && connectedServer != null) {
+                views.setTextViewText(R.id.widget_status_text, context.getString(R.string.status_connected))
+                views.setTextColor(R.id.widget_status_text, android.graphics.Color.parseColor("#4CAF50"))
+                
+                val countryName = ru.protonmod.next.ui.utils.CountryUtils.getCountryName(context, connectedServer.exitCountry)
+                views.setTextViewText(R.id.widget_location_pill_text, "$countryName")
+                
+                views.setTextViewText(R.id.widget_server_country, countryName)
+                views.setTextViewText(R.id.widget_server_name, connectedServer.name)
+                
+                val flagResId = ru.protonmod.next.ui.utils.CountryUtils.getFlagResource(context, connectedServer.exitCountry)
+                if (flagResId != 0) {
+                    views.setImageViewResource(R.id.widget_flag, flagResId)
+                }
+                
+                views.setTextViewText(R.id.widget_button, context.getString(R.string.btn_disconnect))
+                views.setInt(R.id.widget_button, "setBackgroundResource", R.drawable.widget_button_background_connected)
+            } else {
+                views.setTextViewText(R.id.widget_status_text, context.getString(R.string.status_disconnected))
+                views.setTextColor(R.id.widget_status_text, android.graphics.Color.parseColor("#E53935"))
+                
+                views.setTextViewText(R.id.widget_location_pill_text, context.getString(R.string.status_not_connected))
+                
+                views.setTextViewText(R.id.widget_server_country, context.getString(R.string.qc_strategy_fastest))
+                views.setTextViewText(R.id.widget_server_name, context.getString(R.string.label_select_location))
+                views.setImageViewResource(R.id.widget_flag, R.drawable.flag_fastest)
+                
+                views.setTextViewText(R.id.widget_button, context.getString(R.string.btn_quick_connect))
+                views.setInt(R.id.widget_button, "setBackgroundResource", R.drawable.widget_button_background_disconnected)
+            }
+            
+            val intent = Intent(context, VpnWidgetProvider::class.java).apply {
+                action = ACTION_WIDGET_CLICK
+            }
+            val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            
+            // Set click listener ONLY on the container or ONLY on the button to avoid rendering issues
+            views.setOnClickPendingIntent(R.id.widget_container, pendingIntent)
 
-        appWidgetManager.updateAppWidget(appWidgetId, views)
+            appWidgetManager.updateAppWidget(appWidgetId, views)
+            ProtonLogger.d("VpnWidgetProvider", "Widget $appWidgetId updated successfully")
+        } catch (e: Exception) {
+            ProtonLogger.e("VpnWidgetProvider", "Error updating widget $appWidgetId", e)
+        }
     }
 
     private suspend fun performQuickConnect() {

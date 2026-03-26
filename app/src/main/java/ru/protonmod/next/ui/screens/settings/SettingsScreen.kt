@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -196,6 +197,8 @@ fun SettingsContent(
                             onNotificationsChange = onNotificationsChange
                         )
 
+                        WidgetSettingsSection()
+
                         AboutSettingsSection(
                             onNavigateToAbout = onNavigateToAbout,
                             onNavigateToDebug = onNavigateToDebug
@@ -247,12 +250,37 @@ fun SettingsContent(
             }
 
             item {
+                WidgetSettingsSection(modifier = contentModifier)
+            }
+
+            item {
                 AboutSettingsSection(
                     modifier = contentModifier,
                     onNavigateToAbout = onNavigateToAbout,
                     onNavigateToDebug = onNavigateToDebug
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun WidgetSettingsSection(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val appWidgetManager = remember { android.appwidget.AppWidgetManager.getInstance(context) }
+    val isSupported = remember { appWidgetManager.isRequestPinAppWidgetSupported }
+
+    if (isSupported) {
+        Category(modifier = modifier, title = stringResource(R.string.settings_widget)) {
+            SettingRowWithIcon(
+                icon = Icons.Rounded.Widgets,
+                title = stringResource(R.string.settings_widget_add_to_home),
+                subtitle = stringResource(R.string.settings_widget_add_to_home_desc),
+                onClick = {
+                    val myProvider = android.content.ComponentName(context, ru.protonmod.next.ui.widget.VpnWidgetProvider::class.java)
+                    appWidgetManager.requestPinAppWidget(myProvider, null, null)
+                }
+            )
         }
     }
 }
