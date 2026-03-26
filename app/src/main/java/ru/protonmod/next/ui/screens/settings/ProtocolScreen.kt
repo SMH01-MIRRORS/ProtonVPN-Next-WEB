@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.theme.liquidGlass
 
 /**
  * Screen for selecting the VPN Protocol.
@@ -79,9 +80,8 @@ fun ProtocolScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .windowInsetsPadding(WindowInsets.statusBars)
             ) {
-                CenterAlignedTopAppBar(
+                TopAppBar(
                     title = {
                         Text(
                             stringResource(R.string.protocol_title),
@@ -99,24 +99,24 @@ fun ProtocolScreen(
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                        scrolledContainerColor = Color.Transparent,
-                        navigationIconContentColor = colors.textNorm,
-                        titleContentColor = colors.textNorm,
-                        actionIconContentColor = Color.Unspecified
+                        containerColor = Color.Transparent
                     )
                 )
 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     item {
-                        Card(
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = colors.backgroundSecondary.copy(alpha = 0.5f)),
-                            modifier = Modifier.fillMaxWidth()
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .liquidGlass(
+                                    shape = RoundedCornerShape(20.dp),
+                                    alpha = 0.4f,
+                                    shadowElevation = 0.dp
+                                )
                         ) {
                             Column {
                                 // Protocol Item: AmneziaWG

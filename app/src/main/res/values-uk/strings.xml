@@ -165,9 +165,6 @@
     <string name="obfuscation_i3">Спеціальне сміття (I3)</string>
     <string name="obfuscation_i4">Спеціальне сміття (I4)</string>
     <string name="obfuscation_i5">Спеціальне сміття (I5)</string>
-    <string name="obfuscation_custom_id">Спеціальне сміття (Id)</string>
-    <string name="obfuscation_ip">Спеціальне сміття (Ip)</string>
-    <string name="obfuscation_ib">Спеціальне сміття (Ib)</string>
 
     <!-- Obfuscation Modes -->
     <string name="obfuscation_mode_easy">Простий</string>
@@ -218,6 +215,12 @@
     <string name="license_retrofit_title">Retrofit та OkHttp</string>
     <string name="license_proton_go_vpn_title">Бібліотека Proton GO VPN</string>
     <string name="license_amneziawg_title">AmneziaWG Android</string>
+    <string name="license_sentry_title">Sentry SDK</string>
+    <string name="license_room_title">База даних Room</string>
+    <string name="license_leakcanary_title">LeakCanary</string>
+    <string name="license_android_svg_title">Android SVG</string>
+    <string name="license_mit">MIT License</string>
+    <string name="license_bsl">Business Source License 1.1</string>
 
     <!-- Split Tunneling -->
     <string name="settings_st_mode">Режим роздільного тунелювання</string>
@@ -226,6 +229,7 @@
     <string name="st_mode_include">Режим включення</string>
     <string name="st_mode_include_desc">Тільки вибрані додатки та IP будуть використовувати VPN</string>
     <string name="st_enabled_subtitle">VPN з\'єднання буде слідувати правилам роздільного тунелювання</string>
+    <string name="st_disabled_subtitle">Ввесь трафік іде через VPN</string>
     <string name="settings_included_apps">Додатки через VPN</string>
     <string name="settings_included_ips">IP-адреси через VPN</string>
     <plurals name="st_apps_selected">

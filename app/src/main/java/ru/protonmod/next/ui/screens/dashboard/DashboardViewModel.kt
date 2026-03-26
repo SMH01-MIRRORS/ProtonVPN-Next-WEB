@@ -467,6 +467,10 @@ class DashboardViewModel @Inject constructor(
                 logicalServer = targetServer
             )
         }
+
+        if (!profile.autoOpenUrl.isNullOrEmpty()) {
+            amneziaVpnManager.awaitTunnelAndOpenUrl(profile.autoOpenUrl)
+        }
     }
 
     private fun findBestServerForProfile(profile: VpnProfileEntity, allServers: List<LogicalServer>): LogicalServer? {

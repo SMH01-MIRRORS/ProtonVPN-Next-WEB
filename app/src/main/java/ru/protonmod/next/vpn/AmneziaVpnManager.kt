@@ -21,6 +21,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.Uri
 import ru.protonmod.next.utils.ProtonLogger
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -489,5 +490,60 @@ class AmneziaVpnManager @Inject constructor(
 
     private suspend fun disconnectInternal() = withContext(dispatcherProvider.io()) {
         systemContextWrapper.stopVpnService()
+    }
+
+    /**
+     * Connect & Go: Centralized logic to wait for the VPN tunnel to be ready
+     * and then open the specified URL in the system browser.
+     */
+    fun awaitTunnelAndOpenUrl(url: String) {
+        if (url.isEmpty()) return
+
+        var finalUrl = url.trim()
+        if (finalUrl.isNotEmpty() && !finalUrl.contains("://")) {
+            finalUrl = "https://$finalUrl"
+        }
+
+        val targetUrl = finalUrl
+
+        applicationScope.launch(dispatcherProvider.main()) {
+            ProtonLogger.d(TAG, "Connect & Go: Waiting for tunnel UP to open URL: $targetUrl")
+            try {
+                // Initial delay to allow the connection attempt to start and set isConnecting=true
+                delay(1500)
+
+                withTimeout(40000) {
+                    // 1. If we are currently in the middle of connecting, wait for it to finish
+                    if (_isConnecting.value) {
+                        ProtonLogger.d(TAG, "Connect & Go: VPN is connecting, waiting...")
+                        _isConnecting.first { !it }
+                    }
+                    
+                    // 2. Then wait for the tunnel state to be UP
+                    ProtonLogger.d(TAG, "Connect & Go: VPN attempt finished, waiting for UP state...")
+                    _tunnelState.first { it == Tunnel.State.UP }
+                }
+
+                // 3. Extra delay to ensure routing and DNS are fully established and browser can reach the site
+                ProtonLogger.d(TAG, "Connect & Go: Tunnel is UP, waiting for routing stabilization...")
+                delay(3000)
+
+                if (_tunnelState.value == Tunnel.State.UP) {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl)).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+                    ProtonLogger.d(TAG, "Connect & Go: URL opened successfully: $targetUrl")
+                } else {
+                    ProtonLogger.w(TAG, "Connect & Go: Tunnel is not UP anymore, skipping URL open.")
+                }
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.TimeoutCancellationException) {
+                    ProtonLogger.e(TAG, "Connect & Go: Timed out waiting for VPN to connect for URL: $targetUrl")
+                } else {
+                    ProtonLogger.e(TAG, "Connect & Go: Failed to handle URL: $targetUrl", e)
+                }
+            }
+        }
     }
 }

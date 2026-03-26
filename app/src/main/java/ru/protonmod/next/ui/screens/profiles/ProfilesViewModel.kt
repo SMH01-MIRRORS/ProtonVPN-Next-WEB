@@ -18,8 +18,6 @@
 package ru.protonmod.next.ui.screens.profiles
 
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import ru.protonmod.next.utils.ProtonLogger
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -229,7 +227,7 @@ class ProfilesViewModel @Inject constructor(
             }
 
             if (!profile.autoOpenUrl.isNullOrEmpty()) {
-                handleAutoOpenUrl(profile.autoOpenUrl)
+                amneziaVpnManager.awaitTunnelAndOpenUrl(profile.autoOpenUrl)
             }
         }
     }
@@ -257,40 +255,6 @@ class ProfilesViewModel @Inject constructor(
         }
 
         return allServers.minByOrNull { it.averageLoad }
-    }
-
-    private fun handleAutoOpenUrl(url: String?) {
-        if (url.isNullOrEmpty()) return
-
-        viewModelScope.launch {
-            ProtonLogger.d(TAG, "Waiting for VPN to be UP before opening URL: $url")
-            try {
-                // Wait for the tunnel to reach UP state with a 20s timeout
-                withTimeout(20000) {
-                    amneziaVpnManager.tunnelState.first { it == Tunnel.State.UP }
-                }
-
-                // Extra small delay to ensure routing is established
-                delay(800)
-
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                context.startActivity(intent)
-                ProtonLogger.d(TAG, "Connect & Go: URL opened successfully")
-            } catch (e: Exception) {
-                ProtonLogger.e(TAG, "Failed to handle Connect & Go", e)
-                // Fallback: try opening anyway if it took too long but we are still attempting
-                if (amneziaVpnManager.tunnelState.value == Tunnel.State.UP) {
-                    try {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                        context.startActivity(intent)
-                    } catch (_: Exception) {}
-                }
-            }
-        }
     }
 
     suspend fun getCitiesForCountry(countryCode: String): List<CityDisplayItem> {

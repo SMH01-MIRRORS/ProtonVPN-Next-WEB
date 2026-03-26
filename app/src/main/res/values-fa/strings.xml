@@ -165,9 +165,6 @@
     <string name="obfuscation_i3">بیهوده خاص (I3)</string>
     <string name="obfuscation_i4">بیهوده خاص (I4)</string>
     <string name="obfuscation_i5">بیهوده خاص (I5)</string>
-    <string name="obfuscation_custom_id">بیهوده خاص (Id)</string>
-    <string name="obfuscation_ip">بیهوده خاص (Ip)</string>
-    <string name="obfuscation_ib">بیهوده خاص (Ib)</string>
 
     <!-- Obfuscation Modes -->
     <string name="obfuscation_mode_easy">آسان</string>
@@ -218,6 +215,12 @@
     <string name="license_retrofit_title">Retrofit &amp; OkHttp</string>
     <string name="license_proton_go_vpn_title">Proton GO VPN lib</string>
     <string name="license_amneziawg_title">AmneziaWG Android</string>
+    <string name="license_sentry_title">Sentry SDK</string>
+    <string name="license_room_title">Room Database</string>
+    <string name="license_leakcanary_title">LeakCanary</string>
+    <string name="license_android_svg_title">Android SVG</string>
+    <string name="license_mit">MIT License</string>
+    <string name="license_bsl">Business Source License 1.1</string>
 
     <!-- Split Tunneling -->
     <string name="settings_st_mode">حالت تونل‌زنی تقسیم‌شده</string>

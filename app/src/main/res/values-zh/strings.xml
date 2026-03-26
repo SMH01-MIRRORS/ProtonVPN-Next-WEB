@@ -165,9 +165,6 @@
     <string name="obfuscation_i3">特殊垃圾 (I3)</string>
     <string name="obfuscation_i4">特殊垃圾 (I4)</string>
     <string name="obfuscation_i5">特殊垃圾 (I5)</string>
-    <string name="obfuscation_custom_id">特殊垃圾 (Id)</string>
-    <string name="obfuscation_ip">特殊垃圾 (Ip)</string>
-    <string name="obfuscation_ib">特殊垃圾 (Ib)</string>
 
     <!-- Obfuscation Modes -->
     <string name="obfuscation_mode_easy">简单</string>
@@ -218,6 +215,12 @@
     <string name="license_retrofit_title">Retrofit &amp; OkHttp</string>
     <string name="license_proton_go_vpn_title">Proton GO VPN 库</string>
     <string name="license_amneziawg_title">AmneziaWG Android</string>
+    <string name="license_sentry_title">Sentry SDK</string>
+    <string name="license_room_title">Room 数据库</string>
+    <string name="license_leakcanary_title">LeakCanary</string>
+    <string name="license_android_svg_title">Android SVG</string>
+    <string name="license_mit">MIT 许可</string>
+    <string name="license_bsl">Business Source License 1.1</string>
 
     <!-- Split Tunneling -->
     <string name="settings_st_mode">拆分隧道模式</string>

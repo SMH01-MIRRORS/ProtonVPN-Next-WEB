@@ -199,14 +199,11 @@ fun AboutAppScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     // GitHub Hidden Section
-                    Card(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { showGitHub = !showGitHub },
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = colors.backgroundSecondary.copy(alpha = 0.5f)
-                        )
+                            .liquidGlass(shape = RoundedCornerShape(16.dp), alpha = 0.4f, shadowElevation = 0.dp)
+                            .clickable { showGitHub = !showGitHub }
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -246,11 +243,12 @@ fun AboutAppScreen(
                                                 githubUrl.toUri())
                                             context.startActivity(intent)
                                         },
+                                        shape = RoundedCornerShape(12.dp),
                                         colors = ButtonDefaults.buttonColors(
-                                            containerColor = colors.brandNorm.copy(alpha = 0.8f)
+                                            containerColor = colors.brandNorm
                                         )
                                     ) {
-                                        Text(stringResource(R.string.about_github))
+                                        Text(stringResource(R.string.about_github), color = colors.textInverted)
                                     }
                                 }
                             }
@@ -270,12 +268,10 @@ fun AboutAppScreen(
                             .padding(bottom = 12.dp, start = 12.dp)
                     )
 
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = colors.backgroundSecondary.copy(alpha = 0.8f)
-                        ),
-                        modifier = Modifier.fillMaxWidth()
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .liquidGlass(shape = RoundedCornerShape(16.dp), alpha = 0.4f, shadowElevation = 0.dp)
                     ) {
                         Column {
                             SettingRowWithIcon(

@@ -22,7 +22,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -41,7 +40,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
@@ -62,6 +60,8 @@ fun SettingsScreen(
     onNavigateToErrorReporting: (() -> Unit)? = null,
     onNavigateToThemeSelection: (() -> Unit)? = null,
     onNavigateToDebug: (() -> Unit)? = null,
+    onNavigateToCustomDns: (() -> Unit)? = null,
+    onNavigateToPortSelection: ((Int) -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
@@ -99,8 +99,6 @@ fun SettingsScreen(
                 isTablet = isTablet,
                 onAutoConnectChange = viewModel::setAutoConnect,
                 onNotificationsChange = viewModel::setNotifications,
-                onPortChange = viewModel::setVpnPort,
-                onCustomDnsChange = viewModel::setCustomDns,
                 onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
                 onNavigateToProtocol = onNavigateToProtocol,
                 onNavigateToKillSwitch = onNavigateToKillSwitch,
@@ -109,6 +107,8 @@ fun SettingsScreen(
                 onNavigateToErrorReporting = onNavigateToErrorReporting,
                 onNavigateToThemeSelection = onNavigateToThemeSelection,
                 onNavigateToDebug = onNavigateToDebug,
+                onNavigateToCustomDns = onNavigateToCustomDns,
+                onNavigateToPortSelection = onNavigateToPortSelection,
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -121,8 +121,6 @@ fun SettingsContent(
     isTablet: Boolean = false,
     onAutoConnectChange: (Boolean) -> Unit,
     onNotificationsChange: (Boolean) -> Unit,
-    onPortChange: (Int) -> Unit,
-    onCustomDnsChange: (String) -> Unit,
     onNavigateToSplitTunnelingMain: (() -> Unit)? = null,
     onNavigateToProtocol: (() -> Unit)? = null,
     onNavigateToKillSwitch: (() -> Unit)? = null,
@@ -131,6 +129,8 @@ fun SettingsContent(
     onNavigateToErrorReporting: (() -> Unit)? = null,
     onNavigateToThemeSelection: (() -> Unit)? = null,
     onNavigateToDebug: (() -> Unit)? = null,
+    onNavigateToCustomDns: (() -> Unit)? = null,
+    onNavigateToPortSelection: ((Int) -> Unit)? = null,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
@@ -178,7 +178,7 @@ fun SettingsContent(
                             state = state,
                             onAutoConnectChange = onAutoConnectChange,
                             onNavigateToApiBypass = onNavigateToApiBypass,
-                            onPortChange = onPortChange
+                            onNavigateToPortSelection = onNavigateToPortSelection
                         )
 
                         CustomizationSettingsSection(
@@ -191,7 +191,7 @@ fun SettingsContent(
                     Column(modifier = Modifier.weight(1f)) {
                         PrivacySettingsSection(
                             state = state,
-                            onCustomDnsChange = onCustomDnsChange,
+                            onNavigateToCustomDns = onNavigateToCustomDns,
                             onNavigateToKillSwitch = onNavigateToKillSwitch,
                             onNavigateToErrorReporting = onNavigateToErrorReporting,
                             onNotificationsChange = onNotificationsChange
@@ -226,7 +226,7 @@ fun SettingsContent(
                     state = state,
                     onAutoConnectChange = onAutoConnectChange,
                     onNavigateToApiBypass = onNavigateToApiBypass,
-                    onPortChange = onPortChange
+                    onNavigateToPortSelection = onNavigateToPortSelection
                 )
             }
 
@@ -242,7 +242,7 @@ fun SettingsContent(
                 PrivacySettingsSection(
                     modifier = contentModifier,
                     state = state,
-                    onCustomDnsChange = onCustomDnsChange,
+                    onNavigateToCustomDns = onNavigateToCustomDns,
                     onNavigateToKillSwitch = onNavigateToKillSwitch,
                     onNavigateToErrorReporting = onNavigateToErrorReporting,
                     onNotificationsChange = onNotificationsChange
@@ -291,7 +291,7 @@ private fun ConnectionSettingsSection(
     state: SettingsUiState,
     onAutoConnectChange: (Boolean) -> Unit,
     onNavigateToApiBypass: (() -> Unit)?,
-    onPortChange: (Int) -> Unit
+    onNavigateToPortSelection: ((Int) -> Unit)?
 ) {
     Category(modifier = modifier, title = stringResource(R.string.settings_connection)) {
         SettingToggleRow(
@@ -309,23 +309,12 @@ private fun ConnectionSettingsSection(
             onClick = { onNavigateToApiBypass?.invoke() }
         )
 
-        var showPortDialog by remember { mutableStateOf(false) }
         SettingRowWithIcon(
             icon = Icons.Rounded.Numbers,
             title = stringResource(R.string.settings_port),
             subtitle = if (state.vpnPort == 0) stringResource(R.string.settings_port_auto) else state.vpnPort.toString(),
-            onClick = { showPortDialog = true }
+            onClick = { onNavigateToPortSelection?.invoke(state.vpnPort) }
         )
-        if (showPortDialog) {
-            PortSelectionDialog(
-                currentPort = state.vpnPort,
-                onDismiss = { showPortDialog = false },
-                onPortSelected = {
-                    onPortChange(it)
-                    showPortDialog = false
-                }
-            )
-        }
     }
 }
 
@@ -358,13 +347,12 @@ private fun CustomizationSettingsSection(
 private fun PrivacySettingsSection(
     modifier: Modifier = Modifier,
     state: SettingsUiState,
-    onCustomDnsChange: (String) -> Unit,
+    onNavigateToCustomDns: (() -> Unit)?,
     onNavigateToKillSwitch: (() -> Unit)?,
     onNavigateToErrorReporting: (() -> Unit)?,
     onNotificationsChange: (Boolean) -> Unit
 ) {
     Category(modifier = modifier, title = stringResource(R.string.settings_privacy)) {
-        var showCustomDnsDialog by remember { mutableStateOf(false) }
         val currentDnsSubtitle = state.customDns.ifBlank {
             stringResource(R.string.settings_custom_dns_default)
         }
@@ -373,19 +361,8 @@ private fun PrivacySettingsSection(
             icon = Icons.Rounded.Dns,
             title = stringResource(R.string.settings_custom_dns),
             subtitle = currentDnsSubtitle,
-            onClick = { showCustomDnsDialog = true }
+            onClick = onNavigateToCustomDns
         )
-
-        if (showCustomDnsDialog) {
-            CustomDnsDialog(
-                currentDns = state.customDns,
-                onDismiss = { showCustomDnsDialog = false },
-                onDnsSaved = {
-                    onCustomDnsChange(it)
-                    showCustomDnsDialog = false
-                }
-            )
-        }
 
         SettingRowWithIcon(
             icon = Icons.Rounded.GppMaybe,
@@ -432,145 +409,6 @@ private fun AboutSettingsSection(
                 subtitle = stringResource(R.string.debug_title),
                 onClick = onNavigateToDebug
             )
-        }
-    }
-}
-
-@Composable
-fun CustomDnsDialog(
-    currentDns: String,
-    onDismiss: () -> Unit,
-    onDnsSaved: (String) -> Unit
-) {
-    val colors = ProtonNextTheme.colors
-    var inputText by remember { mutableStateOf(currentDns) }
-
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = colors.backgroundSecondary)
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(vertical = 24.dp, horizontal = 24.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.Start
-            ) {
-                Text(
-                    text = stringResource(R.string.settings_custom_dns_title),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = colors.textNorm,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                Text(
-                    text = stringResource(R.string.settings_custom_dns_desc),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = colors.textWeak,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                OutlinedTextField(
-                    value = inputText,
-                    onValueChange = { inputText = it },
-                    placeholder = { Text("e.g. 1.1.1.1 or 94.140.14.14") },
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = colors.brandNorm,
-                        unfocusedBorderColor = colors.shade60,
-                        focusedTextColor = colors.textNorm,
-                        unfocusedTextColor = colors.textNorm
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(onClick = { onDnsSaved("") }) {
-                        Text(stringResource(R.string.settings_custom_dns_reset), color = colors.textWeak)
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = { onDnsSaved(inputText.trim()) },
-                        colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
-                    ) {
-                        Text(stringResource(R.string.btn_save), color = colors.textInverted)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun PortSelectionDialog(
-    currentPort: Int,
-    onDismiss: () -> Unit,
-    onPortSelected: (Int) -> Unit
-) {
-    val colors = ProtonNextTheme.colors
-    val portOptions = listOf(0, 443, 123, 1194, 51820)
-
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = colors.backgroundSecondary)
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(vertical = 16.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = stringResource(R.string.settings_port),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = colors.textNorm,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    items(portOptions) { port ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onPortSelected(port) }
-                                .padding(vertical = 12.dp, horizontal = 24.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = if (port == 0) stringResource(R.string.settings_port_auto) else port.toString(),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = colors.textNorm,
-                                modifier = Modifier.weight(1f)
-                            )
-                            RadioButton(
-                                selected = (port == currentPort),
-                                onClick = { onPortSelected(port) },
-                                colors = RadioButtonDefaults.colors(
-                                    selectedColor = colors.brandNorm,
-                                    unselectedColor = colors.shade60
-                                )
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.align(Alignment.End).padding(end = 16.dp)
-                ) {
-                    Text(stringResource(id = android.R.string.cancel), color = colors.brandNorm)
-                }
-            }
         }
     }
 }

@@ -55,6 +55,10 @@ fun LicensesScreen(
         LicenseItem(R.string.license_kotlin_title, R.string.license_apache_2, "https://www.apache.org/licenses/LICENSE-2.0"),
         LicenseItem(R.string.license_hilt_title, R.string.license_apache_2, "https://www.apache.org/licenses/LICENSE-2.0"),
         LicenseItem(R.string.license_retrofit_title, R.string.license_apache_2, "https://www.apache.org/licenses/LICENSE-2.0"),
+        LicenseItem(R.string.license_sentry_title, R.string.license_bsl, "https://github.com/getsentry/sentry-android"),
+        LicenseItem(R.string.license_room_title, R.string.license_apache_2, "https://developer.android.com/training/data-storage/room"),
+        LicenseItem(R.string.license_leakcanary_title, R.string.license_apache_2, "https://square.github.io/leakcanary/"),
+        LicenseItem(R.string.license_android_svg_title, R.string.license_apache_2, "https://bigbadaboom.github.io/androidsvg/"),
         LicenseItem(R.string.license_proton_go_vpn_title, R.string.license_app_desc, "https://github.com/ProtonMail/gopenpgp"),
         LicenseItem(R.string.license_amneziawg_title, R.string.license_apache_2, "https://github.com/wgtunnel/amneziawg-android")
     )

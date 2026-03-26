@@ -54,6 +54,17 @@ sealed class Screen(val route: String) {
     data object ThemeSelection : Screen("theme_selection")
     data object DebugSettings : Screen("debug_settings")
 
+    data object CustomDns : Screen("custom_dns")
+    data object PortSelection : Screen("port_selection?currentPort={currentPort}&isGlobal={isGlobal}") {
+        fun createRoute(currentPort: Int, isGlobal: Boolean) = "port_selection?currentPort=$currentPort&isGlobal=$isGlobal"
+    }
+    data object ProtocolSelection : Screen("protocol_selection?currentProtocol={currentProtocol}") {
+        fun createRoute(currentProtocol: String) = "protocol_selection?currentProtocol=$currentProtocol"
+    }
+    data object AutoOpenUrl : Screen("auto_open_url?currentUrl={currentUrl}") {
+        fun createRoute(currentUrl: String) = "auto_open_url?currentUrl=$currentUrl"
+    }
+
     data object AboutApp : Screen("about_app")
     data object Licenses : Screen("licenses")
 }
@@ -96,6 +107,12 @@ fun NavGraphBuilder.appNavGraph(
             },
             onNavigateToDebug = {
                 navController.navigate(Screen.DebugSettings.route)
+            },
+            onNavigateToCustomDns = {
+                navController.navigate(Screen.CustomDns.route)
+            },
+            onNavigateToPortSelection = { currentPort ->
+                navController.navigate(Screen.PortSelection.createRoute(currentPort, true))
             }
         )
     }
@@ -154,6 +171,70 @@ fun NavGraphBuilder.appNavGraph(
     composable(Screen.Licenses.route) {
         LicensesScreen(
             onBack = { navController.popBackStack() }
+        )
+    }
+
+    composable(Screen.CustomDns.route) {
+        DnsSettingsScreen(
+            onBack = { navController.popBackStack() }
+        )
+    }
+
+    composable(
+        route = Screen.PortSelection.route,
+        arguments = listOf(
+            navArgument("currentPort") { type = NavType.IntType },
+            navArgument("isGlobal") { type = NavType.BoolType }
+        )
+    ) { backStackEntry ->
+        val currentPort = backStackEntry.arguments?.getInt("currentPort") ?: 0
+        val isGlobal = backStackEntry.arguments?.getBoolean("isGlobal") ?: false
+        val viewModel: SettingsViewModel = hiltViewModel()
+
+        PortSelectionScreen(
+            currentPort = currentPort,
+            onBack = { navController.popBackStack() },
+            onPortSelected = { port ->
+                if (isGlobal) {
+                    viewModel.setVpnPort(port)
+                } else {
+                    // For profile editing, we send the result back
+                    navController.previousBackStackEntry?.savedStateHandle?.set("selectedPort", port)
+                }
+                navController.popBackStack()
+            }
+        )
+    }
+
+    composable(
+        route = Screen.ProtocolSelection.route,
+        arguments = listOf(navArgument("currentProtocol") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val currentProtocol = backStackEntry.arguments?.getString("currentProtocol") ?: "AmneziaWG"
+        
+        ProtocolSelectionScreen(
+            currentProtocol = currentProtocol,
+            onBack = { navController.popBackStack() },
+            onProtocolSelected = { protocol ->
+                navController.previousBackStackEntry?.savedStateHandle?.set("selectedProtocol", protocol)
+                navController.popBackStack()
+            }
+        )
+    }
+
+    composable(
+        route = Screen.AutoOpenUrl.route,
+        arguments = listOf(navArgument("currentUrl") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val currentUrl = backStackEntry.arguments?.getString("currentUrl") ?: ""
+        
+        AutoOpenUrlScreen(
+            currentUrl = currentUrl,
+            onBack = { navController.popBackStack() },
+            onUrlSaved = { url ->
+                navController.previousBackStackEntry?.savedStateHandle?.set("selectedUrl", url)
+                navController.popBackStack()
+            }
         )
     }
 
@@ -227,6 +308,16 @@ fun NavGraphBuilder.appNavGraph(
         EditProfileScreen(
             profileId = profileId,
             viewModel = hiltViewModel(),
+            onNavigateToPortSelection = { port ->
+                navController.navigate(Screen.PortSelection.createRoute(port, false))
+            },
+            onNavigateToProtocolSelection = { protocol ->
+                navController.navigate(Screen.ProtocolSelection.createRoute(protocol))
+            },
+            onNavigateToUrlSelection = { url ->
+                navController.navigate(Screen.AutoOpenUrl.createRoute(url))
+            },
+            navController = navController,
             onNavigateBack = { navController.popBackStack() }
         )
     }

@@ -165,9 +165,6 @@
     <string name="obfuscation_i3">Спецыяльнае смецце (I3)</string>
     <string name="obfuscation_i4">Спецыяльнае смецце (I4)</string>
     <string name="obfuscation_i5">Спецыяльнае смецце (I5)</string>
-    <string name="obfuscation_custom_id">Спецыяльнае смецце (Id)</string>
-    <string name="obfuscation_ip">Спецыяльнае смецце (Ip)</string>
-    <string name="obfuscation_ib">Спецыяльнае смецце (Ib)</string>
 
     <!-- Obfuscation Modes -->
     <string name="obfuscation_mode_easy">Просты</string>
@@ -218,6 +215,12 @@
     <string name="license_retrofit_title">Retrofit і OkHttp</string>
     <string name="license_proton_go_vpn_title">Бібліятэка Proton GO VPN</string>
     <string name="license_amneziawg_title">AmneziaWG Android</string>
+    <string name="license_sentry_title">Sentry SDK</string>
+    <string name="license_room_title">База даных Room</string>
+    <string name="license_leakcanary_title">LeakCanary</string>
+    <string name="license_android_svg_title">Android SVG</string>
+    <string name="license_mit">MIT License</string>
+    <string name="license_bsl">Business Source License 1.1</string>
 
     <!-- Split Tunneling -->
     <string name="settings_st_mode">Рэжым раздзельнага тунэлявання</string>
