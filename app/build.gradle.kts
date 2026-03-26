@@ -71,8 +71,8 @@ android {
         applicationId = "ru.protonmod.next"
         minSdk = 29
         targetSdk = 36
-        versionCode = getDynamicVersionCode(projectDir)
-        versionName = getDynamicVersionName(projectDir)
+        versionCode = getDynamicVersionCode(rootDir)
+        versionName = getDynamicVersionName(rootDir)
 
         ndk {
             abiFilters.addAll(listOf("arm64-v8a", "x86_64"))
