@@ -259,8 +259,10 @@ class MapView(context: Context) : View(context) {
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var renderJob: Job? = null
 
-    // Using Picture instead of Bitmap for infinite vector quality upon zooming
+    // SVG rendering via Picture/Canvas
     private var mapPicture: Picture? = null
+    private var mapCacheBitmap: Bitmap? = null
+    private val cacheCanvas = Canvas()
 
     // Matrix interpolation for smooth zooms
     private val currentMatrix = Matrix()
@@ -277,16 +279,20 @@ class MapView(context: Context) : View(context) {
     // Server data
     var allServers: List<LogicalServer> = emptyList()
     var connectedServer: LogicalServer? = null
-    var userCountryCode: String? = null // New: focus here when not connected
+    var userCountryCode: String? = null
     var isConnecting: Boolean = false
     var isInteractive: Boolean = false
     var onNodeClick: ((String) -> Unit)? = null
 
     // Colors
     var bgColor: Int = android.graphics.Color.BLACK
+        set(value) { if (field != value) { field = value; invalidate() } }
     var baseMapColor: Int = android.graphics.Color.DKGRAY
+        set(value) { if (field != value) { field = value; isSvgRendered = false; invalidate() } }
     var borderMapColor: Int = android.graphics.Color.GRAY
+        set(value) { if (field != value) { field = value; isSvgRendered = false; invalidate() } }
     var pinColor: Int = android.graphics.Color.GREEN
+        set(value) { if (field != value) { field = value; invalidate() } }
 
     // Continuous Animations
     private var waveFraction = 0f
@@ -338,14 +344,21 @@ class MapView(context: Context) : View(context) {
     })
 
     init {
+        // SVG rendering via Picture/Canvas is often more stable in Software mode 
+        // on various Android drivers, avoiding GPU command buffer overflows.
+        setLayerType(LAYER_TYPE_SOFTWARE, null)
+
         // Slow down the wave for a more premium effect
         pulseAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
             duration = 2500
             repeatCount = ValueAnimator.INFINITE
             interpolator = LinearInterpolator()
             addUpdateListener { anim ->
-                waveFraction = anim.animatedFraction
-                invalidate()
+                // Only invalidate if there is something animated to draw (the pulse)
+                if (connectedServer != null || isConnecting) {
+                    waveFraction = anim.animatedFraction
+                    invalidate()
+                }
             }
             start()
         }
@@ -357,6 +370,8 @@ class MapView(context: Context) : View(context) {
         pulseAnimator?.cancel()
         matrixAnimator?.cancel()
         mapPicture = null
+        mapCacheBitmap?.recycle()
+        mapCacheBitmap = null
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -391,8 +406,6 @@ class MapView(context: Context) : View(context) {
             } else {
                 pendingCountryFocus = newTarget
             }
-        } else {
-            invalidate()
         }
     }
 
@@ -474,15 +487,45 @@ class MapView(context: Context) : View(context) {
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        canvas.drawColor(bgColor)
+        // No drawColor here, letting the background gradient show through
 
         if (mapPicture == null) return
 
-        // 1. Draw Vector Map with infinite zoom capabilities
-        canvas.save()
-        canvas.concat(currentMatrix)
-        canvas.drawPicture(mapPicture!!)
-        canvas.restore()
+        val isAnimating = matrixAnimator?.isRunning == true
+
+        if (isAnimating) {
+            // During zoom, draw the vector picture for infinite quality
+            canvas.save()
+            canvas.concat(currentMatrix)
+            canvas.drawPicture(mapPicture!!)
+            canvas.restore()
+            // Invalidate cache since zoom changed
+            mapCacheBitmap = null
+        } else {
+            // Static zoom level - use cached bitmap for high performance (60fps pulse)
+            if (mapCacheBitmap == null || mapCacheBitmap?.width != width || mapCacheBitmap?.height != height) {
+                mapCacheBitmap?.recycle()
+                try {
+                    mapCacheBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                    mapCacheBitmap?.let {
+                        cacheCanvas.setBitmap(it)
+                        cacheCanvas.drawColor(android.graphics.Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+                        cacheCanvas.save()
+                        cacheCanvas.concat(currentMatrix)
+                        cacheCanvas.drawPicture(mapPicture!!)
+                        cacheCanvas.restore()
+                    }
+                } catch (_: Exception) {
+                    // Fallback to Picture if bitmap creation fails (OOM or zero size)
+                    canvas.save()
+                    canvas.concat(currentMatrix)
+                    canvas.drawPicture(mapPicture!!)
+                    canvas.restore()
+                    return
+                }
+            }
+            mapCacheBitmap?.let { canvas.drawBitmap(it, 0f, 0f, null) }
+        }
 
         // 2. Draw animated active server pin (drawn over map to prevent zoom distortion)
         pinPaint.color = pinColor
@@ -540,7 +583,6 @@ fun HomeMap(
 ) {
     val colors = ProtonNextTheme.colors
 
-    val bgColor = colors.backgroundNorm.toArgb()
     val baseMapColor = colors.shade15.toArgb()
     val borderMapColor = colors.shade50.toArgb()
 
@@ -559,7 +601,6 @@ fun HomeMap(
         modifier = modifier.fillMaxSize(),
         factory = { context ->
             MapView(context).apply {
-                this.bgColor = bgColor
                 this.baseMapColor = baseMapColor
                 this.borderMapColor = borderMapColor
                 this.userCountryCode = userCountryCode

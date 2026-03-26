@@ -428,16 +428,35 @@ fun DashboardScreen(
                     )
             )
 
-            HomeMap(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight(if (isTablet) 1f else 0.6f),
-                allServers = successState?.servers ?: emptyList(),
-                connectedServer = successState?.connectedServer,
-                userCountryCode = successState?.originalLocationText?.countryCode,
-                isConnecting = isConnecting,
-                isInteractive = isTablet
-            )
+                    .fillMaxHeight(if (isTablet) 1f else 0.6f)
+            ) {
+                HomeMap(
+                    modifier = Modifier.fillMaxSize(),
+                    allServers = successState?.servers ?: emptyList(),
+                    connectedServer = successState?.connectedServer,
+                    userCountryCode = successState?.originalLocationText?.countryCode,
+                    isConnecting = isConnecting,
+                    isInteractive = isTablet
+                )
+
+                // Fade out map at the bottom to blend with background
+                if (!isTablet) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp)
+                            .align(Alignment.BottomCenter)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(Color.Transparent, colors.backgroundNorm)
+                                )
+                            )
+                    )
+                }
+            }
 
             if (!isTablet) {
                 Spacer(
@@ -605,7 +624,7 @@ fun DashboardContent(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(state.recentConnections) { server ->
+                        items(state.recentConnections, key = { it.id }) { server ->
                             ServerCard(
                                 server = server,
                                 isConnected = state.connectedServer?.id == server.id,
@@ -679,7 +698,7 @@ fun DashboardContent(
                     }
                 }
 
-                items(state.recentConnections) { server ->
+                items(state.recentConnections, key = { it.id }) { server ->
                     Box(modifier = Modifier.background(colors.backgroundNorm)) {
                         ServerCard(
                             server = server,
