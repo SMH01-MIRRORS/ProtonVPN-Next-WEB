@@ -4,6 +4,12 @@ when:
   - event: tag
   - event: manual
 
+clone:
+  git:
+    image: woodpeckerci/plugin-git
+    settings:
+      depth: 0
+
 steps:
   build-android:
     image: ghcr.io/cirruslabs/android-sdk:36

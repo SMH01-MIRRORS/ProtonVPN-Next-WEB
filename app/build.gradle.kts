@@ -39,8 +39,11 @@ fun getDynamicVersionName(workingDir: java.io.File): String {
     return gitVersion.ifEmpty { "12.0.0" }
 }
 
-// Dynamically generate version code using commit count to ensure it strictly increases
+// Dynamically generate version code using total commit count to ensure it strictly increases.
+// Using total count instead of "since last tag" prevents resets when a new tag is created.
 fun getDynamicVersionCode(workingDir: java.io.File): Int {
+    // We use 'HEAD' to count all commits in the current branch's history.
+    // In CI, ensure a full clone (depth: 0) is performed for this to work.
     val commitCount = getGitOutput("git rev-list --count HEAD", workingDir).toIntOrNull() ?: 0
     // Base version code prevents the number from ever dropping below your current state
     val baseVersionCode = 605159512
@@ -105,7 +108,12 @@ android {
         getByName("debug") {
             isMinifyEnabled = false
             buildConfigField("boolean", "ALLOW_LOGCAT", "true")
-            signingConfig = signingConfigs.getByName("debug")
+            // Use release signing config in CI environments to ensure consistent signatures
+            signingConfig = if (System.getenv("SIGNING_KEY_FILE") != null) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
             packaging {
                 jniLibs {
                     keepDebugSymbols.addAll(listOf(
