@@ -143,6 +143,12 @@
     <string name="theme_gold_light">Золото светлый</string>
     <string name="theme_gold_dark">Золото темный</string>
     <string name="theme_gold_amoled">Золото AMOLED</string>
+    <string name="theme_surfshark">Surfshark</string>
+    <string name="theme_nord">NordVPN</string>
+    <string name="theme_ipvanish">IPVanish</string>
+    <string name="theme_purevpn">PureVPN</string>
+    <string name="theme_mullvad">Mullvad</string>
+    <string name="theme_windscribe">Windscribe</string>
 
     <!-- Error Reporting Settings -->
     <string name="settings_error_reporting">Отчеты об ошибках</string>

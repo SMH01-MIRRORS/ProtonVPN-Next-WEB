@@ -338,6 +338,12 @@ private fun CustomizationSettingsSection(
             AppTheme.GOLD_LIGHT -> stringResource(R.string.theme_gold_light)
             AppTheme.GOLD_DARK -> stringResource(R.string.theme_gold_dark)
             AppTheme.GOLD_AMOLED -> stringResource(R.string.theme_gold_amoled)
+            AppTheme.SURFSHARK -> stringResource(R.string.theme_surfshark)
+            AppTheme.NORD -> stringResource(R.string.theme_nord)
+            AppTheme.IPVANISH -> stringResource(R.string.theme_ipvanish)
+            AppTheme.PUREVPN -> stringResource(R.string.theme_purevpn)
+            AppTheme.MULLVAD -> stringResource(R.string.theme_mullvad)
+            AppTheme.WINDSCRIBE -> stringResource(R.string.theme_windscribe)
         }
 
         SettingRowWithIcon(

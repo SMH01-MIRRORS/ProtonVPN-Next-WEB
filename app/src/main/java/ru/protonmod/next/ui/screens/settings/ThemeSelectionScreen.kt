@@ -112,6 +112,12 @@ fun ThemePreviewCard(
         AppTheme.GOLD_LIGHT -> stringResource(R.string.theme_gold_light)
         AppTheme.GOLD_DARK -> stringResource(R.string.theme_gold_dark)
         AppTheme.GOLD_AMOLED -> stringResource(R.string.theme_gold_amoled)
+        AppTheme.SURFSHARK -> stringResource(R.string.theme_surfshark)
+        AppTheme.NORD -> stringResource(R.string.theme_nord)
+        AppTheme.IPVANISH -> stringResource(R.string.theme_ipvanish)
+        AppTheme.PUREVPN -> stringResource(R.string.theme_purevpn)
+        AppTheme.MULLVAD -> stringResource(R.string.theme_mullvad)
+        AppTheme.WINDSCRIBE -> stringResource(R.string.theme_windscribe)
     }
 
     Column(
@@ -177,6 +183,12 @@ fun MiniDashboardPreview(theme: AppTheme) {
         AppTheme.GOLD_LIGHT -> ProtonColors.GoldLight
         AppTheme.GOLD_DARK -> ProtonColors.GoldDark
         AppTheme.GOLD_AMOLED -> ProtonColors.GoldAmoled
+        AppTheme.SURFSHARK -> ProtonColors.Surfshark
+        AppTheme.NORD -> ProtonColors.Nord
+        AppTheme.IPVANISH -> ProtonColors.IPVanish
+        AppTheme.PUREVPN -> ProtonColors.PureVPN
+        AppTheme.MULLVAD -> ProtonColors.Mullvad
+        AppTheme.WINDSCRIBE -> ProtonColors.Windscribe
     }
 
     CompositionLocalProvider(LocalColors provides themeColors) {

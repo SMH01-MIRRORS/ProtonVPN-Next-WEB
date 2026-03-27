@@ -23,5 +23,11 @@ enum class AppTheme {
     AMOLED,
     GOLD_LIGHT,
     GOLD_DARK,
-    GOLD_AMOLED
+    GOLD_AMOLED,
+    SURFSHARK,
+    NORD,
+    IPVANISH,
+    PUREVPN,
+    MULLVAD,
+    WINDSCRIBE
 }

@@ -76,6 +76,30 @@ object ProtonPalette {
     val GoldDarken40 = Color(0xFF7F6921)
     val GoldLighten20 = Color(0xFFDDBF5F)
     val GoldLighten40 = Color(0xFFE6CF87)
+
+    // Surfshark
+    val SurfsharkBlue = Color(0xFF00D1FF)
+    val SurfsharkDeep = Color(0xFF001F2D)
+
+    // Nord
+    val NordBlue = Color(0xFF4687FF)
+    val NordDeep = Color(0xFF0B122B)
+
+    // IPVanish
+    val IPVanishGreen = Color(0xFF8CC63F)
+    val IPVanishDeep = Color(0xFF121212)
+
+    // PureVPN
+    val PureVPNCyan = Color(0xFF00EBC7)
+    val PureVPNDeep = Color(0xFF1A0033)
+
+    // Mullvad
+    val MullvadOrange = Color(0xFFFFBD44)
+    val MullvadDeep = Color(0xFF222222)
+
+    // Windscribe
+    val WindscribeBlue = Color(0xFF009FE3)
+    val WindscribeDeep = Color(0xFF001A33)
 }
 
 @Stable
@@ -351,6 +375,70 @@ class ProtonColors(
             )
         }
 
+        val Surfshark = baseLight(
+            brandNorm = ProtonPalette.SurfsharkBlue,
+            brandDarken20 = Color(0xFF00A3CC),
+            brandDarken40 = Color(0xFF007599),
+        ).copy(
+            notificationError = ProtonPalette.Pomegranate, // Surfshark sometimes uses red accents
+            backgroundSecondary = Color(0xFFF0F8FF).copy(alpha = 0.4f)
+        )
+
+        val Nord = baseLight(
+            brandNorm = ProtonPalette.NordBlue,
+            brandDarken20 = Color(0xFF0055D4),
+            brandDarken40 = Color(0xFF003380),
+        ).copy(
+            backgroundSecondary = Color(0xFFE5E9F0).copy(alpha = 0.4f)
+        )
+
+        val IPVanish = baseDark(
+            brandNorm = ProtonPalette.IPVanishGreen,
+            brandDarken20 = ProtonPalette.IPVanishGreen.copy(alpha = 0.8f),
+            brandDarken40 = ProtonPalette.IPVanishGreen.copy(alpha = 0.6f),
+        ).copy(
+            shade0 = Color.Black,
+            backgroundNorm = ProtonPalette.IPVanishDeep,
+            backgroundSecondary = Color(0xFF222222).copy(alpha = 0.4f),
+            backgroundDeep = Color.Black,
+        )
+
+        val PureVPN = baseDark(
+            brandNorm = ProtonPalette.PureVPNCyan,
+            brandDarken20 = ProtonPalette.PureVPNCyan.copy(alpha = 0.8f),
+            brandDarken40 = ProtonPalette.PureVPNCyan.copy(alpha = 0.6f),
+        ).copy(
+            shade0 = ProtonPalette.PureVPNDeep,
+            backgroundNorm = ProtonPalette.PureVPNDeep,
+            backgroundSecondary = Color(0xFF2A0043).copy(alpha = 0.4f),
+            backgroundDeep = ProtonPalette.PureVPNDeep,
+        )
+
+        val Mullvad = baseDark(
+            brandNorm = ProtonPalette.MullvadOrange,
+            brandDarken20 = ProtonPalette.MullvadOrange.copy(alpha = 0.8f),
+            brandDarken40 = ProtonPalette.MullvadOrange.copy(alpha = 0.6f),
+        ).copy(
+            shade0 = Color.Black,
+            backgroundNorm = ProtonPalette.MullvadDeep,
+            backgroundSecondary = Color(0xFF333333).copy(alpha = 0.4f),
+            backgroundDeep = Color.Black,
+        )
+
+        val Windscribe = baseDark(
+            brandNorm = ProtonPalette.CadetBlue, // Grayish accent
+            brandDarken20 = ProtonPalette.CadetBlue.copy(alpha = 0.8f),
+            brandDarken40 = ProtonPalette.CadetBlue.copy(alpha = 0.6f),
+        ).copy(
+            shade0 = Color.Black,
+            backgroundNorm = Color.Black,
+            backgroundSecondary = Color(0xFF1A1A1A).copy(alpha = 0.4f),
+            backgroundDeep = Color.Black,
+            shade100 = Color.White,
+            shade80 = Color.Gray,
+            textAccent = Color.White
+        )
+
         private fun baseLight(
             brandDarken40: Color = ProtonPalette.Chambray,
             brandDarken20: Color = ProtonPalette.SanMarino,
@@ -551,6 +639,12 @@ fun ProtonNextTheme(
         AppTheme.GOLD_LIGHT -> ProtonColors.GoldLight
         AppTheme.GOLD_DARK -> ProtonColors.GoldDark
         AppTheme.GOLD_AMOLED -> ProtonColors.GoldAmoled
+        AppTheme.SURFSHARK -> ProtonColors.Surfshark
+        AppTheme.NORD -> ProtonColors.Nord
+        AppTheme.IPVANISH -> ProtonColors.IPVanish
+        AppTheme.PUREVPN -> ProtonColors.PureVPN
+        AppTheme.MULLVAD -> ProtonColors.Mullvad
+        AppTheme.WINDSCRIBE -> ProtonColors.Windscribe
     }
 
     val isDark = protonColors.isDark

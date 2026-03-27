@@ -141,6 +141,12 @@
     <string name="theme_gold_light">金色浅色</string>
     <string name="theme_gold_dark">金色深色</string>
     <string name="theme_gold_amoled">金色 AMOLED</string>
+    <string name="theme_surfshark">Surfshark</string>
+    <string name="theme_nord">NordVPN</string>
+    <string name="theme_ipvanish">IPVanish</string>
+    <string name="theme_purevpn">PureVPN</string>
+    <string name="theme_mullvad">Mullvad</string>
+    <string name="theme_windscribe">Windscribe</string>
 
     <!-- Error Reporting Settings -->
     <string name="settings_error_reporting">错误报告</string>
