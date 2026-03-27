@@ -360,10 +360,10 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                         lastSpeedText = getString(R.string.vpn_speed_format, upStr, downStr)
 
                         if (notificationsEnabled && currentTunnelState == Tunnel.State.UP) {
-                            // Update UI on the main thread
-                            launch(Dispatchers.Main) {
-                                updateNotification(Tunnel.State.UP.name, isSpeedUpdateOnly = true)
-                            }
+                            // Update notification directly on the IO thread to avoid blocking the main thread.
+                            // notificationManager.notify() is a Binder IPC call that can block for several
+                            // seconds on slower devices; running it on IO prevents ANR on the main thread.
+                            updateNotification(Tunnel.State.UP.name, isSpeedUpdateOnly = true)
                         }
                     } catch (e: Exception) {
                         ProtonLogger.e(TAG, "Error while fetching traffic statistics", e)
