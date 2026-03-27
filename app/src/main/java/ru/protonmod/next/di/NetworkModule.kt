@@ -26,8 +26,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import okhttp3.Dns
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -47,6 +45,7 @@ import ru.protonmod.next.vpn.AmneziaVpnManager
 import org.amnezia.awg.backend.Tunnel
 import java.net.InetAddress
 import java.util.concurrent.TimeUnit
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
@@ -79,7 +78,7 @@ object NetworkModule {
     @Singleton
     fun provideTokenAuthenticator(
         sessionDao: SessionDao,
-        authApiProvider: javax.inject.Provider<ProtonAuthApi>
+        authApiProvider: Provider<ProtonAuthApi>
     ): TokenAuthenticator {
         return TokenAuthenticator(sessionDao, authApiProvider)
     }
@@ -90,10 +89,13 @@ object NetworkModule {
      */
     private fun shouldUseApiBypass(
         context: Context,
-        vpnManager: AmneziaVpnManager,
-        settingsManager: SettingsManager
+        vpnManagerProvider: Provider<AmneziaVpnManager>,
+        settingsManagerProvider: Provider<SettingsManager>
     ): Boolean {
         // 1. If our VPN tunnel is active, bypass is not needed
+        // Using provider.get() here is safe because this function is called inside interceptors/DNS
+        // which run on background threads, OR it's called during OkHttp init which we've made safer.
+        val vpnManager = vpnManagerProvider.get()
         if (vpnManager.tunnelState.value == Tunnel.State.UP) return false
 
         // 2. If a third-party VPN is active at the OS level, bypass is not needed
@@ -109,20 +111,19 @@ object NetworkModule {
         }
 
         // 3. Read user preferences synchronously.
-        // This is safe because OkHttp interceptors and DNS resolvers run on background threads.
-        return runBlocking {
-            val isBypassEnabled = settingsManager.apiBypassEnabled.first()
-            val strategy = settingsManager.apiBypassStrategy.first()
-            isBypassEnabled && strategy == "netlify"
-        }
+        val settingsManager = settingsManagerProvider.get()
+        val isBypassEnabled = settingsManager.isApiBypassEnabledSync()
+        val strategy = settingsManager.getApiBypassStrategySync()
+        
+        return isBypassEnabled && strategy == "netlify"
     }
 
     @Provides
     @Singleton
     fun provideOkHttpClient(
         @ApplicationContext context: Context,
-        vpnManager: AmneziaVpnManager,
-        settingsManager: SettingsManager,
+        vpnManagerProvider: Provider<AmneziaVpnManager>,
+        settingsManagerProvider: Provider<SettingsManager>,
         tokenAuthenticator: TokenAuthenticator
     ): OkHttpClient {
         try {
@@ -135,7 +136,7 @@ object NetworkModule {
             val userAgent = DeviceInfoProvider.getSpoofedUserAgent()
             val spoofedVersion = DeviceInfoProvider.SPOOFED_APP_VERSION
 
-            val useProxy = shouldUseApiBypass(context, vpnManager, settingsManager)
+            val useProxy = shouldUseApiBypass(context, vpnManagerProvider, settingsManagerProvider)
             val newBaseUrl = if (useProxy) PROTON_PROXY_URL.toHttpUrl() else PROTON_DIRECT_URL.toHttpUrl()
 
             val newUrl = request.url.newBuilder()
@@ -165,7 +166,7 @@ object NetworkModule {
 
         // Dynamic DNS configuration
         val dynamicDns = Dns { hostname ->
-            val useProxy = shouldUseApiBypass(context, vpnManager, settingsManager)
+            val useProxy = shouldUseApiBypass(context, vpnManagerProvider, settingsManagerProvider)
             if (useProxy) {
                 try {
                     doh.lookup(hostname)

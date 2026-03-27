@@ -50,6 +50,7 @@ import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.ui.utils.CountryUtils
 import ru.protonmod.next.vpn.AmneziaVpnManager
+import io.sentry.Sentry
 import java.net.Proxy
 import javax.inject.Inject
 import androidx.core.content.edit
@@ -272,6 +273,7 @@ class DashboardViewModel @Inject constructor(
      * @return [LocationData] object containing location info, or null in case of an error.
      */
     private suspend fun fetchRealLocation(useProxy: Boolean = true): LocationData? = withContext(Dispatchers.IO) {
+        val startTime = System.currentTimeMillis()
         val client = OkHttpClient.Builder()
             .apply { if (useProxy) proxy(Proxy.NO_PROXY) }
             .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
@@ -308,6 +310,11 @@ class DashboardViewModel @Inject constructor(
                             val cleanCountryCode = if (countryCode.equals("null", ignoreCase = true)) "" else countryCode.trim()
 
                             if (cleanIp.isNotEmpty() && cleanCountryCode.isNotEmpty()) {
+                                // Metrics
+                                val duration = System.currentTimeMillis() - startTime
+                                Sentry.metrics().distribution("location_fetch_latency", duration.toDouble())
+                                Sentry.metrics().count("location_fetch_success", 1.0)
+                                
                                 return@withContext LocationData(cleanIp, cleanCountryCode)
                             }
                         }
@@ -323,6 +330,10 @@ class DashboardViewModel @Inject constructor(
                 }
             }
         }
+        
+        // Metrics
+        Sentry.metrics().count("location_fetch_error", 1.0)
+
         null
     }
 

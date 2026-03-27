@@ -33,6 +33,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -145,12 +148,24 @@ class AmneziaVpnManager @Inject constructor(
             }
         }, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
 
-        applicationScope.launch { settingsManager.notificationsEnabled.collect { updateServiceSettings() } }
-        applicationScope.launch { settingsManager.killSwitchEnabled.collect { updateServiceSettings() } }
-        applicationScope.launch { settingsManager.sentryNonFatalEnabled.collect { updateServiceSettings() } }
-        applicationScope.launch { settingsManager.analyticsEnabled.collect { updateServiceSettings() } }
+        // Monitor settings changes and update the service accordingly.
+        // We use a single coroutine with a small initial delay to avoid competing 
+        // with the main thread during critical app boot/injection window.
+        applicationScope.launch {
+            delay(1000) 
+            combine(
+                settingsManager.notificationsEnabled,
+                settingsManager.killSwitchEnabled,
+                settingsManager.sentryNonFatalEnabled,
+                settingsManager.analyticsEnabled
+            ) { _, _, _, _ -> }
+                .collectLatest {
+                    updateServiceSettings()
+                }
+        }
 
         applicationScope.launch {
+            delay(1500) // Staggered initialization
             val session = sessionDao.getSession()
             if (session != null) {
                 updateCertificateState(session.wgCertificate)
@@ -212,6 +227,10 @@ class AmneziaVpnManager @Inject constructor(
             val newCert = result.getOrNull()?.certificate
             if (newCert != null) {
                 ProtonLogger.i(TAG, "Successfully registered new WireGuard key and received certificate")
+                
+                // Metrics
+                Sentry.metrics().count("cert_refresh_success", 1.0)
+                
                 sessionDao.updateVpnKeys(
                     privateKey = keyPair.privateKeyX25519,
                     publicKeyPem = keyPair.publicKeyPem,
@@ -227,6 +246,10 @@ class AmneziaVpnManager @Inject constructor(
         } else {
             val error = result.exceptionOrNull()?.message ?: "Unknown error"
             ProtonLogger.e(TAG, "Failed to register WireGuard key with Proton API: $error", result.exceptionOrNull())
+            
+            // Metrics
+            Sentry.metrics().count("cert_refresh_error", 1.0)
+
             val isFullyExpired = previousState is CertificateState.Expired ||
                     (previousState is CertificateState.RefreshFailed && previousState.isFullyExpired)
             _certState.value = CertificateState.RefreshFailed(error, isFullyExpired)

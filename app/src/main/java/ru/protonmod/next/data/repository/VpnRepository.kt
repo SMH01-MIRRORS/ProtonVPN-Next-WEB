@@ -18,6 +18,7 @@
 package ru.protonmod.next.data.repository
 
 import ru.protonmod.next.utils.ProtonLogger
+import io.sentry.Sentry
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -162,6 +163,7 @@ class VpnRepository @Inject constructor(
         userTier: Int,
         forceRefresh: Boolean
     ): Result<List<LogicalServer>> = withContext(dispatcherProvider.io()) {
+        val startTime = System.currentTimeMillis()
         try {
             val now = System.currentTimeMillis()
             val cacheInfo = serversCacheDao.getCacheInfo()
@@ -286,9 +288,19 @@ class VpnRepository @Inject constructor(
 
             val logicalServers = serversList.filter { it.tier <= userTier }
             cachedServers = logicalServers
+            
+            // Metrics
+            val duration = System.currentTimeMillis() - startTime
+            Sentry.metrics().distribution("server_fetch_latency", duration.toDouble())
+            Sentry.metrics().count("server_fetch_success", 1.0)
+            
             Result.success(logicalServers)
         } catch (e: Exception) {
             ProtonLogger.e(TAG, "Critical error in performGetServers", e)
+            
+            // Metrics
+            Sentry.metrics().count("server_fetch_error", 1.0)
+
             val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
             if (dbServers.isNotEmpty()) Result.success(dbServers.filter { it.tier <= userTier })
             else Result.failure(e)

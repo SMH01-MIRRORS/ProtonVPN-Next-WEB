@@ -26,19 +26,13 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import ru.protonmod.next.data.local.ServerDao
-import ru.protonmod.next.data.local.ServersCacheDao
-import ru.protonmod.next.data.local.ServersCacheEntity
-import ru.protonmod.next.data.local.ServerMapper
 import ru.protonmod.next.data.repository.VpnRepository
 
 @HiltWorker
 class ServersCacheUpdateWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
-    private val vpnRepository: VpnRepository,
-    private val serverDao: ServerDao,
-    private val serversCacheDao: ServersCacheDao
+    private val vpnRepository: VpnRepository
 ) : CoroutineWorker(appContext, workerParams) {
 
     companion object {
@@ -55,11 +49,8 @@ class ServersCacheUpdateWorker @AssistedInject constructor(
 
             val result = vpnRepository.getServers(accessToken, sessionId, userTier = userTier)
 
-            result.onSuccess { servers ->
-                ProtonLogger.d(TAG, "Background update success: ${servers.size} servers")
-                serverDao.insertServers(servers.map { ServerMapper.toEntity(it) })
-                val now = System.currentTimeMillis()
-                serversCacheDao.saveCacheInfo(ServersCacheEntity(cachedAt = now, expiresAt = now + 3600000L))
+            result.onSuccess {
+                ProtonLogger.d(TAG, "Background update success: ${it.size} servers")
                 return@withContext Result.success()
             }
 

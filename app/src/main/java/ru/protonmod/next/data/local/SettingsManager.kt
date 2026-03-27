@@ -161,6 +161,9 @@ class SettingsManager @Inject constructor(
     fun isAnrEnabledSync(): Boolean = prefs.getBoolean("sentry_anr_enabled", true)
     fun isMetricsEnabledSync(): Boolean = prefs.getBoolean("sentry_metrics_enabled", true)
 
+    fun isApiBypassEnabledSync(): Boolean = prefs.getBoolean("api_bypass_enabled", false)
+    fun getApiBypassStrategySync(): String = prefs.getString("api_bypass_strategy", "netlify") ?: "netlify"
+
     val quickConnectStrategy: Flow<String> = context.dataStore.data.map { it[QUICK_CONNECT_STRATEGY] ?: "fastest" }
     val quickConnectTargetId: Flow<String?> = context.dataStore.data.map { it[QUICK_CONNECT_TARGET_ID] }
 
@@ -269,10 +272,12 @@ class SettingsManager @Inject constructor(
     }
 
     suspend fun setApiBypassEnabled(enabled: Boolean) {
+        prefs.edit { putBoolean("api_bypass_enabled", enabled) }
         context.dataStore.edit { it[API_BYPASS_ENABLED] = enabled }
     }
 
     suspend fun setApiBypassStrategy(strategy: String) {
+        prefs.edit { putString("api_bypass_strategy", strategy) }
         context.dataStore.edit { it[API_BYPASS_STRATEGY] = strategy }
     }
 
