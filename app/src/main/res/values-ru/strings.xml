@@ -157,6 +157,14 @@
     <string name="settings_crash_reports_desc">Подробные отчеты в случае непредвиденного завершения работы приложения</string>
     <string name="settings_analytics">Отправлять аналитику</string>
     <string name="settings_analytics_desc">Анонимные данные об использовании, помогающие нам понять, как работает приложение</string>
+    <string name="settings_sentry_performance">Производительность приложения</string>
+    <string name="settings_sentry_performance_desc">Сбор анонимных трассировок и данных о скорости запуска</string>
+    <string name="settings_sentry_non_fatal">Нефатальные ошибки</string>
+    <string name="settings_sentry_non_fatal_desc">Отправка отчетов о перехваченных исключениях и мелких проблемах логики</string>
+    <string name="settings_sentry_anr">Детекция ANR</string>
+    <string name="settings_sentry_anr_desc">Обнаружение зависаний приложения более чем на 5 секунд</string>
+    <string name="settings_sentry_session_replay">Повторы сессий</string>
+    <string name="settings_sentry_session_replay_desc">Анонимное воспроизведение взаимодействий для отладки проблем интерфейса</string>
 
     <!-- Kill Switch Screen -->
     <string name="kill_switch_title">Kill Switch</string>

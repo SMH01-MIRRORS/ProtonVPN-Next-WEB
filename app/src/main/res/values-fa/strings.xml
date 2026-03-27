@@ -155,6 +155,14 @@
     <string name="settings_crash_reports_desc">گزارش‌های دقیق زمانی که برنامه به طور غیرمنتظره متوقف می‌شود</string>
     <string name="settings_analytics">ارسال تجزیه و تحلیل</string>
     <string name="settings_analytics_desc">داده‌های استفاده ناشناس برای کمک به ما در درک نحوه استفاده از برنامه</string>
+    <string name="settings_sentry_performance">عملکرد برنامه</string>
+    <string name="settings_sentry_performance_desc">جمع‌آوری ردیابی‌های ناشناس و داده‌های عملکرد راه‌اندازی</string>
+    <string name="settings_sentry_non_fatal">خطاهای غیر بحرانی</string>
+    <string name="settings_sentry_non_fatal_desc">ارسال گزارش برای استثناهای مدیریت شده و مشکلات جزئی منطقی</string>
+    <string name="settings_sentry_anr">تشخیص ANR</string>
+    <string name="settings_sentry_anr_desc">تشخیص زمانی که برنامه بیش از ۵ ثانیه پاسخگو نباشد</string>
+    <string name="settings_sentry_session_replay">بازبینی نشست‌ها</string>
+    <string name="settings_sentry_session_replay_desc">پخش ناشناس تعاملات برای عیب‌یابی مشکلات رابط کاربری</string>
 
     <!-- Kill Switch Screen -->
     <string name="kill_switch_title">Kill Switch</string>

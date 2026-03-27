@@ -155,6 +155,14 @@
     <string name="settings_crash_reports_desc">Детальні звіти при несподіваній зупинці додатка</string>
     <string name="settings_analytics">Надсилати аналітику</string>
     <string name="settings_analytics_desc">Анонімні дані про використання, що допомагають нам покращувати додаток</string>
+    <string name="settings_sentry_performance">Продуктивність додатка</string>
+    <string name="settings_sentry_performance_desc">Збір анонімних трасувань та даних про швидкість запуску</string>
+    <string name="settings_sentry_non_fatal">Нефатальні помилки</string>
+    <string name="settings_sentry_non_fatal_desc">Надсилання звітів про перехоплені виключення та дрібні проблеми логіки</string>
+    <string name="settings_sentry_anr">Детекція ANR</string>
+    <string name="settings_sentry_anr_desc">Виявлення зависань додатка більше ніж на 5 секунд</string>
+    <string name="settings_sentry_session_replay">Повтори сесій</string>
+    <string name="settings_sentry_session_replay_desc">Анонімне відтворення взаємодій для налагодження проблем інтерфейсу</string>
 
     <!-- Kill Switch Screen -->
     <string name="kill_switch_title">Kill Switch</string>

@@ -146,6 +146,8 @@ class AmneziaVpnManager @Inject constructor(
 
         applicationScope.launch { settingsManager.notificationsEnabled.collect { updateServiceSettings() } }
         applicationScope.launch { settingsManager.killSwitchEnabled.collect { updateServiceSettings() } }
+        applicationScope.launch { settingsManager.sentryNonFatalEnabled.collect { updateServiceSettings() } }
+        applicationScope.launch { settingsManager.analyticsEnabled.collect { updateServiceSettings() } }
 
         applicationScope.launch {
             val session = sessionDao.getSession()
@@ -183,18 +185,22 @@ class AmneziaVpnManager @Inject constructor(
     }
 
     private suspend fun performCertificateRefresh(force: Boolean = false): Result<String> = refreshMutex.withLock {
-        val currentSession = sessionDao.getSession() ?: return Result.failure(Exception("No session"))
+        val currentSession = sessionDao.getSession() ?: return Result.failure<String>(Exception("No session")).also {
+            ProtonLogger.e(TAG, "Certificate refresh failed: No active session found in database")
+        }
         updateCertificateState(currentSession.wgCertificate)
 
         if (!force && _certState.value is CertificateState.Valid) {
+            ProtonLogger.d(TAG, "Certificate is still valid, skipping refresh")
             return Result.success(currentSession.wgCertificate ?: "")
         }
 
         val previousState = _certState.value
         _certState.value = CertificateState.Refreshing
-        ProtonLogger.d(TAG, "Refreshing certificate (previous state: $previousState)")
+        ProtonLogger.i(TAG, "Starting certificate refresh (force=$force, previous state: $previousState)")
 
         val keyPair = cryptoWrapper.generateVpnKeyPair()
+        ProtonLogger.v(TAG, "Generated new VPN keypair for registration")
 
         val result = vpnRepositoryProvider.get().registerWireGuardKey(
             accessToken = currentSession.accessToken,
@@ -204,6 +210,7 @@ class AmneziaVpnManager @Inject constructor(
         return if (result.isSuccess) {
             val newCert = result.getOrNull()?.certificate
             if (newCert != null) {
+                ProtonLogger.i(TAG, "Successfully registered new WireGuard key and received certificate")
                 sessionDao.updateVpnKeys(
                     privateKey = keyPair.privateKeyX25519,
                     publicKeyPem = keyPair.publicKeyPem,
@@ -212,11 +219,13 @@ class AmneziaVpnManager @Inject constructor(
                 updateCertificateState(newCert)
                 Result.success(newCert)
             } else {
+                ProtonLogger.e(TAG, "Server returned success but certificate is null or empty")
                 _certState.value = previousState
                 Result.failure(Exception("Empty certificate in response"))
             }
         } else {
             val error = result.exceptionOrNull()?.message ?: "Unknown error"
+            ProtonLogger.e(TAG, "Failed to register WireGuard key with Proton API: $error", result.exceptionOrNull())
             val isFullyExpired = previousState is CertificateState.Expired ||
                     (previousState is CertificateState.RefreshFailed && previousState.isFullyExpired)
             _certState.value = CertificateState.RefreshFailed(error, isFullyExpired)
@@ -268,7 +277,9 @@ class AmneziaVpnManager @Inject constructor(
     private suspend fun updateServiceSettings() {
         systemContextWrapper.updateVpnSettings(
             notificationsEnabled = settingsManager.notificationsEnabled.first(),
-            killSwitchEnabled = settingsManager.killSwitchEnabled.first()
+            killSwitchEnabled = settingsManager.killSwitchEnabled.first(),
+            nonFatalEnabled = settingsManager.sentryNonFatalEnabled.first(),
+            analyticsEnabled = settingsManager.analyticsEnabled.first()
         )
     }
 
@@ -311,35 +322,36 @@ class AmneziaVpnManager @Inject constructor(
         obfuscationParams: ObfuscationParams? = null
     ): Result<Unit> = withContext(dispatcherProvider.io()) {
         try {
+            ProtonLogger.i(TAG, "Initiating connection to server: ${server.id} (Domain: ${server.domain}, LogicalID: $logicalServerId)")
             _isConnecting.value = true
             var currentSession = session
 
             // Proactively refresh certificate if it's not valid (Expired or ExpiringSoon)
             updateCertificateState(currentSession.wgCertificate)
             if (_certState.value !is CertificateState.Valid) {
-                ProtonLogger.d(TAG, "Certificate state is ${_certState.value}, attempting refresh before connection.")
+                ProtonLogger.i(TAG, "Certificate state is ${_certState.value}, attempting refresh before connection.")
                 performCertificateRefresh()
 
                 if (isEffectivelyExpired()) {
-                    // Even if expired, we try to connect because Proton API might be reachable 
-                    // and some servers might still accept the old key for a short grace period.
-                    // But we keep the UI wrning.
-                    ProtonLogger.w(TAG, "Certificate is expired. Proceeding with connection anyway as Proton API is accessible.")
+                    ProtonLogger.w(TAG, "Certificate is still effectively expired after refresh attempt. Proceeding anyway as Proton API might allow grace period.")
                 }
                 
                 // Refresh session from DB to get the new certificate and any other potential updates
                 currentSession = sessionDao.getSession() ?: currentSession
             }
 
-            val wgPrivateKeyB64 = currentSession.wgPrivateKey ?: throw Exception("Offline VPN private key missing!")
+            val wgPrivateKeyB64 = currentSession.wgPrivateKey ?: throw Exception("Offline VPN private key missing!").also {
+                ProtonLogger.e(TAG, "Critical: VPN Private Key is null in session data")
+            }
             var targetIp: String? = null
             
             // DNS resolution with improved retry and logging
+            ProtonLogger.d(TAG, "Resolving domain ${server.domain} (Max retries: $DNS_RETRY_COUNT)")
             for (i in 1..DNS_RETRY_COUNT) {
                 try {
                     targetIp = InetAddress.getByName(server.domain).hostAddress
                     if (targetIp != null) {
-                        ProtonLogger.d(TAG, "DNS resolved ${server.domain} to $targetIp")
+                        ProtonLogger.i(TAG, "DNS resolved ${server.domain} to $targetIp on attempt $i")
                         break
                     }
                 } catch (e: Exception) {
@@ -351,10 +363,15 @@ class AmneziaVpnManager @Inject constructor(
             if (targetIp == null) {
                 _isConnecting.value = false
                 _tunnelState.value = Tunnel.State.DOWN
-                throw Exception("DNS resolution failed for ${server.domain}")
+                throw Exception("DNS resolution failed for ${server.domain} after $DNS_RETRY_COUNT attempts").also {
+                    ProtonLogger.e(TAG, it.message!!)
+                }
             }
 
-            val serverPubKey = server.wgPublicKey ?: throw Exception("Missing WG Public Key for Server")
+            val serverPubKey = server.wgPublicKey ?: throw Exception("Missing WG Public Key for Server").also {
+                ProtonLogger.e(TAG, "Critical: Server ${server.id} has no WireGuard Public Key")
+            }
+            
             val splitTunnelingEnabled = settingsManager.splitTunnelingEnabled.first()
             val stMode = settingsManager.splitTunnelingMode.first()
             val isIncludeMode = stMode == "include"
@@ -362,9 +379,11 @@ class AmneziaVpnManager @Inject constructor(
             val selectedIps = if (splitTunnelingEnabled) settingsManager.excludedIps.first().toMutableSet() else mutableSetOf()
             val selectedDomains = if (splitTunnelingEnabled) settingsManager.excludedDomains.first() else emptySet()
 
+            ProtonLogger.d(TAG, "Split Tunneling: enabled=$splitTunnelingEnabled, mode=$stMode, apps=${selectedApps.size}, IPs=${selectedIps.size}, domains=${selectedDomains.size}")
+
             // Resolve split tunneling domains
             if (splitTunnelingEnabled && selectedDomains.isNotEmpty()) {
-                ProtonLogger.d(TAG, "Resolving ${selectedDomains.size} split-tunneling domains...")
+                ProtonLogger.i(TAG, "Resolving ${selectedDomains.size} split-tunneling domains...")
                 selectedDomains.forEach { domain ->
                     try {
                         val addresses = InetAddress.getAllByName(domain)
@@ -372,7 +391,7 @@ class AmneziaVpnManager @Inject constructor(
                             val ip = addr.hostAddress
                             if (ip != null) {
                                 selectedIps.add(if (ip.contains(":")) "$ip/128" else "$ip/32")
-                                ProtonLogger.v(TAG, "Domain $domain resolved to $ip for split tunneling")
+                                ProtonLogger.v(TAG, "Split-tunnel domain $domain resolved to $ip")
                             }
                         }
                     } catch (e: Exception) {
@@ -382,9 +401,15 @@ class AmneziaVpnManager @Inject constructor(
             }
 
             val selectedPort = overridePort?.takeIf { it != 0 } ?: settingsManager.vpnPort.first().let { port ->
-                if (port == 0) listOf(443, 123, 1194, 51820).random() else port
+                if (port == 0) {
+                    val p = listOf(443, 123, 1194, 51820).random()
+                    ProtonLogger.d(TAG, "Auto-port selected: $p")
+                    p
+                } else port
             }
             val isObfuscationEnabled = overrideObfuscation ?: settingsManager.obfuscationEnabled.first()
+
+            ProtonLogger.i(TAG, "Connection parameters: Port=$selectedPort, Obfuscation=$isObfuscationEnabled")
 
             val params = if (isObfuscationEnabled) {
                 obfuscationParams ?: ObfuscationParams(
@@ -401,7 +426,7 @@ class AmneziaVpnManager @Inject constructor(
             // Retrieve Custom DNS IP or fallback to Proton Default
             val userDns = settingsManager.customDns.first().trim()
             val activeDns = if (userDns.isNotEmpty()) userDns else PROTON_DNS_IP
-            ProtonLogger.d(TAG, "Using DNS Server: $activeDns")
+            ProtonLogger.i(TAG, "Using DNS Server: $activeDns")
 
             val configStr = amneziaConfigGenerator.buildConfig(
                 serverPublicKey = serverPubKey,
@@ -416,7 +441,8 @@ class AmneziaVpnManager @Inject constructor(
                 certificate = currentSession.wgCertificate,
                 obfuscationParams = params
             )
-            ProtonLogger.d(TAG, "Connecting with AWG config:\n$configStr")
+            
+            ProtonLogger.v(TAG, "Generated AWG Config Length: ${configStr.length}")
 
             systemContextWrapper.startVpnService(
                 configStr = configStr,
@@ -426,8 +452,10 @@ class AmneziaVpnManager @Inject constructor(
                 excludedIps = selectedIps
             )
 
+            ProtonLogger.i(TAG, "VPN start command issued successfully")
             Result.success(Unit)
         } catch (e: Exception) {
+            ProtonLogger.e(TAG, "Failed to connect to VPN", e)
             _isConnecting.value = false
             _tunnelState.value = Tunnel.State.DOWN
             Result.failure(e)

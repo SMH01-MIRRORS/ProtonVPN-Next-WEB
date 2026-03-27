@@ -155,6 +155,14 @@
     <string name="settings_crash_reports_desc">应用意外停止运行时的详细报告</string>
     <string name="settings_analytics">发送分析数据</string>
     <string name="settings_analytics_desc">匿名使用数据，帮助我们了解应用的使用情况</string>
+    <string name="settings_sentry_performance">应用性能</string>
+    <string name="settings_sentry_performance_desc">收集匿名追踪和启动性能数据</string>
+    <string name="settings_sentry_non_fatal">非致命错误</string>
+    <string name="settings_sentry_non_fatal_desc">发送关于捕获的异常和轻微逻辑问题的报告</string>
+    <string name="settings_sentry_anr">ANR 检测</string>
+    <string name="settings_sentry_anr_desc">检测应用是否超过 5 秒未响应</string>
+    <string name="settings_sentry_session_replay">会话重放</string>
+    <string name="settings_sentry_session_replay_desc">匿名交互回放以调试 UI 问题</string>
 
     <!-- Kill Switch Screen -->
     <string name="kill_switch_title">Kill Switch</string>

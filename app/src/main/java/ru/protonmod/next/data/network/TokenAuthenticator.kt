@@ -38,29 +38,28 @@ class TokenAuthenticator @Inject constructor(
 
     override fun authenticate(route: Route?, response: Response): Request? {
         val requestUrl = response.request.url.toString()
-        ProtonLogger.d(TAG, "authenticate() triggered for URL: $requestUrl (HTTP ${response.code})")
+        ProtonLogger.i(TAG, "HTTP 401/402 detected for $requestUrl. Initializing token refresh cycle.")
 
         // Prevent infinite loops if the new token also returns 401 Unauthorized
         if (response.responseCount >= 3) {
-            ProtonLogger.e(TAG, "Failed to refresh token after 3 attempts for $requestUrl. Giving up to prevent infinite loop.")
+            ProtonLogger.e(TAG, "Aborting refresh cycle: Max retry count (3) exceeded for $requestUrl. Session might be completely broken.")
             return null
         }
 
         return synchronized(this) {
-            ProtonLogger.d(TAG, "Entering synchronized block to refresh token")
+            ProtonLogger.d(TAG, "Acquired lock for token refresh")
 
             // Read the current session synchronously
             val session = runBlocking { sessionDao.getSession() }
             if (session == null || session.refreshToken.isNullOrEmpty() || session.sessionId.isNullOrEmpty()) {
-                ProtonLogger.e(TAG, "Cannot refresh token: Session is null or missing refreshToken/sessionId in DB")
+                ProtonLogger.e(TAG, "Token refresh failed: No valid session found in DB (UID: ${session?.userId})")
                 return null
             }
 
             // Check if the request's auth header matches the current token.
-            // If it doesn't, another thread might have already refreshed the token while we were waiting for the lock.
             val requestHeader = response.request.header("Authorization")
             if (requestHeader != null && !requestHeader.contains(session.accessToken)) {
-                ProtonLogger.d(TAG, "Token was already refreshed by another thread. Retrying original request with the new token.")
+                ProtonLogger.i(TAG, "Token was already refreshed by a parallel request. Retrying with current token.")
                 return response.request.newBuilder()
                     .header("Authorization", "Bearer ${session.accessToken}")
                     .build()
@@ -68,7 +67,7 @@ class TokenAuthenticator @Inject constructor(
 
             // Token is genuinely expired, we need to refresh it
             try {
-                ProtonLogger.d(TAG, "Attempting to call refreshSession API with UID: ${session.sessionId}")
+                ProtonLogger.i(TAG, "Calling refreshSession API (SessionID: ${session.sessionId})")
 
                 val authApi = authApiProvider.get()
                 val refreshRequest = RefreshSessionRequest(
@@ -81,10 +80,10 @@ class TokenAuthenticator @Inject constructor(
                     authApi.refreshSession(refreshRequest)
                 }
 
-                ProtonLogger.d(TAG, "Refresh API response received. Code: ${refreshResponse.code}")
+                ProtonLogger.d(TAG, "Refresh API response: code=${refreshResponse.code}, hasToken=${refreshResponse.accessToken != null}")
 
                 if (refreshResponse.code == 1000 && refreshResponse.accessToken != null) {
-                    ProtonLogger.d(TAG, "Successfully acquired new access token. Updating database...")
+                    ProtonLogger.i(TAG, "Successfully acquired new access token. Persisting to database...")
 
                     // Update session with new tokens
                     val newAccessToken = refreshResponse.accessToken
@@ -96,21 +95,21 @@ class TokenAuthenticator @Inject constructor(
                     )
 
                     runBlocking { sessionDao.saveSession(updatedSession) }
-                    ProtonLogger.d(TAG, "Database updated with new session. Retrying the original request ($requestUrl).")
+                    ProtonLogger.i(TAG, "Session updated in database. Retrying original request.")
 
                     // Retry the failed request with the new access token
                     return response.request.newBuilder()
                         .header("Authorization", "Bearer $newAccessToken")
                         .build()
                 } else {
-                    ProtonLogger.e(TAG, "Refresh API returned unexpected code (${refreshResponse.code}) or null access token. Session might be invalid.")
+                    ProtonLogger.e(TAG, "Proton API rejected refresh request: Code ${refreshResponse.code}. User might be logged out.")
                 }
             } catch (e: Exception) {
                 // Refresh failed (e.g., network error or refresh token itself is expired)
-                ProtonLogger.e(TAG, "Exception occurred during token refresh: ${e.message}. Forcing logout might be needed.", e)
+                ProtonLogger.e(TAG, "Network or system error during token refresh: ${e.message}", e)
             }
 
-            ProtonLogger.e(TAG, "Returning null from Authenticator. The 401/402 error will be passed down to the caller.")
+            ProtonLogger.w(TAG, "Authenticator cycle finished without a new token. Passing 401/402 to caller.")
             null
         }
     }

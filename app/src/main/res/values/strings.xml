@@ -157,6 +157,14 @@
     <string name="settings_crash_reports_desc">Detailed reports when the app stops working unexpectedly</string>
     <string name="settings_analytics">Send Analytics</string>
     <string name="settings_analytics_desc">Anonymous usage data to help us understand how the app is used</string>
+    <string name="settings_sentry_performance">App Performance</string>
+    <string name="settings_sentry_performance_desc">Collect anonymous traces and startup performance data</string>
+    <string name="settings_sentry_non_fatal">Non-fatal Errors</string>
+    <string name="settings_sentry_non_fatal_desc">Send reports for caught exceptions and minor logic issues</string>
+    <string name="settings_sentry_anr">ANR Detection</string>
+    <string name="settings_sentry_anr_desc">Detect when the app becomes unresponsive for more than 5 seconds</string>
+    <string name="settings_sentry_session_replay">Session Replays</string>
+    <string name="settings_sentry_session_replay_desc">Anonymous interaction playback to debug UI issues</string>
 
     <!-- Kill Switch Screen -->
     <string name="kill_switch_title">Kill Switch</string>

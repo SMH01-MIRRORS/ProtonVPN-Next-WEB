@@ -25,6 +25,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import ru.protonmod.next.utils.ProtonLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -72,6 +73,10 @@ class SettingsManager @Inject constructor(
 
         private val ANALYTICS_ENABLED = booleanPreferencesKey("analytics_enabled")
         private val CRASH_REPORTS_ENABLED = booleanPreferencesKey("crash_reports_enabled")
+        private val SENTRY_PERFORMANCE_ENABLED = booleanPreferencesKey("sentry_performance_enabled")
+        private val SENTRY_NON_FATAL_ENABLED = booleanPreferencesKey("sentry_non_fatal_enabled")
+        private val SENTRY_SESSION_REPLAY_ENABLED = booleanPreferencesKey("sentry_session_replay_enabled")
+        private val SENTRY_ANR_ENABLED = booleanPreferencesKey("sentry_anr_enabled")
 
         private val QUICK_CONNECT_STRATEGY = stringPreferencesKey("quick_connect_strategy") // "fastest", "recent", "profile"
         private val QUICK_CONNECT_TARGET_ID = stringPreferencesKey("quick_connect_target_id")
@@ -137,12 +142,21 @@ class SettingsManager @Inject constructor(
 
     val analyticsEnabled: Flow<Boolean> = context.dataStore.data.map { it[ANALYTICS_ENABLED] ?: true }
     val crashReportsEnabled: Flow<Boolean> = context.dataStore.data.map { it[CRASH_REPORTS_ENABLED] ?: true }
+    val sentryPerformanceEnabled: Flow<Boolean> = context.dataStore.data.map { it[SENTRY_PERFORMANCE_ENABLED] ?: true }
+    val sentryNonFatalEnabled: Flow<Boolean> = context.dataStore.data.map { it[SENTRY_NON_FATAL_ENABLED] ?: true }
+    val sentrySessionReplayEnabled: Flow<Boolean> = context.dataStore.data.map { it[SENTRY_SESSION_REPLAY_ENABLED] ?: true }
+    val sentryAnrEnabled: Flow<Boolean> = context.dataStore.data.map { it[SENTRY_ANR_ENABLED] ?: true }
 
     /** Synchronous check for app startup initializers to avoid ANR from runBlocking */
     fun isAnalyticsEnabledSync(): Boolean = prefs.getBoolean("analytics_enabled", true)
     
     /** Synchronous check for app startup initializers to avoid ANR from runBlocking */
     fun isCrashReportsEnabledSync(): Boolean = prefs.getBoolean("crash_reports_enabled", true)
+
+    fun isPerformanceEnabledSync(): Boolean = prefs.getBoolean("sentry_performance_enabled", true)
+    fun isNonFatalEnabledSync(): Boolean = prefs.getBoolean("sentry_non_fatal_enabled", true)
+    fun isSessionReplayEnabledSync(): Boolean = prefs.getBoolean("sentry_session_replay_enabled", true)
+    fun isAnrEnabledSync(): Boolean = prefs.getBoolean("sentry_anr_enabled", true)
 
     val quickConnectStrategy: Flow<String> = context.dataStore.data.map { it[QUICK_CONNECT_STRATEGY] ?: "fastest" }
     val quickConnectTargetId: Flow<String?> = context.dataStore.data.map { it[QUICK_CONNECT_TARGET_ID] }
@@ -274,11 +288,33 @@ class SettingsManager @Inject constructor(
     suspend fun setAnalyticsEnabled(enabled: Boolean) {
         prefs.edit { putBoolean("analytics_enabled", enabled) }
         context.dataStore.edit { it[ANALYTICS_ENABLED] = enabled }
+        ProtonLogger.isAnalyticsEnabled = enabled
     }
 
     suspend fun setCrashReportsEnabled(enabled: Boolean) {
         prefs.edit { putBoolean("crash_reports_enabled", enabled) }
         context.dataStore.edit { it[CRASH_REPORTS_ENABLED] = enabled }
+    }
+
+    suspend fun setSentryPerformanceEnabled(enabled: Boolean) {
+        prefs.edit { putBoolean("sentry_performance_enabled", enabled) }
+        context.dataStore.edit { it[SENTRY_PERFORMANCE_ENABLED] = enabled }
+    }
+
+    suspend fun setSentryNonFatalEnabled(enabled: Boolean) {
+        prefs.edit { putBoolean("sentry_non_fatal_enabled", enabled) }
+        context.dataStore.edit { it[SENTRY_NON_FATAL_ENABLED] = enabled }
+        ProtonLogger.isNonFatalEnabled = enabled
+    }
+
+    suspend fun setSentrySessionReplayEnabled(enabled: Boolean) {
+        prefs.edit { putBoolean("sentry_session_replay_enabled", enabled) }
+        context.dataStore.edit { it[SENTRY_SESSION_REPLAY_ENABLED] = enabled }
+    }
+
+    suspend fun setSentryAnrEnabled(enabled: Boolean) {
+        prefs.edit { putBoolean("sentry_anr_enabled", enabled) }
+        context.dataStore.edit { it[SENTRY_ANR_ENABLED] = enabled }
     }
 
     suspend fun setQuickConnectStrategy(strategy: String, targetId: String? = null) {

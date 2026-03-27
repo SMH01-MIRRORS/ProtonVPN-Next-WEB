@@ -31,6 +31,9 @@ object FlavorInitializer {
         // Read settings synchronously for app startup to avoid ANR
         val settingsManager = SettingsManager(context)
         val isAnalyticsEnabled = settingsManager.isAnalyticsEnabledSync()
+        val isPerformanceEnabled = settingsManager.isPerformanceEnabledSync()
+        val isSessionReplayEnabled = settingsManager.isSessionReplayEnabledSync()
+        val isAnrEnabled = settingsManager.isAnrEnabledSync()
 
         // Sentry initialization
         SentryAndroid.init(context) { options ->
@@ -43,22 +46,25 @@ object FlavorInitializer {
             }
 
             // Utilize 100M Spans and 6K Profile Hours quota when analytics is on
-            options.tracesSampleRate = if (isAnalyticsEnabled) 1.0 else 0.0
-            options.profilesSampleRate = if (isAnalyticsEnabled) 1.0 else 0.0
+            options.tracesSampleRate = if (isPerformanceEnabled) 1.0 else 0.0
+            options.profilesSampleRate = if (isPerformanceEnabled) 1.0 else 0.0
             
             options.isEnableAutoSessionTracking = isAnalyticsEnabled
-            options.isAnrEnabled = true
-            options.isEnableAppStartProfiling = true
-            options.isEnableUserInteractionTracing = true
+            options.isAnrEnabled = isAnrEnabled
+            options.isEnableAppStartProfiling = isPerformanceEnabled
+            options.isEnableUserInteractionTracing = isAnalyticsEnabled
             
             // Advanced Debugging (Attachments & Screenshots, 10 GB quota)
-            options.isAttachScreenshot = true
-            options.isAttachViewHierarchy = true
+            options.isAttachScreenshot = isAnalyticsEnabled
+            options.isAttachViewHierarchy = isAnalyticsEnabled
             
             // Session Replay (100K replays quota)
-            if (isAnalyticsEnabled) {
+            if (isSessionReplayEnabled) {
                 options.sessionReplay.sessionSampleRate = 1.0
                 options.sessionReplay.onErrorSampleRate = 1.0
+            } else {
+                options.sessionReplay.sessionSampleRate = 0.0
+                options.sessionReplay.onErrorSampleRate = 0.0
             }
         }
     }

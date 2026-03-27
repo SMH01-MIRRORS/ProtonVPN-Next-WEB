@@ -23,7 +23,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.BugReport
+import androidx.compose.material.icons.rounded.HourglassBottom
 import androidx.compose.material.icons.rounded.Insights
+import androidx.compose.material.icons.rounded.Replay
+import androidx.compose.material.icons.rounded.ReportProblem
+import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -120,11 +124,39 @@ fun ErrorReportingScreen(
                                 onCheckedChange = { viewModel.setCrashReportsEnabled(it) }
                             )
                             SettingToggleRow(
+                                title = stringResource(R.string.settings_sentry_non_fatal),
+                                subtitle = stringResource(R.string.settings_sentry_non_fatal_desc),
+                                icon = Icons.Rounded.ReportProblem,
+                                checked = uiState.isSentryNonFatalEnabled,
+                                onCheckedChange = { viewModel.setSentryNonFatalEnabled(it) }
+                            )
+                            SettingToggleRow(
+                                title = stringResource(R.string.settings_sentry_anr),
+                                subtitle = stringResource(R.string.settings_sentry_anr_desc),
+                                icon = Icons.Rounded.HourglassBottom,
+                                checked = uiState.isSentryAnrEnabled,
+                                onCheckedChange = { viewModel.setSentryAnrEnabled(it) }
+                            )
+                            SettingToggleRow(
+                                title = stringResource(R.string.settings_sentry_performance),
+                                subtitle = stringResource(R.string.settings_sentry_performance_desc),
+                                icon = Icons.Rounded.Speed,
+                                checked = uiState.isSentryPerformanceEnabled,
+                                onCheckedChange = { viewModel.setSentryPerformanceEnabled(it) }
+                            )
+                            SettingToggleRow(
                                 title = stringResource(R.string.settings_analytics),
                                 subtitle = stringResource(R.string.settings_analytics_desc),
                                 icon = Icons.Rounded.Insights,
                                 checked = uiState.isAnalyticsEnabled,
                                 onCheckedChange = { viewModel.setAnalyticsEnabled(it) }
+                            )
+                            SettingToggleRow(
+                                title = stringResource(R.string.settings_sentry_session_replay),
+                                subtitle = stringResource(R.string.settings_sentry_session_replay_desc),
+                                icon = Icons.Rounded.Replay,
+                                checked = uiState.isSentrySessionReplayEnabled,
+                                onCheckedChange = { viewModel.setSentrySessionReplayEnabled(it) }
                             )
                         }
                     }

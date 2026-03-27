@@ -69,16 +69,19 @@ class VpnRepository @Inject constructor(
         if (autoUpdateJob?.isActive == true) return
 
         autoUpdateJob = managerScope.launch {
-            ProtonLogger.d(TAG, "Starting auto-update loop")
+            ProtonLogger.i(TAG, "Starting periodic server load/list auto-update loop")
             while (isActive) {
                 val session = sessionDao.getSession()
                 if (session != null) {
+                    ProtonLogger.d(TAG, "Auto-update: Fetching fresh server data for user tier ${session.userTier}")
                     getServers(
                         session.accessToken,
                         session.sessionId,
                         session.userTier,
                         forceRefresh = false
                     )
+                } else {
+                    ProtonLogger.w(TAG, "Auto-update: No active session, skipping this cycle")
                 }
                 delay(TimeUnit.MINUTES.toMillis(AUTO_UPDATE_INTERVAL_MINUTES))
             }
@@ -166,11 +169,14 @@ class VpnRepository @Inject constructor(
             val shouldCheckApi = forceRefresh || cacheInfo == null || now > cacheInfo.expiresAt
             val isStale = cacheInfo != null && (now - cacheInfo.cachedAt > TimeUnit.MINUTES.toMillis(AUTO_UPDATE_INTERVAL_MINUTES))
 
+            ProtonLogger.d(TAG, "Server sync check: force=$forceRefresh, hasCache=${cacheInfo != null}, expired=${now > (cacheInfo?.expiresAt ?: 0)}, stale=$isStale")
+
             if (!shouldCheckApi && !isStale) {
                 val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
                 if (dbServers.isNotEmpty()) {
                     val result = dbServers.filter { it.tier <= userTier }
                     cachedServers = result
+                    ProtonLogger.i(TAG, "Returning ${result.size} servers from local cache (API skip)")
                     return@withContext Result.success(result)
                 }
             }
@@ -178,7 +184,7 @@ class VpnRepository @Inject constructor(
             val bearer = "Bearer $accessToken"
             val ifModifiedSince = if (!forceRefresh) cacheInfo?.lastModified else null
 
-            ProtonLogger.d(TAG, "Fetching servers from API (forceRefresh=$forceRefresh)")
+            ProtonLogger.i(TAG, "Fetching servers from Proton API... (If-Modified-Since: $ifModifiedSince)")
             val response = vpnApi.getLogicalServers(
                 authorization = bearer,
                 sessionId = sessionId,
@@ -189,43 +195,56 @@ class VpnRepository @Inject constructor(
 
             val (serversList, newLastModified) = when (response.code()) {
                 304 -> {
-                    ProtonLogger.d(TAG, "Servers not modified (304), updating timestamps only")
+                    ProtonLogger.i(TAG, "Proton API: Servers not modified (304). Re-using existing DB entries.")
                     val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
                     dbServers to cacheInfo?.lastModified
                 }
                 200 -> {
                     val body = response.body()
                     if (body?.code == 1000) {
+                        ProtonLogger.i(TAG, "Proton API: Received ${body.logicalServers.size} logical servers")
                         body.logicalServers to response.headers()["Last-Modified"]
                     } else {
+                        ProtonLogger.e(TAG, "Proton API Error: Code ${body?.code}")
                         return@withContext Result.failure(Exception("API error: ${body?.code}"))
                     }
                 }
                 else -> {
+                    ProtonLogger.w(TAG, "Proton API: Unexpected response code ${response.code()}")
                     val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
-                    if (dbServers.isNotEmpty()) return@withContext Result.success(dbServers.filter { it.tier <= userTier })
+                    if (dbServers.isNotEmpty()) {
+                        ProtonLogger.i(TAG, "Falling back to DB servers due to API error")
+                        return@withContext Result.success(dbServers.filter { it.tier <= userTier })
+                    }
                     return@withContext Result.failure(Exception("Network error: ${response.code()}"))
                 }
             }
 
             if (serversList.isEmpty()) {
+                ProtonLogger.w(TAG, "Proton API: Server list is empty in response")
                 return@withContext Result.failure(Exception("No servers available"))
             }
 
             // Fetch server loads and merge with current list
+            ProtonLogger.d(TAG, "Fetching server loads for ${serversList.size} servers...")
             val loadsResponse = try {
                 vpnApi.getLoads(bearer, sessionId, userTier)
             } catch (e: Exception) {
+                ProtonLogger.w(TAG, "Failed to initiate loads request: ${e.message}")
                 null
             }
 
             if (loadsResponse?.isSuccessful == true) {
                 val loadsBody = loadsResponse.body()?.string()
                 val loadsData = loadsBody?.let {
-                    try { json.decodeFromString<LoadsResponse>(it) } catch (e: Exception) { null }
+                    try { json.decodeFromString<LoadsResponse>(it) } catch (e: Exception) { 
+                        ProtonLogger.e(TAG, "Failed to parse loads JSON", e)
+                        null 
+                    }
                 }
 
                 val loadsMap = loadsData?.loads?.associate { it.id to it.load } ?: emptyMap()
+                ProtonLogger.d(TAG, "Successfully updated loads for ${loadsMap.size} server IDs")
 
                 serversList.forEach { logical ->
                     val logicalLoad = loadsMap[logical.id]
@@ -247,10 +266,7 @@ class VpnRepository @Inject constructor(
                     }
                 }
             } else {
-                ProtonLogger.w(TAG, "Failed to fetch fresh server loads. Keeping existing loads if available.")
-                // If we fail to get fresh loads, we might want to fill from DB, 
-                // but since we just got serversList from API (200 OK), they might have 0.
-                // An improvement would be to map DB loads to this new list.
+                ProtonLogger.w(TAG, "Failed to fetch fresh server loads (HTTP ${loadsResponse?.code()}). Keeping existing loads.")
                 val dbServers = serverDao.getAllServers().associateBy({ it.id }, { it.averageLoad })
                 serversList.forEach { it.averageLoad = dbServers[it.id] ?: 0 }
             }
@@ -258,6 +274,7 @@ class VpnRepository @Inject constructor(
             // Save to DB AFTER fetching loads, ensuring the DB has the latest load values
             val entities = serversList.map { ServerMapper.toEntity(it) }
             serverDao.insertServers(entities)
+            ProtonLogger.d(TAG, "Saved ${entities.size} servers to local database")
 
             // Update cache metadata
             val newCacheInfo = ServersCacheEntity(
@@ -271,7 +288,7 @@ class VpnRepository @Inject constructor(
             cachedServers = logicalServers
             Result.success(logicalServers)
         } catch (e: Exception) {
-            ProtonLogger.e(TAG, "Error in performGetServers", e)
+            ProtonLogger.e(TAG, "Critical error in performGetServers", e)
             val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
             if (dbServers.isNotEmpty()) Result.success(dbServers.filter { it.tier <= userTier })
             else Result.failure(e)

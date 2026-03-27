@@ -22,7 +22,9 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
 import okhttp3.OkHttp
+import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.repository.VpnRepository
+import ru.protonmod.next.utils.ProtonLogger
 import javax.inject.Inject
 
 /**
@@ -60,6 +62,11 @@ class ProtonNextApp : Application(), Configuration.Provider {
 
         // Initialize flavor-specific components (e.g., Firebase for Google flavor)
         FlavorInitializer.initialize(this)
+
+        // Initialize logger settings from sync storage
+        val settings = SettingsManager(this)
+        ProtonLogger.isNonFatalEnabled = settings.isNonFatalEnabledSync()
+        ProtonLogger.isAnalyticsEnabled = settings.isAnalyticsEnabledSync()
 
         // Start background server load updates
         vpnRepository.startAutoUpdate()

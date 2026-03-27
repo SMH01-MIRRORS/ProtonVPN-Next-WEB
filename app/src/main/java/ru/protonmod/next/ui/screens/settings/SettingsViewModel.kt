@@ -94,7 +94,11 @@ data class SettingsUiState(
 
     // Privacy & Analytics
     val isAnalyticsEnabled: Boolean = true,
-    val isCrashReportsEnabled: Boolean = true
+    val isCrashReportsEnabled: Boolean = true,
+    val isSentryPerformanceEnabled: Boolean = true,
+    val isSentryNonFatalEnabled: Boolean = true,
+    val isSentrySessionReplayEnabled: Boolean = true,
+    val isSentryAnrEnabled: Boolean = true
 )
 
 @HiltViewModel
@@ -172,6 +176,10 @@ class SettingsViewModel @Inject constructor(
         settingsManager.customDns,
         settingsManager.analyticsEnabled,
         settingsManager.crashReportsEnabled,
+        settingsManager.sentryPerformanceEnabled,
+        settingsManager.sentryNonFatalEnabled,
+        settingsManager.sentrySessionReplayEnabled,
+        settingsManager.sentryAnrEnabled,
         settingsManager.apiBypassEnabled,
         settingsManager.apiBypassStrategy,
         settingsManager.appTheme,
@@ -213,11 +221,15 @@ class SettingsViewModel @Inject constructor(
             customDns = args[31] as String,
             isAnalyticsEnabled = args[32] as Boolean,
             isCrashReportsEnabled = args[33] as Boolean,
-            apiBypassEnabled = args[34] as Boolean,
-            apiBypassStrategy = args[35] as String,
-            appTheme = args[36] as AppTheme,
-            serverLoadDisplayMode = args[37] as ServerLoadDisplayMode,
-            isAnyVpnActive = args[38] as Boolean
+            isSentryPerformanceEnabled = args[34] as Boolean,
+            isSentryNonFatalEnabled = args[35] as Boolean,
+            isSentrySessionReplayEnabled = args[36] as Boolean,
+            isSentryAnrEnabled = args[37] as Boolean,
+            apiBypassEnabled = args[38] as Boolean,
+            apiBypassStrategy = args[39] as String,
+            appTheme = args[40] as AppTheme,
+            serverLoadDisplayMode = args[41] as ServerLoadDisplayMode,
+            isAnyVpnActive = args[42] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -306,6 +318,30 @@ class SettingsViewModel @Inject constructor(
     fun setCrashReportsEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setCrashReportsEnabled(enabled)
+        }
+    }
+
+    fun setSentryPerformanceEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setSentryPerformanceEnabled(enabled)
+        }
+    }
+
+    fun setSentryNonFatalEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setSentryNonFatalEnabled(enabled)
+        }
+    }
+
+    fun setSentrySessionReplayEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setSentrySessionReplayEnabled(enabled)
+        }
+    }
+
+    fun setSentryAnrEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setSentryAnrEnabled(enabled)
         }
     }
 
