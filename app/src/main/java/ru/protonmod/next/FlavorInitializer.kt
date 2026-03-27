@@ -52,7 +52,9 @@ object FlavorInitializer {
             
             options.isEnableAutoSessionTracking = isAnalyticsEnabled
             options.isAnrEnabled = isAnrEnabled
-            options.isEnableAppStartProfiling = isPerformanceEnabled
+            // App Start Profiling is disabled to prevent ANR on startup. 
+            // It triggers method tracing which can hang the main thread on some devices.
+            options.isEnableAppStartProfiling = false
             options.isEnableUserInteractionTracing = isAnalyticsEnabled
             
             // Measure what matters with Metrics (v8.30.0+)
