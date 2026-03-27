@@ -161,6 +161,8 @@
     <string name="settings_sentry_non_fatal_desc">ارسال گزارش برای استثناهای مدیریت شده و مشکلات جزئی منطقی</string>
     <string name="settings_sentry_anr">تشخیص ANR</string>
     <string name="settings_sentry_anr_desc">تشخیص زمانی که برنامه بیش از ۵ ثانیه پاسخگو نباشد</string>
+    <string name="settings_sentry_metrics">معیارهای برنامه</string>
+    <string name="settings_sentry_metrics_desc">ردیابی سلامت برنامه با داده‌های عددی مانند شمارنده‌ها و سنجه‌ها</string>
     <string name="settings_sentry_session_replay">بازبینی نشست‌ها</string>
     <string name="settings_sentry_session_replay_desc">پخش ناشناس تعاملات برای عیب‌یابی مشکلات رابط کاربری</string>
 

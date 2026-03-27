@@ -25,6 +25,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.BugReport
 import androidx.compose.material.icons.rounded.HourglassBottom
 import androidx.compose.material.icons.rounded.Insights
+import androidx.compose.material.icons.rounded.QueryStats
 import androidx.compose.material.icons.rounded.Replay
 import androidx.compose.material.icons.rounded.ReportProblem
 import androidx.compose.material.icons.rounded.Speed
@@ -136,6 +137,13 @@ fun ErrorReportingScreen(
                                 icon = Icons.Rounded.HourglassBottom,
                                 checked = uiState.isSentryAnrEnabled,
                                 onCheckedChange = { viewModel.setSentryAnrEnabled(it) }
+                            )
+                            SettingToggleRow(
+                                title = stringResource(R.string.settings_sentry_metrics),
+                                subtitle = stringResource(R.string.settings_sentry_metrics_desc),
+                                icon = Icons.Rounded.QueryStats,
+                                checked = uiState.isSentryMetricsEnabled,
+                                onCheckedChange = { viewModel.setSentryMetricsEnabled(it) }
                             )
                             SettingToggleRow(
                                 title = stringResource(R.string.settings_sentry_performance),

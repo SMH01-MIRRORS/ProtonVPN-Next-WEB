@@ -77,6 +77,7 @@ class SettingsManager @Inject constructor(
         private val SENTRY_NON_FATAL_ENABLED = booleanPreferencesKey("sentry_non_fatal_enabled")
         private val SENTRY_SESSION_REPLAY_ENABLED = booleanPreferencesKey("sentry_session_replay_enabled")
         private val SENTRY_ANR_ENABLED = booleanPreferencesKey("sentry_anr_enabled")
+        private val SENTRY_METRICS_ENABLED = booleanPreferencesKey("sentry_metrics_enabled")
 
         private val QUICK_CONNECT_STRATEGY = stringPreferencesKey("quick_connect_strategy") // "fastest", "recent", "profile"
         private val QUICK_CONNECT_TARGET_ID = stringPreferencesKey("quick_connect_target_id")
@@ -146,6 +147,7 @@ class SettingsManager @Inject constructor(
     val sentryNonFatalEnabled: Flow<Boolean> = context.dataStore.data.map { it[SENTRY_NON_FATAL_ENABLED] ?: true }
     val sentrySessionReplayEnabled: Flow<Boolean> = context.dataStore.data.map { it[SENTRY_SESSION_REPLAY_ENABLED] ?: true }
     val sentryAnrEnabled: Flow<Boolean> = context.dataStore.data.map { it[SENTRY_ANR_ENABLED] ?: true }
+    val sentryMetricsEnabled: Flow<Boolean> = context.dataStore.data.map { it[SENTRY_METRICS_ENABLED] ?: true }
 
     /** Synchronous check for app startup initializers to avoid ANR from runBlocking */
     fun isAnalyticsEnabledSync(): Boolean = prefs.getBoolean("analytics_enabled", true)
@@ -157,6 +159,7 @@ class SettingsManager @Inject constructor(
     fun isNonFatalEnabledSync(): Boolean = prefs.getBoolean("sentry_non_fatal_enabled", true)
     fun isSessionReplayEnabledSync(): Boolean = prefs.getBoolean("sentry_session_replay_enabled", true)
     fun isAnrEnabledSync(): Boolean = prefs.getBoolean("sentry_anr_enabled", true)
+    fun isMetricsEnabledSync(): Boolean = prefs.getBoolean("sentry_metrics_enabled", true)
 
     val quickConnectStrategy: Flow<String> = context.dataStore.data.map { it[QUICK_CONNECT_STRATEGY] ?: "fastest" }
     val quickConnectTargetId: Flow<String?> = context.dataStore.data.map { it[QUICK_CONNECT_TARGET_ID] }
@@ -315,6 +318,11 @@ class SettingsManager @Inject constructor(
     suspend fun setSentryAnrEnabled(enabled: Boolean) {
         prefs.edit { putBoolean("sentry_anr_enabled", enabled) }
         context.dataStore.edit { it[SENTRY_ANR_ENABLED] = enabled }
+    }
+
+    suspend fun setSentryMetricsEnabled(enabled: Boolean) {
+        prefs.edit { putBoolean("sentry_metrics_enabled", enabled) }
+        context.dataStore.edit { it[SENTRY_METRICS_ENABLED] = enabled }
     }
 
     suspend fun setQuickConnectStrategy(strategy: String, targetId: String? = null) {

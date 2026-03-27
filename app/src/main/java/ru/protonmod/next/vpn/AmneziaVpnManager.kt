@@ -55,6 +55,7 @@ import ru.protonmod.next.di.ApplicationScope
 import ru.protonmod.next.utils.coroutines.DispatcherProvider
 import ru.protonmod.next.utils.crypto.CryptoWrapper
 import ru.protonmod.next.utils.system.SystemContextWrapper
+import io.sentry.Sentry
 import java.io.ByteArrayInputStream
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
@@ -310,6 +311,9 @@ class AmneziaVpnManager @Inject constructor(
             }
 
             connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams)
+            
+            // Track connection attempt via Sentry Metrics
+            Sentry.metrics().count("vpn_connection_attempt", 1.0)
         }
     }
 
@@ -453,9 +457,17 @@ class AmneziaVpnManager @Inject constructor(
             )
 
             ProtonLogger.i(TAG, "VPN start command issued successfully")
+            
+            // Track connection success
+            Sentry.metrics().count("vpn_connection_success", 1.0)
+            
             Result.success(Unit)
         } catch (e: Exception) {
             ProtonLogger.e(TAG, "Failed to connect to VPN", e)
+            
+            // Track connection failure
+            Sentry.metrics().count("vpn_connection_failure", 1.0)
+
             _isConnecting.value = false
             _tunnelState.value = Tunnel.State.DOWN
             Result.failure(e)

@@ -98,7 +98,8 @@ data class SettingsUiState(
     val isSentryPerformanceEnabled: Boolean = true,
     val isSentryNonFatalEnabled: Boolean = true,
     val isSentrySessionReplayEnabled: Boolean = true,
-    val isSentryAnrEnabled: Boolean = true
+    val isSentryAnrEnabled: Boolean = true,
+    val isSentryMetricsEnabled: Boolean = true
 )
 
 @HiltViewModel
@@ -180,6 +181,7 @@ class SettingsViewModel @Inject constructor(
         settingsManager.sentryNonFatalEnabled,
         settingsManager.sentrySessionReplayEnabled,
         settingsManager.sentryAnrEnabled,
+        settingsManager.sentryMetricsEnabled,
         settingsManager.apiBypassEnabled,
         settingsManager.apiBypassStrategy,
         settingsManager.appTheme,
@@ -225,11 +227,12 @@ class SettingsViewModel @Inject constructor(
             isSentryNonFatalEnabled = args[35] as Boolean,
             isSentrySessionReplayEnabled = args[36] as Boolean,
             isSentryAnrEnabled = args[37] as Boolean,
-            apiBypassEnabled = args[38] as Boolean,
-            apiBypassStrategy = args[39] as String,
-            appTheme = args[40] as AppTheme,
-            serverLoadDisplayMode = args[41] as ServerLoadDisplayMode,
-            isAnyVpnActive = args[42] as Boolean
+            isSentryMetricsEnabled = args[38] as Boolean,
+            apiBypassEnabled = args[39] as Boolean,
+            apiBypassStrategy = args[40] as String,
+            appTheme = args[41] as AppTheme,
+            serverLoadDisplayMode = args[42] as ServerLoadDisplayMode,
+            isAnyVpnActive = args[43] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -342,6 +345,12 @@ class SettingsViewModel @Inject constructor(
     fun setSentryAnrEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setSentryAnrEnabled(enabled)
+        }
+    }
+
+    fun setSentryMetricsEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setSentryMetricsEnabled(enabled)
         }
     }
 

@@ -161,6 +161,8 @@
     <string name="settings_sentry_non_fatal_desc">Адпраўка справаздач аб перахопленых выключэннях і дробных праблемах логікі</string>
     <string name="settings_sentry_anr">Дэтэкцыя ANR</string>
     <string name="settings_sentry_anr_desc">Выяўленне завісанняў прыкладання больш чым на 5 секунд</string>
+    <string name="settings_sentry_metrics">Метрыкі прыкладання</string>
+    <string name="settings_sentry_metrics_desc">Адсочванне стану прыкладання з дапамогай лікавых даных (лічыльнікі, шкалы)</string>
     <string name="settings_sentry_session_replay">Паўторы сесій</string>
     <string name="settings_sentry_session_replay_desc">Ананімнае прайграванне ўзаемадзеянняў для адладкі праблем інтэрфейсу</string>
 

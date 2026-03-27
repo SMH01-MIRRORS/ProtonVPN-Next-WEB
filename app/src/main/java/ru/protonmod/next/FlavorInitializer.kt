@@ -34,6 +34,7 @@ object FlavorInitializer {
         val isPerformanceEnabled = settingsManager.isPerformanceEnabledSync()
         val isSessionReplayEnabled = settingsManager.isSessionReplayEnabledSync()
         val isAnrEnabled = settingsManager.isAnrEnabledSync()
+        val isMetricsEnabled = settingsManager.isMetricsEnabledSync()
 
         // Sentry initialization
         SentryAndroid.init(context) { options ->
@@ -53,6 +54,10 @@ object FlavorInitializer {
             options.isAnrEnabled = isAnrEnabled
             options.isEnableAppStartProfiling = isPerformanceEnabled
             options.isEnableUserInteractionTracing = isAnalyticsEnabled
+            
+            // Measure what matters with Metrics (v8.30.0+)
+            // Track application health with numeric data like counters and gauges
+            options.metrics.isEnabled = isMetricsEnabled
             
             // Advanced Debugging (Attachments & Screenshots, 10 GB quota)
             options.isAttachScreenshot = isAnalyticsEnabled

@@ -161,6 +161,8 @@
     <string name="settings_sentry_non_fatal_desc">Надсилання звітів про перехоплені виключення та дрібні проблеми логіки</string>
     <string name="settings_sentry_anr">Детекція ANR</string>
     <string name="settings_sentry_anr_desc">Виявлення зависань додатка більше ніж на 5 секунд</string>
+    <string name="settings_sentry_metrics">Метрики додатка</string>
+    <string name="settings_sentry_metrics_desc">Відстеження стану додатка за допомогою числових даних (лічильники, шкали)</string>
     <string name="settings_sentry_session_replay">Повтори сесій</string>
     <string name="settings_sentry_session_replay_desc">Анонімне відтворення взаємодій для налагодження проблем інтерфейсу</string>
 
