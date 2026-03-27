@@ -19,6 +19,7 @@ package ru.protonmod.next.utils.system
 
 import android.content.Context
 import android.content.Intent
+import androidx.core.content.ContextCompat
 import ru.protonmod.next.vpn.ProtonVpnService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -43,7 +44,7 @@ class SystemContextWrapper @Inject constructor(
             putStringArrayListExtra(ProtonVpnService.EXTRA_EXCLUDED_APPS, ArrayList(excludedApps))
             putStringArrayListExtra(ProtonVpnService.EXTRA_EXCLUDED_IPS, ArrayList(excludedIps))
         }
-        context.startService(intent)
+        ContextCompat.startForegroundService(context, intent)
     }
 
     fun stopVpnService() {
@@ -53,11 +54,13 @@ class SystemContextWrapper @Inject constructor(
         context.startService(intent)
     }
 
-    fun updateVpnSettings(notificationsEnabled: Boolean, killSwitchEnabled: Boolean) {
+    fun updateVpnSettings(notificationsEnabled: Boolean, killSwitchEnabled: Boolean, nonFatalEnabled: Boolean, analyticsEnabled: Boolean) {
         val intent = Intent(ProtonVpnService.ACTION_UPDATE_SETTINGS).apply {
             setPackage(context.packageName)
             putExtra(ProtonVpnService.EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
             putExtra(ProtonVpnService.EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
+            putExtra(ProtonVpnService.EXTRA_NON_FATAL_ENABLED, nonFatalEnabled)
+            putExtra(ProtonVpnService.EXTRA_ANALYTICS_ENABLED, analyticsEnabled)
         }
         context.sendBroadcast(intent)
     }

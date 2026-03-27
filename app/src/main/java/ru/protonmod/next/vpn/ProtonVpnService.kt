@@ -76,6 +76,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     private var statsJob: Job? = null
+    private var logcatJob: Job? = null
     private var lastRx: Long = 0L
     private var lastTx: Long = 0L
     private var lastSpeedText: String? = null
@@ -100,6 +101,8 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         const val EXTRA_STATE = "state"
         const val EXTRA_NOTIFICATIONS_ENABLED = "notifications_enabled"
         const val EXTRA_KILL_SWITCH_ENABLED = "kill_switch_enabled"
+        const val EXTRA_NON_FATAL_ENABLED = "non_fatal_enabled"
+        const val EXTRA_ANALYTICS_ENABLED = "analytics_enabled"
 
         const val TUNNEL_NAME = "proton_awg"
         private const val NOTIFICATION_ID = 1001
@@ -141,12 +144,16 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             // Handle traffic updates based on the current state
             if (newState == Tunnel.State.DOWN) {
                 stopTrafficUpdates()
+                stopLogcatCollection()
             }
             
             updateNotification(newState.name)
             
             if (newState == Tunnel.State.UP) {
                 startTrafficUpdates()
+                // Log collection is already started in ACTION_CONNECT, 
+                // but we ensure it's active here just in case of unexpected state transitions.
+                startLogcatCollection() 
             }
         }
 
@@ -164,7 +171,18 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             if (intent?.action == ACTION_UPDATE_SETTINGS) {
                 notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
                 killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
-                ProtonLogger.d(TAG, "Settings updated via broadcast: notifications=$notificationsEnabled, killSwitch=$killSwitchEnabled")
+                
+                if (intent.hasExtra(EXTRA_NON_FATAL_ENABLED)) {
+                    val nonFatal = intent.getBooleanExtra(EXTRA_NON_FATAL_ENABLED, true)
+                    ProtonLogger.isNonFatalEnabled = nonFatal
+                }
+                
+                if (intent.hasExtra(EXTRA_ANALYTICS_ENABLED)) {
+                    val analytics = intent.getBooleanExtra(EXTRA_ANALYTICS_ENABLED, true)
+                    ProtonLogger.isAnalyticsEnabled = analytics
+                }
+
+                ProtonLogger.d(TAG, "Settings updated via broadcast: notifications=$notificationsEnabled, killSwitch=$killSwitchEnabled, nonFatal=${ProtonLogger.isNonFatalEnabled}, analytics=${ProtonLogger.isAnalyticsEnabled}")
                 
                 val label = when {
                     isCurrentlyConnecting -> STATE_CONNECTING
@@ -177,12 +195,13 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     }
 
     override fun onCreate() {
-        ProtonLogger.d(TAG, "VPN Service creating in isolated :vpn process")
+        ProtonLogger.i(TAG, "VPN Service creating in isolated :vpn process (PID: ${android.os.Process.myPid()})")
 
         // Set environment variables required for the Go backend (WireGuard/AmneziaWG)
         try {
             Os.setenv("TMPDIR", cacheDir.absolutePath, true)
             Os.setenv("WG_TUN_DIR", cacheDir.absolutePath, true)
+            ProtonLogger.d(TAG, "Backend environment variables initialized")
         } catch (e: Exception) {
             ProtonLogger.e(TAG, "Failed to set environment variables for the backend", e)
         }
@@ -204,26 +223,32 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        ProtonLogger.d(TAG, "VPN Service start command received: ${intent?.action}")
+        val action = intent?.action
+        ProtonLogger.i(TAG, "Service start command: $action (StartID: $startId, Flags: $flags)")
 
-        when (intent?.action) {
+        when (action) {
             ACTION_CONNECT -> {
                 isManualDisconnect = false
                 val configStr = intent.getStringExtra(EXTRA_CONFIG)
                 notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, true)
                 killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, false)
 
+                ProtonLogger.d(TAG, "Action CONNECT: notifications=$notificationsEnabled, killSwitch=$killSwitchEnabled")
+
                 // Important: Show connecting notification immediately to satisfy
                 // Android's Foreground Service requirements and prevent exceptions.
                 isCurrentlyConnecting = true
+                startLogcatCollection() // Start early to capture handshake and init logs
                 updateNotification(STATE_CONNECTING)
 
                 if (configStr != null) {
-                    ProtonLogger.d(TAG, "Received connection config:\n$configStr")
+                    ProtonLogger.v(TAG, "Connection config received (Length: ${configStr.length})")
                     serviceScope.launch(Dispatchers.IO) {
                         try {
                             val configStream = ByteArrayInputStream(configStr.toByteArray())
                             val config = Config.parse(configStream)
+
+                            ProtonLogger.i(TAG, "Config parsed successfully. Bringing tunnel UP...")
 
                             // Broadcast connecting state to UI
                             val broadcast = Intent(ACTION_STATE_CHANGED).apply {
@@ -235,20 +260,24 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                             // Bring the tunnel up
                             backend.setState(tunnel, Tunnel.State.UP, config)
                         } catch (e: Exception) {
-                            ProtonLogger.e(TAG, "Failed to start VPN tunnel", e)
+                            ProtonLogger.e(TAG, "Critical failure during tunnel startup", e)
                             tunnel.onStateChange(Tunnel.State.DOWN)
                         }
                     }
+                } else {
+                    ProtonLogger.e(TAG, "Action CONNECT received but config string is NULL")
+                    stopForegroundOrService()
                 }
             }
             ACTION_DISCONNECT -> {
+                ProtonLogger.i(TAG, "Action DISCONNECT: Stopping tunnel gracefully")
                 isManualDisconnect = true
                 isCurrentlyConnecting = false
                 try {
                     // Bring the tunnel down gracefully
                     backend.setState(tunnel, Tunnel.State.DOWN, null)
                 } catch (e: Exception) {
-                    ProtonLogger.e(TAG, "Failed to stop VPN tunnel", e)
+                    ProtonLogger.e(TAG, "Failed to stop VPN tunnel cleanly", e)
                     stopForegroundOrService()
                 }
             }
@@ -256,6 +285,14 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 // Keep for backward compatibility if settings are updated via startService
                 notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
                 killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
+                
+                if (intent.hasExtra(EXTRA_NON_FATAL_ENABLED)) {
+                    ProtonLogger.isNonFatalEnabled = intent.getBooleanExtra(EXTRA_NON_FATAL_ENABLED, true)
+                }
+                
+                if (intent.hasExtra(EXTRA_ANALYTICS_ENABLED)) {
+                    ProtonLogger.isAnalyticsEnabled = intent.getBooleanExtra(EXTRA_ANALYTICS_ENABLED, true)
+                }
                 
                 val label = when {
                     isCurrentlyConnecting -> STATE_CONNECTING
@@ -301,6 +338,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
      */
     private fun startTrafficUpdates() {
         stopTrafficUpdates()
+        
         lastRx = 0L
         lastTx = 0L
         statsJob = serviceScope.launch(Dispatchers.IO) {
@@ -342,6 +380,37 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         statsJob?.cancel()
         statsJob = null
         lastSpeedText = null
+    }
+
+    /**
+     * Starts background collection of tunnel-specific logs from Logcat
+     * and forwards them to Sentry via ProtonLogger.
+     */
+    private fun startLogcatCollection() {
+        logcatJob?.cancel()
+        logcatJob = serviceScope.launch(Dispatchers.IO) {
+            ProtonLogger.d(TAG, "Starting Logcat collection for 'tun/proton_awg'")
+            try {
+                // Read logs for the specific tunnel tag. 
+                // -T 1 ensures we only get new logs starting from now.
+                val process = Runtime.getRuntime().exec("logcat -v tag -T 1 tun/proton_awg:V *:S")
+                process.inputStream.bufferedReader().useLines { lines ->
+                    lines.forEach { line ->
+                        if (!isActive) return@useLines
+                        // Forward to ProtonLogger which will add it as a Sentry breadcrumb
+                        ProtonLogger.v("tun/proton_awg", line)
+                    }
+                }
+            } catch (e: Exception) {
+                ProtonLogger.e(TAG, "Failed to read tunnel logs from Logcat", e)
+            }
+        }
+    }
+
+    private fun stopLogcatCollection() {
+        ProtonLogger.d(TAG, "Stopping Logcat collection")
+        logcatJob?.cancel()
+        logcatJob = null
     }
 
     /**
@@ -429,22 +498,29 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         if (shouldShow) {
             val notification = createNotification(stateName, lastSpeedText)
 
-            if (!isForegroundServiceStarted || !isSpeedUpdateOnly) {
-                // Compat layer to handle Android 14+ Foreground Service types safely
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    ServiceCompat.startForeground(
-                        this,
-                        NOTIFICATION_ID,
-                        notification,
-                        ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-                    )
+            try {
+                if (!isForegroundServiceStarted || !isSpeedUpdateOnly) {
+                    // Compat layer to handle Android 14+ Foreground Service types safely
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                        ServiceCompat.startForeground(
+                            this,
+                            NOTIFICATION_ID,
+                            notification,
+                            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                        )
+                    } else {
+                        startForeground(NOTIFICATION_ID, notification)
+                    }
+                    isForegroundServiceStarted = true
                 } else {
-                    startForeground(NOTIFICATION_ID, notification)
+                    // Update existing notification without re-registering the foreground service
+                    notificationManager.notify(NOTIFICATION_ID, notification)
                 }
-                isForegroundServiceStarted = true
-            } else {
-                // Update existing notification without re-registering the foreground service
-                notificationManager.notify(NOTIFICATION_ID, notification)
+            } catch (e: Exception) {
+                ProtonLogger.e(TAG, "Failed to start/update foreground service", e)
+                // If it's a ForegroundServiceStartNotAllowedException, we can't do much
+                // but at least we don't crash. The VPN might still work as a background VpnService
+                // or it might be killed soon.
             }
         } else {
             stopForegroundOrService(isDown)
