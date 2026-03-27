@@ -55,6 +55,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import kotlinx.coroutines.launch
 import ru.protonmod.next.R
+import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.FlagIcon
@@ -93,6 +94,7 @@ fun EditProfileScreen(
     val profiles by viewModel.profiles.collectAsState()
     val countries by viewModel.countries.collectAsState()
     val customObfuscationConfigs by viewModel.customObfuscationConfigs.collectAsState()
+    val serverLoadDisplayMode by viewModel.serverLoadDisplayMode.collectAsState()
     val isTablet = isTablet()
 
     val editingProfile = remember(profileId, profiles) {
@@ -182,7 +184,7 @@ fun EditProfileScreen(
                     title = { Text(if (profileId == null) stringResource(R.string.title_create_profile) else stringResource(R.string.title_edit_profile), fontWeight = FontWeight.Bold) },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = colors.textNorm)
+                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.desc_back), tint = colors.textNorm)
                         }
                     },
                     windowInsets = WindowInsets.statusBars,
@@ -249,7 +251,11 @@ fun EditProfileScreen(
                     Category(modifier = contentModifier, title = stringResource(R.string.category_connection)) {
                         val locationSubtitle = when {
                             targetServerId != null -> stringResource(R.string.location_server, (targetServerName ?: targetServerId) as Any)
-                            targetCity != null -> "🏙️ ${getLocalizedCityName(context, targetCity!!)}, ${CountryUtils.getCountryName(context, targetCountry)}"
+                            targetCity != null -> {
+                                val city = getLocalizedCityName(context, targetCity!!)
+                                val country = CountryUtils.getCountryName(context, targetCountry)
+                                stringResource(R.string.location_city_format, city, country)
+                            }
                             targetCountry != null -> CountryUtils.getCountryName(context, targetCountry)
                             else -> stringResource(R.string.location_fastest)
                         }
@@ -347,6 +353,7 @@ fun EditProfileScreen(
             countries = countries,
             selectedCountry = targetCountry,
             selectedCity = targetCity,
+            loadDisplayMode = serverLoadDisplayMode,
             viewModel = viewModel,
             onDismiss = { showLocationDialog = false },
             onLocationSelected = { country, city, serverId, serverName ->
@@ -397,6 +404,7 @@ fun SelectionCard(
     title: String,
     icon: @Composable () -> Unit,
     load: Int? = null,
+    displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     onClick: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
@@ -438,12 +446,12 @@ fun SelectionCard(
                 }
 
                 if (load != null) {
-                    LoadIndicator(load = load)
+                    LoadIndicator(load = load, displayMode = displayMode)
                 }
             }
 
             if (load != null) {
-                LoadProgressBar(load = load)
+                LoadProgressBar(load = load, displayMode = displayMode)
             }
         }
     }
@@ -454,6 +462,7 @@ fun LocationSelectionDialog(
     countries: List<CountryDisplayItem>,
     selectedCountry: String?,
     selectedCity: String?,
+    loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     viewModel: ProfilesViewModel,
     onDismiss: () -> Unit,
     onLocationSelected: (String?, String?, String?, String?) -> Unit
@@ -492,7 +501,7 @@ fun LocationSelectionDialog(
                         IconButton(onClick = { step-- }, enabled = !isTransitioning) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                                contentDescription = "Back",
+                                contentDescription = stringResource(R.string.desc_back),
                                 tint = colors.textNorm
                             )
                         }
@@ -513,7 +522,7 @@ fun LocationSelectionDialog(
                     )
 
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = colors.iconWeak)
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.desc_close), tint = colors.iconWeak)
                     }
                 }
 
@@ -536,6 +545,7 @@ fun LocationSelectionDialog(
                                     1 -> stringResource(R.string.location_fastest_in_country, CountryUtils.getCountryName(context, currentCountry))
                                     else -> stringResource(R.string.location_fastest_in_city, getLocalizedCityName(context, currentCity ?: ""))
                                 },
+                                displayMode = loadDisplayMode,
                                 icon = {
                                     FlagIcon(
                                         countryFlag = R.drawable.flag_fastest,
@@ -580,6 +590,7 @@ fun LocationSelectionDialog(
                                             }
                                         },
                                         load = countryItem.averageLoad,
+                                        displayMode = loadDisplayMode,
                                         onClick = {
                                             if (!isTransitioning) {
                                                 scope.launch {
@@ -611,6 +622,7 @@ fun LocationSelectionDialog(
                                             }
                                         },
                                         load = cityItem.averageLoad,
+                                        displayMode = loadDisplayMode,
                                         onClick = {
                                             if (!isTransitioning) {
                                                 scope.launch {
@@ -646,6 +658,7 @@ fun LocationSelectionDialog(
                                             }
                                         },
                                         load = server.averageLoad,
+                                        displayMode = loadDisplayMode,
                                         onClick = {
                                             if (!isTransitioning) {
                                                 onLocationSelected(currentCountry, currentCity, server.id, server.name)

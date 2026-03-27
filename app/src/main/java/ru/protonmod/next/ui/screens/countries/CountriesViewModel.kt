@@ -30,8 +30,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.amnezia.awg.backend.Tunnel
+import ru.protonmod.next.R
 import ru.protonmod.next.data.repository.VpnRepository
+import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.data.local.SessionDao
+import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.vpn.AmneziaVpnManager
@@ -42,15 +45,20 @@ data class CityDisplayItem(val name: String, val averageLoad: Int)
 
 sealed class CountriesUiState {
     data object Loading : CountriesUiState()
-    data class CountriesList(val countries: List<CountryDisplayItem>) : CountriesUiState()
+    data class CountriesList(
+        val countries: List<CountryDisplayItem>,
+        val loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
+    ) : CountriesUiState()
     data class CitiesList(
         val country: String,
-        val cities: List<CityDisplayItem>
+        val cities: List<CityDisplayItem>,
+        val loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
     ) : CountriesUiState()
     data class ServersList(
         val country: String,
         val city: String,
-        val servers: List<LogicalServer>
+        val servers: List<LogicalServer>,
+        val loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
     ) : CountriesUiState()
     data class Error(val message: String) : CountriesUiState()
 }
@@ -63,10 +71,12 @@ sealed class NavigationState {
 
 @HiltViewModel
 class CountriesViewModel @Inject constructor(
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
     private val vpnRepository: VpnRepository,
     private val sessionDao: SessionDao,
     private val amneziaVpnManager: AmneziaVpnManager,
-    private val connectedServerState: ConnectedServerState
+    private val connectedServerState: ConnectedServerState,
+    private val settingsManager: SettingsManager
 ) : ViewModel() {
 
     companion object {
@@ -80,8 +90,9 @@ class CountriesViewModel @Inject constructor(
         vpnRepository.getServersFlow(),
         _navState,
         vpnRepository.isUpdating,
+        settingsManager.serverLoadDisplayMode,
         _error
-    ) { servers, nav, isUpdating, error ->
+    ) { servers, nav, isUpdating, loadMode, error ->
         if (isUpdating && servers.isEmpty()) {
             return@combine CountriesUiState.Loading
         }
@@ -97,7 +108,7 @@ class CountriesViewModel @Inject constructor(
                         CountryDisplayItem(code, avg)
                     }
                     .sortedBy { it.code }
-                CountriesUiState.CountriesList(countries)
+                CountriesUiState.CountriesList(countries, loadMode)
             }
             is NavigationState.Cities -> {
                 val cities = servers.filter { it.exitCountry == nav.countryCode }
@@ -107,12 +118,12 @@ class CountriesViewModel @Inject constructor(
                         CityDisplayItem(name, avg)
                     }
                     .sortedBy { it.name }
-                CountriesUiState.CitiesList(nav.countryCode, cities)
+                CountriesUiState.CitiesList(nav.countryCode, cities, loadMode)
             }
             is NavigationState.Servers -> {
                 val cityServers = servers.filter { it.exitCountry == nav.countryCode && it.city == nav.cityName }
                     .sortedBy { it.name }
-                CountriesUiState.ServersList(nav.countryCode, nav.cityName, cityServers)
+                CountriesUiState.ServersList(nav.countryCode, nav.cityName, cityServers, loadMode)
             }
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CountriesUiState.Loading)
@@ -128,7 +139,7 @@ class CountriesViewModel @Inject constructor(
             _error.value = null
             val session = sessionDao.getSession()
             if (session == null) {
-                _error.value = "Session not found"
+                _error.value = context.getString(R.string.error_session_not_found)
                 return@launch
             }
             vpnRepository.getServers(session.accessToken, session.sessionId, session.userTier, forceRefresh = false)
@@ -161,7 +172,7 @@ class CountriesViewModel @Inject constructor(
                 amneziaVpnManager.connect(server.id, physicalServer, session)
             }
         } else {
-            _error.value = "Selected server is currently unavailable."
+            _error.value = context.getString(R.string.label_server_unavailable)
         }
     }
 

@@ -59,6 +59,7 @@ fun SettingsScreen(
     onNavigateToAbout: (() -> Unit)? = null,
     onNavigateToErrorReporting: (() -> Unit)? = null,
     onNavigateToThemeSelection: (() -> Unit)? = null,
+    onNavigateToLoadDisplayMode: (() -> Unit)? = null,
     onNavigateToDebug: (() -> Unit)? = null,
     onNavigateToCustomDns: (() -> Unit)? = null,
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
@@ -106,6 +107,7 @@ fun SettingsScreen(
                 onNavigateToAbout = onNavigateToAbout,
                 onNavigateToErrorReporting = onNavigateToErrorReporting,
                 onNavigateToThemeSelection = onNavigateToThemeSelection,
+                onNavigateToLoadDisplayMode = onNavigateToLoadDisplayMode,
                 onNavigateToDebug = onNavigateToDebug,
                 onNavigateToCustomDns = onNavigateToCustomDns,
                 onNavigateToPortSelection = onNavigateToPortSelection,
@@ -128,6 +130,7 @@ fun SettingsContent(
     onNavigateToAbout: (() -> Unit)? = null,
     onNavigateToErrorReporting: (() -> Unit)? = null,
     onNavigateToThemeSelection: (() -> Unit)? = null,
+    onNavigateToLoadDisplayMode: (() -> Unit)? = null,
     onNavigateToDebug: (() -> Unit)? = null,
     onNavigateToCustomDns: (() -> Unit)? = null,
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
@@ -183,7 +186,8 @@ fun SettingsContent(
 
                         CustomizationSettingsSection(
                             state = state,
-                            onNavigateToThemeSelection = onNavigateToThemeSelection
+                            onNavigateToThemeSelection = onNavigateToThemeSelection,
+                            onNavigateToLoadDisplayMode = onNavigateToLoadDisplayMode
                         )
                     }
 
@@ -234,7 +238,8 @@ fun SettingsContent(
                 CustomizationSettingsSection(
                     modifier = contentModifier,
                     state = state,
-                    onNavigateToThemeSelection = onNavigateToThemeSelection
+                    onNavigateToThemeSelection = onNavigateToThemeSelection,
+                    onNavigateToLoadDisplayMode = onNavigateToLoadDisplayMode
                 )
             }
 
@@ -322,7 +327,8 @@ private fun ConnectionSettingsSection(
 private fun CustomizationSettingsSection(
     modifier: Modifier = Modifier,
     state: SettingsUiState,
-    onNavigateToThemeSelection: (() -> Unit)?
+    onNavigateToThemeSelection: (() -> Unit)?,
+    onNavigateToLoadDisplayMode: (() -> Unit)?
 ) {
     Category(modifier = modifier, title = stringResource(R.string.settings_customization)) {
         val currentThemeName = when (state.appTheme) {
@@ -339,6 +345,20 @@ private fun CustomizationSettingsSection(
             subtitle = currentThemeName,
             icon = Icons.Rounded.Palette,
             onClick = { onNavigateToThemeSelection?.invoke() }
+        )
+
+        val currentLoadModeName = when (state.serverLoadDisplayMode) {
+            ru.protonmod.next.data.local.ServerLoadDisplayMode.ALL -> stringResource(R.string.load_mode_all)
+            ru.protonmod.next.data.local.ServerLoadDisplayMode.LINE -> stringResource(R.string.load_mode_line)
+            ru.protonmod.next.data.local.ServerLoadDisplayMode.PERCENT -> stringResource(R.string.load_mode_percent)
+            ru.protonmod.next.data.local.ServerLoadDisplayMode.HIDDEN -> stringResource(R.string.load_mode_hidden)
+        }
+
+        SettingRowWithIcon(
+            title = stringResource(R.string.settings_load_display_mode),
+            subtitle = currentLoadModeName,
+            icon = Icons.Rounded.BarChart,
+            onClick = { onNavigateToLoadDisplayMode?.invoke() }
         )
     }
 }

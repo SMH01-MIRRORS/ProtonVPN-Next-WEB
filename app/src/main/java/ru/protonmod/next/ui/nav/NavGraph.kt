@@ -52,6 +52,7 @@ sealed class Screen(val route: String) {
     data object ErrorReporting : Screen("error_reporting")
 
     data object ThemeSelection : Screen("theme_selection")
+    data object LoadDisplayModeSelection : Screen("load_display_mode_selection")
     data object DebugSettings : Screen("debug_settings")
 
     data object CustomDns : Screen("custom_dns")
@@ -105,6 +106,9 @@ fun NavGraphBuilder.appNavGraph(
             onNavigateToThemeSelection = {
                 navController.navigate(Screen.ThemeSelection.route)
             },
+            onNavigateToLoadDisplayMode = {
+                navController.navigate(Screen.LoadDisplayModeSelection.route)
+            },
             onNavigateToDebug = {
                 navController.navigate(Screen.DebugSettings.route)
             },
@@ -150,6 +154,12 @@ fun NavGraphBuilder.appNavGraph(
 
     composable(Screen.ThemeSelection.route) {
         ThemeSelectionScreen(
+            onBack = { navController.popBackStack() }
+        )
+    }
+
+    composable(Screen.LoadDisplayModeSelection.route) {
+        ServerLoadDisplayModeScreen(
             onBack = { navController.popBackStack() }
         )
     }

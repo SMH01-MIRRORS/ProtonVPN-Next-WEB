@@ -32,6 +32,7 @@
     <string name="hint_password">Пароль</string>
     <string name="forgot_password">Забыли пароль?</string>
     <string name="desc_back_button">Вернуться назад</string>
+    <string name="desc_back">Назад</string>
     <string name="desc_toggle_password">Показать/скрыть пароль</string>
     <string name="login_success">Вход выполнен!</string>
     <string name="login_error">Ошибка: %1$s</string>
@@ -56,6 +57,10 @@
     <string name="desc_toggle_connection">Переключить соединение</string>
     <string name="desc_country">Страна</string>
     <string name="map_placeholder">Заглушка интерактивной карты</string>
+    <string name="ip_placeholder">0.0.0.0</string>
+    <string name="status_vpn">VPN</string>
+    <string name="location_format">%1$s • %2$s</string>
+    <string name="location_city_format">%1$s, %2$s</string>
     <string name="label_fastest_server">Самый быстрый сервер</string>
     <string name="label_select_location">Выберите локацию</string>
     <string name="label_server_unavailable">Сервер недоступен</string>
@@ -95,6 +100,7 @@
     <string name="settings_notifications_desc">Получать уведомления о статусе VPN</string>
     <string name="settings_about">О приложении</string>
     <string name="settings_version">Версия %1$s</string>
+    <string name="settings_version_short">v%1$s</string>
     <string name="settings_licenses">Лицензии открытого ПО</string>
     <string name="settings_licenses_desc">Стороннее ПО, используемое в приложении</string>
     <string name="settings_on">Вкл</string>
@@ -126,6 +132,11 @@
     <!-- Customization -->
     <string name="settings_customization">Кастомизация</string>
     <string name="settings_app_theme">Тема приложения</string>
+    <string name="settings_load_display_mode">Отображение нагрузки</string>
+    <string name="load_mode_all">Линия и проценты</string>
+    <string name="load_mode_line">Только линия</string>
+    <string name="load_mode_percent">Только проценты</string>
+    <string name="load_mode_hidden">Скрыть</string>
     <string name="theme_light">Светлая</string>
     <string name="theme_dark">Темная</string>
     <string name="theme_amoled">AMOLED</string>
@@ -201,9 +212,14 @@
     <!-- About App Screen -->
     <string name="about_community">Сообщество</string>
     <string name="about_github">GitHub</string>
+    <string name="about_github_unavailable">GitHub (%1$s)</string>
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
     <string name="about_unavailable">Временно недоступно</string>
+
+    <string name="url_github">https://github.com/SMH01-MOD-NEXT/ProtonMOD-NEXT</string>
+    <string name="url_codeberg">https://codeberg.org/SMH01/ProtonVPN-Next</string>
+    <string name="url_telegram">https://t.me/ProtonVPN_MOD</string>
 
     <!-- Licenses Screen -->
     <string name="licenses_title">Лицензии</string>
@@ -296,6 +312,7 @@
     <string name="unit_mb_s">МБ/с</string>
     <string name="unit_gb_s">ГБ/с</string>
     <string name="unit_b_s">Б/с</string>
+    <string name="vpn_speed_format">↑ %1$s ↓ %2$s</string>
 
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">Активная сессия не найдена. Пожалуйста, войдите снова.</string>
@@ -315,6 +332,7 @@
     <string name="profile_city_info">🏙️ %1$s, %2$s</string>
     <string name="profile_country_info">%1$s %2$s</string>
     <string name="profile_fastest_info">⚡ %1$s</string>
+    <string name="profile_info_format">%1$s • %2$s • %3$s</string>
 
     <!-- Edit Profile Screen -->
     <string name="title_create_profile">Создать профиль</string>
@@ -349,7 +367,7 @@
     <string name="title_select_server">Выберите сервер</string>
     <string name="location_fastest_in_country">Самый быстрый в %1$s</string>
     <string name="location_fastest_in_city">Самый быстрый в %1$s</string>
-    <string name="location_load">Нагрузка: %1$d%%</string>
+    <string name="location_load">%1$d%%</string>
     <string name="title_select_obfuscation_config">Выберите конфиг обфускации</string>
     <string name="title_auto_open_url">Автоматически открывать URL</string>
     <string name="btn_create_new_config">Создать новый конфиг</string>

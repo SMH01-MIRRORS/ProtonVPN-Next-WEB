@@ -25,12 +25,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import ru.protonmod.next.R
+import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 @Composable
-fun LoadIndicator(load: Int) {
+fun LoadIndicator(load: Int, displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL) {
+    if (displayMode == ServerLoadDisplayMode.HIDDEN || displayMode == ServerLoadDisplayMode.LINE) return
+
     val colors = ProtonNextTheme.colors
     val color = when {
         load < 40 -> colors.notificationSuccess
@@ -47,7 +52,7 @@ fun LoadIndicator(load: Int) {
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(
-            text = "$load%",
+            text = stringResource(R.string.location_load, load),
             style = MaterialTheme.typography.labelMedium,
             color = color,
             fontWeight = FontWeight.Bold
@@ -56,7 +61,9 @@ fun LoadIndicator(load: Int) {
 }
 
 @Composable
-fun LoadProgressBar(load: Int) {
+fun LoadProgressBar(load: Int, displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL) {
+    if (displayMode == ServerLoadDisplayMode.HIDDEN || displayMode == ServerLoadDisplayMode.PERCENT) return
+
     val colors = ProtonNextTheme.colors
     val color = when {
         load < 40 -> colors.notificationSuccess

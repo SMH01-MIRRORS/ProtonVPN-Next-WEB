@@ -32,6 +32,7 @@
     <string name="hint_password">رمز عبور</string>
     <string name="forgot_password">رمز عبور را فراموش کرده‌اید؟</string>
     <string name="desc_back_button">بازگشت</string>
+    <string name="desc_back">بازگشت</string>
     <string name="desc_toggle_password">تغییر وضعیت نمایش رمز عبور</string>
     <string name="login_success">ورود با موفقیت انجام شد!</string>
     <string name="login_error">خطا: %1$s</string>
@@ -56,6 +57,10 @@
     <string name="desc_toggle_connection">تغییر وضعیت اتصال</string>
     <string name="desc_country">کشور</string>
     <string name="map_placeholder">محل قرارگیری نقشه تعاملی</string>
+    <string name="ip_placeholder">0.0.0.0</string>
+    <string name="status_vpn">VPN</string>
+    <string name="location_format">%1$s • %2$s</string>
+    <string name="location_city_format">%1$s, %2$s</string>
     <string name="label_fastest_server">سریع‌ترین سرور</string>
     <string name="label_select_location">انتخاب مکان</string>
     <string name="label_server_unavailable">سرور در دسترس نیست</string>
@@ -93,6 +98,7 @@
     <string name="settings_notifications_desc">دریافت اعلان‌های وضعیت VPN</string>
     <string name="settings_about">درباره</string>
     <string name="settings_version">نسخه %1$s</string>
+    <string name="settings_version_short">v%1$s</string>
     <string name="settings_licenses">مجوزهای متن باز</string>
     <string name="settings_licenses_desc">نرم‌افزارهای شخص ثالث استفاده شده در برنامه</string>
     <string name="settings_on">روشن</string>
@@ -124,6 +130,11 @@
     <!-- Customization -->
     <string name="settings_customization">شخصی‌سازی</string>
     <string name="settings_app_theme">تم برنامه</string>
+    <string name="settings_load_display_mode">نحوه نمایش بار سرور</string>
+    <string name="load_mode_all">خط و درصد</string>
+    <string name="load_mode_line">فقط خط</string>
+    <string name="load_mode_percent">فقط درصد</string>
+    <string name="load_mode_hidden">مخفی</string>
     <string name="theme_light">روشن</string>
     <string name="theme_dark">تیره</string>
     <string name="theme_amoled">AMOLED</string>
@@ -199,9 +210,14 @@
     <!-- About App Screen -->
     <string name="about_community">انجمن</string>
     <string name="about_github">GitHub</string>
+    <string name="about_github_unavailable">GitHub (%1$s)</string>
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
     <string name="about_unavailable">موقت در دسترس نیست</string>
+
+    <string name="url_github">https://github.com/SMH01-MOD-NEXT/ProtonMOD-NEXT</string>
+    <string name="url_codeberg">https://codeberg.org/SMH01/ProtonVPN-Next</string>
+    <string name="url_telegram">https://t.me/ProtonVPN_MOD</string>
 
     <!-- Licenses Screen -->
     <string name="licenses_title">مجوزها</string>
@@ -299,6 +315,7 @@
     <string name="profile_city_info">🏙️ %1$s، %2$s</string>
     <string name="profile_country_info">%1$s %2$s</string>
     <string name="profile_fastest_info">⚡ %1$s</string>
+    <string name="profile_info_format">%1$s • %2$s • %3$s</string>
 
     <!-- Edit Profile Screen -->
     <string name="title_create_profile">ایجاد پروفایل</string>
@@ -333,7 +350,7 @@
     <string name="title_select_server">انتخاب سرور</string>
     <string name="location_fastest_in_country">سریع‌ترین در %1$s</string>
     <string name="location_fastest_in_city">سریع‌ترین در %1$s</string>
-    <string name="location_load">بار: %1$d%%</string>
+    <string name="location_load">%1$d%%</string>
     <string name="title_select_obfuscation_config">انتخاب پیکربندی مبهم‌سازی</string>
     <string name="title_auto_open_url">باز کردن خودکار URL</string>
     <string name="btn_create_new_config">ایجاد پیکربندی جدید</string>
@@ -405,6 +422,7 @@
     <string name="unit_mb_s">مگابایت بر ثانیه</string>
     <string name="unit_gb_s">گیگابایت بر ثانیه</string>
     <string name="unit_b_s">بایت بر ثانیه</string>
+    <string name="vpn_speed_format">↑ %1$s ↓ %2$s</string>
 
     <!-- Captcha Screen -->
     <string name="captcha_title">تایید انسانی</string>

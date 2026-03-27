@@ -32,6 +32,7 @@
     <string name="hint_password">Password</string>
     <string name="forgot_password">Forgot password?</string>
     <string name="desc_back_button">Navigate back</string>
+    <string name="desc_back">Back</string>
     <string name="desc_toggle_password">Toggle password visibility</string>
     <string name="login_success">Login Successful!</string>
     <string name="login_error">Error: %1$s</string>
@@ -56,6 +57,10 @@
     <string name="desc_toggle_connection">Toggle Connection</string>
     <string name="desc_country">Country</string>
     <string name="map_placeholder">Interactive Map Placeholder</string>
+    <string name="ip_placeholder">0.0.0.0</string>
+    <string name="status_vpn">VPN</string>
+    <string name="location_format">%1$s • %2$s</string>
+    <string name="location_city_format">%1$s, %2$s</string>
     <string name="label_fastest_server">Fastest Server</string>
     <string name="label_select_location">Select location</string>
     <string name="label_server_unavailable">Server unavailable</string>
@@ -95,6 +100,7 @@
     <string name="settings_notifications_desc">Receive VPN status notifications</string>
     <string name="settings_about">About</string>
     <string name="settings_version">Version %1$s</string>
+    <string name="settings_version_short">v%1$s</string>
     <string name="settings_licenses">Open Source Licenses</string>
     <string name="settings_licenses_desc">Third-party software used in the app</string>
     <string name="settings_on">On</string>
@@ -126,6 +132,11 @@
     <!-- Customization -->
     <string name="settings_customization">Customization</string>
     <string name="settings_app_theme">App Theme</string>
+    <string name="settings_load_display_mode">Server Load Display</string>
+    <string name="load_mode_all">Line and Percentages</string>
+    <string name="load_mode_line">Line only</string>
+    <string name="load_mode_percent">Percentages only</string>
+    <string name="load_mode_hidden">Hidden</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_amoled">AMOLED</string>
@@ -201,9 +212,14 @@
     <!-- About App Screen -->
     <string name="about_community">Community</string>
     <string name="about_github">GitHub</string>
+    <string name="about_github_unavailable">GitHub (%1$s)</string>
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
     <string name="about_unavailable">Temporarily unavailable</string>
+
+    <string name="url_github">https://github.com/SMH01-MOD-NEXT/ProtonMOD-NEXT</string>
+    <string name="url_codeberg">https://codeberg.org/SMH01/ProtonVPN-Next</string>
+    <string name="url_telegram">https://t.me/ProtonVPN_MOD</string>
 
     <!-- Licenses Screen -->
     <string name="licenses_title">Licenses</string>
@@ -286,6 +302,7 @@
     <string name="unit_mb_s">MiB/s</string>
     <string name="unit_gb_s">GiB/s</string>
     <string name="unit_b_s">B/s</string>
+    <string name="vpn_speed_format">↑ %1$s ↓ %2$s</string>
 
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">Active session not found. Please log in again.</string>
@@ -305,6 +322,7 @@
     <string name="profile_city_info">🏙️ %1$s, %2$s</string>
     <string name="profile_country_info">%1$s %2$s</string>
     <string name="profile_fastest_info">⚡ %1$s</string>
+    <string name="profile_info_format">%1$s • %2$s • %3$s</string>
 
     <!-- Edit Profile Screen -->
     <string name="title_create_profile">Create Profile</string>
@@ -339,7 +357,7 @@
     <string name="title_select_server">Select Server</string>
     <string name="location_fastest_in_country">Fastest in %1$s</string>
     <string name="location_fastest_in_city">Fastest in %1$s</string>
-    <string name="location_load">Load: %1$d%%</string>
+    <string name="location_load">%1$d%%</string>
     <string name="title_select_obfuscation_config">Select Obfuscation Config</string>
     <string name="title_auto_open_url">Auto-open URL</string>
     <string name="btn_create_new_config">Create New Config</string>

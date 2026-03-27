@@ -39,6 +39,7 @@ import ru.protonmod.next.data.repository.VpnRepository
 import ru.protonmod.next.data.local.ProfileDao
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.data.local.VpnProfileEntity
 import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.data.network.LogicalServer
@@ -279,6 +280,13 @@ class ProfilesViewModel @Inject constructor(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
+        )
+
+    val serverLoadDisplayMode: StateFlow<ServerLoadDisplayMode> = settingsManager.serverLoadDisplayMode
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = ServerLoadDisplayMode.ALL
         )
 
     fun saveObfuscationProfile(profile: ObfuscationProfile) {

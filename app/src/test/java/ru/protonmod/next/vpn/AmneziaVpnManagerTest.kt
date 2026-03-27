@@ -33,6 +33,7 @@ import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.network.CreateCertificateResponse
 import ru.protonmod.next.data.network.PhysicalServer
 import ru.protonmod.next.data.repository.VpnRepository
+import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.utils.coroutines.DispatcherProvider
 import ru.protonmod.next.utils.crypto.CryptoWrapper
 import ru.protonmod.next.utils.crypto.VpnKeyPair
@@ -54,6 +55,9 @@ class AmneziaVpnManagerTest {
 
     @Mock
     private lateinit var sessionDao: SessionDao
+
+    @Mock
+    private lateinit var connectedServerState: ConnectedServerState
 
     @Mock
     private lateinit var systemContextWrapper: SystemContextWrapper
@@ -98,6 +102,7 @@ class AmneziaVpnManagerTest {
             settingsManager,
             { vpnRepository },
             sessionDao,
+            connectedServerState,
             systemContextWrapper,
             cryptoWrapper,
             amneziaConfigGenerator,

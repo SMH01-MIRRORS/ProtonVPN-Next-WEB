@@ -32,6 +32,7 @@
     <string name="hint_password">密码</string>
     <string name="forgot_password">忘记密码？</string>
     <string name="desc_back_button">返回</string>
+    <string name="desc_back">返回</string>
     <string name="desc_toggle_password">切换密码可见性</string>
     <string name="login_success">登录成功！</string>
     <string name="login_error">错误：%1$s</string>
@@ -56,6 +57,10 @@
     <string name="desc_toggle_connection">切换连接</string>
     <string name="desc_country">国家</string>
     <string name="map_placeholder">交互式地图占位符</string>
+    <string name="ip_placeholder">0.0.0.0</string>
+    <string name="status_vpn">VPN</string>
+    <string name="location_format">%1$s • %2$s</string>
+    <string name="location_city_format">%1$s, %2$s</string>
     <string name="label_fastest_server">最快服务器</string>
     <string name="label_select_location">选择位置</string>
     <string name="label_server_unavailable">服务器不可用</string>
@@ -93,6 +98,7 @@
     <string name="settings_notifications_desc">接收 VPN 状态通知</string>
     <string name="settings_about">关于</string>
     <string name="settings_version">版本 %1$s</string>
+    <string name="settings_version_short">v%1$s</string>
     <string name="settings_licenses">开源许可</string>
     <string name="settings_licenses_desc">应用中使用的第三方软件</string>
     <string name="settings_on">开启</string>
@@ -124,6 +130,11 @@
     <!-- Customization -->
     <string name="settings_customization">个性化</string>
     <string name="settings_app_theme">应用主题</string>
+    <string name="settings_load_display_mode">负载显示方式</string>
+    <string name="load_mode_all">进度条和百分比</string>
+    <string name="load_mode_line">仅进度条</string>
+    <string name="load_mode_percent">仅百分比</string>
+    <string name="load_mode_hidden">隐藏</string>
     <string name="theme_light">浅色</string>
     <string name="theme_dark">深色</string>
     <string name="theme_amoled">AMOLED</string>
@@ -199,9 +210,14 @@
     <!-- About App Screen -->
     <string name="about_community">社区</string>
     <string name="about_github">GitHub</string>
+    <string name="about_github_unavailable">GitHub (%1$s)</string>
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
     <string name="about_unavailable">暂时不可用</string>
+
+    <string name="url_github">https://github.com/SMH01-MOD-NEXT/ProtonMOD-NEXT</string>
+    <string name="url_codeberg">https://codeberg.org/SMH01/ProtonVPN-Next</string>
+    <string name="url_telegram">https://t.me/ProtonVPN_MOD</string>
 
     <!-- Licenses Screen -->
     <string name="licenses_title">许可</string>
@@ -294,6 +310,7 @@
     <string name="profile_city_info">🏙️ %1$s, %2$s</string>
     <string name="profile_country_info">%1$s %2$s</string>
     <string name="profile_fastest_info">⚡ %1$s</string>
+    <string name="profile_info_format">%1$s • %2$s • %3$s</string>
 
     <!-- Edit Profile Screen -->
     <string name="title_create_profile">创建配置方案</string>
@@ -328,7 +345,7 @@
     <string name="title_select_server">选择服务器</string>
     <string name="location_fastest_in_country">%1$s 中最快</string>
     <string name="location_fastest_in_city">%1$s 中最快</string>
-    <string name="location_load">负载：%1$d%%</string>
+    <string name="location_load">%1$d%%</string>
     <string name="title_select_obfuscation_config">选择混淆配置</string>
     <string name="title_auto_open_url">自动打开 URL</string>
     <string name="btn_create_new_config">创建新配置</string>
@@ -400,6 +417,7 @@
     <string name="unit_mb_s">MiB/s</string>
     <string name="unit_gb_s">GiB/s</string>
     <string name="unit_b_s">B/s</string>
+    <string name="vpn_speed_format">↑ %1$s ↓ %2$s</string>
 
     <!-- Captcha Screen -->
     <string name="captcha_title">人机身份验证</string>

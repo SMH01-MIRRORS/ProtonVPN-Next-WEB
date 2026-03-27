@@ -310,17 +310,17 @@ private fun LocationTextElement(
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick) // Makes the entire IP block clickable to toggle privacy mode
     ) {
-        // Safe fallbacks to absolutely guarantee no null strings
-        val safeCountry = if (locationText.country.isBlank() || locationText.country.equals("null", ignoreCase = true)) {
+        // Data is now sanitized at the Mapper level, so we only need simple fallbacks
+        val safeCountry = locationText.country.ifBlank {
             stringResource(R.string.status_not_connected)
-        } else locationText.country
+        }
         
-        val safeIp = if (locationText.ip.isBlank() || locationText.ip.equals("null", ignoreCase = true)) {
-            "0.0.0.0"
-        } else locationText.ip
+        val safeIp = locationText.ip.ifBlank {
+            stringResource(R.string.ip_placeholder)
+        }
 
         val country = BidiFormatter.getInstance().unicodeWrap(safeCountry)
-        val fullText = "$country • $safeIp"
+        val fullText = stringResource(R.string.location_format, country, safeIp)
 
         ObscurableText(
             targetText = fullText,
@@ -624,11 +624,12 @@ fun DashboardContent(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(state.recentConnections, key = { it.id }) { server ->
+                                items(state.recentConnections, key = { it.id }) { server ->
                             ServerCard(
                                 server = server,
                                 isConnected = state.connectedServer?.id == server.id,
                                 isConnecting = state.isConnecting && state.connectedServer?.id == server.id,
+                                displayMode = state.serverLoadDisplayMode,
                                 onClick = { onServerClick(server) }
                             )
                         }
@@ -704,6 +705,7 @@ fun DashboardContent(
                             server = server,
                             isConnected = state.connectedServer?.id == server.id,
                             isConnecting = state.isConnecting && state.connectedServer?.id == server.id,
+                            displayMode = state.serverLoadDisplayMode,
                             onClick = { onServerClick(server) },
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
                         )
@@ -878,10 +880,10 @@ fun ConnectionStatusCard(
                     isConnected && vpnLocationText == null -> {
                         // Provide a dummy IP string while waiting for the real one.
                         val rawCountry = connectedServer?.exitCountry?.let { CountryUtils.getCountryName(context, it) }
-                        val safeCountry = rawCountry?.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) } ?: "VPN"
-                        LocationText(country = safeCountry, countryCode = connectedServer?.exitCountry, ip = "0.0.0.0")
+                        val safeCountry = rawCountry?.ifBlank { null } ?: stringResource(R.string.status_vpn)
+                        LocationText(country = safeCountry, countryCode = connectedServer?.exitCountry, ip = stringResource(R.string.ip_placeholder))
                     }
-                    else -> originalLocationText ?: LocationText(country = stringResource(R.string.status_connecting), ip = "0.0.0.0")
+                    else -> originalLocationText ?: LocationText(country = stringResource(R.string.status_connecting), ip = stringResource(R.string.ip_placeholder))
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -969,15 +971,19 @@ fun ConnectionStatusCard(
 
                 Column(modifier = Modifier.weight(1f)) {
                     val rawCountry = connectedServer?.let { CountryUtils.getCountryName(context, it.exitCountry) }
-                    val safeCountryName = rawCountry?.takeIf { it.isNotBlank() && it != "null" } ?: "VPN"
-                    val safeCityName = connectedServer?.city?.takeIf { it.isNotBlank() && it != "null" } ?: ""
+                    val safeCountryName = rawCountry?.ifBlank { null } ?: stringResource(R.string.status_vpn)
+                    val safeCityName = connectedServer?.city ?: ""
 
                     val targetServer = if (quickConnectStrategy == "server") {
                         allServers.find { it.id == quickConnectTargetId }
                     } else null
 
                     val locationTitleText = if (isConnected || isConnecting) {
-                        if (safeCityName.isNotEmpty()) "$safeCountryName, $safeCityName" else safeCountryName
+                        if (safeCityName.isNotEmpty()) {
+                            stringResource(R.string.location_city_format, safeCountryName, safeCityName)
+                        } else {
+                            safeCountryName
+                        }
                     } else {
                         when (quickConnectStrategy) {
                             "fastest" -> stringResource(R.string.qc_strategy_fastest)
@@ -1059,7 +1065,8 @@ fun ServerCard(
     server: LogicalServer,
     isConnected: Boolean,
     isConnecting: Boolean,
-    onClick: () -> Unit,
+    displayMode: ru.protonmod.next.data.local.ServerLoadDisplayMode = ru.protonmod.next.data.local.ServerLoadDisplayMode.ALL,
+    onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
@@ -1073,70 +1080,94 @@ fun ServerCard(
                 alpha = if (isConnected) 0.3f else 0.4f,
                 shadowElevation = 0.dp
             )
-            .clickable(enabled = !isConnecting) { onClick() }
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier.size(36.dp, 24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                if (isConnecting) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp,
-                        color = colors.brandNorm
-                    )
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(enabled = !isConnecting) { onClick() }
                 } else {
-                    val flagResId = CountryUtils.getFlagResource(context, server.exitCountry)
-                    if (flagResId != 0) {
-                        FlagIcon(
-                            countryFlag = flagResId,
-                            size = DpSize(36.dp, 24.dp)
+                    Modifier
+                }
+            )
+    ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier.size(36.dp, 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isConnecting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = colors.brandNorm
                         )
                     } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(colors.backgroundNorm),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Public,
-                                contentDescription = stringResource(R.string.desc_country),
-                                tint = colors.iconNorm,
-                                modifier = Modifier.size(20.dp)
+                        val flagResId = CountryUtils.getFlagResource(context, server.exitCountry)
+                        if (flagResId != 0) {
+                            FlagIcon(
+                                countryFlag = flagResId,
+                                size = DpSize(36.dp, 24.dp)
                             )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(colors.backgroundNorm),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Public,
+                                    contentDescription = stringResource(R.string.desc_country),
+                                    tint = colors.iconNorm,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    val rawCountry = CountryUtils.getCountryName(context, server.exitCountry)
+                    val safeCountry = rawCountry.ifBlank { stringResource(R.string.status_vpn) }
+                    val safeCity = server.city
+                    val locationTitle = if (safeCity.isNotEmpty()) {
+                        stringResource(R.string.location_city_format, safeCountry, safeCity)
+                    } else {
+                        safeCountry
+                    }
+
+                    Text(
+                        text = locationTitle,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.textNorm
+                    )
+                    Text(
+                        text = server.name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.textWeak
+                    )
+                }
+
+                if (!isConnecting) {
+                    ru.protonmod.next.ui.components.LoadIndicator(
+                        load = server.averageLoad,
+                        displayMode = displayMode
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                val rawCountry = CountryUtils.getCountryName(context, server.exitCountry)
-                val safeCountry = rawCountry.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) } ?: "VPN"
-                val safeCity = server.city.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) } ?: ""
-                val locationTitle = if (safeCity.isNotEmpty()) "$safeCountry, $safeCity" else safeCountry
-
-                Text(
-                    text = locationTitle,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = colors.textNorm
-                )
-                Text(
-                    text = server.name,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = colors.textWeak
-                )
-            }
+            ru.protonmod.next.ui.components.LoadProgressBar(
+                load = server.averageLoad,
+                displayMode = displayMode
+            )
         }
     }
 }

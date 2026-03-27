@@ -38,6 +38,7 @@ import okhttp3.Request
 import org.amnezia.awg.backend.Tunnel
 import org.json.JSONObject
 import ru.protonmod.next.R
+import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.data.repository.VpnRepository
 import ru.protonmod.next.data.local.ProfileDao
 import ru.protonmod.next.data.local.RecentConnectionEntity
@@ -74,7 +75,8 @@ sealed class DashboardUiState {
         val certificateState: AmneziaVpnManager.CertificateState = AmneziaVpnManager.CertificateState.Valid,
         val originalLocationText: LocationText? = null,
         val vpnLocationText: LocationText? = null,
-        val isIpHidden: Boolean = false
+        val isIpHidden: Boolean = false,
+        val serverLoadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
     ) : DashboardUiState()
     data class Error(val message: String, val isSessionError: Boolean = false) : DashboardUiState()
 }
@@ -115,6 +117,7 @@ class DashboardViewModel @Inject constructor(
         profileDao.getAllProfilesFlow(),
         settingsManager.quickConnectStrategy,
         settingsManager.quickConnectTargetId,
+        settingsManager.serverLoadDisplayMode,
         _originalLocationText,
         _vpnLocationText,
         _isIpHidden
@@ -133,9 +136,10 @@ class DashboardViewModel @Inject constructor(
         val profiles = args[8] as List<VpnProfileEntity>
         val qcStrategy = args[9] as String
         val qcTargetId = args[10] as String?
-        val originalLocationText = args[11] as LocationText?
-        val vpnLocationText = args[12] as LocationText?
-        val isIpHidden = args[13] as Boolean
+        val loadMode = args[11] as ServerLoadDisplayMode
+        val originalLocationText = args[12] as LocationText?
+        val vpnLocationText = args[13] as LocationText?
+        val isIpHidden = args[14] as Boolean
 
         if (isUpdating && servers.isEmpty()) {
             DashboardUiState.Loading
@@ -160,7 +164,8 @@ class DashboardViewModel @Inject constructor(
                 certificateState = certState,
                 originalLocationText = originalLocationText,
                 vpnLocationText = vpnLocationText,
-                isIpHidden = isIpHidden
+                isIpHidden = isIpHidden,
+                serverLoadDisplayMode = loadMode
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.Loading)
@@ -225,14 +230,13 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             val location = fetchRealLocation()
             if (location != null) {
-                // Safeguard against literal "null" strings
-                val cleanCode = location.countryCode.trim().uppercase().takeIf { it.isNotBlank() && it != "NULL" } ?: "US"
+                val cleanCode = location.countryCode.trim().uppercase().ifBlank { "US" }
                 val localizedCountry = CountryUtils.getCountryName(context, cleanCode)
-                    .takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) } ?: cleanCode
+                    .ifBlank { cleanCode }
                 _originalLocationText.value = LocationText(localizedCountry, cleanCode, location.ip)
             } else {
                 // Fallback if API completely fails on boot
-                _originalLocationText.value = LocationText(context.getString(R.string.status_disconnected), null, "0.0.0.0")
+                _originalLocationText.value = LocationText(context.getString(R.string.status_disconnected), null, context.getString(R.string.ip_placeholder))
             }
         }
     }
@@ -243,15 +247,15 @@ class DashboardViewModel @Inject constructor(
             val location = fetchRealLocation(useProxy = false)
 
             // Prioritize API country code if valid, otherwise use the server's declared country code
-            val apiCountryCode = location?.countryCode?.trim()?.uppercase()?.takeIf { it.isNotBlank() && it != "NULL" }
-            val fallbackCountryCode = countryCode.trim().uppercase().takeIf { it.isNotBlank() && it != "NULL" } ?: "US"
+            val apiCountryCode = location?.countryCode?.trim()?.uppercase()?.ifBlank { null }
+            val fallbackCountryCode = countryCode.trim().uppercase().ifBlank { "US" }
             val finalCountryCode = apiCountryCode ?: fallbackCountryCode
 
             val localizedCountry = CountryUtils.getCountryName(context, finalCountryCode)
-                .takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) } ?: finalCountryCode
+                .ifBlank { finalCountryCode }
 
             // If API failed to fetch IP, generate a simulated IP to keep the UI looking alive
-            val safeIp = location?.ip?.takeIf { it.isNotBlank() && it != "null" }
+            val safeIp = location?.ip?.ifBlank { null }
                 ?: "185.201.${(10..250).random()}.${(10..250).random()}"
 
             // Guard against race condition: check if tunnel is still active before updating UI

@@ -32,6 +32,7 @@
     <string name="hint_password">Пароль</string>
     <string name="forgot_password">Забыліся пароль?</string>
     <string name="desc_back_button">Назад</string>
+    <string name="desc_back">Назад</string>
     <string name="desc_toggle_password">Паказаць/схаваць пароль</string>
     <string name="login_success">Уваход выкананы!</string>
     <string name="login_error">Памылка: %1$s</string>
@@ -56,6 +57,10 @@
     <string name="desc_toggle_connection">Пераключыць падключэнне</string>
     <string name="desc_country">Краіна</string>
     <string name="map_placeholder">Заглушка інтэрактыўнай карты</string>
+    <string name="ip_placeholder">0.0.0.0</string>
+    <string name="status_vpn">VPN</string>
+    <string name="location_format">%1$s • %2$s</string>
+    <string name="location_city_format">%1$s, %2$s</string>
     <string name="label_fastest_server">Самы хуткі сервер</string>
     <string name="label_select_location">Выберыце лакацыю</string>
     <string name="label_server_unavailable">Сервер недаступны</string>
@@ -93,6 +98,7 @@
     <string name="settings_notifications_desc">Атрымліваць апавяшчэнні аб статусе VPN</string>
     <string name="settings_about">Аб прыкладанні</string>
     <string name="settings_version">Версія %1$s</string>
+    <string name="settings_version_short">v%1$s</string>
     <string name="settings_licenses">Ліцэнзіі адкрытага ПЗ</string>
     <string name="settings_licenses_desc">Баковыя ПЗ, якія выкарыстоўваюцца ў прыкладанні</string>
     <string name="settings_on">Укл</string>
@@ -124,6 +130,11 @@
     <!-- Customization -->
     <string name="settings_customization">Кастамізацыя</string>
     <string name="settings_app_theme">Тэма прыкладання</string>
+    <string name="settings_load_display_mode">Адлюстраванне нагрузкі</string>
+    <string name="load_mode_all">Лінія і працэнты</string>
+    <string name="load_mode_line">Толькі лінія</string>
+    <string name="load_mode_percent">Толькі працэнты</string>
+    <string name="load_mode_hidden">Схаваць</string>
     <string name="theme_light">Светлая</string>
     <string name="theme_dark">Цёмная</string>
     <string name="theme_amoled">AMOLED</string>
@@ -199,9 +210,14 @@
     <!-- About App Screen -->
     <string name="about_community">Супольнасць</string>
     <string name="about_github">GitHub</string>
+    <string name="about_github_unavailable">GitHub (%1$s)</string>
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
     <string name="about_unavailable">Часова недаступна</string>
+
+    <string name="url_github">https://github.com/SMH01-MOD-NEXT/ProtonMOD-NEXT</string>
+    <string name="url_codeberg">https://codeberg.org/SMH01/ProtonVPN-Next</string>
+    <string name="url_telegram">https://t.me/ProtonVPN_MOD</string>
 
     <!-- Licenses Screen -->
     <string name="licenses_title">Ліцэнзіі</string>
@@ -309,6 +325,7 @@
     <string name="profile_city_info">🏙️ %1$s, %2$s</string>
     <string name="profile_country_info">%1$s %2$s</string>
     <string name="profile_fastest_info">⚡ %1$s</string>
+    <string name="profile_info_format">%1$s • %2$s • %3$s</string>
 
     <!-- Edit Profile Screen -->
     <string name="title_create_profile">Стварыць профіль</string>
@@ -343,7 +360,7 @@
     <string name="title_select_server">Выберыце сервер</string>
     <string name="location_fastest_in_country">Самы хуткі ў %1$s</string>
     <string name="location_fastest_in_city">Самы хуткі ў %1$s</string>
-    <string name="location_load">Нагрузка: %1$d%%</string>
+    <string name="location_load">%1$d%%</string>
     <string name="title_select_obfuscation_config">Выберыце канфігурацыю абфускацыі</string>
     <string name="title_auto_open_url">Аўтаадкрыццё URL</string>
     <string name="btn_create_new_config">Стварыць новую канфігурацыю</string>
@@ -415,6 +432,7 @@
     <string name="unit_mb_s">МБ/с</string>
     <string name="unit_gb_s">ГБ/с</string>
     <string name="unit_b_s">Б/с</string>
+    <string name="vpn_speed_format">↑ %1$s ↓ %2$s</string>
 
     <!-- Captcha Screen -->
     <string name="captcha_title">Праверка на чалавечнасць</string>

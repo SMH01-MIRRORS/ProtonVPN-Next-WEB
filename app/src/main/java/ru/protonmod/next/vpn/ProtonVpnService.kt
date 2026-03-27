@@ -319,7 +319,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
 
                         val upStr = formatSpeed(deltaTx)
                         val downStr = formatSpeed(deltaRx)
-                        lastSpeedText = "↑ $upStr ↓ $downStr"
+                        lastSpeedText = getString(R.string.vpn_speed_format, upStr, downStr)
 
                         if (notificationsEnabled && currentTunnelState == Tunnel.State.UP) {
                             // Update UI on the main thread

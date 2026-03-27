@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.amnezia.awg.backend.Tunnel
+import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.ui.theme.AppTheme
@@ -60,6 +61,7 @@ data class SettingsUiState(
 
     // Customization
     val appTheme: AppTheme = AppTheme.DARK,
+    val serverLoadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
 
     // AWG low-level params
     val awgJc: Int = 3,
@@ -173,6 +175,7 @@ class SettingsViewModel @Inject constructor(
         settingsManager.apiBypassEnabled,
         settingsManager.apiBypassStrategy,
         settingsManager.appTheme,
+        settingsManager.serverLoadDisplayMode,
         _isAnyVpnActive
     ) { args: Array<Any?> ->
         SettingsUiState(
@@ -213,7 +216,8 @@ class SettingsViewModel @Inject constructor(
             apiBypassEnabled = args[34] as Boolean,
             apiBypassStrategy = args[35] as String,
             appTheme = args[36] as AppTheme,
-            isAnyVpnActive = args[37] as Boolean
+            serverLoadDisplayMode = args[37] as ServerLoadDisplayMode,
+            isAnyVpnActive = args[38] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -236,6 +240,12 @@ class SettingsViewModel @Inject constructor(
     fun setAppTheme(theme: AppTheme) {
         viewModelScope.launch {
             settingsManager.setAppTheme(theme)
+        }
+    }
+
+    fun setServerLoadDisplayMode(mode: ServerLoadDisplayMode) {
+        viewModelScope.launch {
+            settingsManager.setServerLoadDisplayMode(mode)
         }
     }
 

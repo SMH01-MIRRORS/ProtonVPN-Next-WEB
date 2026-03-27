@@ -59,15 +59,25 @@ object ServerMapper {
     private val json = Json { ignoreUnknownKeys = true }
 
     fun toEntity(server: LogicalServer): ServerEntity {
+        val sanitizedName = server.name.takeIf { !it.equals("null", ignoreCase = true) } ?: ""
+        val sanitizedCity = server.city.takeIf { !it.equals("null", ignoreCase = true) } ?: ""
+        val sanitizedExitCountry = server.exitCountry.takeIf { !it.equals("null", ignoreCase = true) } ?: ""
+        
+        val sanitizedPhysicalServers = server.servers.map { physical ->
+            physical.copy(
+                domain = physical.domain.takeIf { !it.equals("null", ignoreCase = true) } ?: ""
+            )
+        }
+
         return ServerEntity(
             id = server.id,
-            name = server.name.takeIf { !it.equals("null", ignoreCase = true) } ?: "",
-            city = server.city.takeIf { !it.equals("null", ignoreCase = true) } ?: "",
-            exitCountry = server.exitCountry.takeIf { !it.equals("null", ignoreCase = true) } ?: "",
+            name = sanitizedName,
+            city = sanitizedCity,
+            exitCountry = sanitizedExitCountry,
             tier = server.tier,
             features = server.features,
             averageLoad = server.averageLoad,
-            physicalServersJson = json.encodeToString(server.servers)
+            physicalServersJson = json.encodeToString(sanitizedPhysicalServers)
         )
     }
 

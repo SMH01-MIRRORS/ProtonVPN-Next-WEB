@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.R
+import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.LoadIndicator
@@ -165,6 +166,7 @@ fun CountriesScreen(
                                 countries = state.countries,
                                 connectedServer = connectedServer,
                                 isTablet = isTablet,
+                                loadDisplayMode = state.loadDisplayMode,
                                 onCountryClick = { country ->
                                     checkVpnAndConnect {
                                         viewModel.selectCountry(country.code)
@@ -182,6 +184,7 @@ fun CountriesScreen(
                                 cities = state.cities,
                                 connectedServer = connectedServer,
                                 isTablet = isTablet,
+                                loadDisplayMode = state.loadDisplayMode,
                                 onBack = { viewModel.backToCountries() },
                                 onCityClick = { city ->
                                     checkVpnAndConnect {
@@ -201,6 +204,7 @@ fun CountriesScreen(
                                 servers = state.servers,
                                 connectedServer = connectedServer,
                                 isTablet = isTablet,
+                                loadDisplayMode = state.loadDisplayMode,
                                 onBack = { viewModel.backToCities() },
                                 onServerClick = { server ->
                                     checkVpnAndConnect {
@@ -222,6 +226,7 @@ fun CountriesListContent(
     countries: List<CountryDisplayItem>,
     connectedServer: LogicalServer?,
     isTablet: Boolean = false,
+    loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     onCountryClick: (CountryDisplayItem) -> Unit,
     onCountryMore: (CountryDisplayItem) -> Unit
 ) {
@@ -253,6 +258,7 @@ fun CountriesListContent(
                 CountryCard(
                     country = country,
                     isConnected = connectedServer?.exitCountry == country.code,
+                    displayMode = loadDisplayMode,
                     onClick = { onCountryClick(country) },
                     onMoreClick = { onCountryMore(country) }
                 )
@@ -284,6 +290,7 @@ fun CountriesListContent(
                 CountryCard(
                     country = country,
                     isConnected = connectedServer?.exitCountry == country.code,
+                    displayMode = loadDisplayMode,
                     onClick = { onCountryClick(country) },
                     onMoreClick = { onCountryMore(country) }
                 )
@@ -296,6 +303,7 @@ fun CountriesListContent(
 fun CountryCard(
     country: CountryDisplayItem,
     isConnected: Boolean = false,
+    displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     onClick: () -> Unit,
     onMoreClick: () -> Unit
 ) {
@@ -373,7 +381,7 @@ fun CountryCard(
                     modifier = Modifier.weight(1f)
                 )
 
-                LoadIndicator(load = country.averageLoad)
+                LoadIndicator(load = country.averageLoad, displayMode = displayMode)
 
                 IconButton(
                     onClick = onMoreClick,
@@ -387,7 +395,7 @@ fun CountryCard(
                 }
             }
 
-            LoadProgressBar(load = country.averageLoad)
+            LoadProgressBar(load = country.averageLoad, displayMode = displayMode)
         }
     }
 }
@@ -398,6 +406,7 @@ fun CitiesListContent(
     cities: List<CityDisplayItem>,
     connectedServer: LogicalServer?,
     isTablet: Boolean = false,
+    loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     onBack: () -> Unit,
     onCityClick: (CityDisplayItem) -> Unit,
     onCityMore: (CityDisplayItem) -> Unit
@@ -423,6 +432,7 @@ fun CitiesListContent(
                 CityCard(
                     city = city,
                     isConnected = (connectedServer?.city == city.name && connectedServer.exitCountry == countryName),
+                    displayMode = loadDisplayMode,
                     onClick = { onCityClick(city) },
                     onMoreClick = { onCityMore(city) }
                 )
@@ -447,6 +457,7 @@ fun CitiesListContent(
                 CityCard(
                     city = city,
                     isConnected = (connectedServer?.city == city.name && connectedServer.exitCountry == countryName),
+                    displayMode = loadDisplayMode,
                     onClick = { onCityClick(city) },
                     onMoreClick = { onCityMore(city) }
                 )
@@ -459,6 +470,7 @@ fun CitiesListContent(
 fun CityCard(
     city: CityDisplayItem,
     isConnected: Boolean = false,
+    displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     onClick: () -> Unit,
     onMoreClick: () -> Unit
 ) {
@@ -526,7 +538,7 @@ fun CityCard(
                     modifier = Modifier.weight(1f)
                 )
 
-                LoadIndicator(load = city.averageLoad)
+                LoadIndicator(load = city.averageLoad, displayMode = displayMode)
 
                 IconButton(
                     onClick = onMoreClick,
@@ -540,7 +552,7 @@ fun CityCard(
                 }
             }
 
-            LoadProgressBar(load = city.averageLoad)
+            LoadProgressBar(load = city.averageLoad, displayMode = displayMode)
         }
     }
 }
@@ -552,6 +564,7 @@ fun ServersListContent(
     servers: List<LogicalServer>,
     connectedServer: LogicalServer?,
     isTablet: Boolean = false,
+    loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     onBack: () -> Unit,
     onServerClick: (LogicalServer) -> Unit
 ) {
@@ -576,6 +589,7 @@ fun ServersListContent(
                 ServerItemCard(
                     server = server,
                     isConnected = connectedServer?.id == server.id,
+                    displayMode = loadDisplayMode,
                     onClick = { onServerClick(server) }
                 )
             }
@@ -599,6 +613,7 @@ fun ServersListContent(
                 ServerItemCard(
                     server = server,
                     isConnected = connectedServer?.id == server.id,
+                    displayMode = loadDisplayMode,
                     onClick = { onServerClick(server) }
                 )
             }
@@ -639,6 +654,7 @@ private fun NavigationHeader(
 fun ServerItemCard(
     server: LogicalServer,
     isConnected: Boolean,
+    displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     onClick: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
@@ -676,7 +692,7 @@ fun ServerItemCard(
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    LoadIndicator(load = server.averageLoad)
+                    LoadIndicator(load = server.averageLoad, displayMode = displayMode)
                     if (isConnected) {
                         Spacer(modifier = Modifier.width(12.dp))
                         Box(
@@ -687,7 +703,7 @@ fun ServerItemCard(
                     }
                 }
             }
-            LoadProgressBar(load = server.averageLoad)
+            LoadProgressBar(load = server.averageLoad, displayMode = displayMode)
         }
     }
 }

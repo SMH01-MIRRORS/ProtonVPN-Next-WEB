@@ -341,7 +341,7 @@ fun ProfileCardItem(
                 }
 
                 Text(
-                    text = "${profile.protocol} • $portStr • $targetName",
+                    text = stringResource(R.string.profile_info_format, profile.protocol, portStr, targetName),
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.textWeak
                 )

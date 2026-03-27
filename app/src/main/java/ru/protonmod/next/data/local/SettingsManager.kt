@@ -45,6 +45,7 @@ class SettingsManager @Inject constructor(
         private val NOTIFICATIONS = booleanPreferencesKey("notifications")
 
         private val APP_THEME = stringPreferencesKey("app_theme")
+        private val SERVER_LOAD_DISPLAY_MODE = stringPreferencesKey("server_load_display_mode")
 
         private val SPLIT_TUNNELING_ENABLED = booleanPreferencesKey("split_tunneling_enabled")
         private val SPLIT_TUNNELING_MODE = stringPreferencesKey("split_tunneling_mode") // "exclude" or "include"
@@ -103,6 +104,15 @@ class SettingsManager @Inject constructor(
             ru.protonmod.next.ui.theme.AppTheme.valueOf(themeString)
         } catch (e: Exception) {
             ru.protonmod.next.ui.theme.AppTheme.DARK
+        }
+    }
+
+    val serverLoadDisplayMode: Flow<ServerLoadDisplayMode> = context.dataStore.data.map { preferences ->
+        val modeString = preferences[SERVER_LOAD_DISPLAY_MODE] ?: ServerLoadDisplayMode.ALL.name
+        try {
+            ServerLoadDisplayMode.valueOf(modeString)
+        } catch (e: Exception) {
+            ServerLoadDisplayMode.ALL
         }
     }
 
@@ -198,6 +208,10 @@ class SettingsManager @Inject constructor(
 
     suspend fun setAppTheme(theme: ru.protonmod.next.ui.theme.AppTheme) {
         context.dataStore.edit { it[APP_THEME] = theme.name }
+    }
+
+    suspend fun setServerLoadDisplayMode(mode: ServerLoadDisplayMode) {
+        context.dataStore.edit { it[SERVER_LOAD_DISPLAY_MODE] = mode.name }
     }
 
     suspend fun setSplitTunnelingEnabled(enabled: Boolean) {

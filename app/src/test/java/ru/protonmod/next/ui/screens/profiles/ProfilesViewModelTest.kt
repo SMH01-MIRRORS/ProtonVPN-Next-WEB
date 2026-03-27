@@ -100,6 +100,7 @@ class ProfilesViewModelTest {
         whenever(amneziaVpnManager.isConnecting).thenReturn(MutableStateFlow(false))
         
         whenever(settingsManager.customProfiles).thenReturn(flowOf(emptyList()))
+        whenever(settingsManager.serverLoadDisplayMode).thenReturn(flowOf(ServerLoadDisplayMode.ALL))
 
         viewModel = ProfilesViewModel(
             context, vpnRepository, sessionDao, amneziaVpnManager,
@@ -143,7 +144,7 @@ class ProfilesViewModelTest {
         val uiProfile = VpnProfileUiModel(id = "p_1", name = "My Profile", targetCountry = "US")
         viewModel.connectWithProfile(uiProfile)
         advanceUntilIdle()
-        verify(amneziaVpnManager).connect(eq("us_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull())
+        verify(amneziaVpnManager).connect(eq("us_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())
         
         collectJob.cancel()
     }

@@ -61,9 +61,9 @@ fun AboutAppScreen(
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
-    val githubUrl = "https://github.com/SMH01-MOD-NEXT/ProtonMOD-NEXT"
-    val codebergUrl = "https://codeberg.org/SMH01/ProtonVPN-Next"
-    val telegramUrl = "https://t.me/ProtonVPN_MOD"
+    val githubUrl = stringResource(R.string.url_github)
+    val codebergUrl = stringResource(R.string.url_codeberg)
+    val telegramUrl = stringResource(R.string.url_telegram)
 
     var showGitHub by remember { mutableStateOf(false) }
 
@@ -152,7 +152,7 @@ fun AboutAppScreen(
 
                         // Version
                         Text(
-                            text = "v$appVersion",
+                            text = stringResource(R.string.settings_version_short, appVersion),
                             style = MaterialTheme.typography.bodyMedium,
                             color = colors.textWeak
                         )
@@ -222,7 +222,7 @@ fun AboutAppScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "GitHub (${stringResource(R.string.about_unavailable)})",
+                                    text = stringResource(R.string.about_github_unavailable, stringResource(R.string.about_unavailable)),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = colors.textWeak
                                 )

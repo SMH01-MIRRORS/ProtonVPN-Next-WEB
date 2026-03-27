@@ -34,8 +34,11 @@ import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
+import ru.protonmod.next.data.local.ProfileDao
 import ru.protonmod.next.data.local.RecentConnectionDao
+import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.data.local.SessionDao
+import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.network.PhysicalServer
 import ru.protonmod.next.data.repository.VpnRepository
@@ -68,6 +71,12 @@ class DashboardViewModelTest {
     private lateinit var connectedServerState: ConnectedServerState
 
     @Mock
+    private lateinit var settingsManager: SettingsManager
+
+    @Mock
+    private lateinit var profileDao: ProfileDao
+
+    @Mock
     private lateinit var recentConnectionDao: RecentConnectionDao
 
     private lateinit var viewModel: DashboardViewModel
@@ -91,13 +100,20 @@ class DashboardViewModelTest {
         whenever(amneziaVpnManager.certState).thenReturn(MutableStateFlow(AmneziaVpnManager.CertificateState.Valid))
         whenever(connectedServerState.connectedServer).thenReturn(MutableStateFlow(null))
         whenever(recentConnectionDao.getRecentConnections()).thenReturn(flowOf(emptyList()))
+        whenever(profileDao.getAllProfilesFlow()).thenReturn(flowOf(emptyList()))
+        whenever(settingsManager.quickConnectStrategy).thenReturn(flowOf("fastest"))
+        whenever(settingsManager.quickConnectTargetId).thenReturn(flowOf(null))
+        whenever(settingsManager.serverLoadDisplayMode).thenReturn(flowOf(ServerLoadDisplayMode.ALL))
+        whenever(vpnRepository.isUpdating).thenReturn(MutableStateFlow(false))
 
         viewModel = DashboardViewModel(
             context,
             vpnRepository,
             sessionDao,
+            settingsManager,
             amneziaVpnManager,
             connectedServerState,
+            profileDao,
             recentConnectionDao
         )
     }
@@ -120,8 +136,8 @@ class DashboardViewModelTest {
         
         // Re-init viewModel to use the new tunnelState mock
         viewModel = DashboardViewModel(
-            context, vpnRepository, sessionDao, amneziaVpnManager,
-            connectedServerState, recentConnectionDao
+            context, vpnRepository, sessionDao, settingsManager, amneziaVpnManager,
+            connectedServerState, profileDao, recentConnectionDao
         )
 
         val collectJob = launch(UnconfinedTestDispatcher()) { viewModel.uiState.collect() }

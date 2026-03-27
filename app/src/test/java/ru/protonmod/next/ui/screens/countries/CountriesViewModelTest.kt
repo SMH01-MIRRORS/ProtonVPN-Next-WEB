@@ -33,8 +33,10 @@ import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.*
+import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SessionEntity
+import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.network.PhysicalServer
 import ru.protonmod.next.data.repository.VpnRepository
@@ -49,6 +51,9 @@ class CountriesViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     @Mock
+    private lateinit var context: android.content.Context
+
+    @Mock
     private lateinit var vpnRepository: VpnRepository
 
     @Mock
@@ -56,6 +61,9 @@ class CountriesViewModelTest {
 
     @Mock
     private lateinit var amneziaVpnManager: AmneziaVpnManager
+
+    @Mock
+    private lateinit var settingsManager: SettingsManager
 
     private lateinit var connectedServerState: ConnectedServerState
     private lateinit var viewModel: CountriesViewModel
@@ -84,6 +92,7 @@ class CountriesViewModelTest {
         connectedServerState = ConnectedServerState()
         
         whenever(vpnRepository.getServersFlow()).thenReturn(flowOf(testServers))
+        whenever(vpnRepository.isUpdating).thenReturn(MutableStateFlow(false))
         whenever(sessionDao.getSession()).thenReturn(
             SessionEntity(accessToken = "at", refreshToken = "rt", sessionId = "sid", userId = "uid")
         )
@@ -92,8 +101,9 @@ class CountriesViewModelTest {
         
         whenever(amneziaVpnManager.tunnelState).thenReturn(MutableStateFlow(org.amnezia.awg.backend.Tunnel.State.DOWN))
         whenever(amneziaVpnManager.isConnecting).thenReturn(MutableStateFlow(false))
+        whenever(settingsManager.serverLoadDisplayMode).thenReturn(flowOf(ServerLoadDisplayMode.ALL))
 
-        viewModel = CountriesViewModel(vpnRepository, sessionDao, amneziaVpnManager, connectedServerState)
+        viewModel = CountriesViewModel(context, vpnRepository, sessionDao, amneziaVpnManager, connectedServerState, settingsManager)
     }
 
     @Test
@@ -151,7 +161,7 @@ class CountriesViewModelTest {
         
         viewModel.selectCountry("US")
         advanceUntilIdle()
-        verify(amneziaVpnManager).connect(eq("us_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull())
+        verify(amneziaVpnManager).connect(eq("us_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())
         
         collectJob.cancel()
     }
@@ -163,7 +173,7 @@ class CountriesViewModelTest {
         
         viewModel.selectServer(testServers[2]) // DE-FREE-1
         advanceUntilIdle()
-        verify(amneziaVpnManager).connect(eq("de_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull())
+        verify(amneziaVpnManager).connect(eq("de_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())
         
         collectJob.cancel()
     }
