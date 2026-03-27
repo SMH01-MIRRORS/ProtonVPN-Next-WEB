@@ -18,6 +18,7 @@
 package ru.protonmod.next.data.local
 
 import android.content.Context
+import androidx.core.content.edit
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -39,6 +40,8 @@ private val Context.dataStore by preferencesDataStore(name = "settings")
 class SettingsManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
+    private val prefs = context.getSharedPreferences("boot_settings", Context.MODE_PRIVATE)
+
     companion object {
         private val KILL_SWITCH = booleanPreferencesKey("kill_switch")
         private val AUTO_CONNECT = booleanPreferencesKey("auto_connect")
@@ -134,6 +137,12 @@ class SettingsManager @Inject constructor(
 
     val analyticsEnabled: Flow<Boolean> = context.dataStore.data.map { it[ANALYTICS_ENABLED] ?: true }
     val crashReportsEnabled: Flow<Boolean> = context.dataStore.data.map { it[CRASH_REPORTS_ENABLED] ?: true }
+
+    /** Synchronous check for app startup initializers to avoid ANR from runBlocking */
+    fun isAnalyticsEnabledSync(): Boolean = prefs.getBoolean("analytics_enabled", true)
+    
+    /** Synchronous check for app startup initializers to avoid ANR from runBlocking */
+    fun isCrashReportsEnabledSync(): Boolean = prefs.getBoolean("crash_reports_enabled", true)
 
     val quickConnectStrategy: Flow<String> = context.dataStore.data.map { it[QUICK_CONNECT_STRATEGY] ?: "fastest" }
     val quickConnectTargetId: Flow<String?> = context.dataStore.data.map { it[QUICK_CONNECT_TARGET_ID] }
@@ -263,10 +272,12 @@ class SettingsManager @Inject constructor(
     }
 
     suspend fun setAnalyticsEnabled(enabled: Boolean) {
+        prefs.edit { putBoolean("analytics_enabled", enabled) }
         context.dataStore.edit { it[ANALYTICS_ENABLED] = enabled }
     }
 
     suspend fun setCrashReportsEnabled(enabled: Boolean) {
+        prefs.edit { putBoolean("crash_reports_enabled", enabled) }
         context.dataStore.edit { it[CRASH_REPORTS_ENABLED] = enabled }
     }
 

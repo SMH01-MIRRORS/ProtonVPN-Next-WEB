@@ -497,34 +497,41 @@ class MapView(context: Context) : View(context) {
             // During zoom, draw the vector picture for infinite quality
             canvas.save()
             canvas.concat(currentMatrix)
-            canvas.drawPicture(mapPicture!!)
+            mapPicture?.let { canvas.drawPicture(it) }
             canvas.restore()
             // Invalidate cache since zoom changed
             mapCacheBitmap = null
         } else {
             // Static zoom level - use cached bitmap for high performance (60fps pulse)
-            if (mapCacheBitmap == null || mapCacheBitmap?.width != width || mapCacheBitmap?.height != height) {
+            if (width > 0 && height > 0 && (mapCacheBitmap == null || mapCacheBitmap?.width != width || mapCacheBitmap?.height != height)) {
                 mapCacheBitmap?.recycle()
+                mapCacheBitmap = null
                 try {
-                    mapCacheBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                    mapCacheBitmap?.let {
-                        cacheCanvas.setBitmap(it)
-                        cacheCanvas.drawColor(android.graphics.Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+                    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                    mapCacheBitmap = bitmap
+                    cacheCanvas.setBitmap(bitmap)
+                    cacheCanvas.drawColor(android.graphics.Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+                    mapPicture?.let {
                         cacheCanvas.save()
                         cacheCanvas.concat(currentMatrix)
-                        cacheCanvas.drawPicture(mapPicture!!)
+                        cacheCanvas.drawPicture(it)
                         cacheCanvas.restore()
                     }
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    ProtonLogger.e("HomeMap", "Failed to create/prepare cache bitmap", e)
                     // Fallback to Picture if bitmap creation fails (OOM or zero size)
                     canvas.save()
                     canvas.concat(currentMatrix)
-                    canvas.drawPicture(mapPicture!!)
+                    mapPicture?.let { canvas.drawPicture(it) }
                     canvas.restore()
                     return
                 }
             }
-            mapCacheBitmap?.let { canvas.drawBitmap(it, 0f, 0f, null) }
+            mapCacheBitmap?.let { 
+                if (!it.isRecycled) {
+                    canvas.drawBitmap(it, 0f, 0f, null)
+                }
+            }
         }
 
         // 2. Draw animated active server pin (drawn over map to prevent zoom distortion)

@@ -19,8 +19,6 @@ package ru.protonmod.next
 
 import android.content.Context
 import io.sentry.android.core.SentryAndroid
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import ru.protonmod.next.data.local.SettingsManager
 
 /**
@@ -30,9 +28,9 @@ import ru.protonmod.next.data.local.SettingsManager
  */
 object FlavorInitializer {
     fun initialize(context: Context) {
-        // Read settings synchronously for app startup
+        // Read settings synchronously for app startup to avoid ANR
         val settingsManager = SettingsManager(context)
-        val isAnalyticsEnabled = runBlocking { settingsManager.analyticsEnabled.first() }
+        val isAnalyticsEnabled = settingsManager.isAnalyticsEnabledSync()
 
         // Sentry initialization
         SentryAndroid.init(context) { options ->
@@ -40,7 +38,7 @@ object FlavorInitializer {
             
             // Allow all errors if crash reporting is enabled
             options.setBeforeSend { event, _ ->
-                val currentCrashEnabled = runBlocking { settingsManager.crashReportsEnabled.first() }
+                val currentCrashEnabled = settingsManager.isCrashReportsEnabledSync()
                 if (!currentCrashEnabled) null else event
             }
 
