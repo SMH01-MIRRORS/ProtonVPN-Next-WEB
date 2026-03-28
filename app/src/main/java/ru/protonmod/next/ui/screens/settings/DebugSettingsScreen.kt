@@ -42,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
@@ -72,7 +73,7 @@ fun DebugSettingsScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             // Background gradient decoration (immersive)
             Box(
                 modifier = Modifier
@@ -88,54 +89,41 @@ fun DebugSettingsScreen(
                     )
             )
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Header
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = stringResource(R.string.desc_back_button),
-                            tint = colors.textNorm
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.debug_title),
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = colors.textNorm
+                item {
+                    NavigationHeader(
+                        title = stringResource(R.string.debug_title),
+                        onBack = onBack
                     )
                 }
 
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Session & Certificate Info
-                    item {
+                // Session & Certificate Info
+                item {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         DebugSection(title = stringResource(R.string.debug_session_header)) {
                             uiState.session?.let { session ->
                                 DebugInfoRow("User ID", session.userId)
-                                DebugInfoRow("Tier", when(session.userTier) {
+                                DebugInfoRow("Tier", when (session.userTier) {
                                     1 -> "Basic"
                                     2 -> "Plus"
                                     else -> "Free"
                                 })
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = colors.separatorNorm.copy(alpha = 0.3f))
-                                
-                                val idLabel = stringResource(R.string.debug_cert_id, "").trim().removeSuffix(":").trim()
-                                val issuedLabel = stringResource(R.string.debug_cert_issued, "").trim().removeSuffix(":").trim()
-                                val expiresLabel = stringResource(R.string.debug_cert_expires, "").trim().removeSuffix(":").trim()
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    color = colors.separatorNorm.copy(alpha = 0.3f)
+                                )
+
+                                val idLabel =
+                                    stringResource(R.string.debug_cert_id, "").trim().removeSuffix(":")
+                                        .trim()
+                                val issuedLabel = stringResource(R.string.debug_cert_issued, "").trim()
+                                    .removeSuffix(":").trim()
+                                val expiresLabel = stringResource(R.string.debug_cert_expires, "").trim()
+                                    .removeSuffix(":").trim()
 
                                 DebugInfoRow(idLabel, session.sessionId)
                                 uiState.certIssued?.let { DebugInfoRow(issuedLabel, it) }
@@ -152,12 +140,18 @@ fun DebugSettingsScreen(
                                     Spacer(Modifier.width(8.dp))
                                     Text(stringResource(R.string.debug_btn_refresh_cert))
                                 }
-                            } ?: Text("No active session", color = colors.textWeak, modifier = Modifier.padding(16.dp))
+                            } ?: Text(
+                                "No active session",
+                                color = colors.textWeak,
+                                modifier = Modifier.padding(16.dp)
+                            )
                         }
                     }
+                }
 
-                    // Exports
-                    item {
+                // Exports
+                item {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         DebugSection(title = stringResource(R.string.debug_exports_header)) {
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 DebugActionRow(
@@ -173,9 +167,11 @@ fun DebugSettingsScreen(
                             }
                         }
                     }
+                }
 
-                    // Device Info
-                    item {
+                // Device Info
+                item {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         DebugSection(title = stringResource(R.string.debug_device_header)) {
                             Text(
                                 text = viewModel.getDeviceInfo(),
@@ -185,10 +181,15 @@ fun DebugSettingsScreen(
                             )
                         }
                     }
+                }
 
-                    // Sentry Tests
-                    item {
-                        DebugSection(title = stringResource(R.string.debug_sentry_header), titleColor = Color.Magenta) {
+                // Sentry Tests
+                item {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        DebugSection(
+                            title = stringResource(R.string.debug_sentry_header),
+                            titleColor = Color.Magenta
+                        ) {
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 DebugActionRow(
                                     icon = Icons.Rounded.BugReport,
@@ -238,9 +239,11 @@ fun DebugSettingsScreen(
                             }
                         }
                     }
+                }
 
-                    // Danger Zone
-                    item {
+                // Danger Zone
+                item {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         DebugSection(
                             title = stringResource(R.string.debug_danger_header),
                             titleColor = colors.notificationError

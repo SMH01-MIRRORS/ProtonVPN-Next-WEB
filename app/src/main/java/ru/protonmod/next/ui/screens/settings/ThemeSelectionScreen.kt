@@ -45,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.ui.theme.LocalColors
 import ru.protonmod.next.ui.theme.ProtonColors
@@ -61,37 +62,35 @@ fun ThemeSelectionScreen(
     val colors = ProtonNextTheme.colors
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.settings_app_theme)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colors.backgroundNorm,
-                    titleContentColor = colors.textNorm,
-                    navigationIconContentColor = colors.iconNorm
-                )
-            )
-        },
-        containerColor = colors.backgroundNorm
+        modifier = Modifier.fillMaxSize(),
+        containerColor = colors.backgroundNorm,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { padding ->
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(bottom = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
+                NavigationHeader(
+                    title = stringResource(R.string.settings_app_theme),
+                    onBack = onBack
+                )
+            }
+
             items(AppTheme.entries) { theme ->
                 ThemePreviewCard(
                     theme = theme,
                     isSelected = uiState.appTheme == theme,
-                    onClick = { viewModel.setAppTheme(theme) }
+                    onClick = { viewModel.setAppTheme(theme) },
+                    modifier = Modifier.padding(
+                        start = if (AppTheme.entries.indexOf(theme) % 2 == 0) 16.dp else 0.dp,
+                        end = if (AppTheme.entries.indexOf(theme) % 2 == 1) 16.dp else 0.dp
+                    )
                 )
             }
         }
@@ -102,7 +101,8 @@ fun ThemeSelectionScreen(
 fun ThemePreviewCard(
     theme: AppTheme,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     val themeName = when (theme) {
@@ -121,7 +121,7 @@ fun ThemePreviewCard(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally

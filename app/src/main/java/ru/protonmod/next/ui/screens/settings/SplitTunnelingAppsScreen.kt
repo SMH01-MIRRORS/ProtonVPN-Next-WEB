@@ -26,7 +26,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
@@ -45,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,125 +81,115 @@ fun SplitTunnelingAppsScreen(
                     )
             )
 
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .windowInsetsPadding(WindowInsets.statusBars)
             ) {
-                TopAppBar(
-                    title = {
-                        Text(
-                            stringResource(
-                                if (uiState.splitTunnelingMode == "exclude") R.string.settings_excluded_apps
-                                else R.string.settings_included_apps
-                            ),
-                            fontWeight = FontWeight.Bold,
-                            color = colors.textNorm
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.desc_back_button),
-                                tint = colors.textNorm
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                        scrolledContainerColor = Color.Transparent
-                    )
-                )
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp)
-                ) {
-                    // Search Bar
-                    TextField(
-                        value = uiState.searchQuery,
-                        onValueChange = viewModel::setSearchQuery,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp, bottom = 16.dp)
-                            .clip(RoundedCornerShape(12.dp)),
-                        placeholder = {
-                            Text(
-                                stringResource(R.string.st_search_apps_hint),
-                                color = colors.textWeak
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Default.Search,
-                                contentDescription = null,
-                                tint = colors.iconWeak
-                            )
-                        },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = colors.backgroundSecondary.copy(alpha = 0.7f),
-                            unfocusedContainerColor = colors.backgroundSecondary.copy(alpha = 0.7f),
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            focusedTextColor = colors.textNorm,
-                            unfocusedTextColor = colors.textNorm
+                item {
+                    NavigationHeader(
+                        title = stringResource(
+                            if (uiState.splitTunnelingMode == "exclude") R.string.settings_excluded_apps
+                            else R.string.settings_included_apps
                         ),
-                        singleLine = true
+                        onBack = onBack
                     )
+                }
 
-                    if (uiState.isLoading) {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        // Search Bar
+                        TextField(
+                            value = uiState.searchQuery,
+                            onValueChange = viewModel::setSearchQuery,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp, bottom = 16.dp)
+                                .clip(RoundedCornerShape(12.dp)),
+                            placeholder = {
+                                Text(
+                                    stringResource(R.string.st_search_apps_hint),
+                                    color = colors.textWeak
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Search,
+                                    contentDescription = null,
+                                    tint = colors.iconWeak
+                                )
+                            },
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = colors.backgroundSecondary.copy(alpha = 0.7f),
+                                unfocusedContainerColor = colors.backgroundSecondary.copy(alpha = 0.7f),
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                focusedTextColor = colors.textNorm,
+                                unfocusedTextColor = colors.textNorm
+                            ),
+                            singleLine = true
+                        )
+                    }
+                }
+
+                if (uiState.isLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
                             CircularProgressIndicator(color = colors.brandNorm)
                         }
-                    } else {
-                        Card(
-                            modifier = Modifier.fillMaxSize(),
-                            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = colors.backgroundSecondary.copy(alpha = 0.5f)
+                    }
+                } else {
+                    // Selected Apps Section
+                    if (uiState.selectedApps.isNotEmpty()) {
+                        item {
+                            SectionHeader(
+                                stringResource(
+                                    R.string.st_selected_apps_header,
+                                    uiState.selectedApps.size
+                                )
                             )
-                        ) {
-                            LazyColumn(
-                                modifier = Modifier.fillMaxSize(),
-                                contentPadding = PaddingValues(vertical = 8.dp)
-                            ) {
-
-                                // Selected Apps Section
-                                if (uiState.selectedApps.isNotEmpty()) {
-                                    item {
-                                        SectionHeader(stringResource(R.string.st_selected_apps_header, uiState.selectedApps.size))
-                                    }
-                                    items(uiState.selectedApps, key = { it.packageName }) { app ->
-                                        AppListItem(
-                                            app = app,
-                                            isAdded = true,
-                                            onClick = { viewModel.toggleApp(app.packageName, false) }
-                                        )
-                                    }
-                                }
-
-                                // Available Apps Section
-                                if (uiState.availableApps.isNotEmpty()) {
-                                    item {
-                                        SectionHeader(stringResource(R.string.st_available_apps_header, uiState.availableApps.size))
-                                    }
-                                    items(uiState.availableApps, key = { it.packageName }) { app ->
-                                        AppListItem(
-                                            app = app,
-                                            isAdded = false,
-                                            onClick = { viewModel.toggleApp(app.packageName, true) }
-                                        )
-                                    }
-                                }
-
-                                // Bottom Spacer
-                                item {
-                                    Spacer(modifier = Modifier.height(24.dp))
-                                }
-                            }
                         }
+                        items(uiState.selectedApps, key = { it.packageName }) { app ->
+                            AppListItem(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                app = app,
+                                isAdded = true,
+                                onClick = { viewModel.toggleApp(app.packageName, false) }
+                            )
+                        }
+                    }
+
+                    // Available Apps Section
+                    if (uiState.availableApps.isNotEmpty()) {
+                        item {
+                            SectionHeader(
+                                stringResource(
+                                    R.string.st_available_apps_header,
+                                    uiState.availableApps.size
+                                )
+                            )
+                        }
+                        items(uiState.availableApps, key = { it.packageName }) { app ->
+                            AppListItem(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                app = app,
+                                isAdded = false,
+                                onClick = { viewModel.toggleApp(app.packageName, true) }
+                            )
+                        }
+                    }
+
+                    // Bottom Spacer
+                    item {
+                        Spacer(modifier = Modifier.height(24.dp))
                     }
                 }
             }
@@ -222,13 +212,14 @@ private fun SectionHeader(text: String) {
 
 @Composable
 fun AppListItem(
+    modifier: Modifier = Modifier,
     app: AppInfo,
     isAdded: Boolean,
     onClick: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(vertical = 12.dp, horizontal = 16.dp),

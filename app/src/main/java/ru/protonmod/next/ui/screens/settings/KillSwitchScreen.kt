@@ -25,7 +25,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.GppMaybe
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -40,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,33 +51,14 @@ fun KillSwitchScreen(
     val context = LocalContext.current
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.kill_switch_title),
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = Color.Transparent,
-                    titleContentColor = colors.textNorm,
-                    navigationIconContentColor = colors.textNorm
-                )
-            )
-        },
-        containerColor = colors.backgroundNorm
+        modifier = Modifier.fillMaxSize(),
+        containerColor = colors.backgroundNorm,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize().padding(paddingValues)
         ) {
-            // Background gradient decoration - ignore paddingValues to start from top
+            // Background gradient decoration
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -95,11 +76,17 @@ fun KillSwitchScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp, vertical = 8.dp),
+                    .padding(bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                NavigationHeader(
+                    title = stringResource(R.string.kill_switch_title),
+                    onBack = onBack
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
                 Box(
                     modifier = Modifier
                         .size(80.dp)
@@ -121,7 +108,8 @@ fun KillSwitchScreen(
                     text = stringResource(R.string.kill_switch_subtitle),
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                     color = colors.textNorm,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 24.dp)
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -130,12 +118,14 @@ fun KillSwitchScreen(
                     text = stringResource(R.string.kill_switch_desc),
                     style = MaterialTheme.typography.bodyLarge,
                     color = colors.textWeak,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 24.dp)
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
 
                 InstructionCard(
+                    modifier = Modifier.padding(horizontal = 24.dp),
                     steps = listOf(
                         stringResource(R.string.kill_switch_step_1),
                         stringResource(R.string.kill_switch_step_2),
@@ -153,6 +143,7 @@ fun KillSwitchScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
                         .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -171,14 +162,17 @@ fun KillSwitchScreen(
 }
 
 @Composable
-private fun InstructionCard(steps: List<String>) {
+private fun InstructionCard(
+    modifier: Modifier = Modifier,
+    steps: List<String>
+) {
     val colors = ProtonNextTheme.colors
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
             containerColor = colors.backgroundSecondary.copy(alpha = 0.6f)
         ),
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier.padding(20.dp),

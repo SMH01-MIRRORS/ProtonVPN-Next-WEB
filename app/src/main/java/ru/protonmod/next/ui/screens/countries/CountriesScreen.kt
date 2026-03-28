@@ -59,6 +59,8 @@ import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.LoadIndicator
 import ru.protonmod.next.ui.components.LoadProgressBar
+import ru.protonmod.next.ui.components.MainHeader
+import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.CountryUtils
@@ -244,14 +246,7 @@ fun CountriesListContent(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                Text(
-                    text = stringResource(R.string.countries_title),
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                    color = colors.textNorm,
-                    modifier = Modifier
-                        .statusBarsPadding()
-                        .padding(horizontal = 8.dp, vertical = 24.dp)
-                )
+                MainHeader(title = stringResource(R.string.countries_title))
             }
 
             items(countries) { country ->
@@ -276,14 +271,7 @@ fun CountriesListContent(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                Text(
-                    text = stringResource(R.string.countries_title),
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                    color = colors.textNorm,
-                    modifier = Modifier
-                        .statusBarsPadding()
-                        .padding(horizontal = 8.dp, vertical = 24.dp)
-                )
+                MainHeader(title = stringResource(R.string.countries_title))
             }
 
             items(countries) { country ->
@@ -411,8 +399,6 @@ fun CitiesListContent(
     onCityClick: (CityDisplayItem) -> Unit,
     onCityMore: (CityDisplayItem) -> Unit
 ) {
-    val colors = ProtonNextTheme.colors
-
     if (isTablet) {
         val configuration = LocalConfiguration.current
         val columns = (configuration.screenWidthDp / 300).coerceAtLeast(2)
@@ -425,7 +411,7 @@ fun CitiesListContent(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                NavigationHeader(title = countryName, onBack = onBack, colors = colors)
+                NavigationHeader(title = countryName, onBack = onBack)
             }
 
             items(cities) { city ->
@@ -450,7 +436,7 @@ fun CitiesListContent(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                NavigationHeader(title = countryName, onBack = onBack, colors = colors)
+                NavigationHeader(title = countryName, onBack = onBack)
             }
 
             items(cities) { city ->
@@ -582,7 +568,7 @@ fun ServersListContent(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                NavigationHeader(title = "$countryName, $cityName", onBack = onBack, colors = colors)
+                NavigationHeader(title = "$countryName, $cityName", onBack = onBack)
             }
 
             items(servers) { server ->
@@ -606,7 +592,7 @@ fun ServersListContent(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                NavigationHeader(title = "$countryName, $cityName", onBack = onBack, colors = colors)
+                NavigationHeader(title = "$countryName, $cityName", onBack = onBack)
             }
 
             items(servers) { server ->
@@ -618,35 +604,6 @@ fun ServersListContent(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun NavigationHeader(
-    title: String,
-    onBack: () -> Unit,
-    colors: ru.protonmod.next.ui.theme.ProtonColors
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(horizontal = 8.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(onClick = onBack) {
-            Icon(
-                Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = stringResource(R.string.desc_back_button),
-                tint = colors.textNorm
-            )
-        }
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-            color = colors.textNorm
-        )
     }
 }
 

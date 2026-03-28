@@ -30,7 +30,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.rounded.CloudSync
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Public
@@ -50,6 +49,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
@@ -77,32 +77,10 @@ fun ApiBypassScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.settings_api_bypass), // e.g., "API Block Bypass"
-                        fontWeight = FontWeight.Bold,
-                        color = colors.textNorm
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.desc_back_button),
-                            tint = colors.textNorm
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
-            )
-        },
-        containerColor = colors.backgroundNorm
+        containerColor = colors.backgroundNorm,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             // Background gradient matching the unified design language
             Box(
                 modifier = Modifier
@@ -121,11 +99,15 @@ fun ApiBypassScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp),
+                    .padding(bottom = 16.dp),
                 horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start
             ) {
+                NavigationHeader(
+                    title = stringResource(R.string.settings_api_bypass),
+                    onBack = onBack
+                )
+
                 val contentModifier = if (isTablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
 
                 // Header Image/Icon
@@ -156,7 +138,7 @@ fun ApiBypassScreen(
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                     color = colors.textNorm,
                     textAlign = TextAlign.Center,
-                    modifier = contentModifier
+                    modifier = contentModifier.padding(horizontal = 16.dp)
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -168,7 +150,7 @@ fun ApiBypassScreen(
                     color = colors.textWeak,
                     textAlign = TextAlign.Center,
                     modifier = contentModifier
-                        .padding(horizontal = 16.dp)
+                        .padding(horizontal = 32.dp)
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -178,7 +160,7 @@ fun ApiBypassScreen(
                     visible = isAnyVpnActive,
                     enter = fadeIn() + expandVertically(),
                     exit = fadeOut() + shrinkVertically(),
-                    modifier = contentModifier
+                    modifier = contentModifier.padding(horizontal = 16.dp)
                 ) {
                     Surface(
                         modifier = Modifier
@@ -212,6 +194,7 @@ fun ApiBypassScreen(
                 // Main Settings Card
                 Box(
                     modifier = contentModifier
+                        .padding(horizontal = 16.dp)
                         .liquidGlass(shape = RoundedCornerShape(16.dp), alpha = 0.4f, shadowElevation = 0.dp)
                 ) {
                     Column(modifier = Modifier.padding(vertical = 4.dp)) {

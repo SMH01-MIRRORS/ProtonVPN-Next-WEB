@@ -52,6 +52,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.FlagIcon
+import ru.protonmod.next.ui.components.MainHeader
+import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
@@ -148,11 +150,12 @@ fun ProfilesScreen(
             ) {
                 if (profiles.isEmpty()) {
                     // Header for empty state
-                    ProfilesHeader(
-                        isTablet = isTablet,
-                        onCreateNewProfile = onCreateNewProfile,
-                        colors = colors
-                    )
+                    Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        ProfilesHeader(
+                            isTablet = isTablet,
+                            onCreateNewProfile = onCreateNewProfile
+                        )
+                    }
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -170,8 +173,7 @@ fun ProfilesScreen(
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             ProfilesHeader(
                                 isTablet = true,
-                                onCreateNewProfile = onCreateNewProfile,
-                                colors = colors
+                                onCreateNewProfile = onCreateNewProfile
                             )
                         }
 
@@ -201,8 +203,7 @@ fun ProfilesScreen(
                         item {
                             ProfilesHeader(
                                 isTablet = false,
-                                onCreateNewProfile = onCreateNewProfile,
-                                colors = colors
+                                onCreateNewProfile = onCreateNewProfile
                             )
                         }
 
@@ -228,28 +229,28 @@ fun ProfilesScreen(
 @Composable
 private fun ProfilesHeader(
     isTablet: Boolean,
-    onCreateNewProfile: () -> Unit,
-    colors: ru.protonmod.next.ui.theme.ProtonColors
+    onCreateNewProfile: () -> Unit
 ) {
+    val colors = ProtonNextTheme.colors
     Row(
         modifier = Modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(horizontal = 24.dp, vertical = 24.dp),
+            .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = stringResource(R.string.profiles_title),
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-            color = colors.textNorm
+        MainHeader(
+            title = stringResource(R.string.profiles_title),
+            modifier = Modifier.weight(1f)
         )
 
         if (isTablet) {
             Button(
                 onClick = onCreateNewProfile,
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
+                colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(end = 16.dp)
             ) {
                 Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(8.dp))

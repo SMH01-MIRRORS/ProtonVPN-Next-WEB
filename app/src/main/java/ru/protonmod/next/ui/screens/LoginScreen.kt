@@ -26,7 +26,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -44,6 +43,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.components.MainHeader
+import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.isTablet
 
@@ -90,22 +91,9 @@ fun LoginScreen(
 
             is LoginUiState.Requires2FA -> {
                 Scaffold(
-                    topBar = {
-                        TopAppBar(
-                            title = {},
-                            navigationIcon = {
-                                IconButton(onClick = onBackClick) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = stringResource(R.string.desc_back_button),
-                                        tint = colors.textNorm
-                                    )
-                                }
-                            },
-                            colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.backgroundNorm)
-                        )
-                    },
-                    containerColor = colors.backgroundNorm
+                    modifier = Modifier.fillMaxSize(),
+                    containerColor = colors.backgroundNorm,
+                    contentWindowInsets = WindowInsets(0, 0, 0, 0)
                 ) { padding ->
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(
@@ -114,9 +102,13 @@ fun LoginScreen(
                                 .padding(padding)
                                 .widthIn(max = 480.dp)
                                 .verticalScroll(rememberScrollState())
-                                .padding(horizontal = 24.dp, vertical = 16.dp),
+                                .padding(bottom = 16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
+                            NavigationHeader(title = "", onBack = onBackClick)
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+
                             Icon(
                                 imageVector = Icons.Default.Shield,
                                 contentDescription = null,
@@ -203,22 +195,9 @@ fun LoginScreen(
 
             else -> {
                 Scaffold(
-                    topBar = {
-                        TopAppBar(
-                            title = {},
-                            navigationIcon = {
-                                IconButton(onClick = onBackClick) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = stringResource(R.string.desc_back_button),
-                                        tint = colors.textNorm
-                                    )
-                                }
-                            },
-                            colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.backgroundNorm)
-                        )
-                    },
-                    containerColor = colors.backgroundNorm
+                    modifier = Modifier.fillMaxSize(),
+                    containerColor = colors.backgroundNorm,
+                    contentWindowInsets = WindowInsets(0, 0, 0, 0)
                 ) { padding ->
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(
@@ -227,9 +206,13 @@ fun LoginScreen(
                                 .padding(padding)
                                 .widthIn(max = 480.dp)
                                 .verticalScroll(rememberScrollState())
-                                .padding(horizontal = 24.dp, vertical = 16.dp),
+                                .padding(bottom = 16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
+                            NavigationHeader(title = "", onBack = onBackClick)
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+
                             // Logo representation
                             Icon(
                                 imageVector = Icons.Default.Shield,
@@ -240,11 +223,10 @@ fun LoginScreen(
 
                             Text(
                                 text = stringResource(R.string.login_title),
-                                style = MaterialTheme.typography.headlineMedium,
+                                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                                 color = colors.textNorm,
-                                fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(top = 24.dp)
+                                modifier = Modifier.padding(top = 24.dp, start = 24.dp, end = 24.dp)
                             )
 
                             Text(
@@ -252,101 +234,105 @@ fun LoginScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = colors.textWeak,
                                 textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(top = 8.dp)
+                                modifier = Modifier.padding(top = 8.dp, start = 24.dp, end = 24.dp)
                             )
 
                             Spacer(modifier = Modifier.height(32.dp))
 
-                            OutlinedTextField(
-                                value = username,
-                                onValueChange = { username = it },
-                                label = { Text(stringResource(R.string.hint_username)) },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = colors.brandNorm,
-                                    unfocusedBorderColor = colors.shade20,
-                                    focusedTextColor = colors.textNorm,
-                                    unfocusedTextColor = colors.textNorm
-                                ),
-                                singleLine = true
-                            )
+                            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                                OutlinedTextField(
+                                    value = username,
+                                    onValueChange = { username = it },
+                                    label = { Text(stringResource(R.string.hint_username)) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp),
+                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = colors.brandNorm,
+                                        unfocusedBorderColor = colors.shade20,
+                                        focusedTextColor = colors.textNorm,
+                                        unfocusedTextColor = colors.textNorm
+                                    ),
+                                    singleLine = true
+                                )
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                                Spacer(modifier = Modifier.height(16.dp))
 
-                            OutlinedTextField(
-                                value = password,
-                                onValueChange = { password = it },
-                                label = { Text(stringResource(R.string.hint_password)) },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Password,
-                                    imeAction = ImeAction.Done
-                                ),
-                                keyboardActions = KeyboardActions(
-                                    onDone = {
-                                        if (username.isNotBlank() && password.isNotBlank()) {
-                                            viewModel.login(username, password)
+                                OutlinedTextField(
+                                    value = password,
+                                    onValueChange = { password = it },
+                                    label = { Text(stringResource(R.string.hint_password)) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp),
+                                    keyboardOptions = KeyboardOptions(
+                                        keyboardType = KeyboardType.Password,
+                                        imeAction = ImeAction.Done
+                                    ),
+                                    keyboardActions = KeyboardActions(
+                                        onDone = {
+                                            if (username.isNotBlank() && password.isNotBlank()) {
+                                                viewModel.login(username, password)
+                                            }
                                         }
-                                    }
-                                ),
-                                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                                trailingIcon = {
-                                    val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                        Icon(imageVector = image, contentDescription = stringResource(R.string.desc_toggle_password), tint = colors.iconWeak)
-                                    }
-                                },
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = colors.brandNorm,
-                                    unfocusedBorderColor = colors.shade20,
-                                    focusedTextColor = colors.textNorm,
-                                    unfocusedTextColor = colors.textNorm
-                                ),
-                                singleLine = true
-                            )
+                                    ),
+                                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                                    trailingIcon = {
+                                        val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                            Icon(imageVector = image, contentDescription = stringResource(R.string.desc_toggle_password), tint = colors.iconWeak)
+                                        }
+                                    },
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = colors.brandNorm,
+                                        unfocusedBorderColor = colors.shade20,
+                                        focusedTextColor = colors.textNorm,
+                                        unfocusedTextColor = colors.textNorm
+                                    ),
+                                    singleLine = true
+                                )
 
-                            Spacer(modifier = Modifier.height(24.dp))
+                                Spacer(modifier = Modifier.height(24.dp))
 
-                            Button(
-                                onClick = { viewModel.login(username, password) },
-                                modifier = Modifier.fillMaxWidth().height(56.dp),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
-                                enabled = uiState !is LoginUiState.Loading && username.isNotBlank() && password.isNotBlank()
-                            ) {
-                                if (uiState is LoginUiState.Loading) {
-                                    CircularProgressIndicator(color = colors.textInverted, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-                                } else {
-                                    Text(stringResource(R.string.btn_login), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
+                                Button(
+                                    onClick = { viewModel.login(username, password) },
+                                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
+                                    enabled = uiState !is LoginUiState.Loading && username.isNotBlank() && password.isNotBlank()
+                                ) {
+                                    if (uiState is LoginUiState.Loading) {
+                                        CircularProgressIndicator(color = colors.textInverted, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                                    } else {
+                                        Text(stringResource(R.string.btn_login), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
+                                    }
                                 }
-                            }
 
-                            if (uiState is LoginUiState.Error) {
-                                Text(
-                                    text = (uiState as LoginUiState.Error).message,
-                                    color = colors.notificationError,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(top = 16.dp)
-                                )
-                            }
+                                if (uiState is LoginUiState.Error) {
+                                    Text(
+                                        text = (uiState as LoginUiState.Error).message,
+                                        color = colors.notificationError,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(top = 16.dp).fillMaxWidth()
+                                    )
+                                }
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                                Spacer(modifier = Modifier.height(16.dp))
 
-                            // Forgot password textual button mapped from ProtonTextButton
-                            TextButton(
-                                onClick = { /* TODO: Forgot Password flow */ },
-                                modifier = Modifier.height(48.dp),
-                                enabled = uiState !is LoginUiState.Loading
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.forgot_password),
-                                    color = colors.textAccent,
-                                    fontWeight = FontWeight.Medium
-                                )
+                                // Forgot password textual button mapped from ProtonTextButton
+                                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                    TextButton(
+                                        onClick = { /* TODO: Forgot Password flow */ },
+                                        modifier = Modifier.height(48.dp),
+                                        enabled = uiState !is LoginUiState.Loading
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.forgot_password),
+                                            color = colors.textAccent,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

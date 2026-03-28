@@ -40,6 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.LoadIndicator
@@ -58,35 +59,30 @@ fun ServerLoadDisplayModeScreen(
     val colors = ProtonNextTheme.colors
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.settings_load_display_mode)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.desc_back))
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colors.backgroundNorm,
-                    titleContentColor = colors.textNorm,
-                    navigationIconContentColor = colors.iconNorm
-                )
-            )
-        },
-        containerColor = colors.backgroundNorm
+        modifier = Modifier.fillMaxSize(),
+        containerColor = colors.backgroundNorm,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            item {
+                NavigationHeader(
+                    title = stringResource(R.string.settings_load_display_mode),
+                    onBack = onBack
+                )
+            }
+
             items(ServerLoadDisplayMode.entries) { mode ->
                 LoadModePreviewCard(
                     mode = mode,
                     isSelected = uiState.serverLoadDisplayMode == mode,
-                    onClick = { viewModel.setServerLoadDisplayMode(mode) }
+                    onClick = { viewModel.setServerLoadDisplayMode(mode) },
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
         }
@@ -97,7 +93,8 @@ fun ServerLoadDisplayModeScreen(
 fun LoadModePreviewCard(
     mode: ServerLoadDisplayMode,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     val modeName = when (mode) {
@@ -108,7 +105,7 @@ fun LoadModePreviewCard(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally

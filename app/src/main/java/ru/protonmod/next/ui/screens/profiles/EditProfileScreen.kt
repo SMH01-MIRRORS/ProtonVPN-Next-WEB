@@ -63,6 +63,8 @@ import ru.protonmod.next.ui.components.LoadIndicator
 import ru.protonmod.next.ui.components.LoadProgressBar
 import ru.protonmod.next.ui.screens.countries.CityDisplayItem
 import ru.protonmod.next.ui.screens.countries.CountryDisplayItem
+import ru.protonmod.next.ui.components.MainHeader
+import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.CountryUtils
@@ -174,71 +176,63 @@ fun EditProfileScreen(
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Color.Transparent,
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
-            topBar = {
-                TopAppBar(
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = colors.textNorm
-                    ),
-                    title = { Text(if (profileId == null) stringResource(R.string.title_create_profile) else stringResource(R.string.title_edit_profile), fontWeight = FontWeight.Bold) },
-                    navigationIcon = {
-                        IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.desc_back), tint = colors.textNorm)
-                        }
-                    },
-                    windowInsets = WindowInsets.statusBars,
-                    actions = {
-                        Button(
-                            onClick = {
-                                if (profileName.isBlank()) {
-                                    Toast.makeText(context, R.string.error_empty_profile_name, Toast.LENGTH_SHORT).show()
-                                    return@Button
-                                }
-
-                                var validatedUrl = autoOpenUrl.trim()
-                                if (validatedUrl.isNotBlank() && !validatedUrl.contains("://")) {
-                                    validatedUrl = "https://$validatedUrl"
-                                }
-
-                                val newProfile = VpnProfileUiModel(
-                                    id = profileId ?: UUID.randomUUID().toString(),
-                                    name = profileName,
-                                    targetCountry = targetCountry,
-                                    targetCity = targetCity,
-                                    targetServerId = targetServerId,
-                                    targetServerName = targetServerName,
-                                    protocol = selectedProtocol,
-                                    port = selectedPort,
-                                    autoOpenUrl = validatedUrl,
-                                    isObfuscationEnabled = obfuscationEnabled,
-                                    obfuscationProfileId = if (obfuscationEnabled) obfuscationProfileId else null
-                                )
-                                viewModel.saveProfile(newProfile)
-                                onNavigateBack()
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.padding(end = 8.dp)
-                        ) {
-                            Text(stringResource(R.string.btn_save), color = Color.White, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                )
-            }
+            contentWindowInsets = WindowInsets(0, 0, 0, 0)
         ) { padding ->
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
                 horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start,
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 val contentModifier = if (isTablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
 
                 item {
-                    Category(modifier = contentModifier, title = stringResource(R.string.category_general)) {
+                    NavigationHeader(
+                        title = if (profileId == null) stringResource(R.string.title_create_profile) else stringResource(R.string.title_edit_profile),
+                        onBack = onNavigateBack,
+                        actions = {
+                            Button(
+                                onClick = {
+                                    if (profileName.isBlank()) {
+                                        Toast.makeText(context, R.string.error_empty_profile_name, Toast.LENGTH_SHORT).show()
+                                        return@Button
+                                    }
+
+                                    var validatedUrl = autoOpenUrl.trim()
+                                    if (validatedUrl.isNotBlank() && !validatedUrl.contains("://")) {
+                                        validatedUrl = "https://$validatedUrl"
+                                    }
+
+                                    val newProfile = VpnProfileUiModel(
+                                        id = profileId ?: UUID.randomUUID().toString(),
+                                        name = profileName,
+                                        targetCountry = targetCountry,
+                                        targetCity = targetCity,
+                                        targetServerId = targetServerId,
+                                        targetServerName = targetServerName,
+                                        protocol = selectedProtocol,
+                                        port = selectedPort,
+                                        autoOpenUrl = validatedUrl,
+                                        isObfuscationEnabled = obfuscationEnabled,
+                                        obfuscationProfileId = if (obfuscationEnabled) obfuscationProfileId else null
+                                    )
+                                    viewModel.saveProfile(newProfile)
+                                    onNavigateBack()
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.padding(end = 8.dp)
+                            ) {
+                                Text(stringResource(R.string.btn_save), color = Color.White, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    )
+                }
+
+                item {
+                    Category(modifier = contentModifier.padding(horizontal = 16.dp), title = stringResource(R.string.category_general)) {
                         SettingTextFieldRow(
                             label = stringResource(R.string.label_profile_name),
                             value = profileName,
@@ -248,7 +242,7 @@ fun EditProfileScreen(
                 }
 
                 item {
-                    Category(modifier = contentModifier, title = stringResource(R.string.category_connection)) {
+                    Category(modifier = contentModifier.padding(horizontal = 16.dp), title = stringResource(R.string.category_connection)) {
                         val locationSubtitle = when {
                             targetServerId != null -> stringResource(R.string.location_server, (targetServerName ?: targetServerId) as Any)
                             targetCity != null -> {
@@ -284,7 +278,7 @@ fun EditProfileScreen(
                 }
 
                 item {
-                    Category(modifier = contentModifier, title = stringResource(R.string.category_advanced)) {
+                    Category(modifier = contentModifier.padding(horizontal = 16.dp), title = stringResource(R.string.category_advanced)) {
                         SettingToggleRow(
                             icon = Icons.Rounded.VisibilityOff,
                             title = stringResource(R.string.label_obfuscation),
@@ -309,7 +303,7 @@ fun EditProfileScreen(
                 }
 
                 item {
-                    Category(modifier = contentModifier, title = stringResource(R.string.category_automation)) {
+                    Category(modifier = contentModifier.padding(horizontal = 16.dp), title = stringResource(R.string.category_automation)) {
                         SettingRowWithIcon(
                             icon = Icons.Rounded.OpenInBrowser,
                             title = stringResource(R.string.label_connect_go_website),
@@ -322,7 +316,7 @@ fun EditProfileScreen(
                         text = stringResource(R.string.automation_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.textWeak,
-                        modifier = contentModifier.padding(start = 12.dp, top = 8.dp, end = 12.dp)
+                        modifier = contentModifier.padding(start = 28.dp, top = 8.dp, end = 28.dp)
                     )
                 }
 
@@ -334,7 +328,7 @@ fun EditProfileScreen(
                                 viewModel.deleteProfile(profileId)
                                 onNavigateBack()
                             },
-                            modifier = contentModifier.height(56.dp),
+                            modifier = contentModifier.padding(horizontal = 16.dp).height(56.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.1f)),
                             shape = RoundedCornerShape(16.dp)
                         ) {

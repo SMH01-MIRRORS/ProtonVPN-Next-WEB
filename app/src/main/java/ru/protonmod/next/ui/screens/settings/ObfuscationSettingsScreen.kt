@@ -26,7 +26,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -42,10 +41,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.R
 import ru.protonmod.next.data.model.ObfuscationProfile
+import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
-import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,556 +93,532 @@ fun ObfuscationSettingsScreen(
                     )
             )
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .windowInsetsPadding(WindowInsets.statusBars)
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start,
+                contentPadding = PaddingValues(bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                CenterAlignedTopAppBar(
-                    title = {
-                        Text(
-                            stringResource(R.string.obfuscation_title),
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = colors.textNorm
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                                contentDescription = stringResource(R.string.desc_back_button),
-                                tint = colors.textNorm
-                            )
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = { viewModel.resetToStandard() }) {
-                            Icon(
-                                imageVector = Icons.Rounded.Refresh,
-                                contentDescription = stringResource(R.string.settings_reset_obfuscation),
-                                tint = colors.brandNorm
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                        scrolledContainerColor = Color.Transparent,
-                        navigationIconContentColor = colors.textNorm,
-                        titleContentColor = colors.textNorm,
-                        actionIconContentColor = colors.brandNorm
-                    )
-                )
+                val contentModifier = if (isTablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
 
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start,
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    val contentModifier = if (isTablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
-
-                    // Master Toggle
-                    item {
-                        Box(
-                            modifier = contentModifier
-                                .liquidGlass(
-                                    shape = RoundedCornerShape(20.dp),
-                                    alpha = if (uiState.isObfuscationEnabled) 0.3f else 0.5f
-                                )
-                                .clickable { viewModel.setObfuscationEnabled(!uiState.isObfuscationEnabled) }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(R.string.obfuscation_enable),
-                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = colors.textNorm
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = stringResource(R.string.obfuscation_enable_desc),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = colors.textWeak
-                                    )
-                                }
-                                Switch(
-                                    checked = uiState.isObfuscationEnabled,
-                                    onCheckedChange = { viewModel.setObfuscationEnabled(it) },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = colors.textInverted,
-                                        checkedTrackColor = colors.brandNorm,
-                                        uncheckedThumbColor = colors.shade60,
-                                        uncheckedTrackColor = colors.shade20,
-                                        uncheckedBorderColor = Color.Transparent
-                                    )
+                item {
+                    NavigationHeader(
+                        title = stringResource(R.string.obfuscation_title),
+                        onBack = onBack,
+                        actions = {
+                            IconButton(onClick = { viewModel.resetToStandard() }) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Refresh,
+                                    contentDescription = stringResource(R.string.settings_reset_obfuscation),
+                                    tint = colors.brandNorm
                                 )
                             }
+                        }
+                    )
+                }
+
+                // Master Toggle
+                item {
+                    Box(
+                        modifier = contentModifier
+                            .padding(horizontal = 16.dp)
+                            .liquidGlass(
+                                shape = RoundedCornerShape(20.dp),
+                                alpha = if (uiState.isObfuscationEnabled) 0.3f else 0.5f
+                            )
+                            .clickable { viewModel.setObfuscationEnabled(!uiState.isObfuscationEnabled) }
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.obfuscation_enable),
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = colors.textNorm
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = stringResource(R.string.obfuscation_enable_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = colors.textWeak
+                                )
+                            }
+                            Switch(
+                                checked = uiState.isObfuscationEnabled,
+                                onCheckedChange = { viewModel.setObfuscationEnabled(it) },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = colors.textInverted,
+                                    checkedTrackColor = colors.brandNorm,
+                                    uncheckedThumbColor = colors.shade60,
+                                    uncheckedTrackColor = colors.shade20,
+                                    uncheckedBorderColor = Color.Transparent
+                                )
+                            )
                         }
                     }
+                }
 
-                    // Animated content for detailed settings
-                    item {
-                        AnimatedVisibility(
-                            visible = uiState.isObfuscationEnabled,
-                            enter = fadeIn() + expandVertically(),
-                            exit = fadeOut() + shrinkVertically(),
-                            modifier = contentModifier
-                        ) {
-                            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                // Animated content for detailed settings
+                item {
+                    AnimatedVisibility(
+                        visible = uiState.isObfuscationEnabled,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically(),
+                        modifier = contentModifier.padding(horizontal = 16.dp)
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
 
-                                InfoCard(text = stringResource(R.string.obfuscation_info_desc))
+                            InfoCard(text = stringResource(R.string.obfuscation_info_desc))
 
-                                // Mode Selector (Easy / Advanced)
-                                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                                    SegmentedButton(
-                                        selected = !uiState.isObfuscationAdvancedMode,
-                                        onClick = { viewModel.setObfuscationAdvancedMode(false) },
-                                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                                        colors = SegmentedButtonDefaults.colors(
-                                            activeContainerColor = colors.brandNorm,
-                                            activeContentColor = Color.White,
-                                            inactiveContainerColor = colors.backgroundSecondary.copy(alpha = 0.5f),
-                                            inactiveContentColor = colors.textNorm
-                                        )
-                                    ) {
-                                        Text(stringResource(R.string.obfuscation_mode_easy))
-                                    }
-                                    SegmentedButton(
-                                        selected = uiState.isObfuscationAdvancedMode,
-                                        onClick = { viewModel.setObfuscationAdvancedMode(true) },
-                                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                                        colors = SegmentedButtonDefaults.colors(
-                                            activeContainerColor = colors.brandNorm,
-                                            activeContentColor = Color.White,
-                                            inactiveContainerColor = colors.backgroundSecondary.copy(alpha = 0.5f),
-                                            inactiveContentColor = colors.textNorm
-                                        )
-                                    ) {
-                                        Text(stringResource(R.string.obfuscation_mode_advanced))
-                                    }
-                                }
-
-                                // Configuration Selector
-                                CategoryHeader(title = stringResource(R.string.obfuscation_config))
-                                ExposedDropdownMenuBox(
-                                    expanded = showConfigDropdown,
-                                    onExpandedChange = { showConfigDropdown = it },
-                                ) {
-                                    OutlinedTextField(
-                                        value = selectedProfile.name,
-                                        onValueChange = {},
-                                        readOnly = true,
-                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showConfigDropdown) },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, enabled = true),
-                                        shape = RoundedCornerShape(16.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = colors.brandNorm,
-                                            unfocusedBorderColor = colors.shade20,
-                                            focusedContainerColor = colors.backgroundSecondary.copy(alpha = 0.5f),
-                                            unfocusedContainerColor = colors.backgroundSecondary.copy(alpha = 0.5f),
-                                            focusedTextColor = colors.textNorm,
-                                            unfocusedTextColor = colors.textNorm
-                                        )
+                            // Mode Selector (Easy / Advanced)
+                            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                                SegmentedButton(
+                                    selected = !uiState.isObfuscationAdvancedMode,
+                                    onClick = { viewModel.setObfuscationAdvancedMode(false) },
+                                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                                    colors = SegmentedButtonDefaults.colors(
+                                        activeContainerColor = colors.brandNorm,
+                                        activeContentColor = Color.White,
+                                        inactiveContainerColor = colors.backgroundSecondary.copy(alpha = 0.5f),
+                                        inactiveContentColor = colors.textNorm
                                     )
-                                    ExposedDropdownMenu(
-                                        expanded = showConfigDropdown,
-                                        onDismissRequest = { showConfigDropdown = false },
-                                        modifier = Modifier.background(colors.backgroundSecondary)
-                                    ) {
-                                        allProfiles.forEach { profile ->
-                                            DropdownMenuItem(
-                                                text = { Text(profile.name, color = colors.textNorm) },
-                                                onClick = {
-                                                    viewModel.selectObfuscationProfile(profile)
-                                                    showConfigDropdown = false
-                                                },
-                                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                                            )
-                                        }
+                                ) {
+                                    Text(stringResource(R.string.obfuscation_mode_easy))
+                                }
+                                SegmentedButton(
+                                    selected = uiState.isObfuscationAdvancedMode,
+                                    onClick = { viewModel.setObfuscationAdvancedMode(true) },
+                                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                                    colors = SegmentedButtonDefaults.colors(
+                                        activeContainerColor = colors.brandNorm,
+                                        activeContentColor = Color.White,
+                                        inactiveContainerColor = colors.backgroundSecondary.copy(alpha = 0.5f),
+                                        inactiveContentColor = colors.textNorm
+                                    )
+                                ) {
+                                    Text(stringResource(R.string.obfuscation_mode_advanced))
+                                }
+                            }
+
+                            // Configuration Selector
+                            CategoryHeader(title = stringResource(R.string.obfuscation_config))
+                            ExposedDropdownMenuBox(
+                                expanded = showConfigDropdown,
+                                onExpandedChange = { showConfigDropdown = it },
+                            ) {
+                                OutlinedTextField(
+                                    value = selectedProfile.name,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showConfigDropdown) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, enabled = true),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = colors.brandNorm,
+                                        unfocusedBorderColor = colors.shade20,
+                                        focusedContainerColor = colors.backgroundSecondary.copy(alpha = 0.5f),
+                                        unfocusedContainerColor = colors.backgroundSecondary.copy(alpha = 0.5f),
+                                        focusedTextColor = colors.textNorm,
+                                        unfocusedTextColor = colors.textNorm
+                                    )
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = showConfigDropdown,
+                                    onDismissRequest = { showConfigDropdown = false },
+                                    modifier = Modifier.background(colors.backgroundSecondary)
+                                ) {
+                                    allProfiles.forEach { profile ->
+                                        DropdownMenuItem(
+                                            text = { Text(profile.name, color = colors.textNorm) },
+                                            onClick = {
+                                                viewModel.selectObfuscationProfile(profile)
+                                                showConfigDropdown = false
+                                            },
+                                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                                        )
                                     }
                                 }
+                            }
 
-                                if (!uiState.isObfuscationAdvancedMode) {
-                                    // EASY MODE UI
-                                    CategoryHeader(title = stringResource(R.string.obfuscation_junk_level))
-                                    SettingsCard {
-                                        Column(modifier = Modifier.padding(8.dp)) {
-                                            val presets = listOf(
-                                                stringResource(R.string.obfuscation_junk_low),
-                                                stringResource(R.string.obfuscation_junk_medium),
-                                                stringResource(R.string.obfuscation_junk_high)
-                                            )
-                                            presets.forEachIndexed { index, label ->
-                                                Row(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .clickable(enabled = !selectedProfile.isReadOnly) { viewModel.applyJunkPreset(index) }
-                                                        .padding(vertical = 8.dp),
-                                                    verticalAlignment = Alignment.CenterVertically
-                                                ) {
-                                                    RadioButton(
-                                                        selected = uiState.awgJunkLevel == index,
-                                                        onClick = { viewModel.applyJunkPreset(index) },
-                                                        enabled = !selectedProfile.isReadOnly,
-                                                        colors = RadioButtonDefaults.colors(selectedColor = colors.brandNorm)
-                                                    )
-                                                    Spacer(modifier = Modifier.width(12.dp))
-                                                    Text(label, color = colors.textNorm)
-                                                }
-                                            }
-                                            if (uiState.awgJunkLevel == 3) {
-                                                Row(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(vertical = 8.dp),
-                                                    verticalAlignment = Alignment.CenterVertically
-                                                ) {
-                                                    RadioButton(
-                                                        selected = true,
-                                                        onClick = null,
-                                                        enabled = false,
-                                                        colors = RadioButtonDefaults.colors(selectedColor = colors.brandNorm)
-                                                    )
-                                                    Spacer(modifier = Modifier.width(12.dp))
-                                                    Text(stringResource(R.string.obfuscation_junk_custom), color = colors.textNorm)
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    CategoryHeader(title = stringResource(R.string.obfuscation_category_advanced))
-                                    SettingsCard {
-                                        Column(modifier = Modifier.padding(12.dp)) {
-                                            Text(
-                                                stringResource(R.string.obfuscation_i1_desc),
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = colors.textWeak
-                                            )
-                                            Spacer(modifier = Modifier.height(16.dp))
-                                            Box(
+                            if (!uiState.isObfuscationAdvancedMode) {
+                                // EASY MODE UI
+                                CategoryHeader(title = stringResource(R.string.obfuscation_junk_level))
+                                SettingsCard {
+                                    Column(modifier = Modifier.padding(8.dp)) {
+                                        val presets = listOf(
+                                            stringResource(R.string.obfuscation_junk_low),
+                                            stringResource(R.string.obfuscation_junk_medium),
+                                            stringResource(R.string.obfuscation_junk_high)
+                                        )
+                                        presets.forEachIndexed { index, label ->
+                                            Row(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
-                                                    .clip(RoundedCornerShape(8.dp))
-                                                    .background(colors.backgroundNorm)
-                                                    .padding(12.dp)
+                                                    .clickable(enabled = !selectedProfile.isReadOnly) { viewModel.applyJunkPreset(index) }
+                                                    .padding(vertical = 8.dp),
+                                                verticalAlignment = Alignment.CenterVertically
                                             ) {
-                                                Text(
-                                                    uiState.awgI1,
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = colors.textWeak,
-                                                    maxLines = 3
+                                                RadioButton(
+                                                    selected = uiState.awgJunkLevel == index,
+                                                    onClick = { viewModel.applyJunkPreset(index) },
+                                                    enabled = !selectedProfile.isReadOnly,
+                                                    colors = RadioButtonDefaults.colors(selectedColor = colors.brandNorm)
                                                 )
+                                                Spacer(modifier = Modifier.width(12.dp))
+                                                Text(label, color = colors.textNorm)
                                             }
-                                            Spacer(modifier = Modifier.height(16.dp))
-                                            Button(
-                                                onClick = { viewModel.randomizeI1() },
-                                                enabled = !selectedProfile.isReadOnly,
-                                                modifier = Modifier.fillMaxWidth(),
-                                                colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
+                                        }
+                                        if (uiState.awgJunkLevel == 3) {
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 8.dp),
+                                                verticalAlignment = Alignment.CenterVertically
                                             ) {
-                                                Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Text(stringResource(R.string.obfuscation_regenerate_i1))
+                                                RadioButton(
+                                                    selected = true,
+                                                    onClick = null,
+                                                    enabled = false,
+                                                    colors = RadioButtonDefaults.colors(selectedColor = colors.brandNorm)
+                                                )
+                                                Spacer(modifier = Modifier.width(12.dp))
+                                                Text(stringResource(R.string.obfuscation_junk_custom), color = colors.textNorm)
                                             }
+                                        }
+                                    }
+                                }
 
-                                            var showDomainDialog by remember { mutableStateOf(false) }
-                                            OutlinedButton(
-                                                onClick = { showDomainDialog = true },
-                                                enabled = !selectedProfile.isReadOnly,
-                                                modifier = Modifier.fillMaxWidth(),
-                                                shape = RoundedCornerShape(12.dp),
-                                                border = BorderStroke(1.dp, colors.brandNorm.copy(alpha = 0.5f))
-                                            ) {
-                                                Icon(Icons.Rounded.Public, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.brandNorm)
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Text(stringResource(R.string.obfuscation_btn_generate_from_domain), color = colors.brandNorm)
-                                            }
+                                CategoryHeader(title = stringResource(R.string.obfuscation_category_advanced))
+                                SettingsCard {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Text(
+                                            stringResource(R.string.obfuscation_i1_desc),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = colors.textWeak
+                                        )
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(colors.backgroundNorm)
+                                                .padding(12.dp)
+                                        ) {
+                                            Text(
+                                                uiState.awgI1,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = colors.textWeak,
+                                                maxLines = 3
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                        Button(
+                                            onClick = { viewModel.randomizeI1() },
+                                            enabled = !selectedProfile.isReadOnly,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
+                                        ) {
+                                            Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(stringResource(R.string.obfuscation_regenerate_i1))
+                                        }
 
-                                            if (showDomainDialog) {
-                                                var domainInput by remember { mutableStateOf("") }
-                                                AlertDialog(
-                                                    onDismissRequest = { showDomainDialog = false },
-                                                    title = { Text(stringResource(R.string.obfuscation_dialog_domain_title), color = colors.textNorm) },
-                                                    text = {
-                                                        Column {
-                                                            Text(stringResource(R.string.obfuscation_dialog_domain_desc), style = MaterialTheme.typography.bodySmall, color = colors.textWeak)
-                                                            Spacer(modifier = Modifier.height(16.dp))
-                                                            OutlinedTextField(
-                                                                value = domainInput,
-                                                                onValueChange = { domainInput = it },
-                                                                placeholder = { Text("google.com", color = colors.textWeak.copy(alpha = 0.5f)) },
-                                                                singleLine = true,
-                                                                modifier = Modifier.fillMaxWidth(),
-                                                                colors = OutlinedTextFieldDefaults.colors(
-                                                                    focusedBorderColor = colors.brandNorm,
-                                                                    focusedTextColor = colors.textNorm,
-                                                                    unfocusedTextColor = colors.textNorm
-                                                                )
+                                        var showDomainDialog by remember { mutableStateOf(false) }
+                                        OutlinedButton(
+                                            onClick = { showDomainDialog = true },
+                                            enabled = !selectedProfile.isReadOnly,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            shape = RoundedCornerShape(12.dp),
+                                            border = BorderStroke(1.dp, colors.brandNorm.copy(alpha = 0.5f))
+                                        ) {
+                                            Icon(Icons.Rounded.Public, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.brandNorm)
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(stringResource(R.string.obfuscation_btn_generate_from_domain), color = colors.brandNorm)
+                                        }
+
+                                        if (showDomainDialog) {
+                                            var domainInput by remember { mutableStateOf("") }
+                                            AlertDialog(
+                                                onDismissRequest = { showDomainDialog = false },
+                                                title = { Text(stringResource(R.string.obfuscation_dialog_domain_title), color = colors.textNorm) },
+                                                text = {
+                                                    Column {
+                                                        Text(stringResource(R.string.obfuscation_dialog_domain_desc), style = MaterialTheme.typography.bodySmall, color = colors.textWeak)
+                                                        Spacer(modifier = Modifier.height(16.dp))
+                                                        OutlinedTextField(
+                                                            value = domainInput,
+                                                            onValueChange = { domainInput = it },
+                                                            placeholder = { Text("google.com", color = colors.textWeak.copy(alpha = 0.5f)) },
+                                                            singleLine = true,
+                                                            modifier = Modifier.fillMaxWidth(),
+                                                            colors = OutlinedTextFieldDefaults.colors(
+                                                                focusedBorderColor = colors.brandNorm,
+                                                                focusedTextColor = colors.textNorm,
+                                                                unfocusedTextColor = colors.textNorm
                                                             )
-                                                        }
-                                                    },
-                                                    confirmButton = {
-                                                        TextButton(
-                                                            onClick = {
-                                                                if (domainInput.isNotBlank()) {
-                                                                    viewModel.generateI1FromDomain(domainInput.trim())
-                                                                }
-                                                                showDomainDialog = false
-                                                            }
-                                                        ) {
-                                                            Text(stringResource(android.R.string.ok), color = colors.brandNorm)
-                                                        }
-                                                    },
-                                                    dismissButton = {
-                                                        TextButton(onClick = { showDomainDialog = false }) {
-                                                            Text(stringResource(android.R.string.cancel), color = colors.textWeak)
-                                                        }
-                                                    },
-                                                    containerColor = colors.backgroundSecondary
-                                                )
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    // ADVANCED MODE UI
-                                    // Parameters (Junk)
-                                    CategoryHeader(title = stringResource(R.string.obfuscation_category_junk))
-                                    SettingsCard {
-                                        ObfuscationParamField(
-                                            label = stringResource(R.string.obfuscation_jc),
-                                            value = uiState.awgJc.toString(),
-                                            isEnabled = !selectedProfile.isReadOnly,
-                                            onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(v, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
-                                        )
-                                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = colors.shade20.copy(alpha = 0.5f))
-                                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                            ObfuscationParamField(
-                                                modifier = Modifier.weight(1f),
-                                                label = stringResource(R.string.obfuscation_jmin),
-                                                value = uiState.awgJmin.toString(),
-                                                isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, v, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
-                                            )
-                                            ObfuscationParamField(
-                                                modifier = Modifier.weight(1f),
-                                                label = stringResource(R.string.obfuscation_jmax),
-                                                value = uiState.awgJmax.toString(),
-                                                isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, v, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
-                                            )
-                                        }
-                                    }
-
-                                    // Parameters (Magic)
-                                    CategoryHeader(title = stringResource(R.string.obfuscation_category_magic))
-                                    SettingsCard {
-                                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                            ObfuscationParamField(
-                                                modifier = Modifier.weight(1f),
-                                                label = stringResource(R.string.obfuscation_s1),
-                                                value = uiState.awgS1.toString(),
-                                                isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, v, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
-                                            )
-                                            ObfuscationParamField(
-                                                modifier = Modifier.weight(1f),
-                                                label = stringResource(R.string.obfuscation_s2),
-                                                value = uiState.awgS2.toString(),
-                                                isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, v, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
-                                            )
-                                        }
-                                        Spacer(modifier = Modifier.height(12.dp))
-                                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                            ObfuscationParamField(
-                                                modifier = Modifier.weight(1f),
-                                                label = stringResource(R.string.obfuscation_s3),
-                                                value = uiState.awgS3.toString(),
-                                                isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, v, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
-                                            )
-                                            ObfuscationParamField(
-                                                modifier = Modifier.weight(1f),
-                                                label = stringResource(R.string.obfuscation_s4),
-                                                value = uiState.awgS4.toString(),
-                                                isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, v, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
-                                            )
-                                        }
-                                    }
-
-                                    // Parameters (Headers)
-                                    CategoryHeader(title = stringResource(R.string.obfuscation_category_headers))
-                                    SettingsCard {
-                                        ObfuscationParamField(
-                                            label = stringResource(R.string.obfuscation_h1),
-                                            value = uiState.awgH1,
-                                            isNumeric = false,
-                                            isEnabled = !selectedProfile.isReadOnly,
-                                            onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, it, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
-                                        )
-                                        Spacer(modifier = Modifier.height(12.dp))
-                                        ObfuscationParamField(
-                                            label = stringResource(R.string.obfuscation_h2),
-                                            value = uiState.awgH2,
-                                            isNumeric = false,
-                                            isEnabled = !selectedProfile.isReadOnly,
-                                            onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, it, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
-                                        )
-                                        Spacer(modifier = Modifier.height(12.dp))
-                                        ObfuscationParamField(
-                                            label = stringResource(R.string.obfuscation_h3),
-                                            value = uiState.awgH3,
-                                            isNumeric = false,
-                                            isEnabled = !selectedProfile.isReadOnly,
-                                            onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, it, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
-                                        )
-                                        Spacer(modifier = Modifier.height(12.dp))
-                                        ObfuscationParamField(
-                                            label = stringResource(R.string.obfuscation_h4),
-                                            value = uiState.awgH4,
-                                            isNumeric = false,
-                                            isEnabled = !selectedProfile.isReadOnly,
-                                            onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, it, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
-                                        )
-                                    }
-
-                                    // Parameters (Advanced)
-                                    CategoryHeader(title = stringResource(R.string.obfuscation_category_advanced))
-                                    SettingsCard {
-                                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                            ObfuscationParamField(
-                                                label = stringResource(R.string.obfuscation_i1),
-                                                value = uiState.awgI1,
-                                                isNumeric = false,
-                                                isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, it, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
-                                            )
-                                            ObfuscationParamField(
-                                                label = stringResource(R.string.obfuscation_i2),
-                                                value = uiState.awgI2,
-                                                isNumeric = false,
-                                                isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, it, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
-                                            )
-                                            ObfuscationParamField(
-                                                label = stringResource(R.string.obfuscation_i3),
-                                                value = uiState.awgI3,
-                                                isNumeric = false,
-                                                isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, it, uiState.awgI4, uiState.awgI5, 3) }
-                                            )
-                                            ObfuscationParamField(
-                                                label = stringResource(R.string.obfuscation_i4),
-                                                value = uiState.awgI4,
-                                                isNumeric = false,
-                                                isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, it, uiState.awgI5, 3) }
-                                            )
-                                            ObfuscationParamField(
-                                                label = stringResource(R.string.obfuscation_i5),
-                                                value = uiState.awgI5,
-                                                isNumeric = false,
-                                                isEnabled = !selectedProfile.isReadOnly,
-                                                onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, it, 3) }
-                                            )
-                                        }
-                                    }
-                                }
-
-                                // Button to explicitly update current custom config if it's not read-only
-                                if (!selectedProfile.isReadOnly) {
-                                    Button(
-                                        onClick = {
-                                            val updatedProfile = selectedProfile.copy(
-                                                jc = uiState.awgJc, jmin = uiState.awgJmin, jmax = uiState.awgJmax,
-                                                s1 = uiState.awgS1, s2 = uiState.awgS2, s3 = uiState.awgS3, s4 = uiState.awgS4,
-                                                h1 = uiState.awgH1, h2 = uiState.awgH2, h3 = uiState.awgH3, h4 = uiState.awgH4,
-                                                i1 = uiState.awgI1, i2 = uiState.awgI2, i3 = uiState.awgI3, i4 = uiState.awgI4, i5 = uiState.awgI5,
-                                                junkLevel = uiState.awgJunkLevel
-                                            )
-                                            viewModel.saveObfuscationProfile(updatedProfile)
-                                        },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = colors.backgroundSecondary)
-                                    ) {
-                                        Icon(Icons.Rounded.Save, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.textNorm)
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(stringResource(R.string.btn_save), color = colors.textNorm)
-                                    }
-                                }
-
-                                // Create New Profile Button
-                                var showSaveDialog by remember { mutableStateOf(false) }
-                                TextButton(
-                                    onClick = { showSaveDialog = true },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.brandNorm)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(stringResource(R.string.obfuscation_save_config), color = colors.brandNorm)
-                                }
-                                
-                                if (showSaveDialog) {
-                                    var newProfileName by remember { mutableStateOf("") }
-                                    AlertDialog(
-                                        onDismissRequest = { showSaveDialog = false },
-                                        title = { Text(stringResource(R.string.obfuscation_save_config), color = colors.textNorm) },
-                                        text = {
-                                            OutlinedTextField(
-                                                value = newProfileName,
-                                                onValueChange = { newProfileName = it },
-                                                label = { Text(stringResource(R.string.obfuscation_config_name)) },
-                                                singleLine = true,
-                                                colors = OutlinedTextFieldDefaults.colors(
-                                                    focusedBorderColor = colors.brandNorm,
-                                                    focusedTextColor = colors.textNorm,
-                                                    unfocusedTextColor = colors.textNorm
-                                                )
-                                            )
-                                        },
-                                        confirmButton = {
-                                            TextButton(
-                                                onClick = {
-                                                    if (newProfileName.isNotBlank()) {
-                                                        val newProfile = ObfuscationProfile(
-                                                            id = java.util.UUID.randomUUID().toString(),
-                                                            name = newProfileName,
-                                                            isReadOnly = false,
-                                                            jc = uiState.awgJc, jmin = uiState.awgJmin, jmax = uiState.awgJmax,
-                                                            s1 = uiState.awgS1, s2 = uiState.awgS2, s3 = uiState.awgS3, s4 = uiState.awgS4,
-                                                            h1 = uiState.awgH1, h2 = uiState.awgH2, h3 = uiState.awgH3, h4 = uiState.awgH4,
-                                                            i1 = uiState.awgI1, i2 = uiState.awgI2, i3 = uiState.awgI3, i4 = uiState.awgI4, i5 = uiState.awgI5,
-                                                            junkLevel = uiState.awgJunkLevel
                                                         )
-                                                        viewModel.saveObfuscationProfile(newProfile)
                                                     }
-                                                    showSaveDialog = false
-                                                }
-                                            ) {
-                                                Text(stringResource(android.R.string.ok), color = colors.brandNorm)
-                                            }
-                                        },
-                                        dismissButton = {
-                                            TextButton(onClick = { showSaveDialog = false }) {
-                                                Text(stringResource(android.R.string.cancel), color = colors.textWeak)
-                                            }
-                                        },
-                                        containerColor = colors.backgroundSecondary
+                                                },
+                                                confirmButton = {
+                                                    TextButton(
+                                                        onClick = {
+                                                            if (domainInput.isNotBlank()) {
+                                                                viewModel.generateI1FromDomain(domainInput.trim())
+                                                            }
+                                                            showDomainDialog = false
+                                                        }
+                                                    ) {
+                                                        Text(stringResource(android.R.string.ok), color = colors.brandNorm)
+                                                    }
+                                                },
+                                                dismissButton = {
+                                                    TextButton(onClick = { showDomainDialog = false }) {
+                                                        Text(stringResource(android.R.string.cancel), color = colors.textWeak)
+                                                    }
+                                                },
+                                                containerColor = colors.backgroundSecondary
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                // ADVANCED MODE UI
+                                // Parameters (Junk)
+                                CategoryHeader(title = stringResource(R.string.obfuscation_category_junk))
+                                SettingsCard {
+                                    ObfuscationParamField(
+                                        label = stringResource(R.string.obfuscation_jc),
+                                        value = uiState.awgJc.toString(),
+                                        isEnabled = !selectedProfile.isReadOnly,
+                                        onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(v, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
+                                    )
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = colors.shade20.copy(alpha = 0.5f))
+                                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        ObfuscationParamField(
+                                            modifier = Modifier.weight(1f),
+                                            label = stringResource(R.string.obfuscation_jmin),
+                                            value = uiState.awgJmin.toString(),
+                                            isEnabled = !selectedProfile.isReadOnly,
+                                            onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, v, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
+                                        )
+                                        ObfuscationParamField(
+                                            modifier = Modifier.weight(1f),
+                                            label = stringResource(R.string.obfuscation_jmax),
+                                            value = uiState.awgJmax.toString(),
+                                            isEnabled = !selectedProfile.isReadOnly,
+                                            onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, v, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
+                                        )
+                                    }
+                                }
+
+                                // Parameters (Magic)
+                                CategoryHeader(title = stringResource(R.string.obfuscation_category_magic))
+                                SettingsCard {
+                                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        ObfuscationParamField(
+                                            modifier = Modifier.weight(1f),
+                                            label = stringResource(R.string.obfuscation_s1),
+                                            value = uiState.awgS1.toString(),
+                                            isEnabled = !selectedProfile.isReadOnly,
+                                            onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, v, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
+                                        )
+                                        ObfuscationParamField(
+                                            modifier = Modifier.weight(1f),
+                                            label = stringResource(R.string.obfuscation_s2),
+                                            value = uiState.awgS2.toString(),
+                                            isEnabled = !selectedProfile.isReadOnly,
+                                            onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, v, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        ObfuscationParamField(
+                                            modifier = Modifier.weight(1f),
+                                            label = stringResource(R.string.obfuscation_s3),
+                                            value = uiState.awgS3.toString(),
+                                            isEnabled = !selectedProfile.isReadOnly,
+                                            onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, v, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
+                                        )
+                                        ObfuscationParamField(
+                                            modifier = Modifier.weight(1f),
+                                            label = stringResource(R.string.obfuscation_s4),
+                                            value = uiState.awgS4.toString(),
+                                            isEnabled = !selectedProfile.isReadOnly,
+                                            onValueChange = { val v = it.toIntOrNull() ?: 0; viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, v, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
+                                        )
+                                    }
+                                }
+
+                                // Parameters (Headers)
+                                CategoryHeader(title = stringResource(R.string.obfuscation_category_headers))
+                                SettingsCard {
+                                    ObfuscationParamField(
+                                        label = stringResource(R.string.obfuscation_h1),
+                                        value = uiState.awgH1,
+                                        isNumeric = false,
+                                        isEnabled = !selectedProfile.isReadOnly,
+                                        onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, it, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    ObfuscationParamField(
+                                        label = stringResource(R.string.obfuscation_h2),
+                                        value = uiState.awgH2,
+                                        isNumeric = false,
+                                        isEnabled = !selectedProfile.isReadOnly,
+                                        onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, it, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    ObfuscationParamField(
+                                        label = stringResource(R.string.obfuscation_h3),
+                                        value = uiState.awgH3,
+                                        isNumeric = false,
+                                        isEnabled = !selectedProfile.isReadOnly,
+                                        onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, it, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    ObfuscationParamField(
+                                        label = stringResource(R.string.obfuscation_h4),
+                                        value = uiState.awgH4,
+                                        isNumeric = false,
+                                        isEnabled = !selectedProfile.isReadOnly,
+                                        onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, it, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
                                     )
                                 }
 
-                                Spacer(modifier = Modifier.height(32.dp))
+                                // Parameters (Advanced)
+                                CategoryHeader(title = stringResource(R.string.obfuscation_category_advanced))
+                                SettingsCard {
+                                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        ObfuscationParamField(
+                                            label = stringResource(R.string.obfuscation_i1),
+                                            value = uiState.awgI1,
+                                            isNumeric = false,
+                                            isEnabled = !selectedProfile.isReadOnly,
+                                            onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, it, uiState.awgI2, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
+                                        )
+                                        ObfuscationParamField(
+                                            label = stringResource(R.string.obfuscation_i2),
+                                            value = uiState.awgI2,
+                                            isNumeric = false,
+                                            isEnabled = !selectedProfile.isReadOnly,
+                                            onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, it, uiState.awgI3, uiState.awgI4, uiState.awgI5, 3) }
+                                        )
+                                        ObfuscationParamField(
+                                            label = stringResource(R.string.obfuscation_i3),
+                                            value = uiState.awgI3,
+                                            isNumeric = false,
+                                            isEnabled = !selectedProfile.isReadOnly,
+                                            onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, it, uiState.awgI4, uiState.awgI5, 3) }
+                                        )
+                                        ObfuscationParamField(
+                                            label = stringResource(R.string.obfuscation_i4),
+                                            value = uiState.awgI4,
+                                            isNumeric = false,
+                                            isEnabled = !selectedProfile.isReadOnly,
+                                            onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, it, uiState.awgI5, 3) }
+                                        )
+                                        ObfuscationParamField(
+                                            label = stringResource(R.string.obfuscation_i5),
+                                            value = uiState.awgI5,
+                                            isNumeric = false,
+                                            isEnabled = !selectedProfile.isReadOnly,
+                                            onValueChange = { viewModel.setAwgParams(uiState.awgJc, uiState.awgJmin, uiState.awgJmax, uiState.awgS1, uiState.awgS2, uiState.awgS3, uiState.awgS4, uiState.awgH1, uiState.awgH2, uiState.awgH3, uiState.awgH4, uiState.awgI1, uiState.awgI2, uiState.awgI3, uiState.awgI4, it, 3) }
+                                        )
+                                    }
+                                }
                             }
+
+                            // Button to explicitly update current custom config if it's not read-only
+                            if (!selectedProfile.isReadOnly) {
+                                Button(
+                                    onClick = {
+                                        val updatedProfile = selectedProfile.copy(
+                                            jc = uiState.awgJc, jmin = uiState.awgJmin, jmax = uiState.awgJmax,
+                                            s1 = uiState.awgS1, s2 = uiState.awgS2, s3 = uiState.awgS3, s4 = uiState.awgS4,
+                                            h1 = uiState.awgH1, h2 = uiState.awgH2, h3 = uiState.awgH3, h4 = uiState.awgH4,
+                                            i1 = uiState.awgI1, i2 = uiState.awgI2, i3 = uiState.awgI3, i4 = uiState.awgI4, i5 = uiState.awgI5,
+                                            junkLevel = uiState.awgJunkLevel
+                                        )
+                                        viewModel.saveObfuscationProfile(updatedProfile)
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = colors.backgroundSecondary)
+                                ) {
+                                    Icon(Icons.Rounded.Save, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.textNorm)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(stringResource(R.string.btn_save), color = colors.textNorm)
+                                }
+                            }
+
+                            // Create New Profile Button
+                            var showSaveDialog by remember { mutableStateOf(false) }
+                            TextButton(
+                                onClick = { showSaveDialog = true },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.brandNorm)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(stringResource(R.string.obfuscation_save_config), color = colors.brandNorm)
+                            }
+
+                            if (showSaveDialog) {
+                                var newProfileName by remember { mutableStateOf("") }
+                                AlertDialog(
+                                    onDismissRequest = { showSaveDialog = false },
+                                    title = { Text(stringResource(R.string.obfuscation_save_config), color = colors.textNorm) },
+                                    text = {
+                                        OutlinedTextField(
+                                            value = newProfileName,
+                                            onValueChange = { newProfileName = it },
+                                            label = { Text(stringResource(R.string.obfuscation_config_name)) },
+                                            singleLine = true,
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedBorderColor = colors.brandNorm,
+                                                focusedTextColor = colors.textNorm,
+                                                unfocusedTextColor = colors.textNorm
+                                            )
+                                        )
+                                    },
+                                    confirmButton = {
+                                        TextButton(
+                                            onClick = {
+                                                if (newProfileName.isNotBlank()) {
+                                                    val newProfile = ObfuscationProfile(
+                                                        id = java.util.UUID.randomUUID().toString(),
+                                                        name = newProfileName,
+                                                        isReadOnly = false,
+                                                        jc = uiState.awgJc, jmin = uiState.awgJmin, jmax = uiState.awgJmax,
+                                                        s1 = uiState.awgS1, s2 = uiState.awgS2, s3 = uiState.awgS3, s4 = uiState.awgS4,
+                                                        h1 = uiState.awgH1, h2 = uiState.awgH2, h3 = uiState.awgH3, h4 = uiState.awgH4,
+                                                        i1 = uiState.awgI1, i2 = uiState.awgI2, i3 = uiState.awgI3, i4 = uiState.awgI4, i5 = uiState.awgI5,
+                                                        junkLevel = uiState.awgJunkLevel
+                                                    )
+                                                    viewModel.saveObfuscationProfile(newProfile)
+                                                }
+                                                showSaveDialog = false
+                                            }
+                                        ) {
+                                            Text(stringResource(android.R.string.ok), color = colors.brandNorm)
+                                        }
+                                    },
+                                    dismissButton = {
+                                        TextButton(onClick = { showSaveDialog = false }) {
+                                            Text(stringResource(android.R.string.cancel), color = colors.textWeak)
+                                        }
+                                    },
+                                    containerColor = colors.backgroundSecondary
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(32.dp))
                         }
                     }
                 }
@@ -698,10 +673,9 @@ fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
             .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.4f, shadowElevation = 0.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            content()
-        }
+            modifier = Modifier.padding(16.dp),
+            content = content
+        )
     }
 }
 

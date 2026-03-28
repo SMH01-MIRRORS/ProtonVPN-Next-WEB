@@ -31,7 +31,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -48,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import androidx.core.net.toUri
@@ -69,32 +69,10 @@ fun AboutAppScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.settings_about),
-                        fontWeight = FontWeight.Bold,
-                        color = colors.textNorm
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.desc_back_button),
-                            tint = colors.textNorm
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
-            )
-        },
-        containerColor = colors.backgroundNorm
+        containerColor = colors.backgroundNorm,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             // Background gradient
             Box(
                 modifier = Modifier
@@ -112,18 +90,22 @@ fun AboutAppScreen(
 
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
+                    .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                contentPadding = PaddingValues(16.dp)
+                contentPadding = PaddingValues(bottom = 16.dp)
             ) {
                 item {
+                    NavigationHeader(
+                        title = stringResource(R.string.settings_about),
+                        onBack = onBack
+                    )
+
                     Spacer(modifier = Modifier.height(32.dp))
 
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
                     ) {
                         AndroidView(
                             factory = { ctx ->
@@ -162,124 +144,144 @@ fun AboutAppScreen(
                 }
 
                 item {
-                    Text(
-                        text = stringResource(id = R.string.about_community),
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = colors.textNorm,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 12.dp, start = 12.dp)
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        AboutLinkCard(
-                            modifier = Modifier.weight(1f),
-                            title = stringResource(id = R.string.about_codeberg),
-                            iconResId = R.drawable.ic_codeberg,
-                            onClick = {
-                                val intent = Intent(Intent.ACTION_VIEW, codebergUrl.toUri())
-                                context.startActivity(intent)
-                            }
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        Text(
+                            text = stringResource(id = R.string.about_community),
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = colors.textNorm,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp, start = 12.dp)
                         )
 
-                        AboutLinkCard(
-                            modifier = Modifier.weight(1f),
-                            title = stringResource(id = R.string.about_telegram),
-                            iconResId = R.drawable.ic_telegram,
-                            onClick = {
-                                val intent = Intent(Intent.ACTION_VIEW, telegramUrl.toUri())
-                                context.startActivity(intent)
-                            }
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // GitHub Hidden Section
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .liquidGlass(shape = RoundedCornerShape(16.dp), alpha = 0.4f, shadowElevation = 0.dp)
-                            .clickable { showGitHub = !showGitHub }
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_github),
-                                    contentDescription = null,
-                                    tint = colors.textWeak,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = stringResource(R.string.about_github_unavailable, stringResource(R.string.about_unavailable)),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = colors.textWeak
-                                )
-                            }
+                            AboutLinkCard(
+                                modifier = Modifier.weight(1f),
+                                title = stringResource(id = R.string.about_codeberg),
+                                iconResId = R.drawable.ic_codeberg,
+                                onClick = {
+                                    val intent = Intent(Intent.ACTION_VIEW, codebergUrl.toUri())
+                                    context.startActivity(intent)
+                                }
+                            )
 
-                            AnimatedVisibility(
-                                visible = showGitHub,
-                                enter = fadeIn() + expandVertically(),
-                                exit = fadeOut() + shrinkVertically()
+                            AboutLinkCard(
+                                modifier = Modifier.weight(1f),
+                                title = stringResource(id = R.string.about_telegram),
+                                iconResId = R.drawable.ic_telegram,
+                                onClick = {
+                                    val intent = Intent(Intent.ACTION_VIEW, telegramUrl.toUri())
+                                    context.startActivity(intent)
+                                }
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // GitHub Hidden Section
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .liquidGlass(
+                                    shape = RoundedCornerShape(16.dp),
+                                    alpha = 0.4f,
+                                    shadowElevation = 0.dp
+                                )
+                                .clickable { showGitHub = !showGitHub }
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Column(
-                                    modifier = Modifier.padding(top = 12.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
                                 ) {
-                                    Button(
-                                        onClick = {
-                                            val intent = Intent(Intent.ACTION_VIEW,
-                                                githubUrl.toUri())
-                                            context.startActivity(intent)
-                                        },
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = colors.brandNorm
-                                        )
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_github),
+                                        contentDescription = null,
+                                        tint = colors.textWeak,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = stringResource(
+                                            R.string.about_github_unavailable,
+                                            stringResource(R.string.about_unavailable)
+                                        ),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = colors.textWeak
+                                    )
+                                }
+
+                                AnimatedVisibility(
+                                    visible = showGitHub,
+                                    enter = fadeIn() + expandVertically(),
+                                    exit = fadeOut() + shrinkVertically()
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(top = 12.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        Text(stringResource(R.string.about_github), color = colors.textInverted)
+                                        Button(
+                                            onClick = {
+                                                val intent = Intent(
+                                                    Intent.ACTION_VIEW,
+                                                    githubUrl.toUri()
+                                                )
+                                                context.startActivity(intent)
+                                            },
+                                            shape = RoundedCornerShape(12.dp),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = colors.brandNorm
+                                            )
+                                        ) {
+                                            Text(
+                                                stringResource(R.string.about_github),
+                                                color = colors.textInverted
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
                 }
 
                 item {
-                    Text(
-                        text = stringResource(id = R.string.settings_about),
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = colors.textNorm,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 12.dp, start = 12.dp)
-                    )
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        Text(
+                            text = stringResource(id = R.string.settings_about),
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = colors.textNorm,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp, start = 12.dp)
+                        )
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .liquidGlass(shape = RoundedCornerShape(16.dp), alpha = 0.4f, shadowElevation = 0.dp)
-                    ) {
-                        Column {
-                            SettingRowWithIcon(
-                                icon = Icons.AutoMirrored.Rounded.MenuBook,
-                                title = stringResource(R.string.settings_licenses),
-                                subtitle = stringResource(R.string.settings_licenses_desc),
-                                onClick = onNavigateToLicenses
-                            )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .liquidGlass(
+                                    shape = RoundedCornerShape(16.dp),
+                                    alpha = 0.4f,
+                                    shadowElevation = 0.dp
+                                )
+                        ) {
+                            Column {
+                                SettingRowWithIcon(
+                                    icon = Icons.AutoMirrored.Rounded.MenuBook,
+                                    title = stringResource(R.string.settings_licenses),
+                                    subtitle = stringResource(R.string.settings_licenses_desc),
+                                    onClick = onNavigateToLicenses
+                                )
+                            }
                         }
                     }
                 }

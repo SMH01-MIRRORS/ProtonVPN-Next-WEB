@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.components.MainHeader
 import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
@@ -136,8 +137,6 @@ fun SettingsContent(
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
-    val colors = ProtonNextTheme.colors
-
     LazyColumn(
         modifier = modifier,
         horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start,
@@ -149,15 +148,7 @@ fun SettingsContent(
         )
     ) {
         item {
-            // Header is now part of the scrollable list
-            Text(
-                text = stringResource(R.string.settings_title),
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                color = colors.textNorm,
-                modifier = Modifier
-                    .statusBarsPadding()
-                    .padding(horizontal = 12.dp, vertical = 24.dp)
-            )
+            MainHeader(title = stringResource(R.string.settings_title))
         }
 
         if (isTablet) {
