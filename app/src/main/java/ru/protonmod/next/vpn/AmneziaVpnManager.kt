@@ -452,7 +452,14 @@ class AmneziaVpnManager @Inject constructor(
 
             // Retrieve Custom DNS IP or fallback to Proton Default
             val userDns = settingsManager.customDns.first().trim()
-            val activeDns = if (userDns.isNotEmpty()) userDns else PROTON_DNS_IP
+            val isValidDns = userDns.isNotEmpty() && try {
+                InetAddress.getByName(userDns)
+                true
+            } catch (e: Exception) {
+                ProtonLogger.w(TAG, "Invalid custom DNS value '$userDns', falling back to default: ${e.message}")
+                false
+            }
+            val activeDns = if (isValidDns) userDns else PROTON_DNS_IP
             ProtonLogger.i(TAG, "Using DNS Server: $activeDns")
 
             val configStr = amneziaConfigGenerator.buildConfig(
