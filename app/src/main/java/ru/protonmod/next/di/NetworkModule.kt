@@ -67,9 +67,7 @@ object NetworkModule {
             .url("https://cloudflare-dns.com/dns-query".toHttpUrl())
             .bootstrapDnsHosts(
                 InetAddress.getByName("1.1.1.1"),
-                InetAddress.getByName("1.0.0.1"),
-                InetAddress.getByName("2606:4700:4700::1111"),
-                InetAddress.getByName("2606:4700:4700::1001")
+                InetAddress.getByName("1.0.0.1")
             )
             .build()
     }
@@ -182,10 +180,9 @@ object NetworkModule {
             .addInterceptor(dynamicBaseUrlInterceptor)
             .authenticator(tokenAuthenticator)
             .dns(dynamicDns)
-            // 0 means no timeout (unlimited)
-            .connectTimeout(0, TimeUnit.SECONDS)
-            .readTimeout(0, TimeUnit.SECONDS)
-            .writeTimeout(0, TimeUnit.SECONDS)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
             .build()
     }
 
