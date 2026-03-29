@@ -21,6 +21,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -129,6 +130,17 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    // Intercept KEYCODE_CALL events to prevent the Android framework's
+    // PhoneFallbackEventHandler from broadcasting ACTION_CLOSE_SYSTEM_DIALOGS,
+    // which requires a signature-level permission on Android 12+ (API 31+) and
+    // causes a SecurityException in third-party apps.
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.keyCode == KeyEvent.KEYCODE_CALL) {
+            return true
+        }
+        return super.dispatchKeyEvent(event)
     }
 
     private fun checkAndRequestNotificationPermission() {
