@@ -61,7 +61,7 @@ class AmneziaConfigGeneratorImpl @Inject constructor() : AmneziaConfigGenerator 
         
         val peer = Peer.Builder()
             .parsePublicKey(serverPublicKey)
-            .parseEndpoint("$targetIp:$port")
+            .parseEndpoint(if (targetIp.contains(':')) "[$targetIp]:$port" else "$targetIp:$port")
             .apply {
                 allowedIpsList.forEach { parseAllowedIPs(it) }
             }
