@@ -39,6 +39,7 @@ object FlavorInitializer {
 
         // Sentry initialization
         SentryAndroid.init(context) { options ->
+            ru.protonmod.next.utils.ProtonLogger.sentryLogger = options.logger
             options.dsn = "https://7b74cef88678ecb3e6047ac6b4abf139@o4510986952310784.ingest.de.sentry.io/4510986956374096"
             
             // Allow all errors if crash reporting is enabled
