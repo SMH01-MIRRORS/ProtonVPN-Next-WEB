@@ -18,6 +18,7 @@
 package ru.protonmod.next
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -136,6 +137,7 @@ class MainActivity : ComponentActivity() {
     // PhoneFallbackEventHandler from broadcasting ACTION_CLOSE_SYSTEM_DIALOGS,
     // which requires a signature-level permission on Android 12+ (API 31+) and
     // causes a SecurityException in third-party apps.
+    @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.keyCode == KeyEvent.KEYCODE_CALL) {
             return true
