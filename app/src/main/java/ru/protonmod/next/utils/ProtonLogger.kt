@@ -38,6 +38,8 @@ object ProtonLogger {
     var isNonFatalEnabled: Boolean = true
     /** Controlled by SettingsManager at runtime/startup */
     var isAnalyticsEnabled: Boolean = true
+    /** Controlled by SettingsManager at runtime/startup */
+    var isSentryLogsEnabled: Boolean = true
 
     /** Log at VERBOSE level */
     fun v(tag: String? = null, message: String, throwable: Throwable? = null) {
@@ -188,7 +190,7 @@ object ProtonLogger {
      */
     @PublishedApi
     internal fun addSentryLog(tag: String, message: String, level: SentryLevel, throwable: Throwable? = null) {
-        if (!isAnalyticsEnabled) return
+        if (!isAnalyticsEnabled || !isSentryLogsEnabled) return
         val logger = Sentry.logger() ?: return
         val fullMessage = "[$tag] $message"
         when (level) {

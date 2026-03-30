@@ -165,6 +165,8 @@
     <string name="settings_sentry_anr_desc">Detect when the app becomes unresponsive for more than 5 seconds</string>
     <string name="settings_sentry_metrics">App Metrics</string>
     <string name="settings_sentry_metrics_desc">Track application health with numeric data like counters and gauges</string>
+    <string name="settings_sentry_logs">Send Logs</string>
+    <string name="settings_sentry_logs_desc">Include anonymous system logs to help debug complex issues</string>
     <string name="settings_sentry_session_replay">Session Replays</string>
     <string name="settings_sentry_session_replay_desc">Anonymous interaction playback to debug UI issues</string>
 

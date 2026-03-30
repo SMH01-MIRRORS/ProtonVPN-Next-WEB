@@ -163,6 +163,8 @@
     <string name="settings_sentry_anr_desc">Виявлення зависань додатка більше ніж на 5 секунд</string>
     <string name="settings_sentry_metrics">Метрики додатка</string>
     <string name="settings_sentry_metrics_desc">Відстеження стану додатка за допомогою числових даних (лічильники, шкали)</string>
+    <string name="settings_sentry_logs">Відправка логів</string>
+    <string name="settings_sentry_logs_desc">Включати анонімні системні логи, щоб допомогти у налагодженні складних проблем</string>
     <string name="settings_sentry_session_replay">Повтори сесій</string>
     <string name="settings_sentry_session_replay_desc">Анонімне відтворення взаємодій для налагодження проблем інтерфейсу</string>
 

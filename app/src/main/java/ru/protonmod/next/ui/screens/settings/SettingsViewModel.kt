@@ -99,7 +99,8 @@ data class SettingsUiState(
     val isSentryNonFatalEnabled: Boolean = true,
     val isSentrySessionReplayEnabled: Boolean = true,
     val isSentryAnrEnabled: Boolean = true,
-    val isSentryMetricsEnabled: Boolean = true
+    val isSentryMetricsEnabled: Boolean = true,
+    val isSentryLogsEnabled: Boolean = true
 )
 
 @HiltViewModel
@@ -182,6 +183,7 @@ class SettingsViewModel @Inject constructor(
         settingsManager.sentrySessionReplayEnabled,
         settingsManager.sentryAnrEnabled,
         settingsManager.sentryMetricsEnabled,
+        settingsManager.sentryLogsEnabled,
         settingsManager.apiBypassEnabled,
         settingsManager.apiBypassStrategy,
         settingsManager.appTheme,
@@ -228,11 +230,12 @@ class SettingsViewModel @Inject constructor(
             isSentrySessionReplayEnabled = args[36] as Boolean,
             isSentryAnrEnabled = args[37] as Boolean,
             isSentryMetricsEnabled = args[38] as Boolean,
-            apiBypassEnabled = args[39] as Boolean,
-            apiBypassStrategy = args[40] as String,
-            appTheme = args[41] as AppTheme,
-            serverLoadDisplayMode = args[42] as ServerLoadDisplayMode,
-            isAnyVpnActive = args[43] as Boolean
+            isSentryLogsEnabled = args[39] as Boolean,
+            apiBypassEnabled = args[40] as Boolean,
+            apiBypassStrategy = args[41] as String,
+            appTheme = args[42] as AppTheme,
+            serverLoadDisplayMode = args[43] as ServerLoadDisplayMode,
+            isAnyVpnActive = args[44] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -351,6 +354,13 @@ class SettingsViewModel @Inject constructor(
     fun setSentryMetricsEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setSentryMetricsEnabled(enabled)
+        }
+    }
+
+    fun setSentryLogsEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setSentryLogsEnabled(enabled)
+            ru.protonmod.next.utils.ProtonLogger.isSentryLogsEnabled = enabled
         }
     }
 

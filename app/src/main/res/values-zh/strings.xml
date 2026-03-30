@@ -163,6 +163,8 @@
     <string name="settings_sentry_anr_desc">检测应用是否超过 5 秒未响应</string>
     <string name="settings_sentry_metrics">应用指标</string>
     <string name="settings_sentry_metrics_desc">通过计数器和仪表等数值数据跟踪应用健康状况</string>
+    <string name="settings_sentry_logs">发送日志</string>
+    <string name="settings_sentry_logs_desc">包含匿名系统日志以帮助调试复杂问题</string>
     <string name="settings_sentry_session_replay">会话重放</string>
     <string name="settings_sentry_session_replay_desc">匿名交互回放以调试 UI 问题</string>
 

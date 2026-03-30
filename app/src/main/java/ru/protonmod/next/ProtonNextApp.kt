@@ -67,6 +67,7 @@ class ProtonNextApp : Application(), Configuration.Provider {
         val settings = SettingsManager(this)
         ProtonLogger.isNonFatalEnabled = settings.isNonFatalEnabledSync()
         ProtonLogger.isAnalyticsEnabled = settings.isAnalyticsEnabledSync()
+        ProtonLogger.isSentryLogsEnabled = settings.isLogsEnabledSync()
 
         // Start background server load updates
         vpnRepository.startAutoUpdate()

@@ -165,6 +165,8 @@
     <string name="settings_sentry_anr_desc">Обнаружение зависаний приложения более чем на 5 секунд</string>
     <string name="settings_sentry_metrics">Метрики приложения</string>
     <string name="settings_sentry_metrics_desc">Отслеживание состояния приложения с помощью числовых данных (счетчики, шкалы)</string>
+    <string name="settings_sentry_logs">Отправка логов</string>
+    <string name="settings_sentry_logs_desc">Включать анонимные системные логи, чтобы помочь в отладке сложных проблем</string>
     <string name="settings_sentry_session_replay">Повторы сессий</string>
     <string name="settings_sentry_session_replay_desc">Анонимное воспроизведение взаимодействий для отладки проблем интерфейса</string>
 

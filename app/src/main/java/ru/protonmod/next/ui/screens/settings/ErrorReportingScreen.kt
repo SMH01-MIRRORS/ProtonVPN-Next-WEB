@@ -131,6 +131,13 @@ fun ErrorReportingScreen(
                             onCheckedChange = { viewModel.setSentryMetricsEnabled(it) }
                         )
                         SettingToggleRow(
+                            title = stringResource(R.string.settings_sentry_logs),
+                            subtitle = stringResource(R.string.settings_sentry_logs_desc),
+                            icon = Icons.Rounded.Insights,
+                            checked = uiState.isSentryLogsEnabled,
+                            onCheckedChange = { viewModel.setSentryLogsEnabled(it) }
+                        )
+                        SettingToggleRow(
                             title = stringResource(R.string.settings_sentry_performance),
                             subtitle = stringResource(R.string.settings_sentry_performance_desc),
                             icon = Icons.Rounded.Speed,
