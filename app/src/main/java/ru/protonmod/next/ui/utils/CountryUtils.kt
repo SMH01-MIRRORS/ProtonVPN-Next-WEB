@@ -28,13 +28,17 @@ object CountryUtils {
      * Returns a drawable resource ID for a country flag, or 0 if not found.
      */
     fun getFlagResource(context: Context, countryCode: String?): Int {
-        if (countryCode == null) return 0
-        // Standard mapping: UK -> GB for resource matching if necessary, 
-        // but typically resources follow ISO 3166-1 alpha-2.
-        val normalizedCode = when (val code = countryCode.lowercase()) {
+        if (countryCode == null || countryCode.isBlank()) return 0
+        
+        // Handle codes with suffixes like "US-FREE", "NL-BASIC", etc.
+        val baseCode = countryCode.split('-')[0].lowercase().trim()
+        
+        // Standard mapping: UK -> GB for resource matching if necessary.
+        val normalizedCode = when (baseCode) {
             "uk" -> "gb"
-            else -> code
+            else -> baseCode
         }
+        
         val resName = "flag_$normalizedCode"
         return context.resources.getIdentifier(resName, "drawable", context.packageName)
     }
@@ -43,11 +47,13 @@ object CountryUtils {
      * Generates an Emoji flag from an ISO country code (e.g., "US" -> 🇺🇸)
      */
     fun getFlagForCountry(countryCode: String?): String {
-        if (countryCode == null || countryCode.length != 2) return "🌍"
+        if (countryCode == null || countryCode.isBlank()) return "🌍"
         
-        val code = countryCode.uppercase()
-        val firstChar = Character.codePointAt(code, 0) - 0x41 + 0x1F1E6
-        val secondChar = Character.codePointAt(code, 1) - 0x41 + 0x1F1E6
+        val baseCode = countryCode.split('-')[0].uppercase().trim()
+        if (baseCode.length != 2) return "🌍"
+        
+        val firstChar = Character.codePointAt(baseCode, 0) - 0x41 + 0x1F1E6
+        val secondChar = Character.codePointAt(baseCode, 1) - 0x41 + 0x1F1E6
         
         return String(Character.toChars(firstChar)) + String(Character.toChars(secondChar))
     }
@@ -58,17 +64,18 @@ object CountryUtils {
     fun getCountryName(context: Context, countryCode: String?): String {
         if (countryCode == null || countryCode.equals("null", ignoreCase = true) || countryCode.isBlank()) return ""
 
-        val locale = Locale.Builder().setRegion(countryCode.uppercase()).build()
+        val baseCode = countryCode.split('-')[0].uppercase().trim()
+        val locale = Locale.Builder().setRegion(baseCode).build()
         val displayName = locale.getDisplayCountry(Locale.getDefault())
         
-        return if (displayName.isNotEmpty() && !displayName.equals(countryCode, ignoreCase = true)) {
+        return if (displayName.isNotEmpty() && !displayName.equals(baseCode, ignoreCase = true)) {
             displayName
         } else {
-            val resourceName = "country_${countryCode.lowercase()}"
+            val resourceName = "country_${baseCode.lowercase()}"
             val resourceId = context.resources.getIdentifier(resourceName, "string", context.packageName)
             if (resourceId != 0) {
-                context.getString(resourceId).takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) } ?: countryCode
-            } else countryCode
+                context.getString(resourceId).takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) } ?: baseCode
+            } else baseCode
         }
     }
 

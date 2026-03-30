@@ -204,8 +204,10 @@ object MapCoordinates {
     )
 
     fun getPointForCountry(countryCode: String?): PointF {
-        val code = countryCode?.uppercase() ?: return PointF(MAP_ORIGINAL_WIDTH/2, MAP_ORIGINAL_HEIGHT/2)
-        val name = codeToMapCountryName[code]
+        val baseCode = countryCode?.split('-')?.getOrNull(0)?.uppercase()?.trim()
+            ?: return PointF(MAP_ORIGINAL_WIDTH/2, MAP_ORIGINAL_HEIGHT/2)
+            
+        val name = codeToMapCountryName[baseCode]
         val bounds = tvMapNameToBounds[name]
 
         if (bounds != null) {
@@ -213,7 +215,7 @@ object MapCoordinates {
         }
 
         // Fallback for completely unknown countries - deterministic scatter
-        val hash = code.hashCode()
+        val hash = baseCode.hashCode()
         val x = MAP_ORIGINAL_WIDTH * (0.2f + (Math.abs(hash % 100) / 100f) * 0.6f)
         val y = MAP_ORIGINAL_HEIGHT * (0.2f + (Math.abs((hash / 100) % 100) / 100f) * 0.6f)
         return PointF(x, y)
@@ -224,7 +226,8 @@ object MapCoordinates {
             // Default full map view (zoomed out)
             return RectF(150f, 50f, MAP_ORIGINAL_WIDTH - 150f, MAP_ORIGINAL_HEIGHT - 50f)
         }
-        val name = codeToMapCountryName[countryCode.uppercase()]
+        val baseCode = countryCode.split('-')[0].uppercase().trim()
+        val name = codeToMapCountryName[baseCode]
         val bounds = tvMapNameToBounds[name]
 
         if (bounds != null) {
