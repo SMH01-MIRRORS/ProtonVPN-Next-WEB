@@ -18,6 +18,7 @@
 package ru.protonmod.next.data.network
 
 import ru.protonmod.next.utils.ProtonLogger
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import okhttp3.Authenticator
 import okhttp3.Request
@@ -50,7 +51,7 @@ class TokenAuthenticator @Inject constructor(
             ProtonLogger.d(TAG, "Acquired lock for token refresh")
 
             // Read the current session synchronously
-            val session = runBlocking { sessionDao.getSession() }
+            val session = runBlocking(Dispatchers.IO) { sessionDao.getSession() }
             if (session == null || session.refreshToken.isNullOrEmpty() || session.sessionId.isNullOrEmpty()) {
                 ProtonLogger.e(TAG, "Token refresh failed: No valid session found in DB (UID: ${session?.userId})")
                 return null
@@ -76,7 +77,7 @@ class TokenAuthenticator @Inject constructor(
                 )
 
                 // Execute the refresh token request synchronously
-                val refreshResponse = runBlocking {
+                val refreshResponse = runBlocking(Dispatchers.IO) {
                     authApi.refreshSession(refreshRequest)
                 }
 
@@ -94,7 +95,7 @@ class TokenAuthenticator @Inject constructor(
                         refreshToken = newRefreshToken
                     )
 
-                    runBlocking { sessionDao.saveSession(updatedSession) }
+                    runBlocking(Dispatchers.IO) { sessionDao.saveSession(updatedSession) }
                     ProtonLogger.i(TAG, "Session updated in database. Retrying original request.")
 
                     // Retry the failed request with the new access token
