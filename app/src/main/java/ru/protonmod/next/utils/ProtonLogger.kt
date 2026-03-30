@@ -46,15 +46,18 @@ object ProtonLogger {
             Log.v(finalTag, message, throwable)
         }
         addSentryBreadcrumb(finalTag, message, SentryLevel.DEBUG)
+        addSentryLog(finalTag, message, SentryLevel.DEBUG, throwable)
     }
 
     /** Log at VERBOSE level with a lazy message lambda for better performance */
     inline fun v(tag: String? = null, throwable: Throwable? = null, crossinline message: () -> String) {
         val finalTag = tag ?: getAutoTag()
+        val msg = message()
         if (BuildConfig.DEBUG) {
-            Log.v(finalTag, message(), throwable)
+            Log.v(finalTag, msg, throwable)
         }
-        addSentryBreadcrumb(finalTag, message(), SentryLevel.DEBUG)
+        addSentryBreadcrumb(finalTag, msg, SentryLevel.DEBUG)
+        addSentryLog(finalTag, msg, SentryLevel.DEBUG, throwable)
     }
 
     /** Log at DEBUG level */
@@ -64,15 +67,18 @@ object ProtonLogger {
             Log.d(finalTag, message, throwable)
         }
         addSentryBreadcrumb(finalTag, message, SentryLevel.DEBUG)
+        addSentryLog(finalTag, message, SentryLevel.DEBUG, throwable)
     }
 
     /** Log at DEBUG level with a lazy message lambda for better performance */
     inline fun d(tag: String? = null, throwable: Throwable? = null, crossinline message: () -> String) {
         val finalTag = tag ?: getAutoTag()
+        val msg = message()
         if (BuildConfig.DEBUG) {
-            Log.d(finalTag, message(), throwable)
+            Log.d(finalTag, msg, throwable)
         }
-        addSentryBreadcrumb(finalTag, message(), SentryLevel.DEBUG)
+        addSentryBreadcrumb(finalTag, msg, SentryLevel.DEBUG)
+        addSentryLog(finalTag, msg, SentryLevel.DEBUG, throwable)
     }
 
     /** Log at INFO level */
@@ -82,15 +88,18 @@ object ProtonLogger {
             Log.i(finalTag, message, throwable)
         }
         addSentryBreadcrumb(finalTag, message, SentryLevel.INFO)
+        addSentryLog(finalTag, message, SentryLevel.INFO, throwable)
     }
 
     /** Log at INFO level with a lazy message lambda for better performance */
     inline fun i(tag: String? = null, throwable: Throwable? = null, crossinline message: () -> String) {
         val finalTag = tag ?: getAutoTag()
+        val msg = message()
         if (BuildConfig.DEBUG) {
-            Log.i(finalTag, message(), throwable)
+            Log.i(finalTag, msg, throwable)
         }
-        addSentryBreadcrumb(finalTag, message(), SentryLevel.INFO)
+        addSentryBreadcrumb(finalTag, msg, SentryLevel.INFO)
+        addSentryLog(finalTag, msg, SentryLevel.INFO, throwable)
     }
 
     /** Log at WARN level */
@@ -100,6 +109,7 @@ object ProtonLogger {
             Log.w(finalTag, message, throwable)
         }
         addSentryBreadcrumb(finalTag, message, SentryLevel.WARNING)
+        addSentryLog(finalTag, message, SentryLevel.WARNING, throwable)
         if (throwable != null && isNonFatalEnabled) {
             Sentry.captureException(throwable)
         }
@@ -108,10 +118,12 @@ object ProtonLogger {
     /** Log at WARN level with a lazy message lambda for better performance */
     inline fun w(tag: String? = null, throwable: Throwable? = null, crossinline message: () -> String) {
         val finalTag = tag ?: getAutoTag()
+        val msg = message()
         if (BuildConfig.DEBUG) {
-            Log.w(finalTag, message(), throwable)
+            Log.w(finalTag, msg, throwable)
         }
-        addSentryBreadcrumb(finalTag, message(), SentryLevel.WARNING)
+        addSentryBreadcrumb(finalTag, msg, SentryLevel.WARNING)
+        addSentryLog(finalTag, msg, SentryLevel.WARNING, throwable)
         if (throwable != null && isNonFatalEnabled) {
             Sentry.captureException(throwable)
         }
@@ -124,6 +136,7 @@ object ProtonLogger {
             Log.e(finalTag, message, throwable)
         }
         addSentryBreadcrumb(finalTag, message, SentryLevel.ERROR)
+        addSentryLog(finalTag, message, SentryLevel.ERROR, throwable)
         if (isNonFatalEnabled) {
             if (throwable != null) {
                 Sentry.captureException(throwable)
@@ -141,6 +154,7 @@ object ProtonLogger {
             Log.e(finalTag, msg, throwable)
         }
         addSentryBreadcrumb(finalTag, msg, SentryLevel.ERROR)
+        addSentryLog(finalTag, msg, SentryLevel.ERROR, throwable)
         if (isNonFatalEnabled) {
             if (throwable != null) {
                 Sentry.captureException(throwable)
@@ -166,6 +180,24 @@ object ProtonLogger {
             this.level = level
         }
         Sentry.addBreadcrumb(breadcrumb)
+    }
+
+    /**
+     * Forwards a log entry to the Sentry Logs API (requires options.logs.isEnabled = true).
+     * This feeds the real-time "Logs" explorer in Sentry, separate from breadcrumbs.
+     */
+    @PublishedApi
+    internal fun addSentryLog(tag: String, message: String, level: SentryLevel, throwable: Throwable? = null) {
+        if (!isAnalyticsEnabled) return
+        val logger = Sentry.logger() ?: return
+        val fullMessage = "[$tag] $message"
+        when (level) {
+            SentryLevel.DEBUG -> if (throwable != null) logger.debug(throwable, fullMessage) else logger.debug(fullMessage)
+            SentryLevel.INFO -> if (throwable != null) logger.info(throwable, fullMessage) else logger.info(fullMessage)
+            SentryLevel.WARNING -> if (throwable != null) logger.warn(throwable, fullMessage) else logger.warn(fullMessage)
+            SentryLevel.ERROR -> if (throwable != null) logger.error(throwable, fullMessage) else logger.error(fullMessage)
+            SentryLevel.FATAL -> if (throwable != null) logger.fatal(throwable, fullMessage) else logger.fatal(fullMessage)
+        }
     }
 
     /**

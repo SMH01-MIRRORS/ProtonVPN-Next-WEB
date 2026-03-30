@@ -355,11 +355,17 @@ class AuthRepository @Inject constructor(
                         ProtonLogger.w(TAG, "CAPTCHA Verification Required. Token extracted.")
                         return Result.failure(CaptchaRequiredException(url, token, getPendingUid()))
                     }
-                    // 12087 = Captcha validation failed due to payload mismatch or session reset
+                    // 12087 = Captcha validation failed due to payload mismatch or session reset.
+                    // This happens when the server-side anonymous session was invalidated (e.g., after
+                    // the app went to background/foreground) while the captcha token was still bound
+                    // to it. We clear all stale state and request a brand-new captcha challenge so
+                    // the next attempt uses a fresh, valid session.
                     if (parsedError.code == 12087) {
-                        ProtonLogger.e(TAG, "Captcha validation failed (12087) on server side.")
+                        ProtonLogger.e(TAG, "Captcha validation failed (12087): session invalidated. Clearing state and requesting a new challenge.")
                         clearPendingAuth()
-                        return Result.failure(Exception("Verification failed. Please try again."))
+                        val freshUrl = parsedError.details?.webUrl ?: ""
+                        val freshToken = parsedError.details?.humanVerificationToken ?: ""
+                        return Result.failure(CaptchaRequiredException(freshUrl, freshToken, null))
                     }
                 } catch (ex: Exception) {
                     ProtonLogger.w(TAG, "Failed to parse 422 error body: ${ex.message}")

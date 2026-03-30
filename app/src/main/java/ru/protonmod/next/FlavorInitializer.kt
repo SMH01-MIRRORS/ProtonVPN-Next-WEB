@@ -60,6 +60,10 @@ object FlavorInitializer {
             // Measure what matters with Metrics (v8.30.0+)
             // Track application health with numeric data like counters and gauges
             options.metrics.isEnabled = isMetricsEnabled
+
+            // Enable structured Logs (v8.12.0+)
+            // All ProtonLogger calls will be forwarded to Sentry Logs for real-time querying
+            options.logs.isEnabled = true
             
             // Advanced Debugging (Attachments & Screenshots, 10 GB quota)
             options.isAttachScreenshot = isAnalyticsEnabled
