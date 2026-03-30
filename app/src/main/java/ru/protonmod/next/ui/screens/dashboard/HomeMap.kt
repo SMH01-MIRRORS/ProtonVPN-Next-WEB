@@ -494,11 +494,12 @@ class MapView(context: Context) : View(context) {
         val isAnimating = matrixAnimator?.isRunning == true
 
         if (isAnimating) {
-            // During zoom, draw the vector picture for infinite quality
-            canvas.save()
-            canvas.concat(currentMatrix)
-            mapPicture?.let { canvas.drawPicture(it) }
-            canvas.restore()
+            // During zoom, rasterize the Picture into a screen-sized Bitmap with the
+            // current matrix applied. Using drawPicture() after canvas.concat() triggers
+            // libhwui assertion failures on some devices/drivers, so we avoid it entirely.
+            mapPicture?.let { picture ->
+                drawPictureWithMatrix(canvas, picture, currentMatrix, width, height)
+            }
             // Invalidate cache since zoom changed
             mapCacheBitmap = null
         } else {
@@ -506,25 +507,20 @@ class MapView(context: Context) : View(context) {
             if (width > 0 && height > 0 && (mapCacheBitmap == null || mapCacheBitmap?.width != width || mapCacheBitmap?.height != height)) {
                 mapCacheBitmap?.recycle()
                 mapCacheBitmap = null
-                try {
-                    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                    mapCacheBitmap = bitmap
-                    cacheCanvas.setBitmap(bitmap)
-                    cacheCanvas.drawColor(android.graphics.Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
-                    mapPicture?.let {
-                        cacheCanvas.save()
-                        cacheCanvas.concat(currentMatrix)
-                        cacheCanvas.drawPicture(it)
-                        cacheCanvas.restore()
+                mapPicture?.let { picture ->
+                    try {
+                        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                        mapCacheBitmap = bitmap
+                        cacheCanvas.setBitmap(bitmap)
+                        cacheCanvas.drawColor(android.graphics.Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+                        drawPictureWithMatrix(cacheCanvas, picture, currentMatrix, width, height)
+                    } catch (e: Exception) {
+                        ProtonLogger.e("HomeMap", "Failed to create/prepare cache bitmap", e)
+                        mapCacheBitmap = null
+                        // Fallback: render directly onto the view canvas
+                        drawPictureWithMatrix(canvas, picture, currentMatrix, width, height)
+                        return
                     }
-                } catch (e: Exception) {
-                    ProtonLogger.e("HomeMap", "Failed to create/prepare cache bitmap", e)
-                    // Fallback to Picture if bitmap creation fails (OOM or zero size)
-                    canvas.save()
-                    canvas.concat(currentMatrix)
-                    mapPicture?.let { canvas.drawPicture(it) }
-                    canvas.restore()
-                    return
                 }
             }
             mapCacheBitmap?.let { 
@@ -574,6 +570,25 @@ class MapView(context: Context) : View(context) {
     }
 
     private fun isConnected() = connectedServer != null && !isConnecting
+
+    /**
+     * Rasterizes a [Picture] into a [Bitmap] with [matrix] applied, then draws the result
+     * onto [canvas]. This avoids calling [Canvas.drawPicture] after [Canvas.concat], which
+     * triggers assertion failures in libhwui on certain Android versions and GPU drivers.
+     */
+    private fun drawPictureWithMatrix(canvas: Canvas, picture: Picture, matrix: Matrix, w: Int, h: Int) {
+        if (w <= 0 || h <= 0) return
+        try {
+            val tmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+            val tmpCanvas = Canvas(tmp)
+            tmpCanvas.concat(matrix)
+            tmpCanvas.drawPicture(picture)
+            canvas.drawBitmap(tmp, 0f, 0f, null)
+            tmp.recycle()
+        } catch (e: Exception) {
+            ProtonLogger.e("HomeMap", "drawPictureWithMatrix failed", e)
+        }
+    }
 }
 
 // --- Compose Wrapper ---

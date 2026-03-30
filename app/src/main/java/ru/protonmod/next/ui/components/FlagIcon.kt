@@ -18,7 +18,9 @@
 package ru.protonmod.next.ui.components
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Picture
 import android.graphics.RectF
@@ -124,6 +126,18 @@ private class FlagDrawScope(
             (dstSize.height - pictureRect.height()) / 2f
         )
 
+        // Rasterize the Picture into a Bitmap first to avoid libhwui assertion
+        // failures that occur when drawPicture() is combined with clipPath().
+        val bitmapWidth = srcWidth.coerceAtLeast(1)
+        val bitmapHeight = srcHeight.coerceAtLeast(1)
+        val flagBitmap = try {
+            Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888).also { bmp ->
+                Canvas(bmp).drawPicture(picture)
+            }
+        } catch (e: Exception) {
+            null
+        } ?: return
+
         canvas.withSave {
             if (cornerRadius > 0f) {
                 val path = Path().apply {
@@ -134,7 +148,8 @@ private class FlagDrawScope(
                 }
                 clipPath(path)
             }
-            drawPicture(picture, pictureRect)
+            drawBitmap(flagBitmap, null, pictureRect, Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG))
         }
+        flagBitmap.recycle()
     }
 }
