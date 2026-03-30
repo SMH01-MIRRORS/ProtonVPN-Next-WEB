@@ -21,6 +21,7 @@ import android.util.Log
 import io.sentry.Sentry
 import io.sentry.Breadcrumb
 import io.sentry.SentryLevel
+import io.sentry.SentryLogLevel
 import ru.protonmod.next.BuildConfig
 
 /**
@@ -40,9 +41,6 @@ object ProtonLogger {
     var isAnalyticsEnabled: Boolean = true
     /** Controlled by SettingsManager at runtime/startup */
     var isSentryLogsEnabled: Boolean = true
-
-    /** Internal Sentry logger for "Sentry Logs" integration */
-    internal var sentryLogger: io.sentry.ILogger? = null
 
     /** Log at VERBOSE level */
     fun v(tag: String? = null, message: String, throwable: Throwable? = null) {
@@ -195,7 +193,22 @@ object ProtonLogger {
     internal fun addSentryLog(tag: String, message: String, level: SentryLevel, throwable: Throwable? = null) {
         if (!isAnalyticsEnabled || !isSentryLogsEnabled) return
         val fullMessage = "[$tag] $message"
-        sentryLogger?.log(level, fullMessage, throwable)
+        
+        val logLevel = when (level) {
+            SentryLevel.DEBUG -> SentryLogLevel.DEBUG
+            SentryLevel.INFO -> SentryLogLevel.INFO
+            SentryLevel.WARNING -> SentryLogLevel.WARN
+            SentryLevel.ERROR -> SentryLogLevel.ERROR
+            SentryLevel.FATAL -> SentryLogLevel.FATAL
+        }
+
+        // Use the official Sentry Logs API (v8.12.0+)
+        // This ensures logs are sent to the "Logs" explorer in both debug and release.
+        if (throwable != null) {
+            Sentry.logger().log(logLevel, "$fullMessage: ${throwable.message}", throwable)
+        } else {
+            Sentry.logger().log(logLevel, fullMessage)
+        }
     }
 
     /**

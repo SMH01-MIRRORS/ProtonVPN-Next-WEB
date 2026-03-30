@@ -188,7 +188,12 @@ sentry {
     autoUploadProguardMapping = true
     uploadNativeSymbols = true
     includeNativeSources = true
-    tracingInstrumentation.enabled = true
+    tracingInstrumentation {
+        enabled.set(true)
+        logcat {
+            enabled.set(true)
+        }
+    }
 }
 
 dependencies {
