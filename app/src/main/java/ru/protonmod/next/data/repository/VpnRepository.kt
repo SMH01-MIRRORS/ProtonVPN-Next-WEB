@@ -65,6 +65,7 @@ class VpnRepository @Inject constructor(
         private val json = Json { ignoreUnknownKeys = true }
         private const val CACHE_DURATION_MILLIS = 60 * 60 * 1000L // 1 hour
         private const val AUTO_UPDATE_INTERVAL_MINUTES = 20L
+        private const val AUTO_UPDATE_STARTUP_DELAY_MILLIS = 5_000L // 5 seconds
     }
 
     fun startAutoUpdate() {
@@ -72,8 +73,12 @@ class VpnRepository @Inject constructor(
 
         autoUpdateJob = managerScope.launch {
             ProtonLogger.i(TAG, "Starting periodic server load/list auto-update loop")
+            // Delay the first cycle so it does not contend with MainActivity/MainViewModel
+            // initialization for Room database resources during app startup, which could
+            // cause lock contention and an ANR on the main thread.
+            delay(AUTO_UPDATE_STARTUP_DELAY_MILLIS)
             while (isActive) {
-                val session = sessionDao.getSession()
+                val session = withContext(dispatcherProvider.io()) { sessionDao.getSession() }
                 if (session != null) {
                     ProtonLogger.d(TAG, "Auto-update: Fetching fresh server data for user tier ${session.userTier}")
                     getServers(
@@ -97,17 +102,19 @@ class VpnRepository @Inject constructor(
 
     fun getServersFlow(): Flow<List<LogicalServer>> {
         return serverDao.getServersFlow().map { entities ->
-            // Extract tier from the current active session dynamically
-            val userTier = sessionDao.getSession()?.userTier ?: 0
+            // Extract tier from the current active session dynamically.
+            // Explicitly dispatch to IO to avoid any risk of running the DB query on the
+            // main or default thread pool and contributing to lock contention.
+            val userTier = withContext(dispatcherProvider.io()) { sessionDao.getSession() }?.userTier ?: 0
             entities
                 .map { ServerMapper.toDomain(it) }
                 .filter { it.tier <= userTier } // Filter dynamically based on session tier
         }
     }
 
-    suspend fun getCachedServers(): List<LogicalServer> {
+    suspend fun getCachedServers(): List<LogicalServer> = withContext(dispatcherProvider.io()) {
         val userTier = sessionDao.getSession()?.userTier ?: 0
-        return serverDao.getAllServers()
+        serverDao.getAllServers()
             .map { ServerMapper.toDomain(it) }
             .filter { it.tier <= userTier } // Filter dynamically based on session tier
     }
