@@ -158,6 +158,8 @@ fun CaptchaScreen(
                         WebView(context).apply {
                             setBackgroundColor(android.graphics.Color.TRANSPARENT)
 
+                            val proxyBaseUrl = "https://shimmering-stroopwafel-51675e.netlify.app"
+
                             settings.javaScriptEnabled = true
                             settings.domStorageEnabled = true
 
@@ -203,7 +205,6 @@ fun CaptchaScreen(
 
                             webViewClient = object : WebViewClient() {
                                 private val okHttpClient = OkHttpClient.Builder().build()
-                                private val proxyBaseUrl = "https://shimmering-stroopwafel-51675e.netlify.app"
 
                                 override fun onRenderProcessGone(
                                     view: WebView?,
