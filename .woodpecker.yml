@@ -12,7 +12,7 @@ clone:
 
 steps:
   build-android:
-    image: ghcr.io/cirruslabs/android-sdk:37
+    image: ghcr.io/cirruslabs/android-sdk:36
     environment:
       ANDROID_HOME: /opt/android-sdk-linux
       SIGNING_KEY_BASE64:
@@ -30,12 +30,22 @@ steps:
       SENTRY_PROJECT:
         from_secret: SENTRY_PROJECT
     commands:
+      # 1. Force update sdkmanager and install Android 37.0
+      - yes | sdkmanager --licenses > /dev/null
+      - sdkmanager --update
+      - sdkmanager "platforms;android-37.0" "build-tools;37.0.0" "platform-tools"
+
+      # 2. Prepare Git metadata
       - git fetch --unshallow || true
       - git fetch --tags
       - 'echo "Current commit count: $(git rev-list --count HEAD)"'
+
+      # 3. Setup Keystore
       - echo $SIGNING_KEY_BASE64 | base64 -d > app/release.keystore
       - chmod +x gradlew
       - export SIGNING_KEY_FILE=release.keystore
+
+      # 4. Build APKs
       - ./gradlew assembleDebug assembleRelease
 
   generate-changelog:
