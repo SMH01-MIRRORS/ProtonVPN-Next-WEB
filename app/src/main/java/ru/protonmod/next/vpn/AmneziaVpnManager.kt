@@ -22,6 +22,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
+import io.sentry.SentryLevel
 import ru.protonmod.next.utils.ProtonLogger
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -349,7 +350,10 @@ class AmneziaVpnManager @Inject constructor(
         obfuscationParams: ObfuscationParams? = null
     ): Result<Unit> = withContext(dispatcherProvider.io()) {
         try {
-            ProtonLogger.i(TAG, "Initiating connection to server: ${server.id} (Domain: ${server.domain}, LogicalID: $logicalServerId)")
+            val serverLogInfo = "${server.id} (Domain: ${server.domain}, LogicalID: $logicalServerId)"
+            ProtonLogger.i(TAG, "Initiating connection to server: $serverLogInfo")
+            ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: Start ($serverLogInfo)", SentryLevel.INFO, "vpn.connect")
+            
             _isConnecting.value = true
             var currentSession = session
 
@@ -374,6 +378,8 @@ class AmneziaVpnManager @Inject constructor(
             
             // DNS resolution with improved retry and logging
             ProtonLogger.d(TAG, "Resolving domain ${server.domain} (Max retries: $DNS_RETRY_COUNT)")
+            ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: DNS Resolve (${server.domain})", SentryLevel.DEBUG, "vpn.connect")
+            
             for (i in 1..DNS_RETRY_COUNT) {
                 try {
                     targetIp = InetAddress.getByName(server.domain).hostAddress
@@ -462,6 +468,7 @@ class AmneziaVpnManager @Inject constructor(
             val activeDns = if (isValidDns) userDns else PROTON_DNS_IP
             ProtonLogger.i(TAG, "Using DNS Server: $activeDns")
 
+            ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: Building Config", SentryLevel.DEBUG, "vpn.connect")
             val configStr = amneziaConfigGenerator.buildConfig(
                 serverPublicKey = serverPubKey,
                 privateKey = wgPrivateKeyB64,
@@ -478,6 +485,7 @@ class AmneziaVpnManager @Inject constructor(
             
             ProtonLogger.v(TAG, "Generated AWG Config Length: ${configStr.length}")
 
+            ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: Starting Service", SentryLevel.INFO, "vpn.connect")
             systemContextWrapper.startVpnService(
                 configStr = configStr,
                 notificationsEnabled = settingsManager.notificationsEnabled.first(),
@@ -494,6 +502,7 @@ class AmneziaVpnManager @Inject constructor(
             Result.success(Unit)
         } catch (e: Exception) {
             ProtonLogger.e(TAG, "Failed to connect to VPN", e)
+            ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Failed: ${e.message}", SentryLevel.ERROR, "vpn.error")
             
             // Track connection failure
             Sentry.metrics().count("vpn_connection_failure", 1.0)
@@ -550,6 +559,7 @@ class AmneziaVpnManager @Inject constructor(
     }
 
     fun disconnect() {
+        ProtonLogger.action(TAG, "User clicked Disconnect")
         connectionJob?.cancel()
         applicationScope.launch {
             isReconnecting = false

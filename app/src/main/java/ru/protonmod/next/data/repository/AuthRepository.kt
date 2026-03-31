@@ -17,6 +17,7 @@
 
 package ru.protonmod.next.data.repository
 
+import io.sentry.SentryLevel
 import ru.protonmod.next.utils.ProtonLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -84,6 +85,9 @@ class AuthRepository @Inject constructor(
      */
     suspend fun login(username: String, passwordRaw: String, captchaToken: String? = null): Result<LoginResponse> = withContext(dispatcherProvider.io()) {
         try {
+            ProtonLogger.i(TAG, "Starting SRP login flow for user: $username (Captcha: ${captchaToken != null})")
+            ProtonLogger.addSentryBreadcrumb(TAG, "Auth Step: Start Login ($username)", SentryLevel.INFO, "auth.flow")
+
             if (pendingUsername != username) {
                 clearPendingAuth()
                 pendingUsername = username
@@ -171,6 +175,7 @@ class AuthRepository @Inject constructor(
             }
 
             ProtonLogger.d(TAG, "[Login] Success. Scopes: ${loginResponse.scopes}")
+            ProtonLogger.addSentryBreadcrumb(TAG, "Auth Step: Success (Scopes: ${loginResponse.scopes})", SentryLevel.INFO, "auth.flow")
             Result.success(loginResponse.copy(
                 accessToken = finalAccessToken,
                 refreshToken = finalRefreshToken,
@@ -178,6 +183,7 @@ class AuthRepository @Inject constructor(
             ))
         } catch (e: Exception) {
             if (e !is HttpException) ProtonLogger.e(TAG, "[Login] Exception thrown", e)
+            ProtonLogger.addSentryBreadcrumb(TAG, "Auth Step: Failed (${e.message})", SentryLevel.ERROR, "auth.flow")
             handleHttpError(e)
         }
     }

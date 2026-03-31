@@ -17,6 +17,7 @@
 
 package ru.protonmod.next.data.repository
 
+import io.sentry.SentryLevel
 import ru.protonmod.next.utils.ProtonLogger
 import io.sentry.Sentry
 import kotlinx.coroutines.*
@@ -205,6 +206,7 @@ class VpnRepository @Inject constructor(
                     val body = response.body()
                     if (body?.code == 1000) {
                         ProtonLogger.i(TAG, "Proton API: Received ${body.logicalServers.size} logical servers")
+                        ProtonLogger.addSentryBreadcrumb(TAG, "VPN Repository: Servers Updated (${body.logicalServers.size})", SentryLevel.INFO, "vpn.repo")
                         body.logicalServers to response.headers()["Last-Modified"]
                     } else {
                         ProtonLogger.e(TAG, "Proton API Error: Code ${body?.code}")

@@ -18,6 +18,8 @@
 package ru.protonmod.next.ui.screens
 
 import androidx.lifecycle.ViewModel
+import io.sentry.Sentry
+import ru.protonmod.next.utils.ProtonLogger
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +30,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
-import io.sentry.Sentry
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.repository.AuthRepository
 import javax.inject.Inject
@@ -100,11 +101,13 @@ class LoginViewModel @Inject constructor(
     fun login(username: String, passwordRaw: String, captchaToken: String? = null) {
         if (username.isBlank() || passwordRaw.isBlank()) return
 
+        ProtonLogger.action("Login", "User clicked Login (Username: $username)")
         val startTime = System.currentTimeMillis()
         _uiState.value = LoginUiState.Loading
         viewModelScope.launch {
             authRepository.login(username, passwordRaw, captchaToken)
                 .onSuccess { response ->
+                    ProtonLogger.i("Login", "Login successful for $username")
                     // Metrics
                     val duration = System.currentTimeMillis() - startTime
                     Sentry.metrics().distribution("login_latency", duration.toDouble())
@@ -112,6 +115,7 @@ class LoginViewModel @Inject constructor(
 
                     val scopes = response.scopes
                     if (scopes.contains("twofactor")) {
+                        ProtonLogger.i("Login", "2FA required for $username")
                         _uiState.value = LoginUiState.Requires2FA(
                             sessionId = response.sessionId ?: "",
                             tempAccessToken = response.accessToken ?: "",
@@ -125,10 +129,12 @@ class LoginViewModel @Inject constructor(
                     }
                 }
                 .onFailure { exception ->
+                    ProtonLogger.e("Login", "Login failed for $username: ${exception.message}", exception)
                     // Metrics
                     Sentry.metrics().count("login_error", 1.0)
 
                     if (exception is CaptchaRequiredException) {
+                        ProtonLogger.w("Login", "Captcha required for $username")
                         _uiState.value = LoginUiState.RequiresCaptcha(
                             webUrl = exception.webUrl,
                             username = username,
@@ -165,16 +171,19 @@ class LoginViewModel @Inject constructor(
     }
 
     fun loginAnonymous(captchaToken: String? = null) {
+        ProtonLogger.action("Login", "User clicked Login Anonymous")
         viewModelScope.launch {
             _uiState.value = LoginUiState.Loading
             authRepository.loginAnonymous(captchaToken)
                 .onSuccess { response ->
+                    ProtonLogger.i("Login", "Anonymous login successful")
                     _uiState.value = LoginUiState.Success(
                         accessToken = response.accessToken ?: "",
                         userId = response.userId ?: ""
                     )
                 }
                 .onFailure { exception ->
+                    ProtonLogger.e("Login", "Anonymous login failed: ${exception.message}", exception)
                     if (exception is CaptchaRequiredException) {
                         _uiState.value = LoginUiState.RequiresCaptcha(
                             webUrl = exception.webUrl,

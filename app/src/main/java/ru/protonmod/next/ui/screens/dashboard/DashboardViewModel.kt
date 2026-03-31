@@ -222,6 +222,7 @@ class DashboardViewModel @Inject constructor(
      * Toggles the visibility of the IP address and persists the setting.
      */
     fun toggleIpVisibility() {
+        ProtonLogger.action("Dashboard", "User toggled IP visibility")
         val newValue = !_isIpHidden.value
         _isIpHidden.value = newValue
         prefs.edit { putBoolean("is_ip_hidden", newValue) }
@@ -359,6 +360,7 @@ class DashboardViewModel @Inject constructor(
     }
 
     fun disconnect() {
+        ProtonLogger.action("Dashboard", "User clicked Disconnect")
         viewModelScope.launch {
             _vpnLocationText.value = null
             connectedServerState.setConnectedServer(null)
@@ -391,6 +393,7 @@ class DashboardViewModel @Inject constructor(
     }
 
     fun quickConnect() {
+        ProtonLogger.action("Dashboard", "User clicked Quick Connect")
         viewModelScope.launch {
             val currentState = uiState.value
             if (currentState !is DashboardUiState.Success) return@launch
