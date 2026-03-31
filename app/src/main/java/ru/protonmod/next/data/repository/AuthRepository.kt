@@ -19,6 +19,7 @@ package ru.protonmod.next.data.repository
 
 import io.sentry.SentryLevel
 import ru.protonmod.next.utils.ProtonLogger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -182,6 +183,7 @@ class AuthRepository @Inject constructor(
                 sessionId = finalUid
             ))
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             if (e !is HttpException) ProtonLogger.e(TAG, "[Login] Exception thrown", e)
             ProtonLogger.addSentryBreadcrumb(TAG, "Auth Step: Failed (${e.message})", SentryLevel.ERROR, "auth.flow")
             handleHttpError(e)
@@ -241,6 +243,7 @@ class AuthRepository @Inject constructor(
                 Result.failure(Exception("Guest login failed: Code ${response.code}"))
             }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             if (e !is HttpException) ProtonLogger.e(TAG, "[AnonymousLogin] Exception thrown", e)
             handleHttpError(e)
         }
@@ -287,6 +290,7 @@ class AuthRepository @Inject constructor(
             vpnRepository.refreshServersBackground(fullToken, sessionId, userTier)
             Result.success(response2fa.copy(userId = finalUserId))
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             if (e !is HttpException) ProtonLogger.e(TAG, "[verify2FA] Exception thrown", e)
             handleHttpError(e)
         }

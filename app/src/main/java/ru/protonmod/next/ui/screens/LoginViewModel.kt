@@ -25,6 +25,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -129,6 +130,8 @@ class LoginViewModel @Inject constructor(
                     }
                 }
                 .onFailure { exception ->
+                    if (exception is CancellationException) return@onFailure
+
                     // Metrics
                     Sentry.metrics().count("login_error", 1.0)
 
@@ -166,6 +169,7 @@ class LoginViewModel @Inject constructor(
                     )
                 }
                 .onFailure { exception ->
+                    if (exception is CancellationException) return@onFailure
                     _uiState.value = LoginUiState.Error(exception.localizedMessage ?: "Two-factor verification failed")
                 }
         }
@@ -184,6 +188,8 @@ class LoginViewModel @Inject constructor(
                     )
                 }
                 .onFailure { exception ->
+                    if (exception is CancellationException) return@onFailure
+
                     if (exception is CaptchaRequiredException) {
                         // CaptchaRequiredException is expected flow — do NOT log as error or send to Sentry
                         ProtonLogger.w("Login", "Anonymous login requires captcha")
