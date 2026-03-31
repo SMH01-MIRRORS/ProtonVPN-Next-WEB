@@ -355,10 +355,13 @@ class DashboardViewModel @Inject constructor(
         super.onCleared()
         // Shut down the shared OkHttpClient instances to release their thread pools and
         // connection pools when the ViewModel is destroyed, preventing resource leaks.
-        noProxyClient.dispatcher.executorService.shutdown()
-        noProxyClient.connectionPool.evictAll()
-        defaultClient.dispatcher.executorService.shutdown()
-        defaultClient.connectionPool.evictAll()
+        // evictAll() closes sockets which involves network I/O, so it must run off the main thread.
+        viewModelScope.launch(Dispatchers.IO) {
+            noProxyClient.dispatcher.executorService.shutdown()
+            noProxyClient.connectionPool.evictAll()
+            defaultClient.dispatcher.executorService.shutdown()
+            defaultClient.connectionPool.evictAll()
+        }
     }
 
     fun loadServers() {
