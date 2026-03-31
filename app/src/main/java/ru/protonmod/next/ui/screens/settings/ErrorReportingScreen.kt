@@ -160,6 +160,10 @@ fun ErrorReportingScreen(
                         )
                     }
                 }
+
+                item {
+                    SentryPoweredBy()
+                }
             }
         }
     }

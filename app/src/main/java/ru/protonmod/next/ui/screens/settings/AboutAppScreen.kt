@@ -285,6 +285,10 @@ fun AboutAppScreen(
                         }
                     }
                 }
+
+                item {
+                    SentryPoweredBy()
+                }
             }
         }
     }

@@ -32,10 +32,16 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import ru.protonmod.next.R
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
+import android.content.Intent
+import androidx.core.net.toUri
 
 @Composable
 fun Category(
@@ -181,4 +187,36 @@ fun SettingToggleRow(
             )
         }
     )
+}
+
+@Composable
+fun SentryPoweredBy(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val url = stringResource(R.string.url_sentry)
+    val colors = ProtonNextTheme.colors
+    val sentryLogo = if (colors.isDark) R.drawable.sentry_light else R.drawable.sentry_dark
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable {
+                val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+                context.startActivity(intent)
+            }
+            .padding(vertical = 24.dp, horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(R.string.about_sentry),
+            style = MaterialTheme.typography.labelSmall,
+            color = colors.textWeak
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Icon(
+            painter = painterResource(id = sentryLogo),
+            contentDescription = "Sentry",
+            tint = Color.Unspecified,
+            modifier = Modifier.height(24.dp)
+        )
+    }
 }

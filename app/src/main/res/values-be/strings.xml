@@ -233,6 +233,9 @@
     <string name="about_codeberg">Codeberg</string>
     <string name="about_unavailable">Часова недаступна</string>
 
+    <string name="about_sentry">Працуе на базе Sentry</string>
+    <string name="url_sentry">https://sentry.io/</string>
+
     <string name="url_github">https://github.com/SMH01-MOD-NEXT/ProtonMOD-NEXT</string>
     <string name="url_codeberg">https://codeberg.org/SMH01/ProtonVPN-Next</string>
     <string name="url_telegram">https://t.me/ProtonVPN_MOD</string>
