@@ -129,11 +129,11 @@ class LoginViewModel @Inject constructor(
                     }
                 }
                 .onFailure { exception ->
-                    ProtonLogger.e("Login", "Login failed for $username: ${exception.message}", exception)
                     // Metrics
                     Sentry.metrics().count("login_error", 1.0)
 
                     if (exception is CaptchaRequiredException) {
+                        // CaptchaRequiredException is expected flow — do NOT log as error or send to Sentry
                         ProtonLogger.w("Login", "Captcha required for $username")
                         _uiState.value = LoginUiState.RequiresCaptcha(
                             webUrl = exception.webUrl,
@@ -144,6 +144,7 @@ class LoginViewModel @Inject constructor(
                             sessionId = exception.sessionId
                         )
                     } else {
+                        ProtonLogger.e("Login", "Login failed for $username: ${exception.message}", exception)
                         _uiState.value = LoginUiState.Error(
                             exception.localizedMessage ?: "An unexpected authentication error occurred"
                         )
@@ -183,8 +184,9 @@ class LoginViewModel @Inject constructor(
                     )
                 }
                 .onFailure { exception ->
-                    ProtonLogger.e("Login", "Anonymous login failed: ${exception.message}", exception)
                     if (exception is CaptchaRequiredException) {
+                        // CaptchaRequiredException is expected flow — do NOT log as error or send to Sentry
+                        ProtonLogger.w("Login", "Anonymous login requires captcha")
                         _uiState.value = LoginUiState.RequiresCaptcha(
                             webUrl = exception.webUrl,
                             username = "",
@@ -194,6 +196,7 @@ class LoginViewModel @Inject constructor(
                             sessionId = exception.sessionId
                         )
                     } else {
+                        ProtonLogger.e("Login", "Anonymous login failed: ${exception.message}", exception)
                         _uiState.value = LoginUiState.Error(exception.localizedMessage ?: "Guest login failed")
                     }
                 }

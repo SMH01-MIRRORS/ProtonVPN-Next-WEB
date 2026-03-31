@@ -314,9 +314,25 @@ fun CaptchaScreen(
                                 }
                             }
 
+                            // When API bypass is enabled, proxy the captcha URL through the
+                            // netlify proxy so that captcha requests are not blocked by regional
+                            // restrictions. The interceptor handles subsequent resource requests,
+                            // but the initial page load URL must also be rewritten here.
+                            val effectiveWebUrl = if (isApiBypassEnabled) {
+                                when {
+                                    webUrl.startsWith("https://verify-api.proton.me") ->
+                                        webUrl.replace("https://verify-api.proton.me", "$proxyBaseUrl/verify-api")
+                                    webUrl.startsWith("https://verify.proton.me") ->
+                                        webUrl.replace("https://verify.proton.me", "$proxyBaseUrl/verify")
+                                    else -> webUrl
+                                }
+                            } else {
+                                webUrl
+                            }
+
                             val optimizedUrl = buildString {
-                                append(webUrl)
-                                if (!webUrl.contains("?")) append("?") else append("&")
+                                append(effectiveWebUrl)
+                                if (!effectiveWebUrl.contains("?")) append("?") else append("&")
                                 append("embed=true&theme=1&vpn=true")
                             }
 
