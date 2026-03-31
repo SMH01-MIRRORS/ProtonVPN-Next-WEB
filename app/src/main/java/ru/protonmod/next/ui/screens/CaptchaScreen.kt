@@ -20,6 +20,7 @@ package ru.protonmod.next.ui.screens
 import android.annotation.SuppressLint
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -203,6 +204,17 @@ fun CaptchaScreen(
                             webViewClient = object : WebViewClient() {
                                 private val okHttpClient = OkHttpClient.Builder().build()
                                 private val proxyBaseUrl = "https://shimmering-stroopwafel-51675e.netlify.app"
+
+                                override fun onRenderProcessGone(
+                                    view: WebView?,
+                                    detail: RenderProcessGoneDetail?
+                                ): Boolean {
+                                    ProtonLogger.e("CaptchaScreen", "WebView renderer process gone (crashed: ${detail?.didCrash()})")
+                                    // Handle the renderer crash gracefully by dismissing the captcha screen
+                                    // Returning true prevents the entire app from being killed by the system
+                                    onDismiss()
+                                    return true
+                                }
 
                                 override fun shouldInterceptRequest(
                                     view: WebView,

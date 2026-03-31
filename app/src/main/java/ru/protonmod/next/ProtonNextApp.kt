@@ -18,6 +18,7 @@
 package ru.protonmod.next
 
 import android.app.Application
+import android.webkit.WebView
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
@@ -51,6 +52,17 @@ class ProtonNextApp : Application(), Configuration.Provider {
         super.onCreate()
         
         instance = this
+        
+        // Multi-process WebView support for API 28+.
+        // This ensures the application doesn't crash if WebView is initialized in the :vpn process.
+        try {
+            val processName = getProcessName()
+            if (packageName != processName) {
+                WebView.setDataDirectorySuffix(processName.substringAfterLast(':'))
+            }
+        } catch (e: Exception) {
+            // Might have been set already by another component
+        }
         
         // Initialize OkHttp with context to avoid "Unable to load PublicSuffixDatabase"
         // in multi-process environments when using DnsOverHttps.

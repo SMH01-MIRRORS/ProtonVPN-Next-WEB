@@ -62,7 +62,7 @@ plugins {
 
 android {
     namespace = "ru.protonmod.next"
-    compileSdk = 36
+    compileSdk = 37
 
     // Force AGP to use a specific NDK version instead of the default one
     ndkVersion = "29.0.14206865"
@@ -70,7 +70,7 @@ android {
     defaultConfig {
         applicationId = "ru.protonmod.next"
         minSdk = 29
-        targetSdk = 36
+        targetSdk = 37
         versionCode = getDynamicVersionCode(rootDir)
         versionName = getDynamicVersionName(rootDir)
 
