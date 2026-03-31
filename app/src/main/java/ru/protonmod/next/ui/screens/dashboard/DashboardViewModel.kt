@@ -94,6 +94,20 @@ class DashboardViewModel @Inject constructor(
     private val recentConnectionDao: ru.protonmod.next.data.local.RecentConnectionDao
 ) : ViewModel() {
 
+    // Shared OkHttpClient instances — created once, reused for every IP fetch, shut down in onCleared().
+    // noProxyClient forces requests outside any system proxy so we always see the device's real IP.
+    private val noProxyClient: OkHttpClient = OkHttpClient.Builder()
+        .proxy(Proxy.NO_PROXY)
+        .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .build()
+
+    // defaultClient lets requests travel through whatever route is active (i.e. the VPN tunnel).
+    private val defaultClient: OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .build()
+
     private val prefs = context.getSharedPreferences("dashboard_ui_prefs", Context.MODE_PRIVATE)
 
     private val _errorMessage = MutableStateFlow<String?>(null)
@@ -275,11 +289,8 @@ class DashboardViewModel @Inject constructor(
      */
     private suspend fun fetchRealLocation(useProxy: Boolean = true): LocationData? = withContext(Dispatchers.IO) {
         val startTime = System.currentTimeMillis()
-        val client = OkHttpClient.Builder()
-            .apply { if (useProxy) proxy(Proxy.NO_PROXY) }
-            .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-            .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-            .build()
+        // Reuse the pre-built shared client — no new thread pools or connection pools are allocated.
+        val client = if (useProxy) noProxyClient else defaultClient
 
         val endpoints = listOf(
             "https://ipwho.is/",
@@ -339,6 +350,16 @@ class DashboardViewModel @Inject constructor(
     }
 
     private data class LocationData(val ip: String, val countryCode: String)
+
+    override fun onCleared() {
+        super.onCleared()
+        // Shut down the shared OkHttpClient instances to release their thread pools and
+        // connection pools when the ViewModel is destroyed, preventing resource leaks.
+        noProxyClient.dispatcher.executorService.shutdown()
+        noProxyClient.connectionPool.evictAll()
+        defaultClient.dispatcher.executorService.shutdown()
+        defaultClient.connectionPool.evictAll()
+    }
 
     fun loadServers() {
         viewModelScope.launch {

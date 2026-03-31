@@ -12,7 +12,7 @@ clone:
 
 steps:
   build-android:
-    image: ghcr.io/cirruslabs/android-sdk:36
+    image: ghcr.io/cirruslabs/android-sdk:37
     environment:
       ANDROID_HOME: /opt/android-sdk-linux
       SIGNING_KEY_BASE64:

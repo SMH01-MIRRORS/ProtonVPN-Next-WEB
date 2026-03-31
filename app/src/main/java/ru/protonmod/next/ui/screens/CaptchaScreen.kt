@@ -68,6 +68,18 @@ fun CaptchaScreen(
     var progress by remember { mutableIntStateOf(0) }
     val isTablet = isTablet()
 
+    // Single OkHttpClient for the lifetime of this composable.  DisposableEffect guarantees its
+    // thread pool and connection pool are released as soon as the screen leaves the composition.
+    val captchaHttpClient = remember {
+        OkHttpClient.Builder().build()
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            captchaHttpClient.dispatcher.executorService.shutdown()
+            captchaHttpClient.connectionPool.evictAll()
+        }
+    }
+
     Scaffold(
         topBar = {
             Column {
@@ -204,7 +216,9 @@ fun CaptchaScreen(
                             }
 
                             webViewClient = object : WebViewClient() {
-                                private val okHttpClient = OkHttpClient.Builder().build()
+                                // captchaHttpClient is the composable-scoped instance managed by
+                                // DisposableEffect; no new client is created here.
+                                private val okHttpClient = captchaHttpClient
 
                                 override fun onRenderProcessGone(
                                     view: WebView?,
