@@ -330,6 +330,7 @@
     <string name="error_unknown">Unknown error</string>
     <string name="error_auth_failed">An unexpected authentication error occurred</string>
     <string name="error_2fa_failed">Two-factor verification failed</string>
+    <string name="unknown">Unknown</string>
 
     <!-- Profiles Screen -->
     <string name="profiles_title">Profiles</string>

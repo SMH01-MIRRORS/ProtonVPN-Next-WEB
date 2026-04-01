@@ -323,6 +323,7 @@
     <string name="error_unknown">خطای ناشناخته</string>
     <string name="error_auth_failed">یک خطای احراز هویت غیرمنتظره رخ داد</string>
     <string name="error_2fa_failed">تایید دو مرحله‌ای ناموفق بود</string>
+    <string name="unknown">نامشخص</string>
 
     <!-- Profiles Screen -->
     <string name="profiles_title">پروفایل‌ها</string>

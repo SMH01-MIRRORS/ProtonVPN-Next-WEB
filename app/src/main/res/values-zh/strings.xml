@@ -318,6 +318,7 @@
     <string name="error_unknown">未知错误</string>
     <string name="error_auth_failed">发生意外的身份验证错误</string>
     <string name="error_2fa_failed">双重验证失败</string>
+    <string name="unknown">未知</string>
 
     <!-- Profiles Screen -->
     <string name="profiles_title">配置方案</string>

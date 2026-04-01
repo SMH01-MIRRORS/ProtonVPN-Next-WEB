@@ -209,8 +209,8 @@ class DashboardViewModel @Inject constructor(
                 Pair(state, server)
             }.collectLatest { (state, server) ->
                 if (state == Tunnel.State.UP && server != null) {
-                    // Give the tunnel 3 seconds to stabilize routing before updating servers/load
-                    delay(3000)
+                    // Give the tunnel 1 second to stabilize routing before starting fetch attempts
+                    delay(1000)
 
                     recentConnectionDao.addRecentConnection(
                         RecentConnectionEntity(
@@ -261,22 +261,33 @@ class DashboardViewModel @Inject constructor(
 
     private fun fetchVpnLocation(countryCode: String) {
         viewModelScope.launch {
+            val unknown = context.getString(R.string.unknown)
+            val originalIp = _originalLocationText.value?.ip
+
             // Clear connection pool to ensure we don't reuse a pre-VPN connection.
-            // OkHttp connection pooling might otherwise keep using a socket established on the old interface.
             withContext(Dispatchers.IO) {
                 defaultClient.connectionPool.evictAll()
             }
 
-            // Fetch real location through the VPN tunnel
-            var location = fetchRealLocation(useProxy = false)
-
-            // If the fetched IP matches the original unprotected IP, it might mean routing 
-            // hasn't fully switched yet. Wait and retry once.
-            val originalIp = _originalLocationText.value?.ip
-            if (location != null && location.ip == originalIp && originalIp != context.getString(R.string.unknown)) {
-                ProtonLogger.d("DashboardVM", "Fetched IP matches original, retrying after delay...")
-                delay(3000)
+            var location: LocationData? = null
+            
+            // Try up to 3 cycles to get an IP that is NOT the original one (handling routing lag)
+            for (cycle in 1..3) {
                 location = fetchRealLocation(useProxy = false)
+                
+                if (location != null) {
+                    // If we got an IP and it's different from original (or original is unknown) - success
+                    if (location.ip != originalIp || originalIp == unknown) {
+                        break 
+                    } else {
+                        ProtonLogger.d("DashboardVM", "Leak detected: fetched IP matches original (cycle $cycle). Waiting...")
+                    }
+                }
+                
+                if (cycle < 3) {
+                    delay(2000)
+                    withContext(Dispatchers.IO) { defaultClient.connectionPool.evictAll() }
+                }
             }
 
             // Prioritize API country code if valid, otherwise use the server's declared country code
@@ -287,9 +298,7 @@ class DashboardViewModel @Inject constructor(
             val localizedCountry = CountryUtils.getCountryName(context, finalCountryCode)
                 .ifBlank { finalCountryCode }
 
-            val unknown = context.getString(R.string.unknown)
-            
-            // If API failed to fetch IP, use "Unknown" instead of a simulated/random one
+            // If API failed to fetch IP after all retries, use "Unknown"
             val safeIp = location?.ip?.ifBlank { null } ?: unknown
             
             // If IP is unknown, country name and code should also be unknown/null for honesty as in official app
@@ -314,65 +323,53 @@ class DashboardViewModel @Inject constructor(
      */
     private suspend fun fetchRealLocation(useProxy: Boolean = true): LocationData? = withContext(Dispatchers.IO) {
         val startTime = System.currentTimeMillis()
-        // Reuse the pre-built shared client — no new thread pools or connection pools are allocated.
         val client = if (useProxy) noProxyClient else defaultClient
 
+        // Только самые легкие и быстрые API (IP + Country Code)
         val endpoints = listOf(
-            "https://ipwho.is/",
-            "https://ipapi.co/json/",
+            "https://api.myip.com",
             "https://freeipapi.com/api/json",
-            "https://api.myip.com"
+            "http://ip-api.com/json/"
         )
 
         for (url in endpoints) {
-            try {
-                val request = Request.Builder().url(url).build()
-                client.newCall(request).execute().use { response ->
-                    if (response.isSuccessful) {
-                        val body = response.body.string()
-                        if (body.isNotBlank()) {
-                            val json = JSONObject(body)
-                            val ip = when {
-                                json.has("ip") -> json.optString("ip", "")
-                                json.has("ipAddress") -> json.optString("ipAddress", "")
-                                else -> ""
-                            }
-
-                            val countryCode = when {
-                                json.has("country_code") -> json.optString("country_code", "")
-                                json.has("countryCode") -> json.optString("countryCode", "")
-                                json.has("cc") -> json.optString("cc", "")
-                                else -> ""
-                            }
-
-                            val cleanIp = if (ip.equals("null", ignoreCase = true)) "" else ip.trim()
-                            val cleanCountryCode = if (countryCode.equals("null", ignoreCase = true)) "" else countryCode.trim()
-
-                            if (cleanIp.isNotEmpty() && cleanCountryCode.isNotEmpty()) {
-                                // Metrics
-                                val duration = System.currentTimeMillis() - startTime
-                                Sentry.metrics().distribution("location_fetch_latency", duration.toDouble())
-                                Sentry.metrics().count("location_fetch_success", 1.0)
+            // Try each endpoint up to 3 times with 1s delay before moving to next
+            for (attempt in 1..3) {
+                try {
+                    val request = Request.Builder().url(url).build()
+                    client.newCall(request).execute().use { response ->
+                        if (response.isSuccessful) {
+                            val body = response.body.string()
+                            if (body.isNotBlank()) {
+                                val json = JSONObject(body)
                                 
-                                return@withContext LocationData(cleanIp, cleanCountryCode)
+                                val ip = json.optString("ip")
+                                    .ifBlank { json.optString("ipAddress") }
+                                    .ifBlank { json.optString("query") }
+                                
+                                val countryCode = json.optString("cc")
+                                    .ifBlank { json.optString("countryCode") }
+                                    .ifBlank { json.optString("country_code") }
+
+                                if (ip.isNotBlank() && countryCode.isNotBlank()) {
+                                    val duration = System.currentTimeMillis() - startTime
+                                    Sentry.metrics().distribution("location_fetch_latency", duration.toDouble())
+                                    Sentry.metrics().count("location_fetch_success", 1.0)
+                                    
+                                    return@withContext LocationData(ip.trim(), countryCode.trim())
+                                }
                             }
                         }
                     }
+                } catch (e: Exception) {
+                    ProtonLogger.w("DashboardVM", "Fetch failed from $url (attempt $attempt): ${e.message}")
                 }
-            } catch (e: Exception) {
-                // Sentry HttpClientException handling (avoids reporting transient timeouts as hard errors)
-                val isTimeout = e.message?.contains("504") == true || e.message?.contains("timeout") == true
-                if (isTimeout) {
-                    ProtonLogger.w("DashboardViewModel", "Transient timeout for $url, trying fallback...")
-                } else {
-                    ProtonLogger.w("DashboardViewModel", "Failed to fetch from $url: ${e.message}")
-                }
+                if (attempt < 3) delay(1000)
             }
         }
         
         // Metrics
         Sentry.metrics().count("location_fetch_error", 1.0)
-
         null
     }
 

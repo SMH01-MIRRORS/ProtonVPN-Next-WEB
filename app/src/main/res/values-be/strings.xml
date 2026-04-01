@@ -333,6 +333,7 @@
     <string name="error_unknown">Невядомая памылка</string>
     <string name="error_auth_failed">Адбылася непрадбачаная памылка аўтэнтыфікацыі</string>
     <string name="error_2fa_failed">Памылка двухфактарнай праверкі</string>
+    <string name="unknown">Невядома</string>
 
     <!-- Profiles Screen -->
     <string name="profiles_title">Профілі</string>

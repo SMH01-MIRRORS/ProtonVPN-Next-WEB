@@ -310,13 +310,15 @@ private fun LocationTextElement(
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick) // Makes the entire IP block clickable to toggle privacy mode
     ) {
-        // Data is now sanitized at the Mapper level, so we only need simple fallbacks
-        val safeCountry = locationText.country.ifBlank {
-            stringResource(R.string.status_not_connected)
-        }
+        val unknown = stringResource(R.string.unknown)
         
-        val safeIp = locationText.ip.ifBlank {
-            stringResource(R.string.ip_placeholder)
+        // Data is now sanitized at the Mapper level, so we only need simple fallbacks
+        val safeIp = locationText.ip.ifBlank { unknown }
+        
+        val safeCountry = if (locationText.ip.isBlank()) {
+            unknown
+        } else {
+            locationText.country.ifBlank { stringResource(R.string.status_not_connected) }
         }
 
         val country = BidiFormatter.getInstance().unicodeWrap(safeCountry)
@@ -880,10 +882,10 @@ fun ConnectionStatusCard(
                     isConnected && vpnLocationText == null -> {
                         // Provide a dummy IP string while waiting for the real one.
                         val rawCountry = connectedServer?.exitCountry?.let { CountryUtils.getCountryName(context, it) }
-                        val safeCountry = rawCountry?.ifBlank { null } ?: stringResource(R.string.status_vpn)
-                        LocationText(country = safeCountry, countryCode = connectedServer?.exitCountry, ip = stringResource(R.string.ip_placeholder))
+                        val safeCountry = rawCountry?.ifBlank { null } ?: stringResource(R.string.unknown)
+                        LocationText(country = safeCountry, countryCode = connectedServer?.exitCountry, ip = stringResource(R.string.unknown))
                     }
-                    else -> originalLocationText ?: LocationText(country = stringResource(R.string.status_connecting), ip = stringResource(R.string.ip_placeholder))
+                    else -> originalLocationText ?: LocationText(country = stringResource(R.string.status_connecting), ip = stringResource(R.string.unknown))
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))

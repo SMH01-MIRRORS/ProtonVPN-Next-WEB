@@ -340,6 +340,7 @@
     <string name="error_unknown">Неизвестная ошибка</string>
     <string name="error_auth_failed">Произошла непредвиденная ошибка аутентификации</string>
     <string name="error_2fa_failed">Ошибка двухфакторной проверки</string>
+    <string name="unknown">Неизвестно</string>
 
     <!-- Profiles Screen -->
     <string name="profiles_title">Профили</string>
