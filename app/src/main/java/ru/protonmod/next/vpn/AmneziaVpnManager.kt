@@ -315,7 +315,8 @@ class AmneziaVpnManager @Inject constructor(
         overridePort: Int? = null,
         overrideObfuscation: Boolean? = null,
         obfuscationParams: ObfuscationParams? = null,
-        logicalServer: LogicalServer? = null
+        logicalServer: LogicalServer? = null,
+        forceFallback: Boolean = false
     ) {
         if (currentServerId == logicalServerId && _tunnelState.value == Tunnel.State.UP) {
             ProtonLogger.d(TAG, "Already connected to $logicalServerId")
@@ -334,7 +335,7 @@ class AmneziaVpnManager @Inject constructor(
                 connectedServerState.setConnectedServer(resolved)
             }
 
-            connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams)
+            connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams, forceFallback)
             
             // Track connection attempt via Sentry Metrics
             Sentry.metrics().count("vpn_connection_attempt", 1.0)
@@ -347,13 +348,14 @@ class AmneziaVpnManager @Inject constructor(
         session: SessionEntity,
         overridePort: Int? = null,
         overrideObfuscation: Boolean? = null,
-        obfuscationParams: ObfuscationParams? = null
+        obfuscationParams: ObfuscationParams? = null,
+        forceFallback: Boolean = false
     ): Result<Unit> = withContext(dispatcherProvider.io()) {
         try {
             val serverLogInfo = "${server.id} (Domain: ${server.domain}, LogicalID: $logicalServerId)"
             ProtonLogger.i(TAG, "Initiating connection to server: $serverLogInfo")
             ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: Start ($serverLogInfo)", SentryLevel.INFO, "vpn.connect")
-            
+
             _isConnecting.value = true
             var currentSession = session
 
@@ -375,29 +377,49 @@ class AmneziaVpnManager @Inject constructor(
                 ProtonLogger.e(TAG, "Critical: VPN Private Key is null in session data")
             }
             var targetIp: String? = null
-            
-            // DNS resolution with improved retry and logging
-            ProtonLogger.d(TAG, "Resolving domain ${server.domain} (Max retries: $DNS_RETRY_COUNT)")
-            ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: DNS Resolve (${server.domain})", SentryLevel.DEBUG, "vpn.connect")
-            
-            for (i in 1..DNS_RETRY_COUNT) {
-                try {
-                    targetIp = InetAddress.getByName(server.domain).hostAddress
-                    if (targetIp != null) {
-                        ProtonLogger.i(TAG, "DNS resolved ${server.domain} to $targetIp on attempt $i")
-                        break
-                    }
-                } catch (e: Exception) {
-                    ProtonLogger.w(TAG, "DNS retry $i failed for ${server.domain}: ${e.message}")
-                    if (i < DNS_RETRY_COUNT) delay(DNS_RETRY_DELAY_MS * i) // Exponential-ish backoff
-                }
-            }
 
-            if (targetIp == null) {
-                _isConnecting.value = false
-                _tunnelState.value = Tunnel.State.DOWN
-                throw Exception("DNS resolution failed for ${server.domain} after $DNS_RETRY_COUNT attempts").also {
-                    ProtonLogger.e(TAG, it.message!!)
+            if (forceFallback) {
+                // Skip DNS entirely and jump straight to the exitIp fallback
+                val fallbackIp = server.exitIp
+                if (!fallbackIp.isNullOrEmpty()) {
+                    ProtonLogger.i(TAG, "forceFallback=true: skipping DNS resolution, using exitIp: $fallbackIp")
+                    targetIp = fallbackIp
+                } else {
+                    _isConnecting.value = false
+                    _tunnelState.value = Tunnel.State.DOWN
+                    throw Exception("forceFallback=true but no exitIp available for ${server.domain}").also {
+                        ProtonLogger.e(TAG, it.message!!)
+                    }
+                }
+            } else {
+                // DNS resolution with improved retry and logging
+                ProtonLogger.d(TAG, "Resolving domain ${server.domain} (Max retries: $DNS_RETRY_COUNT)")
+                for (i in 1..DNS_RETRY_COUNT) {
+                    if (!isActive) break
+                    try {
+                        targetIp = InetAddress.getByName(server.domain).hostAddress
+                        if (targetIp != null) {
+                            ProtonLogger.i(TAG, "DNS resolved ${server.domain} to $targetIp on attempt $i")
+                            break
+                        }
+                    } catch (e: Exception) {
+                        ProtonLogger.w(TAG, "DNS retry $i failed for ${server.domain}: ${e.message}")
+                        if (i < DNS_RETRY_COUNT) delay(DNS_RETRY_DELAY_MS * i) // Exponential-ish backoff
+                    }
+                }
+
+                if (targetIp == null) {
+                    val fallbackIp = server.exitIp
+                    if (!fallbackIp.isNullOrEmpty()) {
+                        ProtonLogger.w(TAG, "DNS resolution failed for ${server.domain} after $DNS_RETRY_COUNT attempts, falling back to exitIp: $fallbackIp")
+                        targetIp = fallbackIp
+                    } else {
+                        _isConnecting.value = false
+                        _tunnelState.value = Tunnel.State.DOWN
+                        throw Exception("DNS resolution failed for ${server.domain} after $DNS_RETRY_COUNT attempts").also {
+                            ProtonLogger.e(TAG, it.message!!)
+                        }
+                    }
                 }
             }
 
@@ -503,7 +525,7 @@ class AmneziaVpnManager @Inject constructor(
         } catch (e: Exception) {
             ProtonLogger.e(TAG, "Failed to connect to VPN", e)
             ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Failed: ${e.message}", SentryLevel.ERROR, "vpn.error")
-            
+
             // Track connection failure
             Sentry.metrics().count("vpn_connection_failure", 1.0)
 
@@ -520,7 +542,8 @@ class AmneziaVpnManager @Inject constructor(
         overridePort: Int? = null,
         overrideObfuscation: Boolean? = null,
         obfuscationParams: ObfuscationParams? = null,
-        logicalServer: LogicalServer? = null
+        logicalServer: LogicalServer? = null,
+        forceFallback: Boolean = false
     ) {
         // Only skip if we're already connecting (to avoid multiple rapid clicks)
         if (_isConnecting.value) {
@@ -551,7 +574,7 @@ class AmneziaVpnManager @Inject constructor(
                 } catch (_: Exception) {
                 }
                 delay(500)
-                connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams)
+                connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams, forceFallback)
             } finally {
                 isReconnecting = false
             }
