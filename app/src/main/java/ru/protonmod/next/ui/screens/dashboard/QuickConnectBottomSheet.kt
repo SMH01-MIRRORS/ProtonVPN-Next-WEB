@@ -151,7 +151,7 @@ fun QuickConnectBottomSheet(
                         
                         StrategyItem(
                             title = countryName,
-                            description = "${server.city} • ${server.name}",
+                            description = "${server.localizedCity ?: server.city} • ${server.name}",
                             icon = if (flagResId != 0) null else Icons.Rounded.Place,
                             flagResId = flagResId,
                             isSelected = currentStrategy == "server" && currentTargetId == server.id,

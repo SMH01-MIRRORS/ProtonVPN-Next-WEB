@@ -30,5 +30,6 @@ data class VpnProfileUiModel(
     val targetServerId: String? = null,
     val targetServerName: String? = null,
     val targetCountry: String? = null,
-    val targetCity: String? = null
+    val targetCity: String? = null,
+    val localizedCity: String? = null
 )

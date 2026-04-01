@@ -17,27 +17,19 @@
 
 package ru.protonmod.next.data.local
 
-import androidx.room.Database
-import androidx.room.RoomDatabase
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-@Database(
-    entities = [
-        SessionEntity::class,
-        ServersCacheEntity::class,
-        ServerEntity::class,
-        RecentConnectionEntity::class,
-        VpnProfileEntity::class,
-        CityTranslationEntity::class,
-        CityCacheEntity::class
-    ],
-    version = 13,
-    exportSchema = false
+@Entity(tableName = "city_translations", primaryKeys = ["countryCode", "englishName", "languageCode"])
+data class CityTranslationEntity(
+    val countryCode: String,
+    val englishName: String,
+    val localizedName: String,
+    val languageCode: String
 )
-abstract class AppDatabase : RoomDatabase() {
-    abstract fun sessionDao(): SessionDao
-    abstract fun serversCacheDao(): ServersCacheDao
-    abstract fun serverDao(): ServerDao
-    abstract fun recentConnectionDao(): RecentConnectionDao
-    abstract fun profileDao(): ProfileDao
-    abstract fun cityTranslationDao(): CityTranslationDao
-}
+
+@Entity(tableName = "city_cache")
+data class CityCacheEntity(
+    @PrimaryKey val languageCode: String,
+    val lastUpdated: Long
+)

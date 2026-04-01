@@ -1138,7 +1138,7 @@ fun ServerCard(
                 Column(modifier = Modifier.weight(1f)) {
                     val rawCountry = CountryUtils.getCountryName(context, server.exitCountry)
                     val safeCountry = rawCountry.ifBlank { stringResource(R.string.status_vpn) }
-                    val safeCity = server.city
+                    val safeCity = server.localizedCity ?: server.city
                     val locationTitle = if (safeCity.isNotEmpty()) {
                         stringResource(R.string.location_city_format, safeCountry, safeCity)
                     } else {

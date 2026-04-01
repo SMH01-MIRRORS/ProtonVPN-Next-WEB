@@ -36,8 +36,9 @@ data class LogicalServer(
     @SerialName("ExitCountry") val exitCountry: String,
     @SerialName("City") val city: String,
     @SerialName("Servers") val servers: List<PhysicalServer> = emptyList(),
-    // Added field for UI convenience, not directly from logicals API
-    var averageLoad: Int = 0
+    // UI convenience fields
+    var averageLoad: Int = 0,
+    var localizedCity: String? = null
 )
 
 @Serializable

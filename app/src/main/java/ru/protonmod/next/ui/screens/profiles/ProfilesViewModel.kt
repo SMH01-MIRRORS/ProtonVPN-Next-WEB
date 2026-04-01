@@ -69,7 +69,9 @@ class ProfilesViewModel @Inject constructor(
         vpnRepository.getServersFlow()
     ) { entities, servers ->
         entities.map { entity ->
-            val serverName = servers.find { it.id == entity.targetServerId }?.name
+            val matchingServer = servers.find { it.id == entity.targetServerId }
+            val serverName = matchingServer?.name
+            val localizedCity = matchingServer?.localizedCity
             VpnProfileUiModel(
                 id = entity.id,
                 name = entity.name,
@@ -81,7 +83,8 @@ class ProfilesViewModel @Inject constructor(
                 targetServerId = entity.targetServerId,
                 targetServerName = serverName,
                 targetCountry = entity.targetCountry,
-                targetCity = entity.targetCity
+                targetCity = entity.targetCity,
+                localizedCity = localizedCity
             )
         }
     }.stateIn(
@@ -264,9 +267,10 @@ class ProfilesViewModel @Inject constructor(
             .groupBy { it.city }
             .map { (cityName, cityServers) ->
                 val avgLoad = if (cityServers.isEmpty()) 0 else cityServers.map { it.averageLoad }.average().toInt()
-                CityDisplayItem(name = cityName, averageLoad = avgLoad)
+                val localizedName = cityServers.firstOrNull()?.localizedCity ?: cityName
+                CityDisplayItem(name = cityName, localizedName = localizedName, averageLoad = avgLoad)
             }
-            .sortedBy { it.name }
+            .sortedBy { it.localizedName }
     }
 
     suspend fun getServersForCity(countryCode: String, city: String): List<LogicalServer> {

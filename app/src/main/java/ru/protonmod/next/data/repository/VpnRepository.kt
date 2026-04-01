@@ -36,6 +36,9 @@ import ru.protonmod.next.data.local.ServerMapper
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.ServersCacheDao
 import ru.protonmod.next.data.local.ServersCacheEntity
+import ru.protonmod.next.data.local.CityTranslationDao
+import ru.protonmod.next.data.local.CityTranslationEntity
+import ru.protonmod.next.data.local.CityCacheEntity
 import ru.protonmod.next.di.ApplicationScope
 import ru.protonmod.next.utils.coroutines.DispatcherProvider
 import java.util.concurrent.TimeUnit
@@ -48,6 +51,8 @@ class VpnRepository @Inject constructor(
     private val serverDao: ServerDao,
     private val sessionDao: SessionDao,
     private val serversCacheDao: ServersCacheDao,
+    private val cityTranslationDao: CityTranslationDao,
+    private val cityRepository: CityRepository,
     private val dispatcherProvider: DispatcherProvider,
     @ApplicationScope private val managerScope: CoroutineScope
 ) {
@@ -65,6 +70,7 @@ class VpnRepository @Inject constructor(
         private const val TAG = "VpnRepository"
         private val json = Json { ignoreUnknownKeys = true }
         private const val CACHE_DURATION_MILLIS = 60 * 60 * 1000L // 1 hour
+        private const val CITY_CACHE_DURATION_MILLIS = 24 * 60 * 60 * 1000L // 24 hours
         private const val AUTO_UPDATE_INTERVAL_MINUTES = 20L
         private const val AUTO_UPDATE_STARTUP_DELAY_MILLIS = 5_000L // 5 seconds
     }
@@ -105,9 +111,18 @@ class VpnRepository @Inject constructor(
         return serverDao.getServersFlow().map { entities ->
             // Extract tier from the current active session dynamically.
             val userTier = sessionDao.getSession()?.userTier ?: 0
-            entities
+            val servers = entities
                 .map { ServerMapper.toDomain(it) }
                 .filter { it.tier <= userTier } // Filter dynamically based on session tier
+            
+            // Localize cities
+            servers.forEach { server ->
+                server.localizedCity = cityRepository.getLocalizedCityName(
+                    server.exitCountry, 
+                    server.city
+                )
+            }
+            servers
         }.flowOn(dispatcherProvider.io()) // Ensure the entire map block (including DB access) runs on the IO dispatcher,
         // regardless of the collector's context. This prevents unsafe database access from
         // the main thread, which can cause JNI/native crashes (SIGSEGV) in the Android Runtime.
@@ -115,9 +130,17 @@ class VpnRepository @Inject constructor(
 
     suspend fun getCachedServers(): List<LogicalServer> = withContext(dispatcherProvider.io()) {
         val userTier = sessionDao.getSession()?.userTier ?: 0
-        serverDao.getAllServers()
+        val servers = serverDao.getAllServers()
             .map { ServerMapper.toDomain(it) }
             .filter { it.tier <= userTier } // Filter dynamically based on session tier
+        
+        servers.forEach { server ->
+            server.localizedCity = cityRepository.getLocalizedCityName(
+                server.exitCountry,
+                server.city
+            )
+        }
+        servers
     }
 
     suspend fun getServers(
@@ -175,6 +198,10 @@ class VpnRepository @Inject constructor(
         val startTime = System.currentTimeMillis()
         try {
             val now = System.currentTimeMillis()
+
+            // Ensure city translations are up-to-date at the start of any sync
+            refreshCityTranslations(accessToken, sessionId)
+
             val cacheInfo = serversCacheDao.getCacheInfo()
 
             val shouldCheckApi = forceRefresh || cacheInfo == null || now > cacheInfo.expiresAt
@@ -194,6 +221,9 @@ class VpnRepository @Inject constructor(
 
             val bearer = "Bearer $accessToken"
             val ifModifiedSince = if (!forceRefresh) cacheInfo?.lastModified else null
+
+            // Refresh city translations whenever we fetch servers
+            refreshCityTranslations(accessToken, sessionId)
 
             ProtonLogger.i(TAG, "Fetching servers from Proton API... (If-Modified-Since: $ifModifiedSince)")
             val response = vpnApi.getLogicalServers(
@@ -297,6 +327,15 @@ class VpnRepository @Inject constructor(
             serversCacheDao.saveCacheInfo(newCacheInfo)
 
             val logicalServers = serversList.filter { it.tier <= userTier }
+            
+            // Localize cities for the result
+            logicalServers.forEach { server ->
+                server.localizedCity = cityRepository.getLocalizedCityName(
+                    server.exitCountry,
+                    server.city
+                )
+            }
+
             cachedServers = logicalServers
             
             // Metrics
@@ -334,6 +373,11 @@ class VpnRepository @Inject constructor(
     suspend fun getVpnInfo(accessToken: String, sessionId: String): Result<VpnInfoResponse> = withContext(dispatcherProvider.io()) {
         try {
             val bearer = "Bearer $accessToken"
+            
+            // Refresh city translations whenever we refresh vpn info or servers
+            // This ensures city names stay localized if the user changes system language
+            refreshCityTranslations(accessToken, sessionId)
+
             val response = vpnApi.getVpnInfo(bearer, sessionId)
             val body = response.body()?.string()
 
@@ -373,6 +417,52 @@ class VpnRepository @Inject constructor(
         } catch (e: Exception) {
             ProtonLogger.e(TAG, "Error in registerWireGuardKey", e)
             Result.failure(e)
+        }
+    }
+
+    private suspend fun refreshCityTranslations(accessToken: String, sessionId: String) {
+        try {
+            val languageTag = java.util.Locale.getDefault().toLanguageTag()
+            val now = System.currentTimeMillis()
+            
+            // Check if we already have fresh translations for this language
+            val lastUpdated = cityTranslationDao.getLastUpdated(languageTag) ?: 0L
+            val isExpired = now - lastUpdated > CITY_CACHE_DURATION_MILLIS
+            
+            if (!isExpired && cityTranslationDao.getCount(languageTag) > 0) {
+                ProtonLogger.d(TAG, "City translations for $languageTag are fresh, skipping fetch")
+                return
+            }
+
+            ProtonLogger.i(TAG, "Fetching city translations for $languageTag...")
+            val response = vpnApi.getServerCities("Bearer $accessToken", sessionId, languageTag)
+            
+            val entities = mutableListOf<CityTranslationEntity>()
+            response.cities.forEach { (countryCode, cityMap) ->
+                cityMap.forEach { (englishName, localizedName) ->
+                    if (localizedName != null) {
+                        entities.add(
+                            CityTranslationEntity(
+                                countryCode = countryCode,
+                                englishName = englishName,
+                                localizedName = localizedName,
+                                languageCode = languageTag
+                            )
+                        )
+                    }
+                }
+            }
+            
+            if (entities.isNotEmpty()) {
+                // To keep DB clean, we could clear old translations for this language, 
+                // but REPLACE strategy in DAO is enough for now.
+                cityTranslationDao.insertTranslations(entities)
+                cityTranslationDao.saveCacheInfo(CityCacheEntity(languageTag, now))
+                cityRepository.clearCache()
+                ProtonLogger.i(TAG, "Saved ${entities.size} city translations for $languageTag")
+            }
+        } catch (e: Exception) {
+            ProtonLogger.w(TAG, "Failed to refresh city translations: ${e.message}")
         }
     }
 }

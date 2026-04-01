@@ -41,7 +41,7 @@ import ru.protonmod.next.vpn.AmneziaVpnManager
 import javax.inject.Inject
 
 data class CountryDisplayItem(val code: String, val averageLoad: Int)
-data class CityDisplayItem(val name: String, val averageLoad: Int)
+data class CityDisplayItem(val name: String, val localizedName: String, val averageLoad: Int)
 
 sealed class CountriesUiState {
     data object Loading : CountriesUiState()
@@ -115,15 +115,17 @@ class CountriesViewModel @Inject constructor(
                     .groupBy { it.city }
                     .map { (name, cityServers) ->
                         val avg = if (cityServers.isEmpty()) 0 else cityServers.map { it.averageLoad }.average().toInt()
-                        CityDisplayItem(name, avg)
+                        val localizedName = cityServers.firstOrNull()?.localizedCity ?: name
+                        CityDisplayItem(name, localizedName, avg)
                     }
-                    .sortedBy { it.name }
+                    .sortedBy { it.localizedName }
                 CountriesUiState.CitiesList(nav.countryCode, cities, loadMode)
             }
             is NavigationState.Servers -> {
                 val cityServers = servers.filter { it.exitCountry == nav.countryCode && it.city == nav.cityName }
                     .sortedBy { it.name }
-                CountriesUiState.ServersList(nav.countryCode, nav.cityName, cityServers, loadMode)
+                val localizedCityName = cityServers.firstOrNull()?.localizedCity ?: nav.cityName
+                CountriesUiState.ServersList(nav.countryCode, localizedCityName, cityServers, loadMode)
             }
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CountriesUiState.Loading)

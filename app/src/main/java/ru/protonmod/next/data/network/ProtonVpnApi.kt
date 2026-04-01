@@ -17,6 +17,8 @@
 
 package ru.protonmod.next.data.network
 
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -24,6 +26,16 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Query
+
+@Serializable
+data class CityTranslationsResponse(
+    @SerialName("Language")
+    val languageCode: String,
+    @SerialName("Cities")
+    val cities: Map<String, Map<String, String?>>, // CountryCode -> (CityEnglishName -> LocalizedName)
+    @SerialName("States")
+    val states: Map<String, Map<String, String?>>,
+)
 
 interface ProtonVpnApi {
 
@@ -64,6 +76,16 @@ interface ProtonVpnApi {
         @Header("Authorization") authorization: String,
         @Header("x-pm-uid") sessionId: String
     ): Response<ResponseBody>
+
+    /**
+     * Get localized names for cities and states.
+     */
+    @GET("vpn/v1/cities/names")
+    suspend fun getServerCities(
+        @Header("Authorization") authorization: String,
+        @Header("x-pm-uid") sessionId: String,
+        @Header("x-pm-locale") languageTag: String,
+    ): CityTranslationsResponse
 
     /**
      * Registers the WireGuard public key and obtains the internal VPN IP.

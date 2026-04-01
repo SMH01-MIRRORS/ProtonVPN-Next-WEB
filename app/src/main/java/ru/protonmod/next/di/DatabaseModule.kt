@@ -32,6 +32,7 @@ import ru.protonmod.next.data.local.ServersCacheDao
 import ru.protonmod.next.data.local.ServerDao
 import ru.protonmod.next.data.local.RecentConnectionDao
 import ru.protonmod.next.data.local.ProfileDao
+import ru.protonmod.next.data.local.CityTranslationDao
 import javax.inject.Singleton
 
 @Module
@@ -115,6 +116,30 @@ object DatabaseModule {
         }
     }
 
+    val MIGRATION_11_12 = object : Migration(11, 12) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `city_translations` (" +
+                        "`countryCode` TEXT NOT NULL, " +
+                        "`englishName` TEXT NOT NULL, " +
+                        "`localizedName` TEXT NOT NULL, " +
+                        "`languageCode` TEXT NOT NULL, " +
+                        "PRIMARY KEY(`countryCode`, `englishName`, `languageCode`))"
+            )
+        }
+    }
+
+    val MIGRATION_12_13 = object : Migration(12, 13) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `city_cache` (" +
+                        "`languageCode` TEXT NOT NULL, " +
+                        "`lastUpdated` INTEGER NOT NULL, " +
+                        "PRIMARY KEY(`languageCode`))"
+            )
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -130,6 +155,8 @@ object DatabaseModule {
         .addMigrations(MIGRATION_8_9)
         .addMigrations(MIGRATION_9_10)
         .addMigrations(MIGRATION_10_11)
+        .addMigrations(MIGRATION_11_12)
+        .addMigrations(MIGRATION_12_13)
         .build()
     }
 
@@ -161,5 +188,11 @@ object DatabaseModule {
     @Singleton
     fun provideProfileDao(database: AppDatabase): ProfileDao {
         return database.profileDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCityTranslationDao(database: AppDatabase): CityTranslationDao {
+        return database.cityTranslationDao()
     }
 }

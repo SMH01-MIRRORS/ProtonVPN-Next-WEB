@@ -332,7 +332,10 @@ fun ProfileCardItem(
                 val portStr = if (profile.port == 0) stringResource(R.string.settings_port_auto) else profile.port.toString()
                 val targetName = when {
                     profile.targetServerId != null -> stringResource(R.string.profile_server_info, profile.targetServerName ?: profile.targetServerId)
-                    profile.targetCity != null -> stringResource(R.string.profile_city_info, profile.targetCity, CountryUtils.getCountryName(context, profile.targetCountry!!))
+                    profile.targetCity != null -> {
+                        val displayCity = profile.localizedCity ?: profile.targetCity
+                        stringResource(R.string.profile_city_info, displayCity, CountryUtils.getCountryName(context, profile.targetCountry!!))
+                    }
                     profile.targetCountry != null -> {
                         val flagEmoji = CountryUtils.getFlagForCountry(profile.targetCountry)
                         val localizedCountryName = CountryUtils.getCountryName(context, profile.targetCountry)

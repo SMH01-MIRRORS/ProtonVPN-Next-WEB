@@ -390,7 +390,7 @@ fun CountryCard(
 
 @Composable
 fun CitiesListContent(
-    countryName: String,
+    countryName: String, // This is actually country code
     cities: List<CityDisplayItem>,
     connectedServer: LogicalServer?,
     isTablet: Boolean = false,
@@ -399,6 +399,9 @@ fun CitiesListContent(
     onCityClick: (CityDisplayItem) -> Unit,
     onCityMore: (CityDisplayItem) -> Unit
 ) {
+    val context = LocalContext.current
+    val localizedCountry = CountryUtils.getCountryName(context, countryName)
+
     if (isTablet) {
         val configuration = LocalConfiguration.current
         val columns = (configuration.screenWidthDp / 300).coerceAtLeast(2)
@@ -411,7 +414,7 @@ fun CitiesListContent(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                NavigationHeader(title = countryName, onBack = onBack)
+                NavigationHeader(title = localizedCountry, onBack = onBack)
             }
 
             items(cities) { city ->
@@ -436,7 +439,7 @@ fun CitiesListContent(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                NavigationHeader(title = countryName, onBack = onBack)
+                NavigationHeader(title = localizedCountry, onBack = onBack)
             }
 
             items(cities) { city ->
@@ -517,7 +520,7 @@ fun CityCard(
                 Spacer(modifier = Modifier.width(16.dp))
 
                 Text(
-                    text = city.name,
+                    text = city.localizedName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = colors.textNorm,
@@ -545,7 +548,7 @@ fun CityCard(
 
 @Composable
 fun ServersListContent(
-    countryName: String,
+    countryName: String, // This is actually country code
     cityName: String,
     servers: List<LogicalServer>,
     connectedServer: LogicalServer?,
@@ -555,6 +558,8 @@ fun ServersListContent(
     onServerClick: (LogicalServer) -> Unit
 ) {
     val colors = ProtonNextTheme.colors
+    val context = LocalContext.current
+    val localizedCountry = CountryUtils.getCountryName(context, countryName)
 
     if (isTablet) {
         val configuration = LocalConfiguration.current
@@ -568,7 +573,7 @@ fun ServersListContent(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                NavigationHeader(title = "$countryName, $cityName", onBack = onBack)
+                NavigationHeader(title = "$localizedCountry, $cityName", onBack = onBack)
             }
 
             items(servers) { server ->
@@ -592,7 +597,7 @@ fun ServersListContent(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                NavigationHeader(title = "$countryName, $cityName", onBack = onBack)
+                NavigationHeader(title = "$localizedCountry, $cityName", onBack = onBack)
             }
 
             items(servers) { server ->

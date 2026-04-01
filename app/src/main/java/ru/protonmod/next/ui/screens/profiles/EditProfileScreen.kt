@@ -106,6 +106,7 @@ fun EditProfileScreen(
     var profileName by rememberSaveable { mutableStateOf("") }
     var targetCountry by rememberSaveable { mutableStateOf<String?>(null) }
     var targetCity by rememberSaveable { mutableStateOf<String?>(null) }
+    var targetCityLocalized by rememberSaveable { mutableStateOf<String?>(null) }
     var targetServerId by rememberSaveable { mutableStateOf<String?>(null) }
     var targetServerName by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedProtocol by rememberSaveable { mutableStateOf("AmneziaWG") }
@@ -136,10 +137,11 @@ fun EditProfileScreen(
     // Update state when editingProfile is loaded
     LaunchedEffect(editingProfile) {
         if (!isLoaded && editingProfile != null) {
-            editingProfile?.let {
+            editingProfile.let {
                 profileName = it.name
                 targetCountry = it.targetCountry
                 targetCity = it.targetCity
+                targetCityLocalized = it.localizedCity
                 targetServerId = it.targetServerId
                 targetServerName = it.targetServerName
                 selectedProtocol = it.protocol
@@ -246,9 +248,9 @@ fun EditProfileScreen(
                         val locationSubtitle = when {
                             targetServerId != null -> stringResource(R.string.location_server, (targetServerName ?: targetServerId) as Any)
                             targetCity != null -> {
-                                val city = getLocalizedCityName(context, targetCity!!)
+                                val city = targetCityLocalized ?: getLocalizedCityName(context, targetCity!!)
                                 val country = CountryUtils.getCountryName(context, targetCountry)
-                                stringResource(R.string.location_city_format, city, country)
+                                stringResource(R.string.location_city_format, country, city)
                             }
                             targetCountry != null -> CountryUtils.getCountryName(context, targetCountry)
                             else -> stringResource(R.string.location_fastest)
@@ -350,9 +352,10 @@ fun EditProfileScreen(
             loadDisplayMode = serverLoadDisplayMode,
             viewModel = viewModel,
             onDismiss = { showLocationDialog = false },
-            onLocationSelected = { country, city, serverId, serverName ->
+            onLocationSelected = { country, city, cityLocalized, serverId, serverName ->
                 targetCountry = country
                 targetCity = city
+                targetCityLocalized = cityLocalized
                 targetServerId = serverId
                 targetServerName = serverName
                 showLocationDialog = false
@@ -459,7 +462,7 @@ fun LocationSelectionDialog(
     loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     viewModel: ProfilesViewModel,
     onDismiss: () -> Unit,
-    onLocationSelected: (String?, String?, String?, String?) -> Unit
+    onLocationSelected: (String?, String?, String?, String?, String?) -> Unit
 ) {
     val context = LocalContext.current
     val colors = ProtonNextTheme.colors
@@ -468,6 +471,7 @@ fun LocationSelectionDialog(
     var step by remember { mutableIntStateOf(0) } // 0: Country, 1: City, 2: Server
     var currentCountry by remember { mutableStateOf(selectedCountry) }
     var currentCity by remember { mutableStateOf(selectedCity) }
+    var currentCityLocalized by remember { mutableStateOf<String?>(null) }
     var isTransitioning by remember { mutableStateOf(false) }
 
     var cities by remember { mutableStateOf<List<CityDisplayItem>>(emptyList()) }
@@ -549,9 +553,9 @@ fun LocationSelectionDialog(
                                 onClick = {
                                     if (!isTransitioning) {
                                         when(currentStep) {
-                                            0 -> onLocationSelected(null, null, null, null)
-                                            1 -> onLocationSelected(currentCountry, null, null, null)
-                                            2 -> onLocationSelected(currentCountry, currentCity, null, null)
+                                            0 -> onLocationSelected(null, null, null, null, null)
+                                            1 -> onLocationSelected(currentCountry, null, null, null, null)
+                                            2 -> onLocationSelected(currentCountry, currentCity, currentCityLocalized, null, null)
                                         }
                                     }
                                 }
@@ -601,9 +605,8 @@ fun LocationSelectionDialog(
                             }
                             1 -> {
                                 items(cities) { cityItem ->
-                                    val localizedCityName = getLocalizedCityName(context, cityItem.name)
                                     SelectionCard(
-                                        title = localizedCityName,
+                                        title = cityItem.localizedName,
                                         icon = {
                                             Box(
                                                 modifier = Modifier
@@ -623,6 +626,7 @@ fun LocationSelectionDialog(
                                                     isTransitioning = true
                                                     servers = viewModel.getServersForCity(currentCountry!!, cityItem.name)
                                                     currentCity = cityItem.name
+                                                    currentCityLocalized = cityItem.localizedName
                                                     step = 2
                                                     isTransitioning = false
                                                 }
@@ -655,7 +659,7 @@ fun LocationSelectionDialog(
                                         displayMode = loadDisplayMode,
                                         onClick = {
                                             if (!isTransitioning) {
-                                                onLocationSelected(currentCountry, currentCity, server.id, server.name)
+                                                onLocationSelected(currentCountry, currentCity, currentCityLocalized, server.id, server.name)
                                             }
                                         }
                                     )
