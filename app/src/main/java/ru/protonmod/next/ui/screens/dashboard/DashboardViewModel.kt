@@ -23,6 +23,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -356,7 +357,9 @@ class DashboardViewModel @Inject constructor(
         // Shut down the shared OkHttpClient instances to release their thread pools and
         // connection pools when the ViewModel is destroyed, preventing resource leaks.
         // evictAll() closes sockets which involves network I/O, so it must run off the main thread.
-        viewModelScope.launch(Dispatchers.IO) {
+        // viewModelScope is already cancelled at this point, so a standalone CoroutineScope is used
+        // to ensure the cleanup coroutine actually executes on the IO dispatcher.
+        CoroutineScope(Dispatchers.IO).launch {
             noProxyClient.dispatcher.executorService.shutdown()
             noProxyClient.connectionPool.evictAll()
             defaultClient.dispatcher.executorService.shutdown()
