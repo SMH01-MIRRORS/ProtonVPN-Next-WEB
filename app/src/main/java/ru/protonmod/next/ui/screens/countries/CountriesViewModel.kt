@@ -154,12 +154,6 @@ class CountriesViewModel @Inject constructor(
     }
 
     private suspend fun connectToServer(server: LogicalServer) {
-        val session = sessionDao.getSession()
-        if (session == null) {
-            ProtonLogger.e(TAG, "Cannot connect: No session found")
-            return
-        }
-
         // Reliable server selection: Fallback to any server with min load if status == 1 is absent.
         val physicalServer = server.servers.filter { it.status == 1 }.minByOrNull { it.load }
             ?: server.servers.minByOrNull { it.load }
@@ -168,6 +162,13 @@ class CountriesViewModel @Inject constructor(
             connectedServerState.setConnectedServer(server)
             val tunnelState = amneziaVpnManager.tunnelState.value
             val isConnecting = amneziaVpnManager.isConnecting.value
+            // Re-fetch the session right before use so we always pass the freshest credentials,
+            // even if a token refresh occurred between server selection and the actual connect call.
+            val session = sessionDao.getSession()
+            if (session == null) {
+                ProtonLogger.e(TAG, "Cannot connect: No session found")
+                return
+            }
             if (tunnelState == Tunnel.State.UP || isConnecting) {
                 amneziaVpnManager.reconnect(server.id, physicalServer, session)
             } else {
