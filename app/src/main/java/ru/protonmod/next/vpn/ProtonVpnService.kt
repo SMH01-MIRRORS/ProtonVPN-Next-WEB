@@ -399,10 +399,15 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         logcatJob?.cancel()
         logcatJob = serviceScope.launch(Dispatchers.IO) {
             ProtonLogger.d(TAG, "Starting Logcat collection for 'tun/proton_awg'")
-            try {
-                // Read logs for the specific tunnel tag. 
+            val process = try {
+                // Read logs for the specific tunnel tag.
                 // -T 1 ensures we only get new logs starting from now.
-                val process = Runtime.getRuntime().exec("logcat -v tag -T 1 tun/proton_awg:V *:S")
+                Runtime.getRuntime().exec("logcat -v tag -T 1 tun/proton_awg:V *:S")
+            } catch (e: Exception) {
+                ProtonLogger.e(TAG, "Failed to start Logcat process", e)
+                return@launch
+            }
+            try {
                 process.inputStream.bufferedReader().useLines { lines ->
                     lines.forEach { line ->
                         if (!isActive) return@useLines
@@ -412,6 +417,11 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 }
             } catch (e: Exception) {
                 ProtonLogger.e(TAG, "Failed to read tunnel logs from Logcat", e)
+            } finally {
+                // Always destroy the process to close the underlying file descriptors
+                // and prevent a SIGABRT caused by the logcat child process writing
+                // to a stream that was already closed by useLines.
+                process.destroy()
             }
         }
     }
