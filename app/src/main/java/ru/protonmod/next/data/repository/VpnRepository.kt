@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -103,13 +104,13 @@ class VpnRepository @Inject constructor(
     fun getServersFlow(): Flow<List<LogicalServer>> {
         return serverDao.getServersFlow().map { entities ->
             // Extract tier from the current active session dynamically.
-            // Explicitly dispatch to IO to avoid any risk of running the DB query on the
-            // main or default thread pool and contributing to lock contention.
-            val userTier = withContext(dispatcherProvider.io()) { sessionDao.getSession() }?.userTier ?: 0
+            val userTier = sessionDao.getSession()?.userTier ?: 0
             entities
                 .map { ServerMapper.toDomain(it) }
                 .filter { it.tier <= userTier } // Filter dynamically based on session tier
-        }
+        }.flowOn(dispatcherProvider.io()) // Ensure the entire map block (including DB access) runs on the IO dispatcher,
+        // regardless of the collector's context. This prevents unsafe database access from
+        // the main thread, which can cause JNI/native crashes (SIGSEGV) in the Android Runtime.
     }
 
     suspend fun getCachedServers(): List<LogicalServer> = withContext(dispatcherProvider.io()) {
