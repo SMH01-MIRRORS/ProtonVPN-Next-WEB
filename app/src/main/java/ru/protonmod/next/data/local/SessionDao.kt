@@ -23,9 +23,11 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import kotlinx.serialization.Serializable
 
 // --- Entities ---
 
+@Serializable
 @Entity(tableName = "session")
 data class SessionEntity(
     @PrimaryKey val id: Int = 1, // We only store one active user session

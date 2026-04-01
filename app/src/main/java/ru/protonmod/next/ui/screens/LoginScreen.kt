@@ -65,6 +65,9 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var totpCode by remember { mutableStateOf("") }
+    
+    var showTokenLoginDialog by remember { mutableStateOf(false) }
+    var sessionJson by remember { mutableStateOf("") }
 
     LaunchedEffect(uiState) {
         if (uiState is LoginUiState.Success) {
@@ -333,9 +336,76 @@ fun LoginScreen(
                                         )
                                     }
                                 }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                    TextButton(
+                                        onClick = { showTokenLoginDialog = true },
+                                        modifier = Modifier.height(48.dp),
+                                        enabled = uiState !is LoginUiState.Loading
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.btn_login_tokens),
+                                            color = colors.textWeak,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
+                }
+
+                if (showTokenLoginDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showTokenLoginDialog = false },
+                        title = { Text(stringResource(R.string.title_login_tokens)) },
+                        text = {
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.msg_login_tokens_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = colors.textWeak,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+                                OutlinedTextField(
+                                    value = sessionJson,
+                                    onValueChange = { sessionJson = it },
+                                    label = { Text(stringResource(R.string.hint_session_json)) },
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = colors.brandNorm,
+                                        unfocusedBorderColor = colors.shade20,
+                                        focusedTextColor = colors.textNorm,
+                                        unfocusedTextColor = colors.textNorm
+                                    )
+                                )
+                            }
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    if (sessionJson.isNotBlank()) {
+                                        viewModel.loginBySessionJson(sessionJson)
+                                        showTokenLoginDialog = false
+                                    }
+                                },
+                                enabled = sessionJson.isNotBlank()
+                            ) {
+                                Text(stringResource(R.string.btn_login))
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showTokenLoginDialog = false }) {
+                                Text(stringResource(R.string.btn_cancel))
+                            }
+                        },
+                        containerColor = colors.backgroundSecondary,
+                        titleContentColor = colors.textNorm,
+                        textContentColor = colors.textWeak
+                    )
                 }
             }
         }

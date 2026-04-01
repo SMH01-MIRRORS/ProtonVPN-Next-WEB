@@ -27,9 +27,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.BugReport
 import androidx.compose.material.icons.rounded.CleaningServices
+import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.FileDownload
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Input
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -57,6 +59,9 @@ fun DebugSettingsScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showNukeConfirm by remember { mutableStateOf(false) }
     var showServerSelect by remember { mutableStateOf(false) }
+    var showExportConfirm by remember { mutableStateOf(false) }
+    var showImportDialog by remember { mutableStateOf(false) }
+    var importJson by remember { mutableStateOf("") }
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -175,6 +180,16 @@ fun DebugSettingsScreen(
                                     icon = Icons.Rounded.FileDownload,
                                     title = stringResource(R.string.debug_btn_export_config),
                                     onClick = { showServerSelect = true }
+                                )
+                                DebugActionRow(
+                                    icon = Icons.Rounded.ContentCopy,
+                                    title = stringResource(R.string.debug_btn_export_session),
+                                    onClick = { showExportConfirm = true }
+                                )
+                                DebugActionRow(
+                                    icon = Icons.Rounded.Input,
+                                    title = stringResource(R.string.debug_btn_import_session),
+                                    onClick = { showImportDialog = true }
                                 )
                             }
                         }
@@ -331,6 +346,84 @@ fun DebugSettingsScreen(
                 }
             }
         }
+    }
+
+    if (showExportConfirm) {
+        AlertDialog(
+            onDismissRequest = { showExportConfirm = false },
+            title = { Text(stringResource(R.string.debug_export_session_title)) },
+            text = { Text(stringResource(R.string.debug_export_session_msg)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.exportSession()
+                        showExportConfirm = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = colors.brandNorm)
+                ) {
+                    Text(stringResource(R.string.debug_btn_copy))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExportConfirm = false }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            },
+            containerColor = colors.backgroundSecondary,
+            titleContentColor = colors.textNorm,
+            textContentColor = colors.textWeak
+        )
+    }
+
+    if (showImportDialog) {
+        AlertDialog(
+            onDismissRequest = { showImportDialog = false },
+            title = { Text(stringResource(R.string.debug_btn_import_session)) },
+            text = {
+                Column {
+                    Text(
+                        text = stringResource(R.string.debug_import_session_warning),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.notificationError,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    OutlinedTextField(
+                        value = importJson,
+                        onValueChange = { importJson = it },
+                        label = { Text(stringResource(R.string.hint_session_json)) },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = colors.brandNorm,
+                            unfocusedBorderColor = colors.shade20,
+                            focusedTextColor = colors.textNorm,
+                            unfocusedTextColor = colors.textNorm
+                        )
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (importJson.isNotBlank()) {
+                            viewModel.importSession(importJson)
+                            showImportDialog = false
+                        }
+                    },
+                    enabled = importJson.isNotBlank()
+                ) {
+                    Text(stringResource(R.string.btn_import))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showImportDialog = false }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            },
+            containerColor = colors.backgroundSecondary,
+            titleContentColor = colors.textNorm,
+            textContentColor = colors.textWeak
+        )
     }
 
     if (uiState.isLoading) {

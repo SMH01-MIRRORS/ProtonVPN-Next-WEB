@@ -453,4 +453,17 @@
     <string name="captcha_message">برای ایمن نگه داشتن حساب خود، لطفاً تأیید زیر را کامل کنید.</string>
     <string name="captcha_proxy_active">پراکسی ضد مسدودسازی فعال است</string>
     <string name="desc_close">بستن</string>
+
+    <!-- Token Login & Session Management -->
+    <string name="btn_login_tokens">ورود با توکن</string>
+    <string name="title_login_tokens">ورود مبتنی بر توکن</string>
+    <string name="msg_login_tokens_desc">JSON نشست خود را برای ورود مستقیم در زیر جایگذاری کنید. این اطلاعات را محرمانه نگه دارید!</string>
+    <string name="hint_session_json">JSON نشست</string>
+    <string name="debug_btn_export_session">خروجی نشست (حافظه موقت)</string>
+    <string name="debug_btn_import_session">وارد کردن نشست</string>
+    <string name="debug_export_session_title">خروجی اطلاعات حساس</string>
+    <string name="debug_export_session_msg">این کار تمام اطلاعات نشست شما (از جمله توکن‌ها و کلیدهای خصوصی) را در حافظه موقت کپی می‌کند. آن را با هیچ‌کس به اشتراک نگذارید!</string>
+    <string name="debug_import_session_warning">هشدار: وارد کردن نشست جدید جایگزین نشست فعلی خواهد شد. با احتیاط استفاده کنید.</string>
+    <string name="debug_btn_copy">کپی در حافظه موقت</string>
+    <string name="btn_import">وارد کردن</string>
 </resources>

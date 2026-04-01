@@ -17,6 +17,8 @@
 
 package ru.protonmod.next.ui.screens.settings
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
 import android.os.Environment
@@ -171,6 +173,48 @@ class DebugSettingsViewModel @Inject constructor(
                 isLoading = false,
                 message = message
             )
+        }
+    }
+
+    fun exportSession() {
+        viewModelScope.launch {
+            val sessionJson = authRepository.exportSession()
+            if (sessionJson != null) {
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clip = ClipData.newPlainText("ProtonVPN Session", sessionJson)
+                clipboard.setPrimaryClip(clip)
+                _uiState.value = _uiState.value.copy(message = "Session copied to clipboard")
+            } else {
+                _uiState.value = _uiState.value.copy(message = "No active session to export")
+            }
+        }
+    }
+
+    fun importSession(json: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                val session = kotlinx.serialization.json.Json.decodeFromString<SessionEntity>(json)
+                authRepository.loginBySession(session)
+                    .onSuccess {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            message = "Session imported successfully. Restart app to apply.",
+                            session = session
+                        )
+                    }
+                    .onFailure { e ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            message = "Import failed: ${e.message}"
+                        )
+                    }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    message = "Invalid session JSON"
+                )
+            }
         }
     }
 

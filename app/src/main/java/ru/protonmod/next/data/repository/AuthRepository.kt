@@ -22,6 +22,7 @@ import ru.protonmod.next.utils.ProtonLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 import retrofit2.HttpException
 import ru.protonmod.next.data.local.SessionDao
@@ -73,6 +74,20 @@ class AuthRepository @Inject constructor(
     }
 
     fun getPendingUid(): String? = pendingAnonUid
+
+    suspend fun exportSession(): String? = withContext(dispatcherProvider.io()) {
+        sessionDao.getSession()?.let { jsonParser.encodeToString(it) }
+    }
+
+    suspend fun loginBySession(session: SessionEntity): Result<Unit> = withContext(dispatcherProvider.io()) {
+        try {
+            sessionDao.saveSession(session)
+            vpnRepository.refreshServersBackground(session.accessToken, session.sessionId, session.userTier)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
     /**
      * Clears local session and stops background tasks.

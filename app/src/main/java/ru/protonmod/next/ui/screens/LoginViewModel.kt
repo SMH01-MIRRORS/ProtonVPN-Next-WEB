@@ -29,9 +29,11 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.repository.AuthRepository
 import javax.inject.Inject
 
@@ -153,6 +155,28 @@ class LoginViewModel @Inject constructor(
                         )
                     }
                 }
+        }
+    }
+
+    fun loginBySessionJson(json: String) {
+        if (json.isBlank()) return
+
+        _uiState.value = LoginUiState.Loading
+        viewModelScope.launch {
+            try {
+                val session = Json.decodeFromString<SessionEntity>(json)
+                authRepository.loginBySession(session)
+                    .onSuccess {
+                        _uiState.value = LoginUiState.Success(session.accessToken, session.userId)
+                    }
+                    .onFailure { exception ->
+                        _uiState.value = LoginUiState.Error(
+                            exception.localizedMessage ?: "Invalid session format"
+                        )
+                    }
+            } catch (e: Exception) {
+                _uiState.value = LoginUiState.Error("Failed to parse session JSON")
+            }
         }
     }
 

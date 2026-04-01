@@ -462,4 +462,17 @@
     <string name="captcha_message">Для обеспечения безопасности аккаунта, пожалуйста, пройдите проверку ниже.</string>
     <string name="captcha_proxy_active">Антиблокировочный прокси активен</string>
     <string name="desc_close">Закрыть</string>
+
+    <!-- Token Login & Session Management -->
+    <string name="btn_login_tokens">Вход по токенам</string>
+    <string name="title_login_tokens">Вход по токенам</string>
+    <string name="msg_login_tokens_desc">Вставьте JSON вашей сессии ниже для прямого входа. Храните эти данные в секрете!</string>
+    <string name="hint_session_json">JSON сессии</string>
+    <string name="debug_btn_export_session">Экспорт сессии (Буфер)</string>
+    <string name="debug_btn_import_session">Импорт сессии</string>
+    <string name="debug_export_session_title">Экспорт конфиденциальных данных</string>
+    <string name="debug_export_session_msg">Это скопирует вашу полную сессию (включая токены и приватные ключи) в буфер обмена. НЕ делитесь этим ни с кем!</string>
+    <string name="debug_import_session_warning">ВНИМАНИЕ: Импорт сессии перезапишет текущую. Используйте с осторожностью.</string>
+    <string name="debug_btn_copy">Копировать</string>
+    <string name="btn_import">Импортировать</string>
 </resources>

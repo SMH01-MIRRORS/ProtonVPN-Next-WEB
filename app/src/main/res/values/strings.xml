@@ -452,4 +452,17 @@
     <string name="captcha_message">To keep your account secure, please complete the verification below.</string>
     <string name="captcha_proxy_active">Anti-blocking proxy is active</string>
     <string name="desc_close">Close</string>
+
+    <!-- Token Login & Session Management -->
+    <string name="btn_login_tokens">Login via Tokens</string>
+    <string name="title_login_tokens">Token-based Login</string>
+    <string name="msg_login_tokens_desc">Paste your session JSON below to log in directly. Keep this data secret!</string>
+    <string name="hint_session_json">Session JSON</string>
+    <string name="debug_btn_export_session">Export Session (Clipboard)</string>
+    <string name="debug_btn_import_session">Import Session</string>
+    <string name="debug_export_session_title">Export Sensitive Data</string>
+    <string name="debug_export_session_msg">This will copy your full session (including tokens and private keys) to the clipboard. DO NOT share this with anyone!</string>
+    <string name="debug_import_session_warning">WARNING: Importing a session will overwrite your current one. Use with caution.</string>
+    <string name="debug_btn_copy">Copy to Clipboard</string>
+    <string name="btn_import">Import</string>
 </resources>

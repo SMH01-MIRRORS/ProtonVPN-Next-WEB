@@ -448,4 +448,17 @@
     <string name="captcha_message">为了您的账户安全，请完成下方验证。</string>
     <string name="captcha_proxy_active">防封锁代理已激活</string>
     <string name="desc_close">关闭</string>
+
+    <!-- Token Login & Session Management -->
+    <string name="btn_login_tokens">通过令牌登录</string>
+    <string name="title_login_tokens">基于令牌的登录</string>
+    <string name="msg_login_tokens_desc">在下面粘贴您的会话 JSON 以直接登录。请务必保密此数据！</string>
+    <string name="hint_session_json">会话 JSON</string>
+    <string name="debug_btn_export_session">导出会话 (剪贴板)</string>
+    <string name="debug_btn_import_session">导入会话</string>
+    <string name="debug_export_session_title">导出敏感数据</string>
+    <string name="debug_export_session_msg">这将把您的完整会话（包括令牌和私钥）复制到剪贴板。切勿与任何人共享！</string>
+    <string name="debug_import_session_warning">警告：导入会话将覆盖当前的会话。请谨慎使用。</string>
+    <string name="debug_btn_copy">复制到剪贴板</string>
+    <string name="btn_import">导入</string>
 </resources>
