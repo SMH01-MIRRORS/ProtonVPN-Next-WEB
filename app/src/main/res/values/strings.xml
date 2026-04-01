@@ -398,6 +398,8 @@
     <string name="debug_cert_issued">Issued: %1$s</string>
     <string name="debug_cert_expires">Expires: %1$s</string>
     <string name="debug_btn_refresh_cert">Force Refresh Certificate</string>
+    <string name="debug_btn_refresh_session">Force Refresh Session</string>
+    <string name="debug_session_refreshed">Session refreshed successfully!</string>
     <string name="debug_exports_header">Exports &amp; Diagnostics</string>
     <string name="debug_btn_export_logs">Export Logcat to Downloads</string>
     <string name="debug_btn_export_config">Export WG Config (.conf)</string>

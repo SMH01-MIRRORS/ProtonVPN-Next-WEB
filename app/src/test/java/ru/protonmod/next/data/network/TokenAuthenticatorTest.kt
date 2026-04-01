@@ -32,6 +32,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SessionEntity
+import ru.protonmod.next.data.repository.AuthRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TokenAuthenticatorTest {
@@ -40,14 +41,14 @@ class TokenAuthenticatorTest {
     private lateinit var sessionDao: SessionDao
 
     @Mock
-    private lateinit var authApi: ProtonAuthApi
+    private lateinit var authRepository: AuthRepository
 
     private lateinit var authenticator: TokenAuthenticator
 
     @Before
     fun setup() {
         MockitoAnnotations.openMocks(this)
-        authenticator = TokenAuthenticator(sessionDao, { authApi })
+        authenticator = TokenAuthenticator(sessionDao, { authRepository })
     }
 
     @Test
@@ -79,7 +80,7 @@ class TokenAuthenticatorTest {
 
         runBlocking {
             whenever(sessionDao.getSession()).thenReturn(oldSession)
-            whenever(authApi.refreshSession(any())).thenReturn(refreshResponse)
+            whenever(authRepository.refreshSession(any(), any())).thenReturn(Result.success(refreshResponse))
         }
 
         val response = mockResponse("http://test.com", "Bearer old_token")

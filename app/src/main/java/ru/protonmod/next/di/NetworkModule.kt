@@ -40,6 +40,7 @@ import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.network.ProtonAuthApi
 import ru.protonmod.next.data.network.ProtonVpnApi
 import ru.protonmod.next.data.network.TokenAuthenticator
+import ru.protonmod.next.data.repository.AuthRepository
 import ru.protonmod.next.utils.DeviceInfoProvider
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import org.amnezia.awg.backend.Tunnel
@@ -76,9 +77,9 @@ object NetworkModule {
     @Singleton
     fun provideTokenAuthenticator(
         sessionDao: SessionDao,
-        authApiProvider: Provider<ProtonAuthApi>
+        authRepositoryProvider: Provider<AuthRepository>
     ): TokenAuthenticator {
-        return TokenAuthenticator(sessionDao, authApiProvider)
+        return TokenAuthenticator(sessionDao, authRepositoryProvider)
     }
 
     /**

@@ -408,6 +408,8 @@
     <string name="debug_cert_issued">Выдан: %1$s</string>
     <string name="debug_cert_expires">Истекает: %1$s</string>
     <string name="debug_btn_refresh_cert">Обновить сертификат принудительно</string>
+    <string name="debug_btn_refresh_session">Обновить сессию принудительно</string>
+    <string name="debug_session_refreshed">Сессия успешно обновлена!</string>
     <string name="debug_exports_header">Экспорт и Диагностика</string>
     <string name="debug_btn_export_logs">Экспорт Logcat в Downloads</string>
     <string name="debug_btn_export_config">Экспорт WG конфига (.conf)</string>

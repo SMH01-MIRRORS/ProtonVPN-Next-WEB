@@ -39,6 +39,7 @@ import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.local.ServerDao
 import ru.protonmod.next.data.local.ServerMapper
 import ru.protonmod.next.data.network.LogicalServer
+import ru.protonmod.next.data.repository.AuthRepository
 import ru.protonmod.next.utils.ProtonLogger
 import ru.protonmod.next.vpn.AmneziaConfigGenerator
 import ru.protonmod.next.vpn.AmneziaVpnManager
@@ -73,6 +74,7 @@ class DebugSettingsViewModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val vpnManager: AmneziaVpnManager,
     private val configGenerator: AmneziaConfigGenerator,
+    private val authRepository: AuthRepository,
     private val database: AppDatabase
 ) : ViewModel() {
 
@@ -132,6 +134,37 @@ class DebugSettingsViewModel @Inject constructor(
             }
             
             // Reload data BEFORE hiding the loader to avoid flickering old data
+            loadCurrentData()
+            
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                message = message
+            )
+        }
+    }
+
+    fun forceRefreshSession() {
+        viewModelScope.launch {
+            val session = sessionDao.getSession()
+            if (session == null) {
+                _uiState.value = _uiState.value.copy(message = "No active session to refresh")
+                return@launch
+            }
+
+            ProtonLogger.d("DebugVM", "Force refreshing session...")
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            
+            val result = authRepository.refreshSession(session.sessionId, session.refreshToken)
+            
+            val message = if (result.isSuccess) {
+                ProtonLogger.i("DebugVM", "Session refreshed successfully")
+                context.getString(ru.protonmod.next.R.string.debug_session_refreshed)
+            } else {
+                val error = result.exceptionOrNull()?.message ?: "Unknown error"
+                ProtonLogger.e("DebugVM", "Failed to refresh session: $error")
+                "Failed: $error"
+            }
+
             loadCurrentData()
             
             _uiState.value = _uiState.value.copy(

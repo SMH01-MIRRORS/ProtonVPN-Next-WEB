@@ -140,6 +140,18 @@ fun DebugSettingsScreen(
                                     Spacer(Modifier.width(8.dp))
                                     Text(stringResource(R.string.debug_btn_refresh_cert))
                                 }
+
+                                Button(
+                                    onClick = { viewModel.forceRefreshSession() },
+                                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm.copy(alpha = 0.8f)),
+                                    shape = RoundedCornerShape(12.dp),
+                                    enabled = !uiState.isLoading
+                                ) {
+                                    Icon(Icons.Rounded.Refresh, contentDescription = null)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(stringResource(R.string.debug_btn_refresh_session))
+                                }
                             } ?: Text(
                                 "No active session",
                                 color = colors.textWeak,

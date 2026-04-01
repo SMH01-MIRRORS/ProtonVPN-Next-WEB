@@ -47,7 +47,11 @@ class AuthRepository @Inject constructor(
     companion object {
         private const val TAG = "AuthRepository"
         private val jsonParser = Json { ignoreUnknownKeys = true }
+        private val REFRESH_DEBOUNCE_MS = 60000L // 1 minute
+        private val FORCE_LOGOUT_HTTP_CODES = listOf(400, 401, 422)
     }
+
+    private var lastRefreshTime: Long = 0L
 
     private var pendingAnonToken: String? = null
     private var pendingAnonUid: String? = null
@@ -246,6 +250,49 @@ class AuthRepository @Inject constructor(
             if (e is CancellationException) throw e
             if (e !is HttpException) ProtonLogger.e(TAG, "[AnonymousLogin] Exception thrown", e)
             handleHttpError(e)
+        }
+    }
+
+    /**
+     * Refreshes user session using refreshToken.
+     * Includes debounce logic and handles force logout on specific HTTP error codes.
+     */
+    suspend fun refreshSession(sessionId: String, refreshToken: String): Result<LoginResponse> = withContext(dispatcherProvider.io()) {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastRefreshTime < REFRESH_DEBOUNCE_MS) {
+            ProtonLogger.i(TAG, "[Refresh] Debouncing session refresh")
+            return@withContext Result.failure(Exception("Debounced"))
+        }
+
+        try {
+            ProtonLogger.i(TAG, "[Refresh] Attempting session refresh (SID: $sessionId)")
+            val refreshRequest = RefreshSessionRequest(uid = sessionId, refreshToken = refreshToken)
+            val refreshResponse = authApi.refreshSession(refreshRequest)
+
+            if (refreshResponse.code == 1000 && refreshResponse.accessToken != null) {
+                lastRefreshTime = System.currentTimeMillis()
+                
+                // Update local session
+                val currentSession = sessionDao.getSession()
+                if (currentSession != null && currentSession.sessionId == sessionId) {
+                    val updatedSession = currentSession.copy(
+                        accessToken = refreshResponse.accessToken,
+                        refreshToken = refreshResponse.refreshToken ?: currentSession.refreshToken
+                    )
+                    sessionDao.saveSession(updatedSession)
+                    ProtonLogger.i(TAG, "[Refresh] Session updated successfully")
+                }
+                Result.success(refreshResponse)
+            } else {
+                ProtonLogger.e(TAG, "[Refresh] API rejected refresh: Code ${refreshResponse.code}")
+                Result.failure(Exception("Refresh failed with code ${refreshResponse.code}"))
+            }
+        } catch (e: Exception) {
+            if (e is HttpException && e.code() in FORCE_LOGOUT_HTTP_CODES) {
+                ProtonLogger.w(TAG, "[Refresh] Force logout triggered by HTTP ${e.code()}")
+                logout()
+            }
+            Result.failure(e)
         }
     }
 

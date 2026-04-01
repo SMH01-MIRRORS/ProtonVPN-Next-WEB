@@ -401,6 +401,8 @@
     <string name="debug_cert_issued">Выдадзены: %1$s</string>
     <string name="debug_cert_expires">Заканчваецца: %1$s</string>
     <string name="debug_btn_refresh_cert">Абнавіць сертыфікат прымусова</string>
+    <string name="debug_btn_refresh_session">Абнавіць сесію прымусова</string>
+    <string name="debug_session_refreshed">Сесія паспяхова абноўлена!</string>
     <string name="debug_exports_header">Экспарт і Дыягностыка</string>
     <string name="debug_btn_export_logs">Экспарт Logcat у Downloads</string>
     <string name="debug_btn_export_config">Экспарт WG канфігурацыі (.conf)</string>

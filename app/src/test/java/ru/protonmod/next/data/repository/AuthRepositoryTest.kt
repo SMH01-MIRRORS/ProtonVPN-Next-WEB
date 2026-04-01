@@ -32,6 +32,7 @@ import org.mockito.kotlin.*
 import retrofit2.HttpException
 import retrofit2.Response
 import ru.protonmod.next.data.local.SessionDao
+import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.network.*
 import ru.protonmod.next.ui.screens.CaptchaRequiredException
 import ru.protonmod.next.utils.DeviceInfoProvider
@@ -208,12 +209,16 @@ class AuthRepositoryTest {
     }
 
     @Test
-    fun `login returns generic error on 12087 error`() = runTest(testDispatcher) {
+    fun `login returns CaptchaRequiredException on 12087 error`() = runTest(testDispatcher) {
         // Arrange
         val errorJson = """
             {
                 "Code": 12087,
-                "Error": "Captcha validation failed"
+                "Error": "Captcha validation failed",
+                "Details": {
+                    "WebUrl": "https://fresh.captcha.url",
+                    "HumanVerificationToken": "fresh_token"
+                }
             }
         """.trimIndent()
         val response = Response.error<LoginResponse>(422, errorJson.toResponseBody("application/json".toResponseBody().contentType()))
@@ -226,6 +231,79 @@ class AuthRepositoryTest {
 
         // Assert
         assertTrue(result.isFailure)
-        assertEquals("Verification failed. Please try again.", result.exceptionOrNull()?.message)
+        val caught = result.exceptionOrNull()
+        assertTrue("Expected CaptchaRequiredException but was $caught", caught is CaptchaRequiredException)
+        assertEquals("https://fresh.captcha.url", (caught as CaptchaRequiredException).webUrl)
+    }
+
+    @Test
+    fun `refreshSession success flow`() = runTest(testDispatcher) {
+        // Arrange
+        val sessionId = "session_id"
+        val refreshToken = "refresh_token"
+        val refreshResponse = LoginResponse(
+            code = 1000,
+            accessToken = "new_access_token",
+            refreshToken = "new_refresh_token",
+            sessionId = sessionId
+        )
+        val currentSession = SessionEntity(
+            sessionId = sessionId,
+            accessToken = "old_access_token",
+            refreshToken = refreshToken,
+            userId = "user_id"
+        )
+
+        whenever(authApi.refreshSession(any())).thenReturn(refreshResponse)
+        whenever(sessionDao.getSession()).thenReturn(currentSession)
+
+        // Act
+        val result = repository.refreshSession(sessionId, refreshToken)
+
+        // Assert
+        assertTrue(result.isSuccess)
+        verify(sessionDao).saveSession(argThat {
+            this.accessToken == "new_access_token" && this.refreshToken == "new_refresh_token"
+        })
+    }
+
+    @Test
+    fun `refreshSession debounces calls within 1 minute`() = runTest(testDispatcher) {
+        // Arrange
+        val sessionId = "session_id"
+        val refreshToken = "refresh_token"
+        val refreshResponse = LoginResponse(
+            code = 1000,
+            accessToken = "new_access_token",
+            sessionId = sessionId
+        )
+        whenever(authApi.refreshSession(any())).thenReturn(refreshResponse)
+
+        // Act
+        repository.refreshSession(sessionId, refreshToken) // First call
+        val secondResult = repository.refreshSession(sessionId, refreshToken) // Second call (debounced)
+
+        // Assert
+        assertTrue(secondResult.isFailure)
+        assertEquals("Debounced", secondResult.exceptionOrNull()?.message)
+        verify(authApi, times(1)).refreshSession(any())
+    }
+
+    @Test
+    fun `refreshSession triggers logout on HTTP 401`() = runTest(testDispatcher) {
+        // Arrange
+        val sessionId = "session_id"
+        val refreshToken = "refresh_token"
+        val response = Response.error<LoginResponse>(401, "Unauthorized".toResponseBody())
+        val exception = HttpException(response)
+
+        whenever(authApi.refreshSession(any())).thenThrow(exception)
+
+        // Act
+        val result = repository.refreshSession(sessionId, refreshToken)
+
+        // Assert
+        assertTrue(result.isFailure)
+        verify(sessionDao).clearSession()
     }
 }
