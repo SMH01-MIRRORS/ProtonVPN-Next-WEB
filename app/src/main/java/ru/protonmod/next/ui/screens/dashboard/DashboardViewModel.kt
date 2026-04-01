@@ -253,15 +253,31 @@ class DashboardViewModel @Inject constructor(
                 _originalLocationText.value = LocationText(localizedCountry, cleanCode, location.ip)
             } else {
                 // Fallback if API completely fails on boot
-                _originalLocationText.value = LocationText(context.getString(R.string.status_disconnected), null, context.getString(R.string.ip_placeholder))
+                val unknown = context.getString(R.string.unknown)
+                _originalLocationText.value = LocationText(unknown, null, unknown)
             }
         }
     }
 
     private fun fetchVpnLocation(countryCode: String) {
         viewModelScope.launch {
+            // Clear connection pool to ensure we don't reuse a pre-VPN connection.
+            // OkHttp connection pooling might otherwise keep using a socket established on the old interface.
+            withContext(Dispatchers.IO) {
+                defaultClient.connectionPool.evictAll()
+            }
+
             // Fetch real location through the VPN tunnel
-            val location = fetchRealLocation(useProxy = false)
+            var location = fetchRealLocation(useProxy = false)
+
+            // If the fetched IP matches the original unprotected IP, it might mean routing 
+            // hasn't fully switched yet. Wait and retry once.
+            val originalIp = _originalLocationText.value?.ip
+            if (location != null && location.ip == originalIp && originalIp != context.getString(R.string.unknown)) {
+                ProtonLogger.d("DashboardVM", "Fetched IP matches original, retrying after delay...")
+                delay(3000)
+                location = fetchRealLocation(useProxy = false)
+            }
 
             // Prioritize API country code if valid, otherwise use the server's declared country code
             val apiCountryCode = location?.countryCode?.trim()?.uppercase()?.ifBlank { null }
@@ -271,13 +287,21 @@ class DashboardViewModel @Inject constructor(
             val localizedCountry = CountryUtils.getCountryName(context, finalCountryCode)
                 .ifBlank { finalCountryCode }
 
-            // If API failed to fetch IP, generate a simulated IP to keep the UI looking alive
-            val safeIp = location?.ip?.ifBlank { null }
-                ?: "185.201.${(10..250).random()}.${(10..250).random()}"
+            val unknown = context.getString(R.string.unknown)
+            
+            // If API failed to fetch IP, use "Unknown" instead of a simulated/random one
+            val safeIp = location?.ip?.ifBlank { null } ?: unknown
+            
+            // If IP is unknown, country name and code should also be unknown/null for honesty as in official app
+            val (finalCountryName, finalSafeCountryCode) = if (location?.ip.isNullOrBlank()) {
+                unknown to null
+            } else {
+                localizedCountry to finalCountryCode
+            }
 
             // Guard against race condition: check if tunnel is still active before updating UI
             if (amneziaVpnManager.tunnelState.value == Tunnel.State.UP) {
-                _vpnLocationText.value = LocationText(localizedCountry, finalCountryCode, safeIp)
+                _vpnLocationText.value = LocationText(finalCountryName, finalSafeCountryCode, safeIp)
             }
         }
     }
@@ -296,7 +320,8 @@ class DashboardViewModel @Inject constructor(
         val endpoints = listOf(
             "https://ipwho.is/",
             "https://ipapi.co/json/",
-            "https://freeipapi.com/api/json"
+            "https://freeipapi.com/api/json",
+            "https://api.myip.com"
         )
 
         for (url in endpoints) {
@@ -316,6 +341,7 @@ class DashboardViewModel @Inject constructor(
                             val countryCode = when {
                                 json.has("country_code") -> json.optString("country_code", "")
                                 json.has("countryCode") -> json.optString("countryCode", "")
+                                json.has("cc") -> json.optString("cc", "")
                                 else -> ""
                             }
 
