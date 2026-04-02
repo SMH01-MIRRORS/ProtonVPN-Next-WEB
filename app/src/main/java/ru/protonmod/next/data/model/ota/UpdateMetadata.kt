@@ -4,6 +4,12 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UpdateResponse(
+    val stable: ChannelUpdates? = null,
+    val nightly: ChannelUpdates? = null
+)
+
+@Serializable
+data class ChannelUpdates(
     val release: UpdateInfo? = null,
     val debug: UpdateInfo? = null
 )

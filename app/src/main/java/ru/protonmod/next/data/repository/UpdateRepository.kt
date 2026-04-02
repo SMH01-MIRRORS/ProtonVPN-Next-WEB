@@ -20,7 +20,18 @@ class UpdateRepository @Inject constructor(
         for (url in updateUrls) {
             try {
                 val response = updateApi.getUpdateMetadata(url)
-                val updateInfo = if (BuildConfig.DEBUG) response.debug else response.release
+                
+                val channelUpdates = if (BuildConfig.UPDATE_CHANNEL == "nightly") {
+                    response.nightly
+                } else {
+                    response.stable
+                }
+
+                val updateInfo = if (BuildConfig.DEBUG) {
+                    channelUpdates?.debug
+                } else {
+                    channelUpdates?.release
+                }
                 
                 if (updateInfo != null && updateInfo.versionCode > BuildConfig.VERSION_CODE) {
                     return updateInfo

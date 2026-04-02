@@ -81,6 +81,20 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    flavorDimensions.add("channel")
+    productFlavors {
+        create("stable") {
+            dimension = "channel"
+            buildConfigField("String", "UPDATE_CHANNEL", "\"stable\"")
+        }
+        create("nightly") {
+            dimension = "channel"
+            applicationIdSuffix = ".nightly"
+            versionNameSuffix = "-nightly"
+            buildConfigField("String", "UPDATE_CHANNEL", "\"nightly\"")
+        }
+    }
+
     lint {
         checkReleaseBuilds = false
         abortOnError = false
