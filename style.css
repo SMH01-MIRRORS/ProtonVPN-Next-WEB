@@ -64,22 +64,38 @@ nav {
     font-weight: bold;
 }
 
-nav ul {
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.nav-links {
     display: flex;
     list-style: none;
     gap: 30px;
     align-items: center;
 }
 
-nav ul a {
+.nav-links a {
     text-decoration: none;
     color: var(--text-norm);
     font-weight: 500;
     transition: color 0.3s;
 }
 
-nav ul a:hover {
+.nav-links a:hover {
     color: var(--primary);
+}
+
+.lang-switcher select {
+    background: var(--bg-secondary);
+    color: var(--text-norm);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
 }
 
 .btn-primary, .btn-secondary, .btn-outline {

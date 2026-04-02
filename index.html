@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="assets/logo.png">
 </head>
-<body>
+<body class="lang-ru">
     <header>
         <div class="container">
             <nav>
@@ -15,11 +15,23 @@
                     <img src="assets/logo.png" alt="Proton VPN-Next">
                     <span>Proton VPN-Next</span>
                 </div>
-                <ul>
-                    <li><a href="#features">Особенности</a></li>
-                    <li><a href="#about">О проекте</a></li>
-                    <li><a href="https://t.me/smh01" class="btn-secondary">Telegram</a></li>
-                </ul>
+                <div class="nav-right">
+                    <ul class="nav-links">
+                        <li><a href="#features" data-t="nav_features">Особенности</a></li>
+                        <li><a href="#about" data-t="nav_about">О проекте</a></li>
+                    </ul>
+                    <div class="lang-switcher">
+                        <select id="langSelect" onchange="changeLanguage(this.value)">
+                            <option value="en">English</option>
+                            <option value="ru" selected>Русский</option>
+                            <option value="uk">Українська</option>
+                            <option value="be">Беларуская</option>
+                            <option value="fa">فارسی</option>
+                            <option value="zh">中文</option>
+                        </select>
+                    </div>
+                    <a href="https://t.me/smh01" class="btn-secondary">Telegram</a>
+                </div>
             </nav>
         </div>
     </header>
@@ -28,11 +40,11 @@
         <section class="hero">
             <div class="container hero-content">
                 <div class="hero-text">
-                    <h1>Ваша приватность в надежных руках</h1>
-                    <p>Современный, быстрый и безопасный неофициальный клиент для Proton VPN на Android с поддержкой AmneziaWG.</p>
+                    <h1 data-t="hero_title">Ваша приватность в надежных руках</h1>
+                    <p data-t="hero_subtitle">Современный, быстрый и безопасный неофициальный клиент для Proton VPN на Android с поддержкой AmneziaWG.</p>
                     <div class="hero-actions">
-                        <a href="#" class="btn-primary">Скачать</a>
-                        <a href="https://codeberg.org/smh01/ProtonVPN-Next" class="btn-outline">Исходный код</a>
+                        <a href="#" class="btn-primary" data-t="btn_download">Скачать</a>
+                        <a href="https://codeberg.org/smh01/ProtonVPN-Next" class="btn-outline" data-t="btn_source">Исходный код</a>
                     </div>
                 </div>
                 <div class="hero-image">
@@ -43,27 +55,27 @@
 
         <section id="features" class="features">
             <div class="container">
-                <h2 class="section-title">Ключевые особенности</h2>
+                <h2 class="section-title" data-t="features_title">Ключевые особенности</h2>
                 <div class="features-grid">
                     <div class="feature-card glass">
                         <div class="feature-icon">🚀</div>
-                        <h3>Ядро AmneziaWG</h3>
-                        <p>Продвинутый протокол для обхода блокировок и поддержания высокой скорости даже в жестких условиях.</p>
+                        <h3 data-t="feat_1_title">Ядро AmneziaWG</h3>
+                        <p data-t="feat_1_desc">Продвинутый протокол для обхода блокировок и поддержания высокой скорости даже в жестких условиях.</p>
                     </div>
                     <div class="feature-card glass">
                         <div class="feature-icon">🎨</div>
-                        <h3>Material 3 & Compose</h3>
-                        <p>Полностью современный интерфейс на Jetpack Compose с поддержкой динамических цветов и тем.</p>
+                        <h3 data-t="feat_2_title">Material 3 & Compose</h3>
+                        <p data-t="feat_2_desc">Полностью современный интерфейс на Jetpack Compose с поддержкой динамических цветов и тем.</p>
                     </div>
                     <div class="feature-card glass">
                         <div class="feature-icon">🔐</div>
-                        <h3>Приватность</h3>
-                        <p>Kill Switch на уровне системы и раздельное туннелирование для полного контроля над трафиком.</p>
+                        <h3 data-t="feat_3_title">Приватность</h3>
+                        <p data-t="feat_3_desc">Kill Switch на уровне системы и раздельное туннелирование для полного контроля над трафиком.</p>
                     </div>
                     <div class="feature-card glass">
                         <div class="feature-icon">🌍</div>
-                        <h3>Глобальная сеть</h3>
-                        <p>Удобный выбор серверов по всему миру с индикацией нагрузки в реальном времени.</p>
+                        <h3 data-t="feat_4_title">Глобальная сеть</h3>
+                        <p data-t="feat_4_desc">Удобный выбор серверов по всему миру с индикацией нагрузки в реальном времени.</p>
                     </div>
                 </div>
             </div>
@@ -71,10 +83,10 @@
 
         <section id="about" class="about">
             <div class="container glass-panel">
-                <h2>О проекте</h2>
-                <p>Proton VPN-Next — это высокопроизводительный клиент с открытым исходным кодом, созданный для тех, кто ценит скорость и современный дизайн. Мы используем лучшие практики разработки на Kotlin, чтобы обеспечить стабильность и безопасность вашего соединения.</p>
+                <h2 data-t="about_title">О проекте</h2>
+                <p data-t="about_desc">Proton VPN-Next — это высокопроизводительный клиент с открытым исходным кодом, созданный для тех, кто ценит скорость и современный дизайн. Мы используем лучшие практики разработки на Kotlin, чтобы обеспечить стабильность и безопасность вашего соединения.</p>
                 <div class="disclaimer">
-                    <p><strong>Примечание:</strong> Это неофициальный клиент. Мы не связаны с Proton AG. Пожалуйста, поддержите оригинальных разработчиков, оформив платную подписку Proton VPN.</p>
+                    <p><strong data-t="disclaimer_note">Примечание:</strong> <span data-t="disclaimer_text">Это неофициальный клиент. Мы не связаны с Proton AG. Пожалуйста, поддержите оригинальных разработчиков, оформив платную подписку Proton VPN.</span></p>
                 </div>
             </div>
         </section>
@@ -93,5 +105,40 @@
             </div>
         </div>
     </footer>
+
+    <script src="translations.js"></script>
+    <script>
+        function changeLanguage(lang) {
+            document.body.className = 'lang-' + lang;
+            document.documentElement.lang = lang;
+
+            const elements = document.querySelectorAll('[data-t]');
+            elements.forEach(el => {
+                const key = el.getAttribute('data-t');
+                if (translations[lang] && translations[lang][key]) {
+                    el.innerText = translations[lang][key];
+                }
+            });
+
+            // Handle RTL for Farsi
+            if (lang === 'fa') {
+                document.body.dir = 'rtl';
+            } else {
+                document.body.dir = 'ltr';
+            }
+
+            localStorage.setItem('preferredLang', lang);
+        }
+
+        // Auto-detect language or use stored preference
+        window.addEventListener('DOMContentLoaded', () => {
+            const storedLang = localStorage.getItem('preferredLang');
+            const browserLang = navigator.language.split('-')[0];
+            const defaultLang = storedLang || (translations[browserLang] ? browserLang : 'ru');
+
+            document.getElementById('langSelect').value = defaultLang;
+            changeLanguage(defaultLang);
+        });
+    </script>
 </body>
 </html>
