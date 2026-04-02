@@ -485,6 +485,7 @@
     <string name="ota_freq_disabled">غیرفعال</string>
     <string name="ota_status_checking">در حال بررسی برای بروزرسانی…</string>
     <string name="ota_status_up_to_date">برنامه بروز است</string>
+    <string name="ota_btn_check">بررسی برای بروزرسانی</string>
     <string name="ota_downloading">در حال دانلود بروزرسانی… %1$d%%</string>
     <string name="ota_download_failed">دانلود ناموفق بود. لطفاً بعداً دوباره تلاش کنید.</string>
 </resources>

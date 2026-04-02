@@ -115,6 +115,7 @@ fun SettingsScreen(
                 onNavigateToCustomDns = onNavigateToCustomDns,
                 onNavigateToPortSelection = onNavigateToPortSelection,
                 onOtaFrequencyChange = viewModel::setOtaUpdateFrequency,
+                onCheckForUpdates = viewModel::checkForUpdates,
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -140,6 +141,7 @@ fun SettingsContent(
     onNavigateToCustomDns: (() -> Unit)? = null,
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
     onOtaFrequencyChange: (String) -> Unit,
+    onCheckForUpdates: () -> Unit,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -199,7 +201,8 @@ fun SettingsContent(
 
                         UpdateSettingsSection(
                             state = state,
-                            onFrequencyChange = onOtaFrequencyChange
+                            onFrequencyChange = onOtaFrequencyChange,
+                            onCheckNow = onCheckForUpdates
                         )
 
                         WidgetSettingsSection()
@@ -260,7 +263,8 @@ fun SettingsContent(
                 UpdateSettingsSection(
                     modifier = contentModifier,
                     state = state,
-                    onFrequencyChange = onOtaFrequencyChange
+                    onFrequencyChange = onOtaFrequencyChange,
+                    onCheckNow = onCheckForUpdates
                 )
             }
 
@@ -284,7 +288,8 @@ fun SettingsContent(
 private fun UpdateSettingsSection(
     modifier: Modifier = Modifier,
     state: SettingsUiState,
-    onFrequencyChange: (String) -> Unit
+    onFrequencyChange: (String) -> Unit,
+    onCheckNow: () -> Unit
 ) {
     var showFrequencyDialog by remember { mutableStateOf(false) }
 
@@ -303,6 +308,14 @@ private fun UpdateSettingsSection(
             title = stringResource(R.string.ota_check_frequency),
             subtitle = currentFrequencyName,
             onClick = { showFrequencyDialog = true }
+        )
+
+        SettingRowWithIcon(
+            icon = Icons.Rounded.Refresh,
+            title = stringResource(R.string.ota_btn_check),
+            subtitle = if (state.isCheckingForUpdates) stringResource(R.string.ota_status_checking) else stringResource(R.string.ota_status_up_to_date),
+            onClick = onCheckNow,
+            enabled = !state.isCheckingForUpdates
         )
     }
 

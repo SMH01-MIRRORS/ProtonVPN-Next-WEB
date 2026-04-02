@@ -67,6 +67,7 @@ data class SettingsUiState(
 
     // OTA Update Settings
     val otaUpdateFrequency: String = "daily",
+    val isCheckingForUpdates: Boolean = false,
 
     // AWG low-level params
     val awgJc: Int = 3,
@@ -120,6 +121,7 @@ class SettingsViewModel @Inject constructor(
 
     // Internal state tracking if any VPN is operating at the OS level
     private val _isAnyVpnActive = MutableStateFlow(false)
+    private val _isCheckingForUpdates = MutableStateFlow(false)
 
     init {
         // Monitor system networks to automatically detect active VPN connections
@@ -196,7 +198,8 @@ class SettingsViewModel @Inject constructor(
         settingsManager.appTheme,
         settingsManager.serverLoadDisplayMode,
         settingsManager.otaUpdateFrequency,
-        _isAnyVpnActive
+        _isAnyVpnActive,
+        _isCheckingForUpdates
     ) { args: Array<Any?> ->
         SettingsUiState(
             killSwitchEnabled = args[0] as Boolean,
@@ -244,6 +247,7 @@ class SettingsViewModel @Inject constructor(
             appTheme = args[42] as AppTheme,
             serverLoadDisplayMode = args[43] as ServerLoadDisplayMode,
             otaUpdateFrequency = args[44] as String,
+            isCheckingForUpdates = args[46] as Boolean,
             isAnyVpnActive = args[45] as Boolean
         )
     }.stateIn(
@@ -280,6 +284,17 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             settingsManager.setOtaUpdateFrequency(frequency)
             otaUpdateManager.scheduleUpdateCheck()
+        }
+    }
+
+    fun checkForUpdates() {
+        viewModelScope.launch {
+            _isCheckingForUpdates.value = true
+            try {
+                otaUpdateManager.checkForUpdatesNow()
+            } finally {
+                _isCheckingForUpdates.value = false
+            }
         }
     }
 

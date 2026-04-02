@@ -484,6 +484,7 @@
     <string name="ota_freq_disabled">Disabled</string>
     <string name="ota_status_checking">Checking for updates…</string>
     <string name="ota_status_up_to_date">App is up to date</string>
+    <string name="ota_btn_check">Check for Updates</string>
     <string name="ota_downloading">Downloading update… %1$d%%</string>
     <string name="ota_download_failed">Download failed. Please try again later.</string>
 </resources>

@@ -494,6 +494,7 @@
     <string name="ota_freq_disabled">Отключено</string>
     <string name="ota_status_checking">Проверка обновлений…</string>
     <string name="ota_status_up_to_date">Установлена актуальная версия</string>
+    <string name="ota_btn_check">Проверить обновления</string>
     <string name="ota_downloading">Загрузка обновления… %1$d%%</string>
     <string name="ota_download_failed">Ошибка загрузки. Попробуйте позже.</string>
 </resources>
