@@ -1,6 +1,9 @@
 package ru.protonmod.next.data.repository
 
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 import ru.protonmod.next.BuildConfig
+import ru.protonmod.next.R
 import ru.protonmod.next.data.model.ota.UpdateInfo
 import ru.protonmod.next.data.network.ota.UpdateApi
 import ru.protonmod.next.utils.ProtonLogger
@@ -9,14 +12,17 @@ import javax.inject.Singleton
 
 @Singleton
 class UpdateRepository @Inject constructor(
-    private val updateApi: UpdateApi
+    private val updateApi: UpdateApi,
+    @ApplicationContext private val context: Context
 ) {
     private val updateUrls = listOf(
-        "https://protonnext.dpdns.org/update.json",
-        "https://protonnext.qzz.io/update.json"
+        context.getString(R.string.url_ota_mirror_1),
+        context.getString(R.string.url_ota_mirror_2),
+        context.getString(R.string.url_ota_mirror_3)
     )
 
     suspend fun checkForUpdates(): UpdateInfo? {
+        var bestUpdate: UpdateInfo? = null
         for (url in updateUrls) {
             try {
                 val response = updateApi.getUpdateMetadata(url)
@@ -34,13 +40,14 @@ class UpdateRepository @Inject constructor(
                 }
                 
                 if (updateInfo != null && updateInfo.versionCode > BuildConfig.VERSION_CODE) {
-                    return updateInfo
+                    if (bestUpdate == null || updateInfo.versionCode > bestUpdate.versionCode) {
+                        bestUpdate = updateInfo
+                    }
                 }
-                return null // Success but no update
             } catch (e: Exception) {
                 ProtonLogger.e("UpdateRepository", "Failed to fetch updates from $url", e)
             }
         }
-        return null
+        return bestUpdate
     }
 }
