@@ -92,6 +92,38 @@ steps:
       title: "Pre-release ${CI_COMMIT_TAG}"
       prerelease: true
 
+  publish-release-github:
+    image: plugins/github-release
+    when:
+      event: tag
+      ref: refs/tags/[0-9]*.[0-9]*.[0-9]*
+    settings:
+      api_key:
+        from_secret: GITHUB_TOKEN
+      files:
+        - app/build/outputs/apk/stable/release/*.apk
+      note: changelog.txt
+      title: "Release ${CI_COMMIT_TAG}"
+      base_url: https://github.com
+      repository: SMH01-MIRRORS/ProtonVPN-Next-MIRROR
+
+  publish-pre-release-github:
+    image: plugins/github-release
+    when:
+      event: tag
+      ref:
+        exclude: refs/tags/[0-9]*.[0-9]*.[0-9]*
+    settings:
+      api_key:
+        from_secret: GITHUB_TOKEN
+      files:
+        - app/build/outputs/apk/stable/release/*.apk
+      note: changelog.txt
+      title: "Pre-release ${CI_COMMIT_TAG}"
+      prerelease: true
+      base_url: https://github.com
+      repository: SMH01-MIRRORS/ProtonVPN-Next-MIRROR
+
   publish-ota:
     image: python:3.11-slim
     environment:
@@ -107,6 +139,8 @@ steps:
         from_secret: R2_PUBLIC_URL
       CODEBERG_TOKEN:
         from_secret: CODEBERG_TOKEN
+      GITHUB_TOKEN:
+        from_secret: GITHUB_TOKEN
     commands:
       - apt-get update && apt-get install -y git
       - pip install boto3

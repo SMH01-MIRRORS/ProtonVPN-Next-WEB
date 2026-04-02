@@ -139,5 +139,12 @@ def main():
     subprocess.run("git config --global user.name 'CI Bot'", shell=True)
     subprocess.run(f"cd website_repo && git add . && git commit -m 'chore: update ota metadata for {channel} channel' && git push origin {WEBSITE_BRANCH}", shell=True)
 
+    github_token = os.environ.get('GITHUB_TOKEN')
+    if github_token:
+        print("Pushing to GitHub mirror...")
+        mirror_url = f"https://x-access-token:{github_token}@github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR.git"
+        subprocess.run(f"cd website_repo && git remote add mirror {mirror_url}", shell=True)
+        subprocess.run(f"cd website_repo && git push mirror {WEBSITE_BRANCH}", shell=True)
+
 if __name__ == '__main__':
     main()
