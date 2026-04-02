@@ -11,15 +11,15 @@ The goal is to create a landing page for ProtonVPN-Next in a separate branch, ma
 
 ### Website Assets
 
-I will add the following files to the root of the `website` branch:
+I will add the following files to the `public/` directory of the `website` branch:
 
-#### index.html
+#### public/index.html
 - Main structure of the landing page.
 - Hero section with "Download" button.
 - Feature highlights.
 - Footer with links to Telegram and Codeberg.
 
-#### style.css
+#### public/style.css
 - Styling following the Proton dark theme colors:
     - Primary: `#6D4AFF` (CornflowerBlue)
     - Background: `#1C1B24` (BalticSea)
@@ -28,8 +28,8 @@ I will add the following files to the root of the `website` branch:
 - Glassmorphism effects for cards.
 - Responsive design for mobile and desktop.
 
-#### assets/
-- I'll try to find a way to include the app icon.
+#### public/assets/
+- Includes the app icon and hero image.
 
 ### Cloudflare Pages Deployment
 - Add a `wrangler.toml` file for CLI-based deployment.
