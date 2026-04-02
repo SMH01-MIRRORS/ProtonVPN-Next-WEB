@@ -8,17 +8,17 @@
   },
   "nightly": {
     "debug": {
-      "versionCode": 605159725,
-      "versionName": "12.0.0-alpha1st2-14-g7172c0b-nightly",
+      "versionCode": 605159727,
+      "versionName": "12.0.0-alpha1st2-16-gad855db-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "feat: enhance OTA update logic and mirror redundancy\n\n* feat: update `UpdateRepository` to evaluate all mirrors and return the update with the highest version code instead of the first one found\n* refactor: move OTA mirror URLs from code to `strings.xml` and add a third mirror for improved availability\n* i18n: add non-translatable mirror URL strings to all localized `strings.xml` files",
+      "changelog": "chore: improve GitHub mirror synchronization in `publish_ota.py`\n\n* chore: update GitHub authentication to use `git` as the username for better stability with Personal Access Tokens\n* chore: implement non-fatal error handling for the mirror push step to prevent script termination on synchronization failures\n* feat: add the `--force` flag to the git push command for the mirror repository\n* security: mask the `GITHUB_TOKEN` in console output when reporting mirror push errors and provide guidance on required token permissions",
       "force": false
     },
     "release": {
-      "versionCode": 605159725,
-      "versionName": "12.0.0-alpha1st2-14-g7172c0b-nightly",
+      "versionCode": 605159727,
+      "versionName": "12.0.0-alpha1st2-16-gad855db-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "feat: enhance OTA update logic and mirror redundancy\n\n* feat: update `UpdateRepository` to evaluate all mirrors and return the update with the highest version code instead of the first one found\n* refactor: move OTA mirror URLs from code to `strings.xml` and add a third mirror for improved availability\n* i18n: add non-translatable mirror URL strings to all localized `strings.xml` files",
+      "changelog": "chore: improve GitHub mirror synchronization in `publish_ota.py`\n\n* chore: update GitHub authentication to use `git` as the username for better stability with Personal Access Tokens\n* chore: implement non-fatal error handling for the mirror push step to prevent script termination on synchronization failures\n* feat: add the `--force` flag to the git push command for the mirror repository\n* security: mask the `GITHUB_TOKEN` in console output when reporting mirror push errors and provide guidance on required token permissions",
       "force": false
     }
   }
