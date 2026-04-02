@@ -43,7 +43,7 @@
                     <h1 data-t="hero_title">Your privacy in safe hands</h1>
                     <p data-t="hero_subtitle">A modern, high-performance unofficial Android client for Proton VPN, leveraging AmneziaWG for stable connectivity even in restrictive environments.</p>
                     <div class="hero-actions">
-                        <a href="#" class="btn-primary" data-t="btn_download">Download</a>
+                        <a href="#" class="btn-primary" data-t="btn_download" id="downloadBtn">Download</a>
                         <a href="https://codeberg.org/SMH01/ProtonVPN-Next" class="btn-outline" data-t="btn_source">Source Code</a>
                     </div>
                 </div>
@@ -153,6 +153,20 @@
 
             document.getElementById('langSelect').value = defaultLang;
             changeLanguage(defaultLang);
+
+            // Fetch latest download link from update.json
+            fetch('update.json')
+                .then(response => response.json())
+                .then(data => {
+                    const downloadUrl = data.nightly?.release?.url || data.debug?.url;
+                    if (downloadUrl) {
+                        const downloadBtn = document.getElementById('downloadBtn');
+                        if (downloadBtn) {
+                            downloadBtn.href = downloadUrl;
+                        }
+                    }
+                })
+                .catch(err => console.error('Failed to fetch update info:', err));
         });
     </script>
 </body>

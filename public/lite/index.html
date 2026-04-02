@@ -42,7 +42,7 @@
 
         <div class="section">
             <h1>📥 СКАЧАТЬ</h1>
-            <a href="#" class="btn">> СКАЧАТЬ APK <</a>
+            <a href="#" class="btn downloadBtn">> СКАЧАТЬ APK <</a>
         </div>
 
         <div class="section">
@@ -65,7 +65,7 @@
 
         <div class="section">
             <h1>📥 DOWNLOAD</h1>
-            <a href="#" class="btn">> DOWNLOAD APK <</a>
+            <a href="#" class="btn downloadBtn">> DOWNLOAD APK <</a>
         </div>
 
         <div class="section">
@@ -79,5 +79,23 @@
         (c) 2026 SMH01. <br>
         <a href="/">Вернуться на полную версию</a>
     </div>
+
+    <script>
+        // Fetch latest download link from update.json
+        window.addEventListener('DOMContentLoaded', () => {
+            fetch('../update.json')
+                .then(response => response.json())
+                .then(data => {
+                    const downloadUrl = data.nightly?.release?.url || data.debug?.url;
+                    if (downloadUrl) {
+                        const btns = document.querySelectorAll('.downloadBtn');
+                        btns.forEach(btn => {
+                            btn.href = downloadUrl;
+                        });
+                    }
+                })
+                .catch(err => console.error('Failed to fetch update info:', err));
+        });
+    </script>
 </body>
 </html>
