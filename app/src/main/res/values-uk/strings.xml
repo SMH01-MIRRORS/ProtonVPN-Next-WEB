@@ -476,4 +476,6 @@
     <string name="debug_import_session_warning">УВАГА: Імпорт сесії перезапише поточну. Використовуйте з обережністю.</string>
     <string name="debug_btn_copy">Копіювати</string>
     <string name="btn_import">Імпортувати</string>
+    <string name="btn_logout">Вийти</string>
+    <string name="logout_confirmation">Ви впевнені, що хочете вийти?</string>
 </resources>

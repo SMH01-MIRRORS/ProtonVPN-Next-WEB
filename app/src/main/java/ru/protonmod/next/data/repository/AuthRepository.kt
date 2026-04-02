@@ -33,7 +33,9 @@ import ru.protonmod.next.ui.screens.ProtonErrorResponse
 import ru.protonmod.next.utils.DeviceInfoProvider
 import ru.protonmod.next.utils.coroutines.DispatcherProvider
 import ru.protonmod.next.utils.crypto.CryptoWrapper
+import ru.protonmod.next.vpn.AmneziaVpnManager
 import javax.inject.Inject
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Singleton
@@ -43,7 +45,8 @@ class AuthRepository @Inject constructor(
     private val sessionDao: SessionDao,
     private val deviceInfoProvider: DeviceInfoProvider,
     private val cryptoWrapper: CryptoWrapper,
-    private val dispatcherProvider: DispatcherProvider
+    private val dispatcherProvider: DispatcherProvider,
+    private val amneziaVpnManager: Provider<AmneziaVpnManager>
 ) {
     companion object {
         private const val TAG = "AuthRepository"
@@ -94,7 +97,29 @@ class AuthRepository @Inject constructor(
      */
     suspend fun logout() = withContext(dispatcherProvider.io()) {
         ProtonLogger.d(TAG, "Logging out user...")
+        
+        // 1. Disconnect VPN first
+        try {
+            amneziaVpnManager.get().disconnect()
+        } catch (e: Exception) {
+            ProtonLogger.w(TAG, "Failed to disconnect VPN during logout: ${e.message}")
+        }
+
+        // 2. Notify server (best effort)
+        try {
+            sessionDao.getSession()?.let { session ->
+                if (session.accessToken.isNotEmpty()) {
+                    authApi.performLogout("Bearer ${session.accessToken}", session.sessionId)
+                    ProtonLogger.i(TAG, "Server-side logout successful")
+                }
+            }
+        } catch (e: Exception) {
+            ProtonLogger.w(TAG, "Server-side logout failed: ${e.message}")
+        }
+
+        // 3. Clear local state
         vpnRepository.stopAutoUpdate()
+        vpnRepository.clearCache()
         sessionDao.clearSession()
         clearPendingAuth()
     }

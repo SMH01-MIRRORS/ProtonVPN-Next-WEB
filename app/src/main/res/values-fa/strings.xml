@@ -466,4 +466,6 @@
     <string name="debug_import_session_warning">هشدار: وارد کردن نشست جدید جایگزین نشست فعلی خواهد شد. با احتیاط استفاده کنید.</string>
     <string name="debug_btn_copy">کپی در حافظه موقت</string>
     <string name="btn_import">وارد کردن</string>
+    <string name="btn_logout">خروج</string>
+    <string name="logout_confirmation">آیا مطمئن هستید که می‌خواهید خارج شوید؟</string>
 </resources>

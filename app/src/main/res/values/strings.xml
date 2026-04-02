@@ -465,4 +465,6 @@
     <string name="debug_import_session_warning">WARNING: Importing a session will overwrite your current one. Use with caution.</string>
     <string name="debug_btn_copy">Copy to Clipboard</string>
     <string name="btn_import">Import</string>
+    <string name="btn_logout">Log Out</string>
+    <string name="logout_confirmation">Are you sure you want to log out?</string>
 </resources>

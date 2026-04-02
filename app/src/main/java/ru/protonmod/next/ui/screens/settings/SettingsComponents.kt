@@ -81,6 +81,7 @@ fun SettingRowWithIcon(
     title: String,
     subtitle: String? = null,
     enabled: Boolean = true,
+    titleColor: Color = ProtonNextTheme.colors.textNorm,
     trailingContent: (@Composable () -> Unit)? = null,
     onClick: (() -> Unit)? = null
 ) {
@@ -116,7 +117,7 @@ fun SettingRowWithIcon(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = colors.brandNorm,
+                    tint = if (titleColor != colors.textNorm) titleColor else colors.brandNorm,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -131,7 +132,7 @@ fun SettingRowWithIcon(
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                color = colors.textNorm
+                color = titleColor
             )
             if (subtitle != null) {
                 Text(

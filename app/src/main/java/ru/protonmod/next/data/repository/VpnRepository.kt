@@ -39,6 +39,8 @@ import ru.protonmod.next.data.local.ServersCacheEntity
 import ru.protonmod.next.data.local.CityTranslationDao
 import ru.protonmod.next.data.local.CityTranslationEntity
 import ru.protonmod.next.data.local.CityCacheEntity
+import ru.protonmod.next.data.local.ProfileDao
+import ru.protonmod.next.data.local.RecentConnectionDao
 import ru.protonmod.next.di.ApplicationScope
 import ru.protonmod.next.utils.coroutines.DispatcherProvider
 import java.util.concurrent.TimeUnit
@@ -52,6 +54,8 @@ class VpnRepository @Inject constructor(
     private val sessionDao: SessionDao,
     private val serversCacheDao: ServersCacheDao,
     private val cityTranslationDao: CityTranslationDao,
+    private val profileDao: ProfileDao,
+    private val recentConnectionDao: RecentConnectionDao,
     private val cityRepository: CityRepository,
     private val dispatcherProvider: DispatcherProvider,
     @ApplicationScope private val managerScope: CoroutineScope
@@ -418,6 +422,18 @@ class VpnRepository @Inject constructor(
             ProtonLogger.e(TAG, "Error in registerWireGuardKey", e)
             Result.failure(e)
         }
+    }
+
+    suspend fun clearCache() = withContext(dispatcherProvider.io()) {
+        ProtonLogger.d(TAG, "Clearing VPN cache and user data...")
+        serverDao.clearAllServers()
+        serversCacheDao.clearCacheInfo()
+        cityTranslationDao.clearAll()
+        cityTranslationDao.clearCacheInfo()
+        profileDao.deleteAllProfiles()
+        recentConnectionDao.clearHistory()
+        cityRepository.clearCache()
+        cachedServers = emptyList()
     }
 
     private suspend fun refreshCityTranslations(accessToken: String, sessionId: String) {

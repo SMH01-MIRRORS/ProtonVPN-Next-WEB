@@ -475,4 +475,6 @@
     <string name="debug_import_session_warning">ВНИМАНИЕ: Импорт сессии перезапишет текущую. Используйте с осторожностью.</string>
     <string name="debug_btn_copy">Копировать</string>
     <string name="btn_import">Импортировать</string>
+    <string name="btn_logout">Выйти</string>
+    <string name="logout_confirmation">Вы уверены, что хотите выйти?</string>
 </resources>

@@ -36,6 +36,7 @@ import org.amnezia.awg.backend.Tunnel
 import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.model.ObfuscationProfile
+import ru.protonmod.next.data.repository.AuthRepository
 import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.utils.crypto.QuicI1Generator
 import ru.protonmod.next.vpn.AmneziaVpnManager
@@ -108,7 +109,8 @@ data class SettingsUiState(
 class SettingsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     amneziaVpnManager: AmneziaVpnManager,
-    private val settingsManager: SettingsManager
+    private val settingsManager: SettingsManager,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     // Internal state tracking if any VPN is operating at the OS level
@@ -461,5 +463,11 @@ class SettingsViewModel @Inject constructor(
     fun resetToStandard() {
         val standard = ObfuscationProfile.getStandardProfile()
         selectObfuscationProfile(standard)
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            authRepository.logout()
+        }
     }
 }

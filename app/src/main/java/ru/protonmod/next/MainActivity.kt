@@ -79,6 +79,13 @@ class MainViewModel @Inject constructor(
     private val _startDestination = MutableStateFlow<String>("")
     val startDestination: StateFlow<String> = _startDestination.asStateFlow()
 
+    val session = sessionDao.getSessionFlow()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+
     val appTheme: StateFlow<AppTheme> = settingsManager.appTheme
         .stateIn(
             scope = viewModelScope,
@@ -162,6 +169,7 @@ class MainActivity : ComponentActivity() {
 fun ProtonNextAppNavHost(viewModel: MainViewModel = hiltViewModel()) {
     val navController = rememberNavController()
     val startDestination by viewModel.startDestination.collectAsState()
+    val session by viewModel.session.collectAsState()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
@@ -171,6 +179,19 @@ fun ProtonNextAppNavHost(viewModel: MainViewModel = hiltViewModel()) {
         Screen.Profiles.route -> MainTarget.Profiles
         Screen.Settings.route -> MainTarget.Settings
         else -> null
+    }
+
+    LaunchedEffect(session) {
+        ru.protonmod.next.utils.ProtonLogger.d("MainActivity", "Session changed: ${session != null}")
+        if (session == null && startDestination.isNotEmpty()) {
+            ru.protonmod.next.utils.ProtonLogger.d("MainActivity", "User logged out, navigating to welcome. Current route: $currentRoute")
+            // Only navigate if we're not already on a public screen
+            if (currentRoute != "welcome" && currentRoute != "login" && currentRoute != Screen.ApiBypass.route) {
+                navController.navigate("welcome") {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        }
     }
 
     if (startDestination.isEmpty()) return

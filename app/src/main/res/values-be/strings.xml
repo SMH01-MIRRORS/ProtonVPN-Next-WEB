@@ -476,4 +476,6 @@
     <string name="debug_import_session_warning">УВАГА: Імпарт сесіі перазапіша бягучую. Выкарыстоўвайце з асцярожнасцю.</string>
     <string name="debug_btn_copy">Скапіяваць</string>
     <string name="btn_import">Імпартаваць</string>
+    <string name="btn_logout">Выйсці</string>
+    <string name="logout_confirmation">Вы ўпэўнены, што хочаце выйсці?</string>
 </resources>

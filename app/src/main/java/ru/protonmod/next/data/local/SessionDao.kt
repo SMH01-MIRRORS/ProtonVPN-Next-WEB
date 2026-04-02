@@ -23,6 +23,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 
 // --- Entities ---
@@ -56,6 +57,9 @@ data class ServersCacheEntity(
 interface SessionDao {
     @Query("SELECT * FROM session WHERE id = 1")
     suspend fun getSession(): SessionEntity?
+
+    @Query("SELECT * FROM session WHERE id = 1")
+    fun getSessionFlow(): Flow<SessionEntity?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveSession(session: SessionEntity)

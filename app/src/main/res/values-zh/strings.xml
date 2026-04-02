@@ -461,4 +461,6 @@
     <string name="debug_import_session_warning">警告：导入会话将覆盖当前的会话。请谨慎使用。</string>
     <string name="debug_btn_copy">复制到剪贴板</string>
     <string name="btn_import">导入</string>
+    <string name="btn_logout">退出</string>
+    <string name="logout_confirmation">您确定要退出吗？</string>
 </resources>

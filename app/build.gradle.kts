@@ -184,10 +184,12 @@ room {
 }
 
 sentry {
-    includeProguardMapping = true
-    autoUploadProguardMapping = true
-    uploadNativeSymbols = true
-    includeNativeSources = true
+    includeProguardMapping.set(true)
+    autoUploadProguardMapping.set(true)
+    uploadNativeSymbols.set(true)
+    includeNativeSources.set(true)
+    includeSourceContext.set(true)
+    autoUploadSourceContext.set(true)
     tracingInstrumentation {
         enabled.set(true)
         logcat {

@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.AltRoute
+import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -101,6 +102,7 @@ fun SettingsScreen(
                 isTablet = isTablet,
                 onAutoConnectChange = viewModel::setAutoConnect,
                 onNotificationsChange = viewModel::setNotifications,
+                onLogout = viewModel::logout,
                 onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
                 onNavigateToProtocol = onNavigateToProtocol,
                 onNavigateToKillSwitch = onNavigateToKillSwitch,
@@ -124,6 +126,7 @@ fun SettingsContent(
     isTablet: Boolean = false,
     onAutoConnectChange: (Boolean) -> Unit,
     onNotificationsChange: (Boolean) -> Unit,
+    onLogout: () -> Unit,
     onNavigateToSplitTunnelingMain: (() -> Unit)? = null,
     onNavigateToProtocol: (() -> Unit)? = null,
     onNavigateToKillSwitch: (() -> Unit)? = null,
@@ -196,7 +199,8 @@ fun SettingsContent(
 
                         AboutSettingsSection(
                             onNavigateToAbout = onNavigateToAbout,
-                            onNavigateToDebug = onNavigateToDebug
+                            onNavigateToDebug = onNavigateToDebug,
+                            onLogout = onLogout
                         )
                     }
                 }
@@ -253,7 +257,8 @@ fun SettingsContent(
                 AboutSettingsSection(
                     modifier = contentModifier,
                     onNavigateToAbout = onNavigateToAbout,
-                    onNavigateToDebug = onNavigateToDebug
+                    onNavigateToDebug = onNavigateToDebug,
+                    onLogout = onLogout
                 )
             }
         }
@@ -409,8 +414,11 @@ private fun PrivacySettingsSection(
 private fun AboutSettingsSection(
     modifier: Modifier = Modifier,
     onNavigateToAbout: (() -> Unit)?,
-    onNavigateToDebug: (() -> Unit)? = null
+    onNavigateToDebug: (() -> Unit)? = null,
+    onLogout: () -> Unit
 ) {
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
     Category(modifier = modifier, title = stringResource(R.string.settings_about)) {
         SettingRowWithIcon(
             icon = Icons.Rounded.Info,
@@ -427,6 +435,41 @@ private fun AboutSettingsSection(
                 onClick = onNavigateToDebug
             )
         }
+
+        SettingRowWithIcon(
+            icon = Icons.AutoMirrored.Rounded.Logout,
+            title = stringResource(R.string.btn_logout),
+            subtitle = stringResource(R.string.desc_toggle_connection),
+            onClick = { showLogoutDialog = true },
+            titleColor = ProtonNextTheme.colors.notificationError
+        )
+    }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text(stringResource(R.string.btn_logout)) },
+            text = { Text(stringResource(R.string.logout_confirmation)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                        onLogout()
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = ProtonNextTheme.colors.notificationError)
+                ) {
+                    Text(stringResource(R.string.btn_logout))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            },
+            containerColor = ProtonNextTheme.colors.backgroundSecondary,
+            titleContentColor = ProtonNextTheme.colors.textNorm,
+            textContentColor = ProtonNextTheme.colors.textWeak
+        )
     }
 }
 

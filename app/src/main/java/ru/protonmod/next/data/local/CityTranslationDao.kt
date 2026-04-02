@@ -33,6 +33,9 @@ interface CityTranslationDao {
     @Query("DELETE FROM city_translations WHERE languageCode = :languageCode")
     suspend fun clearTranslations(languageCode: String)
 
+    @Query("DELETE FROM city_translations")
+    suspend fun clearAll()
+
     @Query("SELECT COUNT(*) FROM city_translations WHERE languageCode = :languageCode")
     suspend fun getCount(languageCode: String): Int
 
@@ -41,4 +44,8 @@ interface CityTranslationDao {
 
     @Query("SELECT lastUpdated FROM city_cache WHERE languageCode = :languageCode")
     suspend fun getLastUpdated(languageCode: String): Long?
+
+    @Query("DELETE FROM city_cache")
+    suspend fun clearCacheInfo()
 }
+
