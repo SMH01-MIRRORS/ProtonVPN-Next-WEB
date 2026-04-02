@@ -7,5 +7,5 @@
 - [x] Add multi-language support (localization)
 - [x] Prepare for Cloudflare Pages deployment
 - [x] Verify the design matches the app
-- [/] Troubleshoot deployment (moved files to 'public/')
-- [ ] Finalize and notify user
+- [x] Troubleshoot deployment (moved files to 'public/')
+- [x] Finalize and notify user
