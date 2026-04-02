@@ -1,9 +1,9 @@
 {
   "debug": {
-    "versionCode": 605159722,
-    "versionName": "12.0.0-alpha1st2-11-gf6b7ba3",
+    "versionCode": 605159723,
+    "versionName": "12.0.0-alpha1st2-12-ge2141aa",
     "url": "https://protonnext.qzz.io/VPN-Next-TEST/app-debug.apk",
-    "changelog": "build: upgrade Gradle, AGP, and CI environment dependencies\n\n* build: upgrade Gradle wrapper to 9.5.0-milestone-5 and update distribution checksum\n* build: bump Android Gradle Plugin (AGP) version to 9.2.0-alpha06 in the version catalog\n* ci: add `git` installation step to the Woodpecker pipeline configuration to support script execution",
+    "changelog": "feat: implement manual OTA update check in settings\n\n* feat: add a manual \"Check for Updates\" row to the settings screen with a refresh icon\n* refactor: update `SettingsViewModel` and `SettingsUiState` to manage and expose the update checking state\n* feat: integrate `otaUpdateManager.checkForUpdatesNow()` to trigger manual update checks from the UI\n* i18n: add localized strings for the manual update button across English, Chinese, Ukrainian, Belarusian, Russian, and Persian locales",
     "force": false
   }
 }
