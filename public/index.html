@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proton VPN-Next — Современный VPN клиент</title>
+    <title>Proton VPN-Next — Modern VPN client</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="assets/logo.png">
 </head>
@@ -148,8 +148,7 @@
         // Auto-detect language or use stored preference
         window.addEventListener('DOMContentLoaded', () => {
             const storedLang = localStorage.getItem('preferredLang');
-            const browserLang = navigator.language.split('-')[0];
-            const defaultLang = storedLang || (translations[browserLang] ? browserLang : 'en');
+            const defaultLang = storedLang || 'en';
 
             document.getElementById('langSelect').value = defaultLang;
             changeLanguage(defaultLang);
