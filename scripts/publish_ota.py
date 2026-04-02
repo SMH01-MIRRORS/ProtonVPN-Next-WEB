@@ -142,9 +142,24 @@ def main():
     github_token = os.environ.get('GITHUB_TOKEN')
     if github_token:
         print("Pushing to GitHub mirror...")
-        mirror_url = f"https://x-access-token:{github_token}@github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR.git"
+        # Use 'git' as username for PAT, it's more stable
+        mirror_url = f"https://git:{github_token}@github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR.git"
+
+        # Add mirror remote
         subprocess.run(f"cd website_repo && git remote add mirror {mirror_url}", shell=True)
-        subprocess.run(f"cd website_repo && git push mirror {WEBSITE_BRANCH}", shell=True)
+
+        # Try to push, but don't fail the whole script if it fails
+        result = subprocess.run(f"cd website_repo && git push mirror {WEBSITE_BRANCH} --force",
+                                shell=True, capture_output=True, text=True)
+
+        if result.returncode == 0:
+            print("Successfully pushed to GitHub mirror.")
+        else:
+            print("Failed to push to GitHub mirror.")
+            # Mask token in error output
+            clean_error = result.stderr.replace(github_token, "***")
+            print(f"Error: {clean_error}")
+            print("Check if the GITHUB_TOKEN has 'Contents: Read and Write' permissions.")
 
 if __name__ == '__main__':
     main()
