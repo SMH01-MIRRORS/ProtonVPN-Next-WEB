@@ -5,5 +5,21 @@
     "url": "https://protonnext.qzz.io/VPN-Next-TEST/app-debug.apk",
     "changelog": "feat: implement manual OTA update check in settings\n\n* feat: add a manual \"Check for Updates\" row to the settings screen with a refresh icon\n* refactor: update `SettingsViewModel` and `SettingsUiState` to manage and expose the update checking state\n* feat: integrate `otaUpdateManager.checkForUpdatesNow()` to trigger manual update checks from the UI\n* i18n: add localized strings for the manual update button across English, Chinese, Ukrainian, Belarusian, Russian, and Persian locales",
     "force": false
+  },
+  "nightly": {
+    "debug": {
+      "versionCode": 605159724,
+      "versionName": "12.0.0-alpha1st2-13-g6292c3a-nightly",
+      "url": "https://protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
+      "changelog": "feat: implement stable and nightly update channels\n\n* feat: add `stable` and `nightly` product flavors with a `channel` dimension to distinguish update streams\n* feat: update `UpdateRepository` and `UpdateMetadata` to filter OTA updates based on the current build's channel (`BuildConfig.UPDATE_CHANNEL`) and build type\n* refactor: update `publish_ota.py` to automate channel-aware APK uploads to R2 and support tiered metadata updates in the website repository\n* chore: modify Woodpecker CI configuration to build specific flavors based on git tags and separate release from pre-release publishing logic\n* feat: configure `nightly` flavor with a unique `applicationIdSuffix` and `versionNameSuffix` to allow side-by-side installation",
+      "force": false
+    },
+    "release": {
+      "versionCode": 605159724,
+      "versionName": "12.0.0-alpha1st2-13-g6292c3a-nightly",
+      "url": "https://protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
+      "changelog": "feat: implement stable and nightly update channels\n\n* feat: add `stable` and `nightly` product flavors with a `channel` dimension to distinguish update streams\n* feat: update `UpdateRepository` and `UpdateMetadata` to filter OTA updates based on the current build's channel (`BuildConfig.UPDATE_CHANNEL`) and build type\n* refactor: update `publish_ota.py` to automate channel-aware APK uploads to R2 and support tiered metadata updates in the website repository\n* chore: modify Woodpecker CI configuration to build specific flavors based on git tags and separate release from pre-release publishing logic\n* feat: configure `nightly` flavor with a unique `applicationIdSuffix` and `versionNameSuffix` to allow side-by-side installation",
+      "force": false
+    }
   }
 }
