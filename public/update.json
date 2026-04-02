@@ -8,17 +8,17 @@
   },
   "nightly": {
     "debug": {
-      "versionCode": 605159724,
-      "versionName": "12.0.0-alpha1st2-13-g6292c3a-nightly",
-      "url": "https://protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "feat: implement stable and nightly update channels\n\n* feat: add `stable` and `nightly` product flavors with a `channel` dimension to distinguish update streams\n* feat: update `UpdateRepository` and `UpdateMetadata` to filter OTA updates based on the current build's channel (`BuildConfig.UPDATE_CHANNEL`) and build type\n* refactor: update `publish_ota.py` to automate channel-aware APK uploads to R2 and support tiered metadata updates in the website repository\n* chore: modify Woodpecker CI configuration to build specific flavors based on git tags and separate release from pre-release publishing logic\n* feat: configure `nightly` flavor with a unique `applicationIdSuffix` and `versionNameSuffix` to allow side-by-side installation",
+      "versionCode": 605159725,
+      "versionName": "12.0.0-alpha1st2-14-g7172c0b-nightly",
+      "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
+      "changelog": "feat: enhance OTA update logic and mirror redundancy\n\n* feat: update `UpdateRepository` to evaluate all mirrors and return the update with the highest version code instead of the first one found\n* refactor: move OTA mirror URLs from code to `strings.xml` and add a third mirror for improved availability\n* i18n: add non-translatable mirror URL strings to all localized `strings.xml` files",
       "force": false
     },
     "release": {
-      "versionCode": 605159724,
-      "versionName": "12.0.0-alpha1st2-13-g6292c3a-nightly",
-      "url": "https://protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "feat: implement stable and nightly update channels\n\n* feat: add `stable` and `nightly` product flavors with a `channel` dimension to distinguish update streams\n* feat: update `UpdateRepository` and `UpdateMetadata` to filter OTA updates based on the current build's channel (`BuildConfig.UPDATE_CHANNEL`) and build type\n* refactor: update `publish_ota.py` to automate channel-aware APK uploads to R2 and support tiered metadata updates in the website repository\n* chore: modify Woodpecker CI configuration to build specific flavors based on git tags and separate release from pre-release publishing logic\n* feat: configure `nightly` flavor with a unique `applicationIdSuffix` and `versionNameSuffix` to allow side-by-side installation",
+      "versionCode": 605159725,
+      "versionName": "12.0.0-alpha1st2-14-g7172c0b-nightly",
+      "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
+      "changelog": "feat: enhance OTA update logic and mirror redundancy\n\n* feat: update `UpdateRepository` to evaluate all mirrors and return the update with the highest version code instead of the first one found\n* refactor: move OTA mirror URLs from code to `strings.xml` and add a third mirror for improved availability\n* i18n: add non-translatable mirror URL strings to all localized `strings.xml` files",
       "force": false
     }
   }
