@@ -1,5 +1,0 @@
-name = "protonvpn-next"
-pages_build_output_dir = "public"
-
-# Use this to configure your deployment via Wrangler CLI
-# Run `npx wrangler pages deploy public --project-name=protonvpn-next` to deploy
