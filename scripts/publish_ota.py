@@ -1,0 +1,131 @@
+import os
+import sys
+import json
+import glob
+import subprocess
+import boto3
+from botocore.client import Config
+
+# R2 Configuration from secrets
+R2_ACCESS_KEY = os.environ.get('R2_ACCESS_KEY')
+R2_SECRET_KEY = os.environ.get('R2_SECRET_KEY')
+R2_ENDPOINT = os.environ.get('R2_ENDPOINT')
+R2_BUCKET = os.environ.get('R2_BUCKET')
+R2_PUBLIC_URL = os.environ.get('R2_PUBLIC_URL', 'https://pub-xxxx.r2.dev')
+
+# Woodpecker environment
+EVENT = os.environ.get('CI_PIPELINE_EVENT', 'push')
+TAG = os.environ.get('CI_COMMIT_TAG')
+COMMIT_SHA = os.environ.get('CI_COMMIT_SHA', 'unknown')[:8]
+
+# Project branches
+WEBSITE_BRANCH = "website"
+
+def get_git_output(command):
+    try:
+        return subprocess.check_output(command, shell=True).decode().strip()
+    except:
+        return ""
+
+def upload_to_r2(file_path, target_dir):
+    print(f"Uploading {file_path} to R2 folder {target_dir}...")
+    s3 = boto3.resource('s3',
+        endpoint_url=R2_ENDPOINT,
+        aws_access_key_id=R2_ACCESS_KEY,
+        aws_secret_access_key=R2_SECRET_KEY,
+        config=Config(signature_version='s3v4'),
+        region_name='auto'
+    )
+    bucket = s3.Bucket(R2_BUCKET)
+
+    # 1. Clear destination directory
+    print(f"Cleaning R2 directory: {target_dir}")
+    bucket.objects.filter(Prefix=f"{target_dir}/").delete()
+
+    # 2. Upload new file
+    file_name = os.path.basename(file_path)
+    key = f"{target_dir}/{file_name}"
+    bucket.upload_file(file_path, key)
+
+    return f"{R2_PUBLIC_URL}/{key}"
+
+def update_website_json(version_code, version_name, apk_url, is_release):
+    print("Updating update.json on website branch...")
+
+    # Simple strategy: clone website branch to a temp dir
+    if os.path.exists("website_repo"):
+        subprocess.run("rm -rf website_repo", shell=True)
+
+    # We assume CODEBERG_TOKEN is available for git auth
+    token = os.environ.get('CODEBERG_TOKEN')
+    repo_url = os.environ.get('CI_REPO_CLONE_URL')
+    if token and "://" in repo_url:
+        proto, rest = repo_url.split("://", 1)
+        auth_repo_url = f"{proto}://oauth2:{token}@{rest}"
+    else:
+        auth_repo_url = repo_url
+
+    subprocess.run(f"git clone --branch {WEBSITE_BRANCH} {auth_repo_url} website_repo", shell=True)
+
+    json_path = "website_repo/public/update.json"
+    os.makedirs(os.path.dirname(json_path), exist_ok=True)
+
+    data = {}
+    if os.path.exists(json_path):
+        with open(json_path, 'r') as f:
+            try:
+                data = json.load(f)
+            except:
+                data = {}
+
+    key = "release" if is_release else "debug"
+    data[key] = {
+        "versionCode": int(version_code),
+        "versionName": version_name,
+        "url": apk_url,
+        "changelog": get_git_output("git log -1 --pretty=%B"),
+        "force": False # Manual intervention required for force update
+    }
+
+    with open(json_path, 'w') as f:
+        json.dump(data, f, indent=2)
+
+    # Commit and push
+    subprocess.run("git config --global user.email 'ci@protonmod.next'", shell=True)
+    subprocess.run("git config --global user.name 'CI Bot'", shell=True)
+    subprocess.run("cd website_repo && git add . && git commit -m 'chore: update ota metadata' && git push origin " + WEBSITE_BRANCH, shell=True)
+
+def main():
+    if not all([R2_ACCESS_KEY, R2_SECRET_KEY, R2_ENDPOINT, R2_BUCKET]):
+        print("Error: Missing R2 configuration secrets!")
+        return
+
+    is_tag = TAG is not None
+    target_dir = "VPN-Next" if is_tag else "VPN-Next-TEST"
+    build_type = "release" if is_tag else "debug"
+
+    # Find the appropriate APK
+    apk_pattern = f"app/build/outputs/apk/{build_type}/*.apk"
+    apk_files = glob.glob(apk_pattern)
+
+    if not apk_files:
+        print(f"Error: No {build_type} APK found at {apk_pattern}!")
+        return
+
+    apk_path = apk_files[0]
+
+    # Get version info from environment or gradle (here we can use git count logic similar to gradle)
+    # But better to pass them from Woodpecker or read them from build artifacts if possible.
+    # For now, let's try to extract from filename or use git commands.
+    commit_count = int(get_git_output("git rev-list --count HEAD") or "0")
+    version_code = 605159512 + commit_count
+    version_name = TAG if is_tag else get_git_output("git describe --tags --always")
+
+    # Upload to R2
+    public_apk_url = upload_to_r2(apk_path, target_dir)
+
+    # Update website JSON
+    update_website_json(version_code, version_name, public_apk_url, is_tag)
+
+if __name__ == '__main__':
+    main()

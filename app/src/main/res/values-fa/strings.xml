@@ -468,4 +468,23 @@
     <string name="btn_import">وارد کردن</string>
     <string name="btn_logout">خروج</string>
     <string name="logout_confirmation">آیا مطمئن هستید که می‌خواهید خارج شوید؟</string>
+
+    <!-- OTA Updates -->
+    <string name="ota_title">بروزرسانی نرم‌افزار</string>
+    <string name="ota_new_version">نسخه جدید در دسترس است: %1$s</string>
+    <string name="ota_changelog">چه خبر:</string>
+    <string name="ota_btn_update">همین حالا بروزرسانی کن</string>
+    <string name="ota_btn_later">بعداً</string>
+    <string name="ota_force_title">بروزرسانی اجباری</string>
+    <string name="ota_force_desc">یک بروزرسانی بحرانی در دسترس است. لطفاً برای ادامه استفاده از Proton VPN-Next برنامه را بروزرسانی کنید.</string>
+    <string name="ota_check_frequency">بررسی برای بروزرسانی</string>
+    <string name="ota_freq_hourly">ساعتی</string>
+    <string name="ota_freq_daily">روزانه</string>
+    <string name="ota_freq_weekly">هفتگی</string>
+    <string name="ota_freq_monthly">ماهانه</string>
+    <string name="ota_freq_disabled">غیرفعال</string>
+    <string name="ota_status_checking">در حال بررسی برای بروزرسانی…</string>
+    <string name="ota_status_up_to_date">برنامه بروز است</string>
+    <string name="ota_downloading">در حال دانلود بروزرسانی… %1$d%%</string>
+    <string name="ota_download_failed">دانلود ناموفق بود. لطفاً بعداً دوباره تلاش کنید.</string>
 </resources>

@@ -463,4 +463,23 @@
     <string name="btn_import">导入</string>
     <string name="btn_logout">退出</string>
     <string name="logout_confirmation">您确定要退出吗？</string>
+
+    <!-- OTA Updates -->
+    <string name="ota_title">软件更新</string>
+    <string name="ota_new_version">发现新版本：%1$s</string>
+    <string name="ota_changelog">更新内容：</string>
+    <string name="ota_btn_update">立即更新</string>
+    <string name="ota_btn_later">稍后</string>
+    <string name="ota_force_title">需要更新</string>
+    <string name="ota_force_desc">发现关键更新。请更新应用以继续使用 Proton VPN-Next。</string>
+    <string name="ota_check_frequency">检查更新</string>
+    <string name="ota_freq_hourly">每小时</string>
+    <string name="ota_freq_daily">每天</string>
+    <string name="ota_freq_weekly">每周</string>
+    <string name="ota_freq_monthly">每月</string>
+    <string name="ota_freq_disabled">已禁用</string>
+    <string name="ota_status_checking">正在检查更新…</string>
+    <string name="ota_status_up_to_date">应用已是最新版本</string>
+    <string name="ota_downloading">正在下载更新… %1$d%%</string>
+    <string name="ota_download_failed">下载失败。请稍后再试。</string>
 </resources>

@@ -48,6 +48,9 @@ class SettingsManager @Inject constructor(
         private val AUTO_CONNECT = booleanPreferencesKey("auto_connect")
         private val NOTIFICATIONS = booleanPreferencesKey("notifications")
 
+        private val OTA_UPDATE_FREQUENCY = stringPreferencesKey("ota_update_frequency") // "hourly", "daily", "weekly", "monthly", "disabled"
+        private val OTA_LAST_CHECK_TIME = intPreferencesKey("ota_last_check_time")
+
         private val APP_THEME = stringPreferencesKey("app_theme")
         private val SERVER_LOAD_DISPLAY_MODE = stringPreferencesKey("server_load_display_mode")
 
@@ -107,6 +110,9 @@ class SettingsManager @Inject constructor(
     val killSwitchEnabled: Flow<Boolean> = context.dataStore.data.map { it[KILL_SWITCH] ?: false }
     val autoConnectEnabled: Flow<Boolean> = context.dataStore.data.map { it[AUTO_CONNECT] ?: true }
     val notificationsEnabled: Flow<Boolean> = context.dataStore.data.map { it[NOTIFICATIONS] ?: true }
+
+    val otaUpdateFrequency: Flow<String> = context.dataStore.data.map { it[OTA_UPDATE_FREQUENCY] ?: "daily" }
+    val otaLastCheckTime: Flow<Long> = context.dataStore.data.map { it[OTA_LAST_CHECK_TIME]?.toLong() ?: 0L }
 
     val appTheme: Flow<ru.protonmod.next.ui.theme.AppTheme> = context.dataStore.data.map { preferences ->
         val themeString = preferences[APP_THEME] ?: ru.protonmod.next.ui.theme.AppTheme.DARK.name
@@ -236,6 +242,14 @@ class SettingsManager @Inject constructor(
 
     suspend fun setNotifications(enabled: Boolean) {
         context.dataStore.edit { it[NOTIFICATIONS] = enabled }
+    }
+
+    suspend fun setOtaUpdateFrequency(frequency: String) {
+        context.dataStore.edit { it[OTA_UPDATE_FREQUENCY] = frequency }
+    }
+
+    suspend fun setOtaLastCheckTime(time: Long) {
+        context.dataStore.edit { it[OTA_LAST_CHECK_TIME] = time.toInt() }
     }
 
     suspend fun setAppTheme(theme: ru.protonmod.next.ui.theme.AppTheme) {

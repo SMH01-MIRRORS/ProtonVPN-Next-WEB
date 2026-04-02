@@ -467,4 +467,23 @@
     <string name="btn_import">Import</string>
     <string name="btn_logout">Log Out</string>
     <string name="logout_confirmation">Are you sure you want to log out?</string>
+
+    <!-- OTA Updates -->
+    <string name="ota_title">Software Update</string>
+    <string name="ota_new_version">New version available: %1$s</string>
+    <string name="ota_changelog">What\'s new:</string>
+    <string name="ota_btn_update">Update Now</string>
+    <string name="ota_btn_later">Later</string>
+    <string name="ota_force_title">Update Required</string>
+    <string name="ota_force_desc">A critical update is available. Please update the app to continue using Proton VPN-Next.</string>
+    <string name="ota_check_frequency">Check for Updates</string>
+    <string name="ota_freq_hourly">Hourly</string>
+    <string name="ota_freq_daily">Daily</string>
+    <string name="ota_freq_weekly">Weekly</string>
+    <string name="ota_freq_monthly">Monthly</string>
+    <string name="ota_freq_disabled">Disabled</string>
+    <string name="ota_status_checking">Checking for updates…</string>
+    <string name="ota_status_up_to_date">App is up to date</string>
+    <string name="ota_downloading">Downloading update… %1$d%%</string>
+    <string name="ota_download_failed">Download failed. Please try again later.</string>
 </resources>

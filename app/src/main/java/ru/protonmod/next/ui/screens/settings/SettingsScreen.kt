@@ -114,6 +114,7 @@ fun SettingsScreen(
                 onNavigateToDebug = onNavigateToDebug,
                 onNavigateToCustomDns = onNavigateToCustomDns,
                 onNavigateToPortSelection = onNavigateToPortSelection,
+                onOtaFrequencyChange = viewModel::setOtaUpdateFrequency,
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -138,6 +139,7 @@ fun SettingsContent(
     onNavigateToDebug: (() -> Unit)? = null,
     onNavigateToCustomDns: (() -> Unit)? = null,
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
+    onOtaFrequencyChange: (String) -> Unit,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -195,6 +197,11 @@ fun SettingsContent(
                             onNotificationsChange = onNotificationsChange
                         )
 
+                        UpdateSettingsSection(
+                            state = state,
+                            onFrequencyChange = onOtaFrequencyChange
+                        )
+
                         WidgetSettingsSection()
 
                         AboutSettingsSection(
@@ -250,6 +257,14 @@ fun SettingsContent(
             }
 
             item {
+                UpdateSettingsSection(
+                    modifier = contentModifier,
+                    state = state,
+                    onFrequencyChange = onOtaFrequencyChange
+                )
+            }
+
+            item {
                 WidgetSettingsSection(modifier = contentModifier)
             }
 
@@ -262,6 +277,75 @@ fun SettingsContent(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun UpdateSettingsSection(
+    modifier: Modifier = Modifier,
+    state: SettingsUiState,
+    onFrequencyChange: (String) -> Unit
+) {
+    var showFrequencyDialog by remember { mutableStateOf(false) }
+
+    Category(modifier = modifier, title = stringResource(R.string.ota_title)) {
+        val currentFrequencyName = when (state.otaUpdateFrequency) {
+            "hourly" -> stringResource(R.string.ota_freq_hourly)
+            "daily" -> stringResource(R.string.ota_freq_daily)
+            "weekly" -> stringResource(R.string.ota_freq_weekly)
+            "monthly" -> stringResource(R.string.ota_freq_monthly)
+            "disabled" -> stringResource(R.string.ota_freq_disabled)
+            else -> state.otaUpdateFrequency
+        }
+
+        SettingRowWithIcon(
+            icon = Icons.Rounded.SystemUpdate,
+            title = stringResource(R.string.ota_check_frequency),
+            subtitle = currentFrequencyName,
+            onClick = { showFrequencyDialog = true }
+        )
+    }
+
+    if (showFrequencyDialog) {
+        val options = listOf("hourly", "daily", "weekly", "monthly", "disabled")
+        val optionNames = listOf(
+            stringResource(R.string.ota_freq_hourly),
+            stringResource(R.string.ota_freq_daily),
+            stringResource(R.string.ota_freq_weekly),
+            stringResource(R.string.ota_freq_monthly),
+            stringResource(R.string.ota_freq_disabled)
+        )
+
+        AlertDialog(
+            onDismissRequest = { showFrequencyDialog = false },
+            title = { Text(stringResource(R.string.ota_check_frequency)) },
+            text = {
+                Column {
+                    options.forEachIndexed { index, option ->
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onFrequencyChange(option)
+                                    showFrequencyDialog = false
+                                }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = state.otaUpdateFrequency == option,
+                                onClick = null,
+                                colors = RadioButtonDefaults.colors(selectedColor = ProtonNextTheme.colors.brandNorm)
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Text(optionNames[index], color = ProtonNextTheme.colors.textNorm)
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            containerColor = ProtonNextTheme.colors.backgroundSecondary
+        )
     }
 }
 

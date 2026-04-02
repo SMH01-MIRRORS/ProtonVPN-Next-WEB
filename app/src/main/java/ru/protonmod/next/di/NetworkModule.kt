@@ -39,6 +39,7 @@ import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.network.ProtonAuthApi
 import ru.protonmod.next.data.network.ProtonVpnApi
+import ru.protonmod.next.data.network.ota.UpdateApi
 import ru.protonmod.next.data.network.TokenAuthenticator
 import ru.protonmod.next.data.repository.AuthRepository
 import ru.protonmod.next.utils.DeviceInfoProvider
@@ -206,4 +207,8 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideProtonVpnApi(retrofit: Retrofit): ProtonVpnApi = retrofit.create(ProtonVpnApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideUpdateApi(retrofit: Retrofit): UpdateApi = retrofit.create(UpdateApi::class.java)
 }

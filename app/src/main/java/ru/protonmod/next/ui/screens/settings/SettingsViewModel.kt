@@ -37,6 +37,7 @@ import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.data.repository.AuthRepository
+import ru.protonmod.next.ota.OTAUpdateManager
 import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.utils.crypto.QuicI1Generator
 import ru.protonmod.next.vpn.AmneziaVpnManager
@@ -63,6 +64,9 @@ data class SettingsUiState(
     // Customization
     val appTheme: AppTheme = AppTheme.DARK,
     val serverLoadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
+
+    // OTA Update Settings
+    val otaUpdateFrequency: String = "daily",
 
     // AWG low-level params
     val awgJc: Int = 3,
@@ -110,7 +114,8 @@ class SettingsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     amneziaVpnManager: AmneziaVpnManager,
     private val settingsManager: SettingsManager,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val otaUpdateManager: OTAUpdateManager
 ) : ViewModel() {
 
     // Internal state tracking if any VPN is operating at the OS level
@@ -190,6 +195,7 @@ class SettingsViewModel @Inject constructor(
         settingsManager.apiBypassStrategy,
         settingsManager.appTheme,
         settingsManager.serverLoadDisplayMode,
+        settingsManager.otaUpdateFrequency,
         _isAnyVpnActive
     ) { args: Array<Any?> ->
         SettingsUiState(
@@ -237,7 +243,8 @@ class SettingsViewModel @Inject constructor(
             apiBypassStrategy = args[41] as String,
             appTheme = args[42] as AppTheme,
             serverLoadDisplayMode = args[43] as ServerLoadDisplayMode,
-            isAnyVpnActive = args[44] as Boolean
+            otaUpdateFrequency = args[44] as String,
+            isAnyVpnActive = args[45] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -266,6 +273,13 @@ class SettingsViewModel @Inject constructor(
     fun setServerLoadDisplayMode(mode: ServerLoadDisplayMode) {
         viewModelScope.launch {
             settingsManager.setServerLoadDisplayMode(mode)
+        }
+    }
+
+    fun setOtaUpdateFrequency(frequency: String) {
+        viewModelScope.launch {
+            settingsManager.setOtaUpdateFrequency(frequency)
+            otaUpdateManager.scheduleUpdateCheck()
         }
     }
 

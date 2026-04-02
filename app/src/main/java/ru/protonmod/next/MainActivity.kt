@@ -60,6 +60,7 @@ import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SettingsManager
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import ru.protonmod.next.ota.OTAUpdateScreen
 import ru.protonmod.next.ui.components.LiquidGlassBottomBar
 import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.nav.Screen
@@ -134,6 +135,7 @@ class MainActivity : ComponentActivity() {
                             checkAndRequestNotificationPermission()
                         }
                         ProtonNextAppNavHost(viewModel = viewModel)
+                        OTAUpdateOverlay()
                     }
                 }
             }
@@ -162,6 +164,21 @@ class MainActivity : ComponentActivity() {
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
+    }
+}
+
+@Composable
+fun OTAUpdateOverlay(
+    viewModel: ru.protonmod.next.ota.OTAUpdateViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    
+    LaunchedEffect(Unit) {
+        viewModel.checkForUpdates()
+    }
+
+    if (uiState.updateInfo != null) {
+        OTAUpdateScreen(viewModel = viewModel)
     }
 }
 

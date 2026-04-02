@@ -478,4 +478,23 @@
     <string name="btn_import">Імпартаваць</string>
     <string name="btn_logout">Выйсці</string>
     <string name="logout_confirmation">Вы ўпэўнены, што хочаце выйсці?</string>
+
+    <!-- OTA Updates -->
+    <string name="ota_title">Абнаўленне ПЗ</string>
+    <string name="ota_new_version">Даступная новая версія: %1$s</string>
+    <string name="ota_changelog">Што новага:</string>
+    <string name="ota_btn_update">Абнавіць зараз</string>
+    <string name="ota_btn_later">Пазней</string>
+    <string name="ota_force_title">Патрабуецца абнаўленне</string>
+    <string name="ota_force_desc">Даступна крытычнае абнаўленне. Калі ласка, абнавіце прыкладанне, каб працягнуць выкарыстанне Proton VPN-Next.</string>
+    <string name="ota_check_frequency">Праверка абнаўленняў</string>
+    <string name="ota_freq_hourly">Кожную гадзіну</string>
+    <string name="ota_freq_daily">Штодзень</string>
+    <string name="ota_freq_weekly">Штотыдзень</string>
+    <string name="ota_freq_monthly">Штомесяц</string>
+    <string name="ota_freq_disabled">Адключана</string>
+    <string name="ota_status_checking">Праверка абнаўленняў…</string>
+    <string name="ota_status_up_to_date">Усталявана актуальная версія</string>
+    <string name="ota_downloading">Загрузка абнаўлення… %1$d%%</string>
+    <string name="ota_download_failed">Памылка загрузкі. Паспрабуйце пазней.</string>
 </resources>
