@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="assets/logo.png">
 </head>
-<body class="lang-ru">
+<body class="lang-en">
     <header>
         <div class="container">
             <nav>
@@ -17,13 +17,13 @@
                 </div>
                 <div class="nav-right">
                     <ul class="nav-links">
-                        <li><a href="#features" data-t="nav_features">Особенности</a></li>
-                        <li><a href="#about" data-t="nav_about">О проекте</a></li>
+                        <li><a href="#features" data-t="nav_features">Features</a></li>
+                        <li><a href="#about" data-t="nav_about">About</a></li>
                     </ul>
                     <div class="lang-switcher">
                         <select id="langSelect" onchange="changeLanguage(this.value)">
-                            <option value="en">English</option>
-                            <option value="ru" selected>Русский</option>
+                            <option value="en" selected>English</option>
+                            <option value="ru">Русский</option>
                             <option value="uk">Українська</option>
                             <option value="be">Беларуская</option>
                             <option value="fa">فارسی</option>
@@ -40,11 +40,11 @@
         <section class="hero">
             <div class="container hero-content">
                 <div class="hero-text">
-                    <h1 data-t="hero_title">Ваша приватность в надежных руках</h1>
-                    <p data-t="hero_subtitle">Современный, быстрый и безопасный неофициальный клиент для Proton VPN на Android с поддержкой AmneziaWG.</p>
+                    <h1 data-t="hero_title">Your privacy in safe hands</h1>
+                    <p data-t="hero_subtitle">A modern, high-performance unofficial Android client for Proton VPN, leveraging AmneziaWG for stable connectivity even in restrictive environments.</p>
                     <div class="hero-actions">
-                        <a href="#" class="btn-primary" data-t="btn_download">Скачать</a>
-                        <a href="https://codeberg.org/SMH01/ProtonVPN-Next" class="btn-outline" data-t="btn_source">Исходный код</a>
+                        <a href="#" class="btn-primary" data-t="btn_download">Download</a>
+                        <a href="https://codeberg.org/SMH01/ProtonVPN-Next" class="btn-outline" data-t="btn_source">Source Code</a>
                     </div>
                 </div>
                 <div class="hero-image">
@@ -55,27 +55,27 @@
 
         <section id="features" class="features">
             <div class="container">
-                <h2 class="section-title" data-t="features_title">Ключевые особенности</h2>
+                <h2 class="section-title" data-t="features_title">Key Features</h2>
                 <div class="features-grid">
                     <div class="feature-card glass">
                         <div class="feature-icon">🚀</div>
-                        <h3 data-t="feat_1_title">Ядро AmneziaWG</h3>
-                        <p data-t="feat_1_desc">Продвинутый протокол для обхода блокировок и поддержания высокой скорости даже в жестких условиях.</p>
+                        <h3 data-t="feat_1_title">AmneziaWG Core</h3>
+                        <p data-t="feat_1_desc">Advanced protocol integration to bypass censorship and maintain high speeds.</p>
                     </div>
                     <div class="feature-card glass">
                         <div class="feature-icon">🎨</div>
                         <h3 data-t="feat_2_title">Material 3 & Compose</h3>
-                        <p data-t="feat_2_desc">Полностью современный интерфейс на Jetpack Compose с поддержкой динамических цветов и тем.</p>
+                        <p data-t="feat_2_desc">Fully modern UI built with Jetpack Compose and dynamic color support.</p>
                     </div>
                     <div class="feature-card glass">
                         <div class="feature-icon">🔐</div>
-                        <h3 data-t="feat_3_title">Приватность</h3>
-                        <p data-t="feat_3_desc">Kill Switch на уровне системы и раздельное туннелирование для полного контроля над трафиком.</p>
+                        <h3 data-t="feat_3_title">Privacy Suite</h3>
+                        <p data-t="feat_3_desc">System-level Kill Switch and Split Tunneling for full traffic control.</p>
                     </div>
                     <div class="feature-card glass">
                         <div class="feature-icon">🌍</div>
-                        <h3 data-t="feat_4_title">Глобальная сеть</h3>
-                        <p data-t="feat_4_desc">Удобный выбор серверов по всему миру с индикацией нагрузки в реальном времени.</p>
+                        <h3 data-t="feat_4_title">Global Network</h3>
+                        <p data-t="feat_4_desc">Easy server selection with real-time load indicators.</p>
                     </div>
                 </div>
             </div>
@@ -83,10 +83,24 @@
 
         <section id="about" class="about">
             <div class="container glass-panel">
-                <h2 data-t="about_title">О проекте</h2>
-                <p data-t="about_desc">Proton VPN-Next — это высокопроизводительный клиент с открытым исходным кодом, созданный для тех, кто ценит скорость и современный дизайн. Мы используем лучшие практики разработки на Kotlin, чтобы обеспечить стабильность и безопасность вашего соединения.</p>
+                <h2 data-t="about_title">About Project</h2>
+                <p data-t="about_desc">Proton VPN-Next is an open-source high-performance client built with Kotlin, focusing on speed and modern design for the best user experience.</p>
                 <div class="disclaimer">
-                    <p><strong data-t="disclaimer_note">Примечание:</strong> <span data-t="disclaimer_text">Это неофициальный клиент. Мы не связаны с Proton AG. Пожалуйста, поддержите оригинальных разработчиков, оформив платную подписку Proton VPN.</span></p>
+                    <p><strong data-t="disclaimer_note">IMPORTANT DISCLAIMER:</strong> <span data-t="disclaimer_text">This application is NOT an official product of Proton AG. Please support the original creators by subscribing to an official Proton VPN plan.</span></p>
+                </div>
+            </div>
+        </section>
+
+        <section id="sponsors" class="sponsors">
+            <div class="container">
+                <h2 class="section-title" data-t="sponsors_title">Sponsors</h2>
+                <div class="sponsors-grid">
+                    <a href="https://www.cloudflare.com/" target="_blank" class="sponsor-card glass">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/4/4b/Cloudflare_Logo.svg" alt="Cloudflare">
+                    </a>
+                    <a href="https://sentry.io/" target="_blank" class="sponsor-card glass">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Sentry_logo.svg" alt="Sentry">
+                    </a>
                 </div>
             </div>
         </section>
@@ -135,7 +149,7 @@
         window.addEventListener('DOMContentLoaded', () => {
             const storedLang = localStorage.getItem('preferredLang');
             const browserLang = navigator.language.split('-')[0];
-            const defaultLang = storedLang || (translations[browserLang] ? browserLang : 'ru');
+            const defaultLang = storedLang || (translations[browserLang] ? browserLang : 'en');
 
             document.getElementById('langSelect').value = defaultLang;
             changeLanguage(defaultLang);

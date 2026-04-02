@@ -18,7 +18,8 @@ const translations = {
         "about_title": "About Project",
         "about_desc": "Proton VPN-Next is an open-source high-performance client built with Kotlin, focusing on speed and modern design for the best user experience.",
         "disclaimer_note": "IMPORTANT DISCLAIMER:",
-        "disclaimer_text": "This application is NOT an official product of Proton AG. Please support the original creators by subscribing to an official Proton VPN plan."
+        "disclaimer_text": "This application is NOT an official product of Proton AG. Please support the original creators by subscribing to an official Proton VPN plan.",
+        "sponsors_title": "Sponsors"
     },
     "ru": {
         "nav_features": "Особенности",
@@ -39,7 +40,8 @@ const translations = {
         "about_title": "О проекте",
         "about_desc": "Proton VPN-Next — это высокопроизводительный клиент с открытым исходным кодом, созданный для тех, кто ценит скорость и современный дизайн. Мы используем лучшие практики разработки на Kotlin, чтобы обеспечить стабильность и безопасность вашего соединения.",
         "disclaimer_note": "Примечание:",
-        "disclaimer_text": "Это неофициальный клиент. Мы не связаны с Proton AG. Пожалуйста, поддержите оригинальных разработчиков, оформив платную подписку Proton VPN."
+        "disclaimer_text": "Это неофициальный клиент. Мы не связаны с Proton AG. Пожалуйста, поддержите оригинальных разработчиков, оформив платную подписку Proton VPN.",
+        "sponsors_title": "Спонсоры"
     },
     "uk": {
         "nav_features": "Особливості",
@@ -60,7 +62,8 @@ const translations = {
         "about_title": "Про проєкт",
         "about_desc": "Proton VPN-Next — це високопродуктивний клієнт з відкритим вихідним кодом, створений для тих, хто цінує швидкість та сучасний дизайн.",
         "disclaimer_note": "Примітка:",
-        "disclaimer_text": "Це неофіційний клієнт. Ми не пов'язані з Proton AG. Будь ласка, підтримайте оригінальних розробників, оформивши платну підписку Proton VPN."
+        "disclaimer_text": "Це неофіційний клієнт. Ми не пов'язані з Proton AG. Будь ласка, підтримайте оригінальних розробників, оформивши платну підписку Proton VPN.",
+        "sponsors_title": "Спонсори"
     },
     "be": {
         "nav_features": "Асаблівасці",
@@ -81,7 +84,8 @@ const translations = {
         "about_title": "Пра праект",
         "about_desc": "Proton VPN-Next — гэта высокапрадукцыйны кліент з адкрытым зыходным кодам, створаны для тых, хто шануе хуткасць і сучасны дызайн.",
         "disclaimer_note": "Заўвага:",
-        "disclaimer_text": "Гэта неафіцыйны кліент. Мы не звязаны з Proton AG. Калі ласка, падтрымайце арыгінальных распрацоўшчыкаў, аформіўшы платную падпіску Proton VPN."
+        "disclaimer_text": "Гэта неафіцыйны кліент. Мы не звязаны з Proton AG. Калі ласка, падтрымайце арыгінальных распрацоўшчыкаў, аформіўшы платную падпіску Proton VPN.",
+        "sponsors_title": "Спонсары"
     },
     "fa": {
         "nav_features": "ویژگی‌ها",
@@ -102,7 +106,8 @@ const translations = {
         "about_title": "درباره پروژه",
         "about_desc": "Proton VPN-Next یک کلاینت متن‌باز با کارایی بالا است که با Kotlin ساخته شده و بر سرعت و طراحی مدرن تمرکز دارد.",
         "disclaimer_note": "سلب مسئولیت مهم:",
-        "disclaimer_text": "این برنامه محصول رسمی Proton AG نیست. لطفاً با خرید طرح رسمی Proton VPN از سازندگان اصلی حمایت کنید."
+        "disclaimer_text": "این برنامه محصول رسمی Proton AG نیست. لطفاً با خرید طرح رسمی Proton VPN از سازندگان اصلی حمایت کنید.",
+        "sponsors_title": "حامیان مالی"
     },
     "zh": {
         "nav_features": "功能特点",
@@ -123,6 +128,7 @@ const translations = {
         "about_title": "关于项目",
         "about_desc": "Proton VPN-Next 是一个使用 Kotlin 构建的开源高性能客户端，专注于速度和现代设计，提供最佳用户体验。",
         "disclaimer_note": "重要免责声明：",
-        "disclaimer_text": "本应用不是 Proton AG 的官方产品。请通过订阅官方 Proton VPN 计划来支持原作者。"
+        "disclaimer_text": "本应用不是 Proton AG 的官方产品。请通过订阅官方 Proton VPN 计划来支持原作者。",
+        "sponsors_title": "赞助商"
     }
 };

@@ -93,9 +93,20 @@ nav {
     color: var(--text-norm);
     border: 1px solid var(--glass-border);
     border-radius: 8px;
-    padding: 5px 10px;
+    padding: 8px 12px;
     cursor: pointer;
     font-size: 0.9rem;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+}
+
+.lang-switcher select:focus {
+    border-color: var(--primary);
+    outline: none;
 }
 
 .btn-primary, .btn-secondary, .btn-outline {
@@ -263,6 +274,40 @@ nav {
     font-size: 1rem;
 }
 
+/* Sponsors Section */
+.sponsors {
+    padding: 60px 0;
+}
+
+.sponsors-grid {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.sponsor-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 50px;
+    height: 120px;
+    min-width: 250px;
+}
+
+.sponsor-card img {
+    max-width: 100%;
+    max-height: 50px;
+    filter: brightness(0) invert(1);
+    opacity: 0.7;
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.sponsor-card:hover img {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
 /* Footer */
 footer {
     padding: 60px 0;
@@ -291,30 +336,120 @@ footer {
 }
 
 /* Responsive */
+@media (max-width: 1024px) {
+    .hero-text h1 {
+        font-size: 2.8rem;
+    }
+
+    .hero-content {
+        gap: 30px;
+    }
+}
+
 @media (max-width: 768px) {
+    header {
+        padding: 10px 0;
+    }
+
+    .nav-right {
+        gap: 15px;
+    }
+
+    .nav-links {
+        display: none; /* Hidden on mobile for now */
+    }
+
+    .hero {
+        padding: 60px 0;
+    }
+
     .hero-content {
         flex-direction: column;
         text-align: center;
     }
 
     .hero-text h1 {
-        font-size: 2.5rem;
+        font-size: 2.2rem;
+        margin-bottom: 15px;
+    }
+
+    .hero-text p {
+        font-size: 1.1rem;
+        margin-bottom: 30px;
     }
 
     .hero-actions {
         justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .hero-actions a {
+        width: 100%;
+    }
+
+    .hero-image {
+        margin-top: 40px;
+        order: 2;
     }
 
     .hero-image img {
         transform: none;
+        max-width: 280px;
     }
 
-    nav ul {
-        display: none;
+    .section-title {
+        font-size: 2rem;
+        margin-bottom: 40px;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .glass {
+        padding: 30px;
+    }
+
+    .glass-panel {
+        padding: 40px 20px;
+    }
+
+    .about h2 {
+        font-size: 2rem;
+    }
+
+    .sponsors-grid {
+        gap: 20px;
+    }
+
+    .sponsor-card {
+        min-width: 140px;
+        height: 100px;
+        padding: 20px;
     }
 
     .footer-content {
         flex-direction: column;
-        gap: 20px;
+        gap: 30px;
+        text-align: center;
+    }
+
+    .footer-links {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo span {
+        display: none; /* Only icon on very small screens */
+    }
+
+    .hero-text h1 {
+        font-size: 1.8rem;
+    }
+
+    .btn-primary, .btn-secondary, .btn-outline {
+        padding: 12px 20px;
     }
 }
