@@ -1,0 +1,25 @@
+{
+  "debug": {
+    "versionCode": 605159723,
+    "versionName": "12.0.0-alpha1st2-12-ge2141aa",
+    "url": "https://protonnext.qzz.io/VPN-Next-TEST/app-debug.apk",
+    "changelog": "feat: implement manual OTA update check in settings\n\n* feat: add a manual \"Check for Updates\" row to the settings screen with a refresh icon\n* refactor: update `SettingsViewModel` and `SettingsUiState` to manage and expose the update checking state\n* feat: integrate `otaUpdateManager.checkForUpdatesNow()` to trigger manual update checks from the UI\n* i18n: add localized strings for the manual update button across English, Chinese, Ukrainian, Belarusian, Russian, and Persian locales",
+    "force": false
+  },
+  "nightly": {
+    "debug": {
+      "versionCode": 605159725,
+      "versionName": "12.0.0-alpha1st2-14-g7172c0b-nightly",
+      "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
+      "changelog": "feat: enhance OTA update logic and mirror redundancy\n\n* feat: update `UpdateRepository` to evaluate all mirrors and return the update with the highest version code instead of the first one found\n* refactor: move OTA mirror URLs from code to `strings.xml` and add a third mirror for improved availability\n* i18n: add non-translatable mirror URL strings to all localized `strings.xml` files",
+      "force": false
+    },
+    "release": {
+      "versionCode": 605159725,
+      "versionName": "12.0.0-alpha1st2-14-g7172c0b-nightly",
+      "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
+      "changelog": "feat: enhance OTA update logic and mirror redundancy\n\n* feat: update `UpdateRepository` to evaluate all mirrors and return the update with the highest version code instead of the first one found\n* refactor: move OTA mirror URLs from code to `strings.xml` and add a third mirror for improved availability\n* i18n: add non-translatable mirror URL strings to all localized `strings.xml` files",
+      "force": false
+    }
+  }
+}
