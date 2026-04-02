@@ -84,6 +84,7 @@ steps:
       CODEBERG_TOKEN:
         from_secret: CODEBERG_TOKEN
     commands:
+      - apt-get update && apt-get install -y git
       - pip install boto3
       - python scripts/publish_ota.py
 
