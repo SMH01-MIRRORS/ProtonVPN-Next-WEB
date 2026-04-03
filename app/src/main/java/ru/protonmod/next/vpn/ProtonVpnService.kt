@@ -396,6 +396,10 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
      * and explicitly forwards critical AmneziaWG logs to Sentry as Breadcrumbs.
      */
     private fun startLogcatCollection() {
+        if (logcatJob?.isActive == true) {
+            ProtonLogger.v(TAG, "Logcat collection already running, skipping restart.")
+            return
+        }
         logcatJob?.cancel()
         logcatJob = serviceScope.launch(Dispatchers.IO) {
             ProtonLogger.d(TAG, "Starting Logcat collection for 'Tun/proton_awg'")
@@ -461,7 +465,8 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
      * Formats bytes into a human-readable speed string.
      */
     private fun formatSpeed(bytesPerSec: Long): String {
-        val b = bytesPerSec.toDouble()
+        // Handle negative values if counters reset
+        val b = maxOf(0.0, bytesPerSec.toDouble())
         if (b <= 0.0) return "0 ${getString(R.string.unit_b_s)}"
         val kib = 1024.0
         val mib = kib * 1024.0
@@ -533,10 +538,13 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
 
         // Decide if we should show a foreground notification.
         // It must be shown during connection, and kept alive if kill switch is active.
+        // CRITICAL FIX: To prevent ForegroundServiceDidNotStartInTimeException,
+        // we MUST always show the notification if the service is starting or active.
+        // We use the 'SILENT' channel if the user has disabled VPN notifications.
         val shouldShow = when {
             isConnecting -> true
             isDown -> killSwitchEnabled && !isManualDisconnect
-            else -> notificationsEnabled
+            else -> true // Always show if UP, to satisfy Foreground requirements
         }
 
         if (shouldShow) {

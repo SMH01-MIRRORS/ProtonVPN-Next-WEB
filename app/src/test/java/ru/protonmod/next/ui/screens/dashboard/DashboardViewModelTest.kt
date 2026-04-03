@@ -56,6 +56,9 @@ class DashboardViewModelTest {
     private lateinit var context: Context
 
     @Mock
+    private lateinit var connectivityManager: android.net.ConnectivityManager
+
+    @Mock
     private lateinit var sharedPreferences: SharedPreferences
 
     @Mock
@@ -93,6 +96,8 @@ class DashboardViewModelTest {
         
         whenever(context.getSharedPreferences(any(), any())).thenReturn(sharedPreferences)
         whenever(sharedPreferences.getBoolean(any(), any())).thenReturn(false)
+        whenever(context.getSystemService(Context.CONNECTIVITY_SERVICE)).thenReturn(connectivityManager)
+        whenever(connectivityManager.allNetworks).thenReturn(emptyArray())
         
         whenever(vpnRepository.getServersFlow()).thenReturn(flowOf(listOf(testServer)))
         whenever(amneziaVpnManager.tunnelState).thenReturn(MutableStateFlow(Tunnel.State.DOWN))

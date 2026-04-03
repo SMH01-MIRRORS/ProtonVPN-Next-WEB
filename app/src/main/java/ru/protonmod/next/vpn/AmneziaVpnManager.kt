@@ -531,6 +531,8 @@ class AmneziaVpnManager @Inject constructor(
 
             _isConnecting.value = false
             _tunnelState.value = Tunnel.State.DOWN
+            connectedServerState.setConnectedServer(null)
+            currentServerId = null
             Result.failure(e)
         }
     }

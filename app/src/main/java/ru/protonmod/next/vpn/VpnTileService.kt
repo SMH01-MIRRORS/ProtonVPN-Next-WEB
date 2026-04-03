@@ -204,18 +204,7 @@ class VpnTileService : TileService() {
     }
 
     private fun findBestServerForProfile(profile: VpnProfileEntity, allServers: List<LogicalServer>): LogicalServer? {
-        if (profile.targetServerId != null) {
-            return allServers.find { it.id == profile.targetServerId }
-        }
-        if (profile.targetCity != null && profile.targetCountry != null) {
-            val cityServers = allServers.filter { it.exitCountry == profile.targetCountry && it.city == profile.targetCity }
-            if (cityServers.isNotEmpty()) return cityServers.minByOrNull { it.averageLoad }
-        }
-        if (profile.targetCountry != null) {
-            val countryServers = allServers.filter { it.exitCountry == profile.targetCountry }
-            if (countryServers.isNotEmpty()) return countryServers.minByOrNull { it.averageLoad }
-        }
-        return allServers.minByOrNull { it.averageLoad }
+        return vpnRepository.findBestServerForProfile(profile, allServers)
     }
 
     private suspend fun initiateConnection(server: LogicalServer) {

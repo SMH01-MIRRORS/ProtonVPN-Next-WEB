@@ -18,6 +18,8 @@
 package ru.protonmod.next.ui.screens.dashboard
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import ru.protonmod.next.utils.ProtonLogger
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -273,7 +275,7 @@ class DashboardViewModel @Inject constructor(
             
             // Try up to 3 cycles to get an IP that is NOT the original one (handling routing lag)
             for (cycle in 1..3) {
-                location = fetchRealLocation(useProxy = false)
+                location = fetchRealLocation(bypassVpn = false)
                 
                 if (location != null) {
                     // If we got an IP and it's different from original (or original is unknown) - success
@@ -318,14 +320,35 @@ class DashboardViewModel @Inject constructor(
     /**
      * Fetches the user's real location based on IP.
      *
-     * @param useProxy If true, forces the request to bypass system proxy (used for original IP).
+     * @param bypassVpn If true, attempts to bypass the VPN tunnel (used for original IP).
      * @return [LocationData] object containing location info, or null in case of an error.
      */
-    private suspend fun fetchRealLocation(useProxy: Boolean = true): LocationData? = withContext(Dispatchers.IO) {
+    private suspend fun fetchRealLocation(bypassVpn: Boolean = true): LocationData? = withContext(Dispatchers.IO) {
         val startTime = System.currentTimeMillis()
-        val client = if (useProxy) noProxyClient else defaultClient
+        
+        // CRITICAL FIX: To truly bypass the VPN tunnel on Android, we must bind the socket
+        // to a physical network interface (WiFi or Cellular). Proxy.NO_PROXY only affects
+        // HTTP proxies, not the routing table / TUN interface.
+        val client = if (bypassVpn) {
+            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val network = cm.allNetworks.find { net ->
+                val caps = cm.getNetworkCapabilities(net)
+                caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true &&
+                        caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN) == true
+            }
+            
+            if (network != null) {
+                noProxyClient.newBuilder()
+                    .socketFactory(network.socketFactory)
+                    .build()
+            } else {
+                noProxyClient
+            }
+        } else {
+            defaultClient
+        }
 
-        // Только самые легкие и быстрые API (IP + Country Code)
+        // Only the lightest and fastest APIs (IP + Country Code)
         val endpoints = listOf(
             "https://api.myip.com",
             "https://freeipapi.com/api/json",
@@ -542,18 +565,7 @@ class DashboardViewModel @Inject constructor(
     }
 
     private fun findBestServerForProfile(profile: VpnProfileEntity, allServers: List<LogicalServer>): LogicalServer? {
-        if (profile.targetServerId != null) {
-            return allServers.find { it.id == profile.targetServerId }
-        }
-        if (profile.targetCity != null && profile.targetCountry != null) {
-            val cityServers = allServers.filter { it.exitCountry == profile.targetCountry && it.city == profile.targetCity }
-            if (cityServers.isNotEmpty()) return cityServers.minByOrNull { it.averageLoad }
-        }
-        if (profile.targetCountry != null) {
-            val countryServers = allServers.filter { it.exitCountry == profile.targetCountry }
-            if (countryServers.isNotEmpty()) return countryServers.minByOrNull { it.averageLoad }
-        }
-        return allServers.minByOrNull { it.averageLoad }
+        return vpnRepository.findBestServerForProfile(profile, allServers)
     }
 
     fun setQuickConnectStrategy(strategy: String, targetId: String? = null) {

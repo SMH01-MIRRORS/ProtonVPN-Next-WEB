@@ -31,6 +31,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
 import ru.protonmod.next.data.network.*
+import ru.protonmod.next.data.local.VpnProfileEntity
 import ru.protonmod.next.data.local.ServerDao
 import ru.protonmod.next.data.local.ServerMapper
 import ru.protonmod.next.data.local.SessionDao
@@ -145,6 +146,31 @@ class VpnRepository @Inject constructor(
             )
         }
         servers
+    }
+
+    /**
+     * Finds the best logical server for a given VPN profile from the provided list.
+     * Logic: Target ID > City Match > Country Match > Lowest Load.
+     */
+    fun findBestServerForProfile(profile: VpnProfileEntity, allServers: List<LogicalServer>): LogicalServer? {
+        if (profile.targetServerId != null) {
+            val server = allServers.find { it.id == profile.targetServerId }
+            if (server != null) return server
+        }
+
+        if (profile.targetCity != null && profile.targetCountry != null) {
+            val cityServers = allServers.filter {
+                it.exitCountry == profile.targetCountry && it.city == profile.targetCity
+            }
+            if (cityServers.isNotEmpty()) return cityServers.minByOrNull { it.averageLoad }
+        }
+
+        if (profile.targetCountry != null) {
+            val countryServers = allServers.filter { it.exitCountry == profile.targetCountry }
+            if (countryServers.isNotEmpty()) return countryServers.minByOrNull { it.averageLoad }
+        }
+
+        return allServers.minByOrNull { it.averageLoad }
     }
 
     suspend fun getServers(

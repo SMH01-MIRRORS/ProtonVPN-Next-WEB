@@ -38,7 +38,7 @@ object IpSubnetCalculator {
                     val ip = parts[0]
                     val prefix = parts[1].toIntOrNull() ?: return false
                     InetAddress.getByName(ip)
-                    prefix in 1..32
+                    prefix in 0..32
                 }
                 else -> {
                     // Plain IP address
@@ -97,8 +97,9 @@ object IpSubnetCalculator {
         var s = start
         val result = mutableListOf<String>()
         while (s <= end) {
-            // Max size of block starting at s
-            val maxSize = s and -s // largest power of two divisor
+            // Max size of block starting at s.
+            // BUGFIX: For s = 0, maxSize is conceptually 2^32, so maxLen = 0.
+            val maxSize = if (s == 0L) (1L shl 32) else (s and -s)
             val maxLen = 32 - java.lang.Long.numberOfTrailingZeros(maxSize)
             // adjust maxLen to fit in the remaining range
             var pref = maxLen

@@ -54,6 +54,18 @@ class VpnRepositoryTest {
     @Mock
     private lateinit var serversCacheDao: ServersCacheDao
 
+    @Mock
+    private lateinit var cityTranslationDao: ru.protonmod.next.data.local.CityTranslationDao
+
+    @Mock
+    private lateinit var profileDao: ru.protonmod.next.data.local.ProfileDao
+
+    @Mock
+    private lateinit var recentConnectionDao: ru.protonmod.next.data.local.RecentConnectionDao
+
+    @Mock
+    private lateinit var cityRepository: ru.protonmod.next.data.repository.CityRepository
+
     private val testDispatcher = StandardTestDispatcher()
     
     private val testDispatcherProvider = object : DispatcherProvider {
@@ -71,7 +83,8 @@ class VpnRepositoryTest {
         MockitoAnnotations.openMocks(this)
         repository = VpnRepository(
             vpnApi, serverDao, sessionDao, serversCacheDao,
-            testDispatcherProvider, testScope
+            cityTranslationDao, profileDao, recentConnectionDao,
+            cityRepository, testDispatcherProvider, testScope
         )
     }
 

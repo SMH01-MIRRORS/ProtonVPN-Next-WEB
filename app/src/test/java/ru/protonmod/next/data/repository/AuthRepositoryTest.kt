@@ -59,6 +59,9 @@ class AuthRepositoryTest {
     @Mock
     private lateinit var cryptoWrapper: CryptoWrapper
 
+    @Mock
+    private lateinit var amneziaVpnManager: ru.protonmod.next.vpn.AmneziaVpnManager
+
     private val testDispatcher = StandardTestDispatcher()
     
     private val testDispatcherProvider = object : DispatcherProvider {
@@ -74,7 +77,7 @@ class AuthRepositoryTest {
         MockitoAnnotations.openMocks(this)
         repository = AuthRepository(
             authApi, vpnRepository, sessionDao, deviceInfoProvider, 
-            cryptoWrapper, testDispatcherProvider
+            cryptoWrapper, testDispatcherProvider, { amneziaVpnManager }
         )
         
         whenever(deviceInfoProvider.getAppVersion()).thenReturn("5.16.31.0")

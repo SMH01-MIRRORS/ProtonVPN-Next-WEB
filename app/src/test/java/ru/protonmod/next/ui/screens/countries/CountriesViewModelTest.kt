@@ -161,7 +161,7 @@ class CountriesViewModelTest {
         
         viewModel.selectCountry("US")
         advanceUntilIdle()
-        verify(amneziaVpnManager).connect(eq("us_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())
+        verify(amneziaVpnManager).connect(eq("us_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), any())
         
         collectJob.cancel()
     }
@@ -173,7 +173,7 @@ class CountriesViewModelTest {
         
         viewModel.selectServer(testServers[2]) // DE-FREE-1
         advanceUntilIdle()
-        verify(amneziaVpnManager).connect(eq("de_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())
+        verify(amneziaVpnManager).connect(eq("de_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), any())
         
         collectJob.cancel()
     }
