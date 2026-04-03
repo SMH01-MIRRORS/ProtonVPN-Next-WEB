@@ -109,7 +109,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "vpn_status_channel"
         private const val CHANNEL_SILENT_ID = "vpn_status_channel_silent"
-        
+
         const val STATE_CONNECTING = "CONNECTING"
     }
 
@@ -127,7 +127,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
      */
     private val tunnel = object : Tunnel {
         override fun getName() = TUNNEL_NAME
-        
+
         override fun onStateChange(newState: Tunnel.State) {
             if (currentTunnelState == newState) return
             currentTunnelState = newState
@@ -148,12 +148,12 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 stopTrafficUpdates()
                 stopLogcatCollection()
             }
-            
+
             updateNotification(newState.name)
-            
+
             if (newState == Tunnel.State.UP) {
                 startTrafficUpdates()
-                // Log collection is already started in ACTION_CONNECT, 
+                // Log collection is already started in ACTION_CONNECT,
                 // but we ensure it's active here just in case of unexpected state transitions.
                 startLogcatCollection()
             }
@@ -173,24 +173,24 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             if (intent?.action == ACTION_UPDATE_SETTINGS) {
                 notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
                 killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
-                
+
                 if (intent.hasExtra(EXTRA_NON_FATAL_ENABLED)) {
                     val nonFatal = intent.getBooleanExtra(EXTRA_NON_FATAL_ENABLED, true)
                     ProtonLogger.isNonFatalEnabled = nonFatal
                 }
-                
+
                 if (intent.hasExtra(EXTRA_ANALYTICS_ENABLED)) {
                     val analytics = intent.getBooleanExtra(EXTRA_ANALYTICS_ENABLED, true)
                     ProtonLogger.isAnalyticsEnabled = analytics
                 }
 
                 ProtonLogger.d(TAG, "Settings updated via broadcast: notifications=$notificationsEnabled, killSwitch=$killSwitchEnabled, nonFatal=${ProtonLogger.isNonFatalEnabled}, analytics=${ProtonLogger.isAnalyticsEnabled}")
-                
+
                 val label = when {
                     isCurrentlyConnecting -> STATE_CONNECTING
                     else -> currentTunnelState.name
                 }
-                
+
                 updateNotification(label)
             }
         }
@@ -287,20 +287,20 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 // Keep for backward compatibility if settings are updated via startService
                 notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
                 killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
-                
+
                 if (intent.hasExtra(EXTRA_NON_FATAL_ENABLED)) {
                     ProtonLogger.isNonFatalEnabled = intent.getBooleanExtra(EXTRA_NON_FATAL_ENABLED, true)
                 }
-                
+
                 if (intent.hasExtra(EXTRA_ANALYTICS_ENABLED)) {
                     ProtonLogger.isAnalyticsEnabled = intent.getBooleanExtra(EXTRA_ANALYTICS_ENABLED, true)
                 }
-                
+
                 val label = when {
                     isCurrentlyConnecting -> STATE_CONNECTING
                     else -> currentTunnelState.name
                 }
-                
+
                 updateNotification(label)
             }
             else -> {
@@ -317,7 +317,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationManager: NotificationManager =
                 getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            
+
             val name = getString(R.string.notification_channel_name)
 
             // Standard channel for visible VPN status
@@ -340,7 +340,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
      */
     private fun startTrafficUpdates() {
         stopTrafficUpdates()
-        
+
         lastRx = 0L
         lastTx = 0L
         statsJob = serviceScope.launch(Dispatchers.IO) {
@@ -381,7 +381,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     private fun stopTrafficUpdates() {
         statsJob?.cancel()
         statsJob = null
-        
+
         // Log final session stats
         val totalRx = lastRx
         val totalTx = lastTx
@@ -398,16 +398,16 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     private fun startLogcatCollection() {
         logcatJob?.cancel()
         logcatJob = serviceScope.launch(Dispatchers.IO) {
-            ProtonLogger.d(TAG, "Starting Logcat collection for 'tun/proton_awg'")
+            ProtonLogger.d(TAG, "Starting Logcat collection for 'Tun/proton_awg'")
             val process = try {
-                // BUGFIX: Use Array for exec to prevent argument parsing errors on Android 15+.
-                // Added --pid so we strictly read logs from our own process, bypassing Android 13+ restrictions.
+                // BUGFIX: Use :D (Debug) instead of :V (Verbose) to eliminate empty log spam.
                 val command = arrayOf(
                     "logcat",
                     "-v", "tag",
                     "-T", "1",
                     "--pid=${android.os.Process.myPid()}",
-                    "tun/proton_awg:V",
+                    "Tun/proton_awg:D",
+                    "tun/proton_awg:D",
                     "*:S"
                 )
                 Runtime.getRuntime().exec(command)
@@ -420,10 +420,18 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 process.inputStream.bufferedReader().useLines { lines ->
                     lines.forEach { line ->
                         if (!isActive) return@useLines
-                        // Clean up the string slightly for Sentry (remove the "D  " or "V  " prefix if it exists)
-                        val cleanLine = line.substringAfter("D  ").substringAfter("V  ").trim()
 
-                        // Send every log line as a DEBUG breadcrumb
+                        // logcat with '-v tag' outputs format: "D/Tun/proton_awg: actual message"
+                        // We find the colon and extract only the message part.
+                        val msgSeparatorIndex = line.indexOf(": ")
+                        if (msgSeparatorIndex == -1) return@forEach
+
+                        val cleanLine = line.substring(msgSeparatorIndex + 2).trim()
+
+                        // Drop completely empty logs (which cause the "staircase" effect in Sentry)
+                        if (cleanLine.isBlank()) return@forEach
+
+                        // Add as breadcrumb (will be sent IF a crash/error happens later)
                         ProtonLogger.addSentryBreadcrumb(
                             "AmneziaWG",
                             cleanLine,
@@ -432,7 +440,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                         )
 
                         // Local debug as well
-                        ProtonLogger.v("tun/proton_awg", line)
+                        ProtonLogger.d("Tun/proton_awg", cleanLine)
                     }
                 }
             } catch (e: Exception) {
