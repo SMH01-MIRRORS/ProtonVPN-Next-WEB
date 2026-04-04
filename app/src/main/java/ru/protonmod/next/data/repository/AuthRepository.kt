@@ -20,7 +20,6 @@ package ru.protonmod.next.data.repository
 import io.sentry.SentryLevel
 import ru.protonmod.next.utils.ProtonLogger
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
@@ -73,7 +72,7 @@ class AuthRepository @Inject constructor(
      * SupervisorJob for auth operations that allows cancellation of pending login/anonymous operations.
      * Prevents JNI reference leaks when activity is destroyed mid-login.
      */
-    private val authJob = SupervisorJob()
+    private var authJob = SupervisorJob()
 
     /**
      * Cancel all pending authentication operations.
@@ -82,6 +81,7 @@ class AuthRepository @Inject constructor(
     fun cancelPendingOperations() {
         ProtonLogger.d(TAG, "Cancelling pending auth operations")
         authJob.cancel()
+        authJob = SupervisorJob()
         clearPendingAuth()
     }
 
@@ -148,7 +148,7 @@ class AuthRepository @Inject constructor(
      * Main login flow using SRP (Secure Remote Password) protocol.
      * Handles Captcha verification by refreshing sessions if a token is provided.
      */
-    suspend fun login(username: String, passwordRaw: String, captchaToken: String? = null): Result<LoginResponse> = withContext(dispatcherProvider.io()) {
+    suspend fun login(username: String, passwordRaw: String, captchaToken: String? = null): Result<LoginResponse> = withContext(dispatcherProvider.io() + authJob) {
         try {
             ProtonLogger.i(TAG, "Starting SRP login flow for user: $username (Captcha: ${captchaToken != null})")
             ProtonLogger.addSentryBreadcrumb(TAG, "Auth Step: Start Login ($username)", SentryLevel.INFO, "auth.flow")
@@ -266,7 +266,7 @@ class AuthRepository @Inject constructor(
     /**
      * Anonymous login flow (Guest login).
      */
-    suspend fun loginAnonymous(captchaToken: String? = null): Result<LoginResponse> = withContext(dispatcherProvider.io()) {
+    suspend fun loginAnonymous(captchaToken: String? = null): Result<LoginResponse> = withContext(dispatcherProvider.io() + authJob) {
         try {
             val tokenType = if (captchaToken != null) "captcha" else null
 
@@ -381,7 +381,7 @@ class AuthRepository @Inject constructor(
         tempAccessToken: String,
         refreshToken: String,
         totpCode: String
-    ): Result<LoginResponse> = withContext(dispatcherProvider.io()) {
+    ): Result<LoginResponse> = withContext(dispatcherProvider.io() + authJob) {
         try {
             val bearer = "Bearer $tempAccessToken"
             val response2fa = authApi.performSecondFactor(bearer, sessionId, SecondFactorRequest(totpCode))
