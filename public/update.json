@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159737,
-      "versionName": "12.0.0-alpha1st2-26-ga4ca441-nightly",
+      "versionCode": 605159738,
+      "versionName": "12.0.0-alpha1st2-27-g0517279-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "refactor: scope network interceptors and token authentication to Proton API hosts\n\n* refactor: update `NetworkModule` to only apply dynamic URL swapping and header spoofing to verified Proton API or proxy hosts\n* refactor: restrict `TokenAuthenticator` logic to trigger token refresh cycles only for Proton-specific domains\n* refactor: clarify request transformation logic in `NetworkModule` by using distinct variables for original and modified requests\n* fix: prevent potential leakage of spoofed headers and authentication attempts to non-Proton endpoints backended by the same client",
+      "changelog": "feat: implement OTA update channel selection\n\n* feat: add update channel selection (Stable/Nightly) to settings with a dedicated selection dialog and visual availability indicators\n* feat: implement `getAvailableChannels` in `UpdateRepository` to dynamically verify channel availability from remote metadata mirrors\n* refactor: update `checkForUpdates` logic to respect user-selected channels and support seamless switching from Nightly to Stable on matching version codes\n* feat: add `otaUpdateChannel` persistence to `SettingsManager` using DataStore, defaulting to the build-defined channel\n* ui: integrate channel selection into `SettingsScreen` and update `SettingsViewModel` to trigger immediate update checks upon channel changes\n* i18n: add localized strings for update channels in English, Russian, Ukrainian, Belarusian, Chinese, and Persian",
       "force": false
     },
     "release": {
-      "versionCode": 605159737,
-      "versionName": "12.0.0-alpha1st2-26-ga4ca441-nightly",
+      "versionCode": 605159738,
+      "versionName": "12.0.0-alpha1st2-27-g0517279-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "refactor: scope network interceptors and token authentication to Proton API hosts\n\n* refactor: update `NetworkModule` to only apply dynamic URL swapping and header spoofing to verified Proton API or proxy hosts\n* refactor: restrict `TokenAuthenticator` logic to trigger token refresh cycles only for Proton-specific domains\n* refactor: clarify request transformation logic in `NetworkModule` by using distinct variables for original and modified requests\n* fix: prevent potential leakage of spoofed headers and authentication attempts to non-Proton endpoints backended by the same client",
+      "changelog": "feat: implement OTA update channel selection\n\n* feat: add update channel selection (Stable/Nightly) to settings with a dedicated selection dialog and visual availability indicators\n* feat: implement `getAvailableChannels` in `UpdateRepository` to dynamically verify channel availability from remote metadata mirrors\n* refactor: update `checkForUpdates` logic to respect user-selected channels and support seamless switching from Nightly to Stable on matching version codes\n* feat: add `otaUpdateChannel` persistence to `SettingsManager` using DataStore, defaulting to the build-defined channel\n* ui: integrate channel selection into `SettingsScreen` and update `SettingsViewModel` to trigger immediate update checks upon channel changes\n* i18n: add localized strings for update channels in English, Russian, Ukrainian, Belarusian, Chinese, and Persian",
       "force": false
     }
   }
