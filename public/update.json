@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159742,
-      "versionName": "12.0.0-alpha1st2-31-g036cf0f-nightly",
+      "versionCode": 605159743,
+      "versionName": "12.0.0-alpha1st2-32-gd38257e-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "feat: implement explicit installation step and APK caching for OTA updates\n\n* feat: add `REQUEST_INSTALL_PACKAGES` permission to `AndroidManifest.xml` to support manual APK installation\n* feat: update `OTAUpdateViewModel` to cache downloaded APKs and clean up obsolete update files from the cache directory\n* feat: separate the download and installation phases, allowing users to manually trigger installation via a new \"Install\" button\n* refactor: update `OTAUpdateScreen` to show the \"Install\" button once a download completes or if a valid APK is already cached\n* feat: add localized `ota_btn_install` string across supported languages (en, uk, be, fa, zh, ru)\n* fix: implement `dismissUpdate` logic in the update dialog to correctly handle dismissal and the \"Later\" action",
+      "changelog": "feat: implement Cloudflare Proxy strategy for API bypass\n\n* feat: add Cloudflare Proxy as a routing strategy and update `ApiBypassScreen` for user selection\n* feat: update `NetworkModule` and `TokenAuthenticator` to route and authenticate requests via Cloudflare workers\n* refactor: update `CaptchaScreen` and login flows to dynamically resolve proxy URLs based on the selected strategy\n* docs: add \"Infrastructure & Sponsors\" section to `README.md` highlighting Sentry, Cloudflare, and DigitalPlat\n* i18n: provide localized strings for the new proxy strategy across supported languages",
       "force": false
     },
     "release": {
-      "versionCode": 605159742,
-      "versionName": "12.0.0-alpha1st2-31-g036cf0f-nightly",
+      "versionCode": 605159743,
+      "versionName": "12.0.0-alpha1st2-32-gd38257e-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "feat: implement explicit installation step and APK caching for OTA updates\n\n* feat: add `REQUEST_INSTALL_PACKAGES` permission to `AndroidManifest.xml` to support manual APK installation\n* feat: update `OTAUpdateViewModel` to cache downloaded APKs and clean up obsolete update files from the cache directory\n* feat: separate the download and installation phases, allowing users to manually trigger installation via a new \"Install\" button\n* refactor: update `OTAUpdateScreen` to show the \"Install\" button once a download completes or if a valid APK is already cached\n* feat: add localized `ota_btn_install` string across supported languages (en, uk, be, fa, zh, ru)\n* fix: implement `dismissUpdate` logic in the update dialog to correctly handle dismissal and the \"Later\" action",
+      "changelog": "feat: implement Cloudflare Proxy strategy for API bypass\n\n* feat: add Cloudflare Proxy as a routing strategy and update `ApiBypassScreen` for user selection\n* feat: update `NetworkModule` and `TokenAuthenticator` to route and authenticate requests via Cloudflare workers\n* refactor: update `CaptchaScreen` and login flows to dynamically resolve proxy URLs based on the selected strategy\n* docs: add \"Infrastructure & Sponsors\" section to `README.md` highlighting Sentry, Cloudflare, and DigitalPlat\n* i18n: provide localized strings for the new proxy strategy across supported languages",
       "force": false
     }
   }
