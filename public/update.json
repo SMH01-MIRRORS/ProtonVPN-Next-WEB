@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159736,
-      "versionName": "12.0.0-alpha1st2-25-g96392fa-nightly",
+      "versionCode": 605159737,
+      "versionName": "12.0.0-alpha1st2-26-ga4ca441-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "fix: refine OTA metadata generation and prevent stale build types\n\n* fix: filter the root metadata dictionary in `publish_ota.py` to ensure only \"stable\" and \"nightly\" channels are preserved\n* fix: reset the data for the current channel before populating it with new APK info to remove obsolete build type entries from the manifest",
+      "changelog": "refactor: scope network interceptors and token authentication to Proton API hosts\n\n* refactor: update `NetworkModule` to only apply dynamic URL swapping and header spoofing to verified Proton API or proxy hosts\n* refactor: restrict `TokenAuthenticator` logic to trigger token refresh cycles only for Proton-specific domains\n* refactor: clarify request transformation logic in `NetworkModule` by using distinct variables for original and modified requests\n* fix: prevent potential leakage of spoofed headers and authentication attempts to non-Proton endpoints backended by the same client",
       "force": false
     },
     "release": {
-      "versionCode": 605159736,
-      "versionName": "12.0.0-alpha1st2-25-g96392fa-nightly",
+      "versionCode": 605159737,
+      "versionName": "12.0.0-alpha1st2-26-ga4ca441-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "fix: refine OTA metadata generation and prevent stale build types\n\n* fix: filter the root metadata dictionary in `publish_ota.py` to ensure only \"stable\" and \"nightly\" channels are preserved\n* fix: reset the data for the current channel before populating it with new APK info to remove obsolete build type entries from the manifest",
+      "changelog": "refactor: scope network interceptors and token authentication to Proton API hosts\n\n* refactor: update `NetworkModule` to only apply dynamic URL swapping and header spoofing to verified Proton API or proxy hosts\n* refactor: restrict `TokenAuthenticator` logic to trigger token refresh cycles only for Proton-specific domains\n* refactor: clarify request transformation logic in `NetworkModule` by using distinct variables for original and modified requests\n* fix: prevent potential leakage of spoofed headers and authentication attempts to non-Proton endpoints backended by the same client",
       "force": false
     }
   }
