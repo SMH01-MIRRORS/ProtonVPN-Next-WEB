@@ -1,8 +1,10 @@
 package ru.protonmod.next.ota
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,7 +30,8 @@ data class UpdateUiState(
 @HiltViewModel
 class OTAUpdateViewModel @Inject constructor(
     private val updateRepository: UpdateRepository,
-    private val okHttpClient: OkHttpClient
+    private val okHttpClient: OkHttpClient,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UpdateUiState())
@@ -37,11 +40,50 @@ class OTAUpdateViewModel @Inject constructor(
     fun checkForUpdates() {
         viewModelScope.launch {
             val update = updateRepository.checkForUpdates()
-            _uiState.value = _uiState.value.copy(updateInfo = update)
+            var downloadedFile: File? = null
+            if (update != null) {
+                val apkFile = getUpdateFile(update.versionCode)
+                if (apkFile.exists()) {
+                    downloadedFile = apkFile
+                }
+                cleanOldUpdates(update.versionCode)
+            }
+            _uiState.value = _uiState.value.copy(
+                updateInfo = update,
+                downloadedFile = downloadedFile,
+                downloadProgress = if (downloadedFile != null) 1f else 0f
+            )
         }
     }
 
-    fun startDownload(context: android.content.Context, updateInfo: UpdateInfo) {
+    fun dismissUpdate() {
+        _uiState.value = _uiState.value.copy(updateInfo = null)
+    }
+
+    private fun getUpdateFile(versionCode: Int): File {
+        val updateDir = File(context.cacheDir, "updates")
+        if (!updateDir.exists()) updateDir.mkdirs()
+        return File(updateDir, "update_$versionCode.apk")
+    }
+
+    private fun cleanOldUpdates(currentVersionCode: Int) {
+        val updateDir = File(context.cacheDir, "updates")
+        if (updateDir.exists()) {
+            updateDir.listFiles()?.forEach { file ->
+                if (file.name.startsWith("update_") && !file.name.contains(currentVersionCode.toString())) {
+                    file.delete()
+                }
+            }
+        }
+    }
+
+    fun installUpdate(context: Context) {
+        _uiState.value.downloadedFile?.let { apkFile ->
+            APKInstaller.install(context, apkFile)
+        }
+    }
+
+    fun startDownload(context: Context, updateInfo: UpdateInfo) {
         if (_uiState.value.isDownloading) return
 
         _uiState.value = _uiState.value.copy(isDownloading = true, downloadProgress = 0f, error = null)
@@ -55,10 +97,7 @@ class OTAUpdateViewModel @Inject constructor(
 
                 val body = response.body ?: throw Exception("Response body is empty")
                 val totalBytes = body.contentLength()
-                val updateDir = File(context.cacheDir, "updates")
-                if (!updateDir.exists()) updateDir.mkdirs()
-                
-                val apkFile = File(updateDir, "update_${updateInfo.versionCode}.apk")
+                val apkFile = getUpdateFile(updateInfo.versionCode)
                 
                 body.source().use { source ->
                     FileOutputStream(apkFile).use { output ->
@@ -84,10 +123,8 @@ class OTAUpdateViewModel @Inject constructor(
                     downloadedFile = apkFile
                 )
                 
-                // Trigger installation
-                viewModelScope.launch(Dispatchers.Main) {
-                    APKInstaller.install(context, apkFile)
-                }
+                // We no longer trigger installation automatically as per user request.
+                // The UI should now show an "Install" button.
 
             } catch (e: Exception) {
                 ProtonLogger.e("OTAUpdateViewModel", "Download failed", e)

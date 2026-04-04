@@ -487,6 +487,7 @@
     <string name="ota_new_version">Даступная новая версія: %1$s</string>
     <string name="ota_changelog">Што новага:</string>
     <string name="ota_btn_update">Абнавіць зараз</string>
+    <string name="ota_btn_install">Усталяваць</string>
     <string name="ota_btn_later">Пазней</string>
     <string name="ota_force_title">Патрабуецца абнаўленне</string>
     <string name="ota_force_desc">Даступна крытычнае абнаўленне. Калі ласка, абнавіце прыкладанне, каб працягнуць выкарыстанне Proton VPN-Next.</string>

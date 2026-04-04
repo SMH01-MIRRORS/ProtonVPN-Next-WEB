@@ -88,6 +88,16 @@ fun OTAUpdateScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.textWeak
                     )
+                } else if (uiState.downloadedFile != null) {
+                    Spacer(Modifier.height(32.dp))
+                    Button(
+                        onClick = { viewModel.installUpdate(context) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(stringResource(R.string.ota_btn_install))
+                    }
                 } else {
                     Spacer(Modifier.height(32.dp))
                     Button(
@@ -104,7 +114,7 @@ fun OTAUpdateScreen(
     } else {
         // Optional update dialog
         AlertDialog(
-            onDismissRequest = { /* Handle dismiss */ },
+            onDismissRequest = { viewModel.dismissUpdate() },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Rounded.SystemUpdate, null, tint = colors.brandNorm)
@@ -134,14 +144,20 @@ fun OTAUpdateScreen(
             },
             confirmButton = {
                 if (!uiState.isDownloading) {
-                    Button(onClick = { viewModel.startDownload(context, updateInfo) }) {
-                        Text(stringResource(R.string.ota_btn_update))
+                    if (uiState.downloadedFile != null) {
+                        Button(onClick = { viewModel.installUpdate(context) }) {
+                            Text(stringResource(R.string.ota_btn_install))
+                        }
+                    } else {
+                        Button(onClick = { viewModel.startDownload(context, updateInfo) }) {
+                            Text(stringResource(R.string.ota_btn_update))
+                        }
                     }
                 }
             },
             dismissButton = {
                 if (!uiState.isDownloading) {
-                    TextButton(onClick = { /* Dismiss */ }) {
+                    TextButton(onClick = { viewModel.dismissUpdate() }) {
                         Text(stringResource(R.string.ota_btn_later))
                     }
                 }
