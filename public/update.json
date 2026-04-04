@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159741,
-      "versionName": "12.0.0-alpha1st2-30-ga8b9e97-nightly",
+      "versionCode": 605159742,
+      "versionName": "12.0.0-alpha1st2-31-g036cf0f-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "chore: update AGP and Gradle wrapper versions\n\n* chore: update `agp` version to 9.2.0-alpha07 in `libs.versions.toml`\n* chore: update Gradle wrapper distribution to 9.5.0-milestone-7 and update its checksum in `gradle-wrapper.properties`",
+      "changelog": "feat: implement explicit installation step and APK caching for OTA updates\n\n* feat: add `REQUEST_INSTALL_PACKAGES` permission to `AndroidManifest.xml` to support manual APK installation\n* feat: update `OTAUpdateViewModel` to cache downloaded APKs and clean up obsolete update files from the cache directory\n* feat: separate the download and installation phases, allowing users to manually trigger installation via a new \"Install\" button\n* refactor: update `OTAUpdateScreen` to show the \"Install\" button once a download completes or if a valid APK is already cached\n* feat: add localized `ota_btn_install` string across supported languages (en, uk, be, fa, zh, ru)\n* fix: implement `dismissUpdate` logic in the update dialog to correctly handle dismissal and the \"Later\" action",
       "force": false
     },
     "release": {
-      "versionCode": 605159741,
-      "versionName": "12.0.0-alpha1st2-30-ga8b9e97-nightly",
+      "versionCode": 605159742,
+      "versionName": "12.0.0-alpha1st2-31-g036cf0f-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "chore: update AGP and Gradle wrapper versions\n\n* chore: update `agp` version to 9.2.0-alpha07 in `libs.versions.toml`\n* chore: update Gradle wrapper distribution to 9.5.0-milestone-7 and update its checksum in `gradle-wrapper.properties`",
+      "changelog": "feat: implement explicit installation step and APK caching for OTA updates\n\n* feat: add `REQUEST_INSTALL_PACKAGES` permission to `AndroidManifest.xml` to support manual APK installation\n* feat: update `OTAUpdateViewModel` to cache downloaded APKs and clean up obsolete update files from the cache directory\n* feat: separate the download and installation phases, allowing users to manually trigger installation via a new \"Install\" button\n* refactor: update `OTAUpdateScreen` to show the \"Install\" button once a download completes or if a valid APK is already cached\n* feat: add localized `ota_btn_install` string across supported languages (en, uk, be, fa, zh, ru)\n* fix: implement `dismissUpdate` logic in the update dialog to correctly handle dismissal and the \"Later\" action",
       "force": false
     }
   }
