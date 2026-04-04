@@ -121,7 +121,11 @@ def main():
             except:
                 data = {}
 
-    if channel not in data: data[channel] = {}
+    # Clean root from any non-channel keys (like ghost 'debug' blocks)
+    data = {k: v for k, v in data.items() if k in ["stable", "nightly"]}
+
+    # Reset current channel data to prevent stale build types
+    data[channel] = {}
 
     for bt, apk_url, vn in apk_info:
         data[channel][bt] = {
