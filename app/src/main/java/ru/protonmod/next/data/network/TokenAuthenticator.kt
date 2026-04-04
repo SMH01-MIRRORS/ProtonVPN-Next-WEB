@@ -46,7 +46,8 @@ class TokenAuthenticator @Inject constructor(
         // Only authenticate for Proton API requests.
         // These are hardcoded for safety as this is sensitive logic.
         val isProtonApi = requestHost == "vpn-api.proton.me" || 
-                          requestHost == "shimmering-stroopwafel-51675e.netlify.app"
+                          requestHost == "shimmering-stroopwafel-51675e.netlify.app" ||
+                          requestHost == "api-proxy.protonnext.workers.dev"
         
         if (!isProtonApi) {
             return null

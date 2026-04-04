@@ -57,7 +57,8 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val PROTON_PROXY_URL = "https://shimmering-stroopwafel-51675e.netlify.app/"
+    private const val PROTON_PROXY_NETLIFY_URL = "https://shimmering-stroopwafel-51675e.netlify.app/"
+    private const val PROTON_PROXY_CLOUDFLARE_URL = "https://api.protonnext.qzz.io/"
     private const val PROTON_DIRECT_URL = "https://vpn-api.proton.me/"
 
     @Provides
@@ -115,10 +116,7 @@ object NetworkModule {
 
         // 3. Read user preferences synchronously.
         val settingsManager = settingsManagerProvider.get()
-        val isBypassEnabled = settingsManager.isApiBypassEnabledSync()
-        val strategy = settingsManager.getApiBypassStrategySync()
-        
-        return isBypassEnabled && strategy == "netlify"
+        return settingsManager.isApiBypassEnabledSync()
     }
 
     @Provides
@@ -134,7 +132,8 @@ object NetworkModule {
         } catch (e: Throwable) {}
 
         val protonDirectHost = PROTON_DIRECT_URL.toHttpUrl().host
-        val protonProxyHost = PROTON_PROXY_URL.toHttpUrl().host
+        val protonNetlifyHost = PROTON_PROXY_NETLIFY_URL.toHttpUrl().host
+        val protonCloudflareHost = PROTON_PROXY_CLOUDFLARE_URL.toHttpUrl().host
 
         // Interceptor to dynamically swap the base URL depending on bypass rules
         val dynamicBaseUrlInterceptor = Interceptor { chain ->
@@ -142,8 +141,10 @@ object NetworkModule {
             val originalUrl = request.url
             val userAgent = DeviceInfoProvider.getSpoofedUserAgent()
             
-            // Only rewrite if it's a Proton API request (direct or through proxy)
-            val isProtonApi = originalUrl.host == protonDirectHost || originalUrl.host == protonProxyHost
+            // Only rewrite if it's a Proton API request (direct or through one of the proxies)
+            val isProtonApi = originalUrl.host == protonDirectHost || 
+                              originalUrl.host == protonNetlifyHost ||
+                              originalUrl.host == protonCloudflareHost
             
             if (!isProtonApi) {
                 // For non-Proton requests (like OTA mirrors), ensure we still provide a standard User-Agent.
@@ -162,7 +163,16 @@ object NetworkModule {
             val spoofedVersion = DeviceInfoProvider.SPOOFED_APP_VERSION
 
             val useProxy = shouldUseApiBypass(context, vpnManagerProvider, settingsManagerProvider)
-            val newBaseUrl = if (useProxy) PROTON_PROXY_URL.toHttpUrl() else PROTON_DIRECT_URL.toHttpUrl()
+            val settings = settingsManagerProvider.get()
+            val strategy = settings.getApiBypassStrategySync()
+            
+            val proxyBaseUrl = if (strategy == SettingsManager.STRATEGY_CLOUDFLARE) {
+                PROTON_PROXY_CLOUDFLARE_URL
+            } else {
+                PROTON_PROXY_NETLIFY_URL
+            }
+
+            val newBaseUrl = if (useProxy) proxyBaseUrl.toHttpUrl() else PROTON_DIRECT_URL.toHttpUrl()
 
             val newUrl = originalUrl.newBuilder()
                 .scheme(newBaseUrl.scheme)

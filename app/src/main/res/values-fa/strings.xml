@@ -118,6 +118,8 @@
     <string name="api_bypass_strategy_title">استراتژی مسیریابی</string>
     <string name="api_bypass_strategy_netlify">پراکسی Netlify</string>
     <string name="api_bypass_strategy_netlify_desc">درخواست‌های API را از طریق یک پراکسی امن Netlify مسیریابی می‌کند.</string>
+    <string name="api_bypass_strategy_cloudflare">پراکسی Cloudflare</string>
+    <string name="api_bypass_strategy_cloudflare_desc">هدایت درخواست‌های API از طریق یک ورکر با کارایی بالای کلودفلر.</string>
 
     <!-- Custom DNS -->
     <string name="settings_custom_dns">DNS سفارشی</string>

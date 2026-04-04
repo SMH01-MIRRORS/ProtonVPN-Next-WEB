@@ -57,6 +57,7 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isApiBypassEnabled by viewModel.isApiBypassEnabled.collectAsState()
+    val apiBypassStrategy by viewModel.apiBypassStrategy.collectAsState()
     val colors = ProtonNextTheme.colors
     val isTablet = isTablet()
 
@@ -85,6 +86,7 @@ fun LoginScreen(
                     webUrl = state.webUrl,
                     sessionId = state.sessionId,
                     isApiBypassEnabled = isApiBypassEnabled,
+                    apiBypassStrategy = apiBypassStrategy,
                     onDismiss = { viewModel.resetError() },
                     onCaptchaSolved = { verifiedToken ->
                         viewModel.retryWithCaptcha(state, verifiedToken)

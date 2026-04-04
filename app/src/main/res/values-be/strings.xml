@@ -118,6 +118,8 @@
     <string name="api_bypass_strategy_title">СТРАТЭГІЯ МАРШРУТЫЗАЦЫІ</string>
     <string name="api_bypass_strategy_netlify">Проксі Netlify</string>
     <string name="api_bypass_strategy_netlify_desc">Накіроўвае запыты API праз абаронены проксі-сервер Netlify.</string>
+    <string name="api_bypass_strategy_cloudflare">Проксі Cloudflare</string>
+    <string name="api_bypass_strategy_cloudflare_desc">Маршрутызацыя запытаў API праз высокапрадукцыйны Cloudflare worker.</string>
 
     <!-- Custom DNS -->
     <string name="settings_custom_dns">Карыстальніцкі DNS</string>

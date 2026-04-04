@@ -44,6 +44,9 @@ class SettingsManager @Inject constructor(
     private val prefs = context.getSharedPreferences("boot_settings", Context.MODE_PRIVATE)
 
     companion object {
+        const val STRATEGY_NETLIFY = "netlify"
+        const val STRATEGY_CLOUDFLARE = "cloudflare"
+
         private val KILL_SWITCH = booleanPreferencesKey("kill_switch")
         private val AUTO_CONNECT = booleanPreferencesKey("auto_connect")
         private val NOTIFICATIONS = booleanPreferencesKey("notifications")

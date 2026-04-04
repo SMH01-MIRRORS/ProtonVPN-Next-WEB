@@ -59,6 +59,7 @@ fun CaptchaScreen(
     webUrl: String,
     sessionId: String?,
     isApiBypassEnabled: Boolean = false,
+    apiBypassStrategy: String = "netlify",
     onDismiss: () -> Unit,
     onCaptchaSolved: (String) -> Unit
 ) {
@@ -170,7 +171,11 @@ fun CaptchaScreen(
                         WebView(context).apply {
                             setBackgroundColor(android.graphics.Color.TRANSPARENT)
 
-                            val proxyBaseUrl = "https://shimmering-stroopwafel-51675e.netlify.app"
+                            val proxyBaseUrl = if (apiBypassStrategy == "cloudflare") {
+                                "https://api-proxy.protonnext.workers.dev"
+                            } else {
+                                "https://shimmering-stroopwafel-51675e.netlify.app"
+                            }
 
                             settings.javaScriptEnabled = true
                             settings.domStorageEnabled = true

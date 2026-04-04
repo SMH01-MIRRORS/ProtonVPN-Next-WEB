@@ -120,6 +120,8 @@
     <string name="api_bypass_strategy_title">ROUTING STRATEGY</string>
     <string name="api_bypass_strategy_netlify">Netlify Proxy</string>
     <string name="api_bypass_strategy_netlify_desc">Routes API requests through a secure Netlify proxy.</string>
+    <string name="api_bypass_strategy_cloudflare">Cloudflare Proxy</string>
+    <string name="api_bypass_strategy_cloudflare_desc">Routes API requests through a high-performance Cloudflare worker.</string>
 
     <!-- Custom DNS -->
     <string name="settings_custom_dns">Custom DNS</string>

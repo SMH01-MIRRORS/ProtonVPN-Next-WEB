@@ -118,6 +118,8 @@
     <string name="api_bypass_strategy_title">路由策略</string>
     <string name="api_bypass_strategy_netlify">Netlify 代理</string>
     <string name="api_bypass_strategy_netlify_desc">通过安全的 Netlify 代理路由 API 请求。</string>
+    <string name="api_bypass_strategy_cloudflare">Cloudflare 代理</string>
+    <string name="api_bypass_strategy_cloudflare_desc">通过高性能 Cloudflare worker 路由 API 请求。</string>
 
     <!-- Custom DNS -->
     <string name="settings_custom_dns">自定义 DNS</string>

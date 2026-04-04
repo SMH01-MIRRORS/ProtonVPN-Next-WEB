@@ -103,6 +103,9 @@ class LoginViewModel @Inject constructor(
     val isApiBypassEnabled = settingsManager.apiBypassEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    val apiBypassStrategy = settingsManager.apiBypassStrategy
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsManager.STRATEGY_NETLIFY)
+
     /**
      * Cancel any pending login operations to prevent JNI reference leaks.
      * Called when the ViewModel is cleared or navigating away.
