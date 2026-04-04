@@ -47,7 +47,7 @@ class TokenAuthenticator @Inject constructor(
         // These are hardcoded for safety as this is sensitive logic.
         val isProtonApi = requestHost == "vpn-api.proton.me" || 
                           requestHost == "shimmering-stroopwafel-51675e.netlify.app" ||
-                          requestHost == "api-proxy.protonnext.workers.dev"
+                          requestHost == "api.protonnext.qzz.io"
         
         if (!isProtonApi) {
             return null

@@ -172,7 +172,7 @@ fun CaptchaScreen(
                             setBackgroundColor(android.graphics.Color.TRANSPARENT)
 
                             val proxyBaseUrl = if (apiBypassStrategy == "cloudflare") {
-                                "https://api-proxy.protonnext.workers.dev"
+                                "https://api.protonnext.qzz.io"
                             } else {
                                 "https://shimmering-stroopwafel-51675e.netlify.app"
                             }
