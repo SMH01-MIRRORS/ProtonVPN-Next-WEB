@@ -17,8 +17,7 @@ class UpdateRepository @Inject constructor(
 ) {
     private val updateUrls = listOf(
         context.getString(R.string.url_ota_mirror_1),
-        context.getString(R.string.url_ota_mirror_2),
-        context.getString(R.string.url_ota_mirror_3)
+        context.getString(R.string.url_ota_mirror_2)
     )
 
     suspend fun checkForUpdates(): UpdateInfo? {
