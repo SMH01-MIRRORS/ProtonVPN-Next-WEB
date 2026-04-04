@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159743,
-      "versionName": "12.0.0-alpha1st2-32-gd38257e-nightly",
+      "versionCode": 605159745,
+      "versionName": "12.0.0-alpha1st2-34-ga672226-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "feat: implement Cloudflare Proxy strategy for API bypass\n\n* feat: add Cloudflare Proxy as a routing strategy and update `ApiBypassScreen` for user selection\n* feat: update `NetworkModule` and `TokenAuthenticator` to route and authenticate requests via Cloudflare workers\n* refactor: update `CaptchaScreen` and login flows to dynamically resolve proxy URLs based on the selected strategy\n* docs: add \"Infrastructure & Sponsors\" section to `README.md` highlighting Sentry, Cloudflare, and DigitalPlat\n* i18n: provide localized strings for the new proxy strategy across supported languages",
+      "changelog": "chore: update API proxy domain to api.protonnext.qzz.io\n\n* chore: update the authorized Proton API host in `TokenAuthenticator.kt` to reflect the new proxy domain\n* chore: update the Cloudflare bypass base URL in `CaptchaScreen.kt` to use the new hostname",
       "force": false
     },
     "release": {
-      "versionCode": 605159743,
-      "versionName": "12.0.0-alpha1st2-32-gd38257e-nightly",
+      "versionCode": 605159745,
+      "versionName": "12.0.0-alpha1st2-34-ga672226-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "feat: implement Cloudflare Proxy strategy for API bypass\n\n* feat: add Cloudflare Proxy as a routing strategy and update `ApiBypassScreen` for user selection\n* feat: update `NetworkModule` and `TokenAuthenticator` to route and authenticate requests via Cloudflare workers\n* refactor: update `CaptchaScreen` and login flows to dynamically resolve proxy URLs based on the selected strategy\n* docs: add \"Infrastructure & Sponsors\" section to `README.md` highlighting Sentry, Cloudflare, and DigitalPlat\n* i18n: provide localized strings for the new proxy strategy across supported languages",
+      "changelog": "chore: update API proxy domain to api.protonnext.qzz.io\n\n* chore: update the authorized Proton API host in `TokenAuthenticator.kt` to reflect the new proxy domain\n* chore: update the Cloudflare bypass base URL in `CaptchaScreen.kt` to use the new hostname",
       "force": false
     }
   }
