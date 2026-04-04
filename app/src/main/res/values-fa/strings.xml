@@ -481,6 +481,10 @@
     <string name="ota_force_title">بروزرسانی اجباری</string>
     <string name="ota_force_desc">یک بروزرسانی بحرانی در دسترس است. لطفاً برای ادامه استفاده از Proton VPN-Next برنامه را بروزرسانی کنید.</string>
     <string name="ota_check_frequency">بررسی برای بروزرسانی</string>
+    <string name="ota_channel">کانال به‌روزرسانی</string>
+    <string name="ota_channel_stable">پایدار</string>
+    <string name="ota_channel_nightly">شبانه (Nightly)</string>
+    <string name="ota_channel_unavailable">در دسترس نیست</string>
     <string name="ota_freq_hourly">ساعتی</string>
     <string name="ota_freq_daily">روزانه</string>
     <string name="ota_freq_weekly">هفتگی</string>

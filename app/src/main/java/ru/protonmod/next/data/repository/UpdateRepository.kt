@@ -10,9 +10,14 @@ import ru.protonmod.next.utils.ProtonLogger
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import kotlinx.coroutines.flow.first
+import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.data.model.ota.UpdateResponse
+
 @Singleton
 class UpdateRepository @Inject constructor(
     private val updateApi: UpdateApi,
+    private val settingsManager: SettingsManager,
     @ApplicationContext private val context: Context
 ) {
     private val updateUrls = listOf(
@@ -20,13 +25,29 @@ class UpdateRepository @Inject constructor(
         context.getString(R.string.url_ota_mirror_2)
     )
 
+    suspend fun getAvailableChannels(): Map<String, Boolean> {
+        val result = mutableMapOf("stable" to false, "nightly" to false)
+        for (url in updateUrls) {
+            try {
+                val response = updateApi.getUpdateMetadata(url)
+                if (response.stable != null) result["stable"] = true
+                if (response.nightly != null) result["nightly"] = true
+                if (result["stable"] == true && result["nightly"] == true) break
+            } catch (e: Exception) {
+                // Silently ignore
+            }
+        }
+        return result
+    }
+
     suspend fun checkForUpdates(): UpdateInfo? {
+        val selectedChannel = settingsManager.otaUpdateChannel.first()
         var bestUpdate: UpdateInfo? = null
         for (url in updateUrls) {
             try {
                 val response = updateApi.getUpdateMetadata(url)
                 
-                val channelUpdates = if (BuildConfig.UPDATE_CHANNEL == "nightly") {
+                val channelUpdates = if (selectedChannel == "nightly") {
                     response.nightly
                 } else {
                     response.stable
@@ -38,9 +59,18 @@ class UpdateRepository @Inject constructor(
                     channelUpdates?.release
                 }
                 
-                if (updateInfo != null && updateInfo.versionCode > BuildConfig.VERSION_CODE) {
-                    if (bestUpdate == null || updateInfo.versionCode > bestUpdate.versionCode) {
-                        bestUpdate = updateInfo
+                if (updateInfo != null) {
+                    val isHigherVersion = updateInfo.versionCode > BuildConfig.VERSION_CODE
+                    
+                    // Allow switching from Nightly to Stable if versions are equal (e.g. after a release tag)
+                    val isSwitchingToStable = selectedChannel == "stable" && 
+                                              BuildConfig.UPDATE_CHANNEL == "nightly" && 
+                                              updateInfo.versionCode == BuildConfig.VERSION_CODE
+
+                    if (isHigherVersion || isSwitchingToStable) {
+                        if (bestUpdate == null || updateInfo.versionCode > bestUpdate.versionCode) {
+                            bestUpdate = updateInfo
+                        }
                     }
                 }
             } catch (e: Exception) {

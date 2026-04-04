@@ -476,6 +476,10 @@
     <string name="ota_force_title">需要更新</string>
     <string name="ota_force_desc">发现关键更新。请更新应用以继续使用 Proton VPN-Next。</string>
     <string name="ota_check_frequency">检查更新</string>
+    <string name="ota_channel">更新频道</string>
+    <string name="ota_channel_stable">稳定版</string>
+    <string name="ota_channel_nightly">Nightly (每晚构建)</string>
+    <string name="ota_channel_unavailable">不可用</string>
     <string name="ota_freq_hourly">每小时</string>
     <string name="ota_freq_daily">每天</string>
     <string name="ota_freq_weekly">每周</string>

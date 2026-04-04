@@ -480,6 +480,10 @@
     <string name="ota_force_title">Update Required</string>
     <string name="ota_force_desc">A critical update is available. Please update the app to continue using Proton VPN-Next.</string>
     <string name="ota_check_frequency">Check for Updates</string>
+    <string name="ota_channel">Update Channel</string>
+    <string name="ota_channel_stable">Stable</string>
+    <string name="ota_channel_nightly">Nightly</string>
+    <string name="ota_channel_unavailable">Unavailable</string>
     <string name="ota_freq_hourly">Hourly</string>
     <string name="ota_freq_daily">Daily</string>
     <string name="ota_freq_weekly">Weekly</string>

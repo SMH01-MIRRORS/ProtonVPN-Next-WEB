@@ -491,6 +491,10 @@
     <string name="ota_force_title">Потрібне оновлення</string>
     <string name="ota_force_desc">Доступне критичне оновлення. Будь ласка, оновіть додаток, щоб продовжити використання Proton VPN-Next.</string>
     <string name="ota_check_frequency">Перевірка оновлень</string>
+    <string name="ota_channel">Канал оновлень</string>
+    <string name="ota_channel_stable">Стабільний</string>
+    <string name="ota_channel_nightly">Nightly (нічні збірки)</string>
+    <string name="ota_channel_unavailable">Недоступно</string>
     <string name="ota_freq_hourly">Щогодини</string>
     <string name="ota_freq_daily">Щодня</string>
     <string name="ota_freq_weekly">Щотижня</string>

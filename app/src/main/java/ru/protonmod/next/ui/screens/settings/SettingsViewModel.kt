@@ -41,6 +41,7 @@ import ru.protonmod.next.ota.OTAUpdateManager
 import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.utils.crypto.QuicI1Generator
 import ru.protonmod.next.vpn.AmneziaVpnManager
+import ru.protonmod.next.data.repository.UpdateRepository
 import javax.inject.Inject
 
 data class SettingsUiState(
@@ -67,6 +68,8 @@ data class SettingsUiState(
 
     // OTA Update Settings
     val otaUpdateFrequency: String = "daily",
+    val otaUpdateChannel: String = "stable",
+    val availableChannels: Map<String, Boolean> = mapOf("stable" to true, "nightly" to true),
     val isCheckingForUpdates: Boolean = false,
 
     // AWG low-level params
@@ -116,14 +119,17 @@ class SettingsViewModel @Inject constructor(
     amneziaVpnManager: AmneziaVpnManager,
     private val settingsManager: SettingsManager,
     private val authRepository: AuthRepository,
+    private val updateRepository: UpdateRepository,
     private val otaUpdateManager: OTAUpdateManager
 ) : ViewModel() {
 
     // Internal state tracking if any VPN is operating at the OS level
     private val _isAnyVpnActive = MutableStateFlow(false)
     private val _isCheckingForUpdates = MutableStateFlow(false)
+    private val _availableChannels = MutableStateFlow(mapOf("stable" to true, "nightly" to true))
 
     init {
+        checkAvailableChannels()
         // Monitor system networks to automatically detect active VPN connections
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val request = NetworkRequest.Builder()
@@ -198,6 +204,8 @@ class SettingsViewModel @Inject constructor(
         settingsManager.appTheme,
         settingsManager.serverLoadDisplayMode,
         settingsManager.otaUpdateFrequency,
+        settingsManager.otaUpdateChannel,
+        _availableChannels,
         _isAnyVpnActive,
         _isCheckingForUpdates
     ) { args: Array<Any?> ->
@@ -247,8 +255,10 @@ class SettingsViewModel @Inject constructor(
             appTheme = args[42] as AppTheme,
             serverLoadDisplayMode = args[43] as ServerLoadDisplayMode,
             otaUpdateFrequency = args[44] as String,
-            isCheckingForUpdates = args[46] as Boolean,
-            isAnyVpnActive = args[45] as Boolean
+            otaUpdateChannel = args[45] as String,
+            availableChannels = args[46] as Map<String, Boolean>,
+            isCheckingForUpdates = args[48] as Boolean,
+            isAnyVpnActive = args[47] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -284,6 +294,20 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             settingsManager.setOtaUpdateFrequency(frequency)
             otaUpdateManager.scheduleUpdateCheck()
+        }
+    }
+
+    fun setOtaUpdateChannel(channel: String) {
+        viewModelScope.launch {
+            settingsManager.setOtaUpdateChannel(channel)
+            // Immediately check for updates when channel changes
+            checkForUpdates()
+        }
+    }
+
+    private fun checkAvailableChannels() {
+        viewModelScope.launch {
+            _availableChannels.value = updateRepository.getAvailableChannels()
         }
     }
 
