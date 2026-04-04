@@ -133,22 +133,34 @@ object NetworkModule {
             OkHttp.initialize(context)
         } catch (e: Throwable) {}
 
+        val protonDirectHost = PROTON_DIRECT_URL.toHttpUrl().host
+        val protonProxyHost = PROTON_PROXY_URL.toHttpUrl().host
+
         // Interceptor to dynamically swap the base URL depending on bypass rules
         val dynamicBaseUrlInterceptor = Interceptor { chain ->
-            var request = chain.request()
+            val request = chain.request()
+            val originalUrl = request.url
+            
+            // Only rewrite if it's a Proton API request (direct or through proxy)
+            val isProtonApi = originalUrl.host == protonDirectHost || originalUrl.host == protonProxyHost
+            
+            if (!isProtonApi) {
+                return@Interceptor chain.proceed(request)
+            }
+
             val userAgent = DeviceInfoProvider.getSpoofedUserAgent()
             val spoofedVersion = DeviceInfoProvider.SPOOFED_APP_VERSION
 
             val useProxy = shouldUseApiBypass(context, vpnManagerProvider, settingsManagerProvider)
             val newBaseUrl = if (useProxy) PROTON_PROXY_URL.toHttpUrl() else PROTON_DIRECT_URL.toHttpUrl()
 
-            val newUrl = request.url.newBuilder()
+            val newUrl = originalUrl.newBuilder()
                 .scheme(newBaseUrl.scheme)
                 .host(newBaseUrl.host)
                 .port(newBaseUrl.port)
                 .build()
 
-            request = request.newBuilder()
+            val newRequest = request.newBuilder()
                 .url(newUrl)
                 .addHeader("User-Agent", userAgent)
                 .addHeader("x-pm-appversion", "android-vpn@$spoofedVersion-dev+play")
@@ -157,11 +169,11 @@ object NetworkModule {
                 .build()
 
             try {
-                chain.proceed(request)
+                chain.proceed(newRequest)
             } catch (e: Exception) {
                 // Log network errors for debugging lifecycle issues
                 if (e is SocketTimeoutException || e is ConnectException) {
-                    ProtonLogger.w("NetworkModule", "Network timeout during ${request.url}: ${e.message}")
+                    ProtonLogger.w("NetworkModule", "Network timeout during ${newRequest.url}: ${e.message}")
                 }
                 throw e
             }

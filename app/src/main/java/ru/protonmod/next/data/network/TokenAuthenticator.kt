@@ -40,7 +40,18 @@ class TokenAuthenticator @Inject constructor(
     }
 
     override fun authenticate(route: Route?, response: Response): Request? {
-        val requestUrl = response.request.url.toString()
+        val requestUrl = response.request.url
+        val requestHost = requestUrl.host
+        
+        // Only authenticate for Proton API requests.
+        // These are hardcoded for safety as this is sensitive logic.
+        val isProtonApi = requestHost == "vpn-api.proton.me" || 
+                          requestHost == "shimmering-stroopwafel-51675e.netlify.app"
+        
+        if (!isProtonApi) {
+            return null
+        }
+
         ProtonLogger.i(TAG, "HTTP 401/402 detected for $requestUrl. Initializing token refresh cycle.")
         ProtonLogger.addSentryBreadcrumb(TAG, "Auth Step: Token Expired ($requestUrl)", SentryLevel.WARNING, "auth.token")
 
