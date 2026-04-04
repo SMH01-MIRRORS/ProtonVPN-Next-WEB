@@ -49,6 +49,13 @@ Ensure you have the Android SDK and JDK 17 installed.
 - **DI:** Hilt (Dagger 2)
 - **Persistence:** Room Database
 - **VPN Engine:** AmneziaWG (via Maven dependency)
+### 💎 Infrastructure & Sponsors
+- **[Sentry](https://sentry.io/):** Error monitoring and performance tracking (Business Plan provided for the project).
+- **[Cloudflare](https://www.cloudflare.com/):** High-performance infrastructure using **Cloudflare Pages** (hosting) and **R2 Storage** (asset storage).
+- **[DigitalPlat FreeDomain](https://domain.digitalplat.org/):**
+  This project uses DigitalPlat FreeDomain, an open domain infrastructure maintained by Edward Hsing. Built on DigitalPlat FreeDomain for domain provisioning, with credit to the platform and its maintainer.
+
+ ---
 
 ### 💎 Infrastructure & Sponsors
 - **[Sentry](https://sentry.io/):** Error monitoring and performance tracking (Business Plan provided for the project).
@@ -107,7 +114,7 @@ Ensure you have the Android SDK and JDK 17 installed.
 ### 💎 Инфраструктура и Спонсоры
 - **[Sentry](https://sentry.io/):** Мониторинг ошибок и отслеживание производительности (предоставлен Business Plan для проекта).
 - **[Cloudflare](https://www.cloudflare.com/):** Высокопроизводительная инфраструктура с использованием **Cloudflare Pages** (хостинг) и **R2 Storage** (хранилище объектов).
-- **[DigitalPlat FreeDomain](https://freedomain.digiplat.org/):**
+- **[DigitalPlat FreeDomain](https://domain.digitalplat.org/):**
   This project uses DigitalPlat FreeDomain, an open domain infrastructure maintained by Edward Hsing. Built on DigitalPlat FreeDomain for domain provisioning, with credit to the platform and its maintainer.
 
 ---
