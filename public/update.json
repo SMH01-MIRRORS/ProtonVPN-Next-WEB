@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159738,
-      "versionName": "12.0.0-alpha1st2-27-g0517279-nightly",
+      "versionCode": 605159739,
+      "versionName": "12.0.0-alpha1st2-28-g6494f81-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "feat: implement OTA update channel selection\n\n* feat: add update channel selection (Stable/Nightly) to settings with a dedicated selection dialog and visual availability indicators\n* feat: implement `getAvailableChannels` in `UpdateRepository` to dynamically verify channel availability from remote metadata mirrors\n* refactor: update `checkForUpdates` logic to respect user-selected channels and support seamless switching from Nightly to Stable on matching version codes\n* feat: add `otaUpdateChannel` persistence to `SettingsManager` using DataStore, defaulting to the build-defined channel\n* ui: integrate channel selection into `SettingsScreen` and update `SettingsViewModel` to trigger immediate update checks upon channel changes\n* i18n: add localized strings for update channels in English, Russian, Ukrainian, Belarusian, Chinese, and Persian",
+      "changelog": "feat: improve network resilience and update reliability\n\n* feat: implement DNS-over-HTTPS (DoH) fallback for system DNS lookups to improve connectivity in restricted environments\n* fix: ensure non-Proton requests (such as OTA mirrors) include User-Agent and Accept headers to prevent 403/404 responses from hosting providers\n* fix: add cache-busting timestamps to update metadata requests to bypass stale ISP or proxy caches\n* refactor: improve `UpdateRepository` error handling by logging specific HTTP status codes and response bodies for easier debugging",
       "force": false
     },
     "release": {
-      "versionCode": 605159738,
-      "versionName": "12.0.0-alpha1st2-27-g0517279-nightly",
+      "versionCode": 605159739,
+      "versionName": "12.0.0-alpha1st2-28-g6494f81-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "feat: implement OTA update channel selection\n\n* feat: add update channel selection (Stable/Nightly) to settings with a dedicated selection dialog and visual availability indicators\n* feat: implement `getAvailableChannels` in `UpdateRepository` to dynamically verify channel availability from remote metadata mirrors\n* refactor: update `checkForUpdates` logic to respect user-selected channels and support seamless switching from Nightly to Stable on matching version codes\n* feat: add `otaUpdateChannel` persistence to `SettingsManager` using DataStore, defaulting to the build-defined channel\n* ui: integrate channel selection into `SettingsScreen` and update `SettingsViewModel` to trigger immediate update checks upon channel changes\n* i18n: add localized strings for update channels in English, Russian, Ukrainian, Belarusian, Chinese, and Persian",
+      "changelog": "feat: improve network resilience and update reliability\n\n* feat: implement DNS-over-HTTPS (DoH) fallback for system DNS lookups to improve connectivity in restricted environments\n* fix: ensure non-Proton requests (such as OTA mirrors) include User-Agent and Accept headers to prevent 403/404 responses from hosting providers\n* fix: add cache-busting timestamps to update metadata requests to bypass stale ISP or proxy caches\n* refactor: improve `UpdateRepository` error handling by logging specific HTTP status codes and response bodies for easier debugging",
       "force": false
     }
   }
