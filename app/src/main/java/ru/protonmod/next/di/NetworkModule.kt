@@ -140,15 +140,25 @@ object NetworkModule {
         val dynamicBaseUrlInterceptor = Interceptor { chain ->
             val request = chain.request()
             val originalUrl = request.url
+            val userAgent = DeviceInfoProvider.getSpoofedUserAgent()
             
             // Only rewrite if it's a Proton API request (direct or through proxy)
             val isProtonApi = originalUrl.host == protonDirectHost || originalUrl.host == protonProxyHost
             
             if (!isProtonApi) {
-                return@Interceptor chain.proceed(request)
+                // For non-Proton requests (like OTA mirrors), ensure we still provide a standard User-Agent.
+                // Some hosting providers return 404 or 403 for requests without a User-Agent.
+                val builder = request.newBuilder()
+                if (request.header("User-Agent") == null) {
+                    builder.header("User-Agent", userAgent)
+                }
+                // Add a generic Accept header if not present
+                if (request.header("Accept") == null) {
+                    builder.header("Accept", "application/json, text/plain, */*")
+                }
+                return@Interceptor chain.proceed(builder.build())
             }
 
-            val userAgent = DeviceInfoProvider.getSpoofedUserAgent()
             val spoofedVersion = DeviceInfoProvider.SPOOFED_APP_VERSION
 
             val useProxy = shouldUseApiBypass(context, vpnManagerProvider, settingsManagerProvider)
@@ -190,6 +200,7 @@ object NetworkModule {
         // Dynamic DNS configuration
         val dynamicDns = Dns { hostname ->
             val useProxy = shouldUseApiBypass(context, vpnManagerProvider, settingsManagerProvider)
+            
             if (useProxy) {
                 try {
                     doh.lookup(hostname)
@@ -197,7 +208,17 @@ object NetworkModule {
                     Dns.SYSTEM.lookup(hostname)
                 }
             } else {
-                Dns.SYSTEM.lookup(hostname)
+                try {
+                    // Try system DNS first
+                    Dns.SYSTEM.lookup(hostname)
+                } catch (e: Exception) {
+                    // Fallback to DoH if system DNS fails (helps bypass some blocks)
+                    try {
+                        doh.lookup(hostname)
+                    } catch (ignore: Exception) {
+                        throw e // Throw original exception if both fail
+                    }
+                }
             }
         }
 

@@ -11,6 +11,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 import kotlinx.coroutines.flow.first
+import retrofit2.HttpException
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.model.ota.UpdateResponse
 
@@ -29,7 +30,12 @@ class UpdateRepository @Inject constructor(
         val result = mutableMapOf("stable" to false, "nightly" to false)
         for (url in updateUrls) {
             try {
-                val response = updateApi.getUpdateMetadata(url)
+                val urlWithCacheBuster = if (url.contains("?")) {
+                    "$url&t=${System.currentTimeMillis()}"
+                } else {
+                    "$url?t=${System.currentTimeMillis()}"
+                }
+                val response = updateApi.getUpdateMetadata(urlWithCacheBuster)
                 if (response.stable != null) result["stable"] = true
                 if (response.nightly != null) result["nightly"] = true
                 if (result["stable"] == true && result["nightly"] == true) break
@@ -45,7 +51,14 @@ class UpdateRepository @Inject constructor(
         var bestUpdate: UpdateInfo? = null
         for (url in updateUrls) {
             try {
-                val response = updateApi.getUpdateMetadata(url)
+                // Add a timestamp to bypass ISP/Proxy cache that might be returning 404
+                val urlWithCacheBuster = if (url.contains("?")) {
+                    "$url&t=${System.currentTimeMillis()}"
+                } else {
+                    "$url?t=${System.currentTimeMillis()}"
+                }
+
+                val response = updateApi.getUpdateMetadata(urlWithCacheBuster)
                 
                 val channelUpdates = if (selectedChannel == "nightly") {
                     response.nightly
@@ -73,6 +86,9 @@ class UpdateRepository @Inject constructor(
                         }
                     }
                 }
+            } catch (e: HttpException) {
+                val errorBody = e.response()?.errorBody()?.string()
+                ProtonLogger.e("UpdateRepository", "HTTP ${e.code()} from $url: $errorBody", e)
             } catch (e: Exception) {
                 ProtonLogger.e("UpdateRepository", "Failed to fetch updates from $url", e)
             }
