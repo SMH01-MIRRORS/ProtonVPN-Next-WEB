@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159740,
-      "versionName": "12.0.0-alpha1st2-29-g8e1628b-nightly",
+      "versionCode": 605159741,
+      "versionName": "12.0.0-alpha1st2-30-ga8b9e97-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "build: add Foojay toolchains resolver plugin\n\n* build: add `org.gradle.toolchains.foojay-resolver-convention` version 1.0.0 to `settings.gradle.kts` to enable automatic JDK toolchain provisioning",
+      "changelog": "chore: update AGP and Gradle wrapper versions\n\n* chore: update `agp` version to 9.2.0-alpha07 in `libs.versions.toml`\n* chore: update Gradle wrapper distribution to 9.5.0-milestone-7 and update its checksum in `gradle-wrapper.properties`",
       "force": false
     },
     "release": {
-      "versionCode": 605159740,
-      "versionName": "12.0.0-alpha1st2-29-g8e1628b-nightly",
+      "versionCode": 605159741,
+      "versionName": "12.0.0-alpha1st2-30-ga8b9e97-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "build: add Foojay toolchains resolver plugin\n\n* build: add `org.gradle.toolchains.foojay-resolver-convention` version 1.0.0 to `settings.gradle.kts` to enable automatic JDK toolchain provisioning",
+      "changelog": "chore: update AGP and Gradle wrapper versions\n\n* chore: update `agp` version to 9.2.0-alpha07 in `libs.versions.toml`\n* chore: update Gradle wrapper distribution to 9.5.0-milestone-7 and update its checksum in `gradle-wrapper.properties`",
       "force": false
     }
   }
