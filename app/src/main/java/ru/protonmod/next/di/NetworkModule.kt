@@ -43,9 +43,12 @@ import ru.protonmod.next.data.network.ota.UpdateApi
 import ru.protonmod.next.data.network.TokenAuthenticator
 import ru.protonmod.next.data.repository.AuthRepository
 import ru.protonmod.next.utils.DeviceInfoProvider
+import ru.protonmod.next.utils.ProtonLogger
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import org.amnezia.awg.backend.Tunnel
 import java.net.InetAddress
+import java.net.SocketTimeoutException
+import java.net.ConnectException
 import java.util.concurrent.TimeUnit
 import javax.inject.Provider
 import javax.inject.Singleton
@@ -153,7 +156,15 @@ object NetworkModule {
                 .addHeader("Accept", "application/vnd.protonmail.v1+json")
                 .build()
 
-            chain.proceed(request)
+            try {
+                chain.proceed(request)
+            } catch (e: Exception) {
+                // Log network errors for debugging lifecycle issues
+                if (e is SocketTimeoutException || e is ConnectException) {
+                    ProtonLogger.w("NetworkModule", "Network timeout during ${request.url}: ${e.message}")
+                }
+                throw e
+            }
         }
 
         // Bootstrap client for DNS over HTTPS requires longer timeouts
@@ -182,9 +193,11 @@ object NetworkModule {
             .addInterceptor(dynamicBaseUrlInterceptor)
             .authenticator(tokenAuthenticator)
             .dns(dynamicDns)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(60, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
+            // Reduced timeouts to detect network failures faster and prevent JNI reference leaks
+            // Original: 30s connect timeout. On mobile, 15s is more responsive and safer.
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(45, TimeUnit.SECONDS)
+            .writeTimeout(45, TimeUnit.SECONDS)
             .build()
     }
 
