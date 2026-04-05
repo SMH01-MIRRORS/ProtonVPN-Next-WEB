@@ -53,7 +53,7 @@ class TokenAuthenticator @Inject constructor(
             return null
         }
 
-        ProtonLogger.i(TAG, "HTTP 401/402 detected for $requestUrl. Initializing token refresh cycle.")
+        ProtonLogger.i(TAG, "HTTP 401 detected for $requestUrl. Initializing token refresh cycle.")
         ProtonLogger.addSentryBreadcrumb(TAG, "Auth Step: Token Expired ($requestUrl)", SentryLevel.WARNING, "auth.token")
 
         // Prevent infinite loops if the new token also returns 401 Unauthorized
@@ -116,7 +116,7 @@ class TokenAuthenticator @Inject constructor(
                 ProtonLogger.e(TAG, "Network or system error during token refresh: ${e.message}", e)
             }
 
-            ProtonLogger.w(TAG, "Authenticator cycle finished without a new token. Passing 401/402 to caller.")
+            ProtonLogger.w(TAG, "Authenticator cycle finished without a new token. Passing 401 to caller.")
             null
         }
     }

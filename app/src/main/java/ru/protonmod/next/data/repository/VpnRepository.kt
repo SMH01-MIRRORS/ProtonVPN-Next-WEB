@@ -260,8 +260,7 @@ class VpnRepository @Inject constructor(
                 authorization = bearer,
                 sessionId = sessionId,
                 lastModified = ifModifiedSince,
-                protocols = "wireguard",
-                userTier = userTier
+                protocols = "wireguard"
             )
 
             val (serversList, newLastModified) = when (response.code()) {
@@ -300,7 +299,7 @@ class VpnRepository @Inject constructor(
             // Fetch server loads and merge with current list
             ProtonLogger.d(TAG, "Fetching server loads for ${serversList.size} servers...")
             val loadsResponse = try {
-                vpnApi.getLoads(bearer, sessionId, userTier)
+                vpnApi.getLoads(bearer, sessionId)
             } catch (e: Exception) {
                 ProtonLogger.w(TAG, "Failed to initiate loads request: ${e.message}")
                 null

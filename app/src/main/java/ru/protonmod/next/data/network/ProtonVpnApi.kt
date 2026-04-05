@@ -51,15 +51,13 @@ interface ProtonVpnApi {
         @Header("If-Modified-Since") lastModified: String? = null,
         @Header("x-pm-locale") locale: String? = null,
         @Query("WithEntriesForProtocols") protocols: String? = "wireguard",
-        @Query("WithState") withState: Boolean = true,
-        @Query("Tier") userTier: Int? = null
+        @Query("WithState") withState: Boolean = true
     ): Response<LogicalServersResponse>
 
     @GET("vpn/v1/loads")
     suspend fun getLoads(
         @Header("Authorization") authorization: String,
-        @Header("x-pm-uid") sessionId: String,
-        @Query("Tier") userTier: Int? = null
+        @Header("x-pm-uid") sessionId: String
     ): Response<ResponseBody>
 
     @GET("vpn/v2")

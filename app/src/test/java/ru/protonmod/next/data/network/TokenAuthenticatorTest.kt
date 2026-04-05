@@ -57,7 +57,7 @@ class TokenAuthenticatorTest {
             whenever(sessionDao.getSession()).thenReturn(null)
         }
 
-        val response = mockResponse("http://test.com")
+        val response = mockResponse("https://vpn-api.proton.me/vpn/v2/logicals")
         val result = authenticator.authenticate(null, response)
 
         assertNull(result)
@@ -83,7 +83,7 @@ class TokenAuthenticatorTest {
             whenever(authRepository.refreshSession(any(), any())).thenReturn(Result.success(refreshResponse))
         }
 
-        val response = mockResponse("http://test.com", "Bearer old_token")
+        val response = mockResponse("https://vpn-api.proton.me/vpn/v2/logicals", "Bearer old_token")
 
         // Act
         val result = authenticator.authenticate(null, response)

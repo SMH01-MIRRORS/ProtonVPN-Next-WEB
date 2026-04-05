@@ -151,11 +151,10 @@ class VpnRepositoryTest {
             lastModified = anyOrNull(),
             locale = anyOrNull(),
             protocols = anyOrNull(),
-            withState = any(),
-            userTier = anyOrNull()
+            withState = any()
         )).thenReturn(Response.success(logicalServersResponse))
 
-        whenever(vpnApi.getLoads(any(), any(), anyOrNull())).thenReturn(
+        whenever(vpnApi.getLoads(any(), any())).thenReturn(
             Response.success(loadsJson.toResponseBody())
         )
 
