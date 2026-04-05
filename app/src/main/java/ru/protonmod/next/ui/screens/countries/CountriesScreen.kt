@@ -59,6 +59,7 @@ import kotlinx.collections.immutable.toImmutableList
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.data.network.LogicalServer
+import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.LoadIndicator
 import ru.protonmod.next.ui.components.LoadProgressBar
@@ -150,7 +151,7 @@ fun CountriesScreen(
                     when (state) {
                         is CountriesUiState.Loading -> {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(color = colors.brandNorm)
+                                ExpressiveCircularProgressIndicator(color = colors.brandNorm)
                             }
                         }
                         is CountriesUiState.Error -> {

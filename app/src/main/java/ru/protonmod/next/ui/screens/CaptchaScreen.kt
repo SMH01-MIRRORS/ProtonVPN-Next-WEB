@@ -47,6 +47,8 @@ import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONObject
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
+import ru.protonmod.next.ui.components.ExpressiveLinearProgressIndicator
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.utils.DeviceInfoProvider
 import ru.protonmod.next.utils.ProtonLogger
@@ -110,7 +112,7 @@ fun CaptchaScreen(
                     )
                 )
                 if (isLoading) {
-                    LinearProgressIndicator(
+                    ExpressiveLinearProgressIndicator(
                         progress = { progress / 100f },
                         modifier = Modifier.fillMaxWidth(),
                         color = colors.brandNorm,
@@ -381,7 +383,7 @@ fun CaptchaScreen(
                             .background(colors.backgroundNorm),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = colors.brandNorm)
+                        ExpressiveCircularProgressIndicator(color = colors.brandNorm)
                     }
                 }
             }

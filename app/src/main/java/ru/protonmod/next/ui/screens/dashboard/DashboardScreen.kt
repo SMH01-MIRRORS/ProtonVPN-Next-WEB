@@ -72,6 +72,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import ru.protonmod.next.R
 import ru.protonmod.next.data.network.LogicalServer
+import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.theme.ProtonColors
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -139,9 +140,8 @@ fun VpnStatusTop(
                     }
                 }
                 connecting -> {
-                    CircularProgressIndicator(
+                    ExpressiveCircularProgressIndicator(
                         color = colors.iconNorm,
-                        strokeWidth = 2.dp,
                         modifier = Modifier.size(32.dp)
                     )
                 }
@@ -504,7 +504,7 @@ fun DashboardScreen(
                 when (target) {
                     0 -> {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = colors.brandNorm)
+                            ExpressiveCircularProgressIndicator(color = colors.brandNorm)
                         }
                     }
                     1 -> {
@@ -1060,10 +1060,9 @@ fun ConnectionStatusCard(
                 enabled = !isConnecting
             ) {
                 if (isConnecting) {
-                    CircularProgressIndicator(
+                    ExpressiveCircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = colors.textInverted,
-                        strokeWidth = 2.dp
+                        color = colors.textInverted
                     )
                 } else {
                     Text(
@@ -1117,9 +1116,8 @@ fun ServerCard(
                     contentAlignment = Alignment.Center
                 ) {
                     if (isConnecting) {
-                        CircularProgressIndicator(
+                        ExpressiveCircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp,
                             color = colors.brandNorm
                         )
                     } else {

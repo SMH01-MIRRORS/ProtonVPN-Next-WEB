@@ -81,7 +81,7 @@ fun LoadProgressBar(
         else -> colors.notificationError
     }
 
-    LinearProgressIndicator(
+    ExpressiveLinearProgressIndicator(
         progress = { load / 100f },
         modifier = modifier
             .fillMaxWidth()

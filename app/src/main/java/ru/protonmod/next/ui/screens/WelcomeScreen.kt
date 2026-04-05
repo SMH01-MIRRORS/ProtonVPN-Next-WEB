@@ -48,6 +48,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
@@ -356,7 +357,7 @@ private fun WelcomeButtons(
             colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm, contentColor = colors.textInverted)
         ) {
             if (isLoading) {
-                CircularProgressIndicator(color = colors.textInverted, strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
+                ExpressiveCircularProgressIndicator(color = colors.textInverted, modifier = Modifier.size(24.dp))
             } else {
                 Text(text = stringResource(R.string.btn_continue_guest), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
             }

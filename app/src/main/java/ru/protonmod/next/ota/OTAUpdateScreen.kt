@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2026 SMH01
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ru.protonmod.next.ota
 
 import androidx.compose.foundation.background
@@ -17,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import ru.protonmod.next.R
 import ru.protonmod.next.data.model.ota.UpdateInfo
+import ru.protonmod.next.ui.components.ExpressiveLinearProgressIndicator
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 @Composable
@@ -76,7 +94,7 @@ fun OTAUpdateScreen(
                     
                     if (uiState.isDownloading) {
                         Spacer(Modifier.height(32.dp))
-                        LinearProgressIndicator(
+                        ExpressiveLinearProgressIndicator(
                             progress = { uiState.downloadProgress },
                             modifier = Modifier.fillMaxWidth(),
                             color = colors.brandNorm,

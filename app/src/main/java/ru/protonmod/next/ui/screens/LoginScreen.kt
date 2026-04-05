@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.isTablet
@@ -180,7 +181,7 @@ fun LoginScreen(
                                 enabled = totpCode.isNotBlank() && uiState !is LoginUiState.Loading
                             ) {
                                 if (uiState is LoginUiState.Loading) {
-                                    CircularProgressIndicator(color = colors.textInverted, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                                    ExpressiveCircularProgressIndicator(color = colors.textInverted, modifier = Modifier.size(24.dp))
                                 } else {
                                     Text(stringResource(R.string.btn_verify), fontWeight = FontWeight.Bold)
                                 }
@@ -308,7 +309,7 @@ fun LoginScreen(
                                     enabled = uiState !is LoginUiState.Loading && username.isNotBlank() && password.isNotBlank()
                                 ) {
                                     if (uiState is LoginUiState.Loading) {
-                                        CircularProgressIndicator(color = colors.textInverted, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                                        ExpressiveCircularProgressIndicator(color = colors.textInverted, modifier = Modifier.size(24.dp))
                                     } else {
                                         Text(stringResource(R.string.btn_login), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
                                     }

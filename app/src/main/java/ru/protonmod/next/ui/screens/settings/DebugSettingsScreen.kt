@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -430,7 +431,7 @@ fun DebugSettingsScreen(
 
     if (uiState.isLoading) {
         Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = colors.brandNorm)
+            ExpressiveCircularProgressIndicator(color = colors.brandNorm)
         }
     }
 }
