@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159747,
-      "versionName": "12.0.0-alpha1st2-36-g5506fc0-nightly",
+      "versionCode": 605159748,
+      "versionName": "12.0.0-alpha1st2-37-g97e234d-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "feat: support dynamic VPN IP and DNS assignment from session data\n\n* feat: update `SessionEntity` and database schema to version 14 to include `vpnIpv4`, `vpnIpv6`, and `vpnDns` columns\n* feat: implement database migration `MIGRATION_13_14` to support new network assignment fields in the `session` table\n* feat: extend `CreateCertificateResponse` to parse IPv4, IPv6, and DNS information from the provider API\n* refactor: update `AmneziaVpnManager` and `DebugSettingsViewModel` to prioritize session-specific IP and DNS assignments over hardcoded defaults\n* feat: update `AuthRepository` and `VpnRepository` to extract and persist assigned network parameters during authentication and key registration steps",
+      "changelog": "fix: Prevent \"Job was cancelled\" error on navigation during login",
       "force": false
     },
     "release": {
-      "versionCode": 605159747,
-      "versionName": "12.0.0-alpha1st2-36-g5506fc0-nightly",
+      "versionCode": 605159748,
+      "versionName": "12.0.0-alpha1st2-37-g97e234d-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "feat: support dynamic VPN IP and DNS assignment from session data\n\n* feat: update `SessionEntity` and database schema to version 14 to include `vpnIpv4`, `vpnIpv6`, and `vpnDns` columns\n* feat: implement database migration `MIGRATION_13_14` to support new network assignment fields in the `session` table\n* feat: extend `CreateCertificateResponse` to parse IPv4, IPv6, and DNS information from the provider API\n* refactor: update `AmneziaVpnManager` and `DebugSettingsViewModel` to prioritize session-specific IP and DNS assignments over hardcoded defaults\n* feat: update `AuthRepository` and `VpnRepository` to extract and persist assigned network parameters during authentication and key registration steps",
+      "changelog": "fix: Prevent \"Job was cancelled\" error on navigation during login",
       "force": false
     }
   }
