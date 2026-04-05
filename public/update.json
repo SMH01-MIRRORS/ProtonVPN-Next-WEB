@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159751,
-      "versionName": "12.0.0-alpha1st2-40-g7ed190c-nightly",
+      "versionCode": 605159752,
+      "versionName": "12.0.0-alpha1st2-41-g197ed5f-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "refactor: modernize UI layer and optimize Compose performance\n\n* refactor: replace `collectAsState` with `collectAsStateWithLifecycle` across all screens for lifecycle-aware state collection\n* perf: integrate `kotlinx-collections-immutable` and use `ImmutableList` for Composable parameters to minimize unnecessary recompositions\n* perf: add `key` and `contentType` to `LazyColumn` and `LazyVerticalGrid` items to improve scroll performance\n* refactor: standardize Composable APIs by adding `Modifier` parameters to all UI components\n* refactor: decouple `OTAUpdateScreen` from its ViewModel by passing state and event callbacks as parameters\n* refactor: unify callback naming conventions (e.g., `onConfigSelect` instead of `onConfigSelected`) and rename `Category` to `SettingsCategory`\n* chore: update `goVpnLib` to `0.1.87` and add `androidx.lifecycle:lifecycle-runtime-compose` dependency\n* fix: improve `ObscurableText` animation logic in the Dashboard and ensure proper layout direction for IP address displays",
+      "changelog": "refactor: centralize OTA update state management in `OTAUpdateManager`\n\n* refactor: migrate `UpdateWorker` and `OTAUpdateViewModel` to use `OTAUpdateManager` as the primary interface for update checks\n* feat: implement a reactive `latestUpdate` StateFlow in `OTAUpdateManager` to broadcast update availability across the app\n* feat: update `SettingsViewModel` and `SettingsScreen` to observe update status and display appropriate UI feedback when a new version is available\n* refactor: simplify UI state updates in `OTAUpdateViewModel` using `MutableStateFlow.update`\n* chore: suppress lint warning for intentional division by zero in `DebugSettingsViewModel`",
       "force": false
     },
     "release": {
-      "versionCode": 605159751,
-      "versionName": "12.0.0-alpha1st2-40-g7ed190c-nightly",
+      "versionCode": 605159752,
+      "versionName": "12.0.0-alpha1st2-41-g197ed5f-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "refactor: modernize UI layer and optimize Compose performance\n\n* refactor: replace `collectAsState` with `collectAsStateWithLifecycle` across all screens for lifecycle-aware state collection\n* perf: integrate `kotlinx-collections-immutable` and use `ImmutableList` for Composable parameters to minimize unnecessary recompositions\n* perf: add `key` and `contentType` to `LazyColumn` and `LazyVerticalGrid` items to improve scroll performance\n* refactor: standardize Composable APIs by adding `Modifier` parameters to all UI components\n* refactor: decouple `OTAUpdateScreen` from its ViewModel by passing state and event callbacks as parameters\n* refactor: unify callback naming conventions (e.g., `onConfigSelect` instead of `onConfigSelected`) and rename `Category` to `SettingsCategory`\n* chore: update `goVpnLib` to `0.1.87` and add `androidx.lifecycle:lifecycle-runtime-compose` dependency\n* fix: improve `ObscurableText` animation logic in the Dashboard and ensure proper layout direction for IP address displays",
+      "changelog": "refactor: centralize OTA update state management in `OTAUpdateManager`\n\n* refactor: migrate `UpdateWorker` and `OTAUpdateViewModel` to use `OTAUpdateManager` as the primary interface for update checks\n* feat: implement a reactive `latestUpdate` StateFlow in `OTAUpdateManager` to broadcast update availability across the app\n* feat: update `SettingsViewModel` and `SettingsScreen` to observe update status and display appropriate UI feedback when a new version is available\n* refactor: simplify UI state updates in `OTAUpdateViewModel` using `MutableStateFlow.update`\n* chore: suppress lint warning for intentional division by zero in `DebugSettingsViewModel`",
       "force": false
     }
   }
