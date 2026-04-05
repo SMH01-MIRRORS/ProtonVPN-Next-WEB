@@ -28,5 +28,8 @@ data class CreateCertificateRequest(
 @Serializable
 data class CreateCertificateResponse(
     @SerialName("Code") val code: Int,
-    @SerialName("Certificate") val certificate: String? = null // Often empty for WG, used for OpenVPN
+    @SerialName("Certificate") val certificate: String? = null, // Often empty for WG, used for OpenVPN
+    @SerialName("IPv4") val ipv4: String? = null,
+    @SerialName("IPv6") val ipv6: String? = null,
+    @SerialName("DNS") val dns: List<String>? = null
 )

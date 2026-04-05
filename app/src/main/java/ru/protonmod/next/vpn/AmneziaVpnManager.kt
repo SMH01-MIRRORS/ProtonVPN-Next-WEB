@@ -478,7 +478,12 @@ class AmneziaVpnManager @Inject constructor(
                 ObfuscationParams(0, 0, 0, 0, 0, 0, 0, "", "", "", "", "", "", "", "", "")
             }
 
-            // Retrieve Custom DNS IP or fallback to Proton Default
+            // Use assigned IP/DNS from session if available, fallback to defaults.
+            // Paid users (Tier > 0) are often assigned unique internal IPs by the Proton API.
+            val localIp = currentSession.vpnIpv4 ?: PROTON_CLIENT_IP
+            val fallbackDns = currentSession.vpnDns?.split(",")?.firstOrNull() ?: PROTON_DNS_IP
+
+            // Retrieve Custom DNS IP or fallback to Proton Assigned/Default
             val userDns = settingsManager.customDns.first().trim()
             val isValidDns = userDns.isNotEmpty() && try {
                 InetAddress.getByName(userDns)
@@ -487,14 +492,14 @@ class AmneziaVpnManager @Inject constructor(
                 ProtonLogger.w(TAG, "Invalid custom DNS value '$userDns', falling back to default: ${e.message}")
                 false
             }
-            val activeDns = if (isValidDns) userDns else PROTON_DNS_IP
-            ProtonLogger.i(TAG, "Using DNS Server: $activeDns")
+            val activeDns = if (isValidDns) userDns else fallbackDns
+            ProtonLogger.i(TAG, "Using DNS Server: $activeDns, Client IP: $localIp")
 
             ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: Building Config", SentryLevel.DEBUG, "vpn.connect")
             val configStr = amneziaConfigGenerator.buildConfig(
                 serverPublicKey = serverPubKey,
                 privateKey = wgPrivateKeyB64,
-                localIp = PROTON_CLIENT_IP,
+                localIp = localIp,
                 dnsServer = activeDns,
                 targetIp = targetIp,
                 isIncludeMode = isIncludeMode,

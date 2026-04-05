@@ -39,7 +39,10 @@ data class SessionEntity(
     val userTier: Int = 0, // 0: Free, 1: Basic, 2: Plus
     val wgPrivateKey: String? = null,
     val wgPublicKeyPem: String? = null,
-    val wgCertificate: String? = null
+    val wgCertificate: String? = null,
+    val vpnIpv4: String? = null,
+    val vpnIpv6: String? = null,
+    val vpnDns: String? = null // Comma-separated list
 )
 
 @Entity(tableName = "servers_cache")
@@ -72,6 +75,9 @@ interface SessionDao {
 
     @Query("UPDATE session SET wgCertificate = :certificate WHERE id = 1")
     suspend fun updateCertificate(certificate: String)
+
+    @Query("UPDATE session SET vpnIpv4 = :ipv4, vpnIpv6 = :ipv6, vpnDns = :dns WHERE id = 1")
+    suspend fun updateVpnConnectionInfo(ipv4: String?, ipv6: String?, dns: String?)
 
     @Query("UPDATE session SET wgPrivateKey = :privateKey, wgPublicKeyPem = :publicKeyPem, wgCertificate = :certificate WHERE id = 1")
     suspend fun updateVpnKeys(privateKey: String, publicKeyPem: String, certificate: String)

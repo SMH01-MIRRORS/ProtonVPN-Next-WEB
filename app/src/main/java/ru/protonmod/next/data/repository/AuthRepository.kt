@@ -32,6 +32,7 @@ import ru.protonmod.next.ui.screens.ProtonErrorResponse
 import ru.protonmod.next.utils.DeviceInfoProvider
 import ru.protonmod.next.utils.coroutines.DispatcherProvider
 import ru.protonmod.next.utils.crypto.CryptoWrapper
+import ru.protonmod.next.utils.crypto.VpnKeyPair
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -231,9 +232,12 @@ class AuthRepository @Inject constructor(
                     sessionId = finalUid,
                     userId = loginResponse.userId ?: "",
                     userTier = userTier,
-                    wgPrivateKey = keys?.first,
-                    wgPublicKeyPem = keys?.second,
-                    wgCertificate = keys?.third
+                    wgPrivateKey = keys?.first?.privateKeyX25519,
+                    wgPublicKeyPem = keys?.first?.publicKeyPem,
+                    wgCertificate = keys?.third,
+                    vpnIpv4 = keys?.second?.ipv4,
+                    vpnIpv6 = keys?.second?.ipv6,
+                    vpnDns = keys?.second?.dns?.joinToString(",")
                 )
                 
                 vpnRepository.refreshServersBackground(finalAccessToken, finalUid, userTier)
@@ -305,9 +309,12 @@ class AuthRepository @Inject constructor(
                     sessionId = finalUid,
                     userId = response.userId ?: "",
                     userTier = 0,
-                    wgPrivateKey = keys?.first,
-                    wgPublicKeyPem = keys?.second,
-                    wgCertificate = keys?.third
+                    wgPrivateKey = keys?.first?.privateKeyX25519,
+                    wgPublicKeyPem = keys?.first?.publicKeyPem,
+                    wgCertificate = keys?.third,
+                    vpnIpv4 = keys?.second?.ipv4,
+                    vpnIpv6 = keys?.second?.ipv6,
+                    vpnDns = keys?.second?.dns?.joinToString(",")
                 )
 
                 vpnRepository.refreshServersBackground(finalAccessToken, finalUid, 0)
@@ -406,9 +413,12 @@ class AuthRepository @Inject constructor(
                 sessionId = sessionId,
                 userId = finalUserId,
                 userTier = userTier,
-                wgPrivateKey = keys?.first,
-                wgPublicKeyPem = keys?.second,
-                wgCertificate = keys?.third
+                wgPrivateKey = keys?.first?.privateKeyX25519,
+                wgPublicKeyPem = keys?.first?.publicKeyPem,
+                wgCertificate = keys?.third,
+                vpnIpv4 = keys?.second?.ipv4,
+                vpnIpv6 = keys?.second?.ipv6,
+                vpnDns = keys?.second?.dns?.joinToString(",")
             )
 
             vpnRepository.refreshServersBackground(fullToken, sessionId, userTier)
@@ -444,17 +454,17 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    private suspend fun registerAndGetVpnKeys(accessToken: String, sessionId: String): Triple<String, String, String>? {
+    private suspend fun registerAndGetVpnKeys(accessToken: String, sessionId: String): Triple<VpnKeyPair, CreateCertificateResponse, String>? {
         return try {
             val vpnKeyPair = cryptoWrapper.generateVpnKeyPair()
             val publicKeyPem = vpnKeyPair.publicKeyPem
-            val wgPrivateKeyB64 = vpnKeyPair.privateKeyX25519
 
             val regResult = vpnRepository.registerWireGuardKey(accessToken, sessionId, publicKeyPem)
 
             if (regResult.isSuccess) {
-                val cert = regResult.getOrNull()?.certificate
-                Triple(wgPrivateKeyB64, publicKeyPem, cert ?: "")
+                val response = regResult.getOrNull()!!
+                val cert = response.certificate ?: ""
+                Triple(vpnKeyPair, response, cert)
             } else null
         } catch (e: Exception) {
             null
@@ -463,13 +473,15 @@ class AuthRepository @Inject constructor(
 
     private suspend fun saveSessionLocally(
         accessToken: String, refreshToken: String, sessionId: String, userId: String,
-        userTier: Int, wgPrivateKey: String?, wgPublicKeyPem: String?, wgCertificate: String?
+        userTier: Int, wgPrivateKey: String?, wgPublicKeyPem: String?, wgCertificate: String?,
+        vpnIpv4: String? = null, vpnIpv6: String? = null, vpnDns: String? = null
     ) {
         sessionDao.saveSession(
             SessionEntity(
                 accessToken = accessToken, refreshToken = refreshToken, sessionId = sessionId,
                 userId = userId, userTier = userTier, wgPrivateKey = wgPrivateKey,
-                wgPublicKeyPem = wgPublicKeyPem, wgCertificate = wgCertificate
+                wgPublicKeyPem = wgPublicKeyPem, wgCertificate = wgCertificate,
+                vpnIpv4 = vpnIpv4, vpnIpv6 = vpnIpv6, vpnDns = vpnDns
             )
         )
     }

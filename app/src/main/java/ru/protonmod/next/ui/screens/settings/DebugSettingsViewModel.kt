@@ -267,9 +267,11 @@ class DebugSettingsViewModel @Inject constructor(
                 } else {
                     AmneziaVpnManager.ObfuscationParams(0, 0, 0, 0, 0, 0, 0, "", "", "", "", "", "", "", "", "")
                 }
+                val localIp = session.vpnIpv4 ?: "10.2.0.2"
+                val assignedDns = session.vpnDns?.split(",")?.firstOrNull() ?: "10.2.0.1"
                 
                 val userDns = settingsManager.customDns.first().trim()
-                val activeDns = if (userDns.isNotEmpty()) userDns else "10.2.0.1"
+                val activeDns = if (userDns.isNotEmpty()) userDns else assignedDns
                 
                 val selectedPort = settingsManager.vpnPort.first().let { port ->
                     if (port == 0) 1194 else port
@@ -286,7 +288,7 @@ class DebugSettingsViewModel @Inject constructor(
                 val config = configGenerator.buildConfig(
                     serverPublicKey = physicalServer.wgPublicKey ?: "",
                     privateKey = session.wgPrivateKey ?: "",
-                    localIp = "10.2.0.2",
+                    localIp = localIp,
                     dnsServer = activeDns,
                     targetIp = targetIp,
                     port = selectedPort,

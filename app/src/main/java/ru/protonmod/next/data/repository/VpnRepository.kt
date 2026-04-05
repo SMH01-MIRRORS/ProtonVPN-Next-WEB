@@ -439,6 +439,16 @@ class VpnRepository @Inject constructor(
                 if (cert != null) {
                     sessionDao.updateCertificate(cert)
                 }
+
+                // Update vpn information (ipv4, ipv6, dns) returned from the certificate response.
+                // This is crucial for paid users (Tier > 0) who might be assigned unique internal IPs
+                // different from the default "10.2.0.2".
+                sessionDao.updateVpnConnectionInfo(
+                    ipv4 = response.ipv4,
+                    ipv6 = response.ipv6,
+                    dns = response.dns?.joinToString(",")
+                )
+
                 Result.success(response)
             } else {
                 Result.failure(Exception("Proton Cert Error: ${response.code}"))

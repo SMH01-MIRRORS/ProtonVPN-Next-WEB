@@ -140,6 +140,14 @@ object DatabaseModule {
         }
     }
 
+    val MIGRATION_13_14 = object : Migration(13, 14) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE session ADD COLUMN vpnIpv4 TEXT")
+            db.execSQL("ALTER TABLE session ADD COLUMN vpnIpv6 TEXT")
+            db.execSQL("ALTER TABLE session ADD COLUMN vpnDns TEXT")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -157,6 +165,7 @@ object DatabaseModule {
         .addMigrations(MIGRATION_10_11)
         .addMigrations(MIGRATION_11_12)
         .addMigrations(MIGRATION_12_13)
+        .addMigrations(MIGRATION_13_14)
         .build()
     }
 
