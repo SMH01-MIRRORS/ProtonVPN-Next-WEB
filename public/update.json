@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159753,
-      "versionName": "12.0.0-alpha1st2-42-g3e946ea-nightly",
+      "versionCode": 605159754,
+      "versionName": "12.0.0-alpha1st2-43-g97a67a9-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "feat: implement Material 3 expressive progress indicators\n\n* feat: update Compose Material 3 to `1.5.0-alpha16` in `libs.versions.toml` to access experimental expressive APIs\n* feat: create `ExpressiveCircularProgressIndicator` and `ExpressiveLinearProgressIndicator` components in `ExpressiveProgress.kt`\n* refactor: replace standard progress indicators with expressive variants across login, dashboard, OTA, and settings screens\n* docs: add GNU GPL license headers to `OTAUpdateScreen.kt` and `ExpressiveProgress.kt`",
+      "changelog": "feat: implement Proton API mirrors strategy via DNS-over-HTTPS fallback\n\n* feat: add \"Proton Mirrors (DoH)\" API bypass strategy to discover and use dynamic API mirrors\n* feat: implement `DohFallbackInterceptor` and `DohClient` to resolve alternative API hosts using encrypted DNS queries\n* feat: implement `MirrorTrustManager` and manual certificate pinning to allow secure connections via direct IP and mirror domains\n* feat: add support for `x-pm-country` header spoofing based on user settings\n* refactor: improve authentication stability by clearing pending auth state on specific HTTP errors (401, 403, 422)\n* feat: add debug utility to fetch available Proton domains and copy them to the clipboard\n* fix: prevent `TokenAuthenticator` from attempting to authenticate on existing auth-related requests to avoid loops\n* feat: implement `Base32` utility for encoding hostnames in DoH queries",
       "force": false
     },
     "release": {
-      "versionCode": 605159753,
-      "versionName": "12.0.0-alpha1st2-42-g3e946ea-nightly",
+      "versionCode": 605159754,
+      "versionName": "12.0.0-alpha1st2-43-g97a67a9-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "feat: implement Material 3 expressive progress indicators\n\n* feat: update Compose Material 3 to `1.5.0-alpha16` in `libs.versions.toml` to access experimental expressive APIs\n* feat: create `ExpressiveCircularProgressIndicator` and `ExpressiveLinearProgressIndicator` components in `ExpressiveProgress.kt`\n* refactor: replace standard progress indicators with expressive variants across login, dashboard, OTA, and settings screens\n* docs: add GNU GPL license headers to `OTAUpdateScreen.kt` and `ExpressiveProgress.kt`",
+      "changelog": "feat: implement Proton API mirrors strategy via DNS-over-HTTPS fallback\n\n* feat: add \"Proton Mirrors (DoH)\" API bypass strategy to discover and use dynamic API mirrors\n* feat: implement `DohFallbackInterceptor` and `DohClient` to resolve alternative API hosts using encrypted DNS queries\n* feat: implement `MirrorTrustManager` and manual certificate pinning to allow secure connections via direct IP and mirror domains\n* feat: add support for `x-pm-country` header spoofing based on user settings\n* refactor: improve authentication stability by clearing pending auth state on specific HTTP errors (401, 403, 422)\n* feat: add debug utility to fetch available Proton domains and copy them to the clipboard\n* fix: prevent `TokenAuthenticator` from attempting to authenticate on existing auth-related requests to avoid loops\n* feat: implement `Base32` utility for encoding hostnames in DoH queries",
       "force": false
     }
   }
