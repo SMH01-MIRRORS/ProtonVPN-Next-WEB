@@ -3,6 +3,8 @@ package ru.protonmod.next.ota
 import android.content.Context
 import androidx.work.*
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.model.ota.UpdateInfo
@@ -20,6 +22,9 @@ class OTAUpdateManager @Inject constructor(
     companion object {
         private const val WORK_NAME = "ota_update_check"
     }
+
+    private val _latestUpdate = MutableStateFlow<UpdateInfo?>(null)
+    val latestUpdate = _latestUpdate.asStateFlow()
 
     suspend fun scheduleUpdateCheck() {
         val frequency = settingsManager.otaUpdateFrequency.first()
@@ -58,6 +63,7 @@ class OTAUpdateManager @Inject constructor(
     suspend fun checkForUpdatesNow(): UpdateInfo? {
         val update = updateRepository.checkForUpdates()
         settingsManager.setOtaLastCheckTime(System.currentTimeMillis())
+        _latestUpdate.value = update
         return update
     }
 }

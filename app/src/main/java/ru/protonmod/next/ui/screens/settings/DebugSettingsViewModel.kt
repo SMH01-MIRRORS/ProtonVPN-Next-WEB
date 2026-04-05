@@ -394,7 +394,7 @@ class DebugSettingsViewModel @Inject constructor(
     }
 
     fun triggerArithmeticException() {
-        val x = 10 / 0
+        @Suppress("DIVISION_BY_ZERO") val x = 10 / 0
         ProtonLogger.d("DebugVM", "Result: $x")
     }
 

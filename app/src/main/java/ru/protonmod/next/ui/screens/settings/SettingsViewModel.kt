@@ -71,6 +71,7 @@ data class SettingsUiState(
     val otaUpdateChannel: String = "stable",
     val availableChannels: Map<String, Boolean> = mapOf("stable" to true, "nightly" to true),
     val isCheckingForUpdates: Boolean = false,
+    val isUpdateAvailable: Boolean = false,
 
     // AWG low-level params
     val awgJc: Int = 3,
@@ -126,9 +127,15 @@ class SettingsViewModel @Inject constructor(
     // Internal state tracking if any VPN is operating at the OS level
     private val _isAnyVpnActive = MutableStateFlow(false)
     private val _isCheckingForUpdates = MutableStateFlow(false)
+    private val _isUpdateAvailable = MutableStateFlow(false)
     private val _availableChannels = MutableStateFlow(mapOf("stable" to true, "nightly" to true))
 
     init {
+        viewModelScope.launch {
+            otaUpdateManager.latestUpdate.collect { update ->
+                _isUpdateAvailable.value = update != null
+            }
+        }
         checkAvailableChannels()
         // Monitor system networks to automatically detect active VPN connections
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -207,7 +214,8 @@ class SettingsViewModel @Inject constructor(
         settingsManager.otaUpdateChannel,
         _availableChannels,
         _isAnyVpnActive,
-        _isCheckingForUpdates
+        _isCheckingForUpdates,
+        _isUpdateAvailable
     ) { args: Array<Any?> ->
         SettingsUiState(
             killSwitchEnabled = args[0] as Boolean,
@@ -257,8 +265,9 @@ class SettingsViewModel @Inject constructor(
             otaUpdateFrequency = args[44] as String,
             otaUpdateChannel = args[45] as String,
             availableChannels = args[46] as Map<String, Boolean>,
+            isAnyVpnActive = args[47] as Boolean,
             isCheckingForUpdates = args[48] as Boolean,
-            isAnyVpnActive = args[47] as Boolean
+            isUpdateAvailable = args[49] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,

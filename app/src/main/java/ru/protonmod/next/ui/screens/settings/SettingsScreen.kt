@@ -331,10 +331,16 @@ private fun UpdateSettingsSection(
             onClick = { showChannelDialog = true }
         )
 
+        val updateStatus = when {
+            state.isCheckingForUpdates -> stringResource(R.string.ota_status_checking)
+            state.isUpdateAvailable -> stringResource(R.string.ota_new_version, "") // Version code is not easily available here, but the text will indicate update
+            else -> stringResource(R.string.ota_status_up_to_date)
+        }
+
         SettingRowWithIcon(
             icon = Icons.Rounded.Refresh,
             title = stringResource(R.string.ota_btn_check),
-            subtitle = if (state.isCheckingForUpdates) stringResource(R.string.ota_status_checking) else stringResource(R.string.ota_status_up_to_date),
+            subtitle = updateStatus,
             onClick = onCheckNow,
             enabled = !state.isCheckingForUpdates
         )

@@ -9,10 +9,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.update
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import ru.protonmod.next.data.model.ota.UpdateInfo
-import ru.protonmod.next.data.repository.UpdateRepository
 import ru.protonmod.next.utils.APKInstaller
 import ru.protonmod.next.utils.ProtonLogger
 import java.io.File
@@ -29,7 +29,7 @@ data class UpdateUiState(
 
 @HiltViewModel
 class OTAUpdateViewModel @Inject constructor(
-    private val updateRepository: UpdateRepository,
+    private val otaUpdateManager: OTAUpdateManager,
     private val okHttpClient: OkHttpClient,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
@@ -37,27 +37,30 @@ class OTAUpdateViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(UpdateUiState())
     val uiState = _uiState.asStateFlow()
 
+    init {
+        viewModelScope.launch {
+            otaUpdateManager.latestUpdate.collect { update ->
+                if (update != null) {
+                    val apkFile = getUpdateFile(update.versionCode)
+                    cleanOldUpdates(update.versionCode)
+                    _uiState.update { it.copy(
+                        updateInfo = update,
+                        downloadedFile = if (apkFile.exists()) apkFile else null,
+                        downloadProgress = if (apkFile.exists()) 1f else 0f
+                    ) }
+                }
+            }
+        }
+    }
+
     fun checkForUpdates() {
         viewModelScope.launch {
-            val update = updateRepository.checkForUpdates()
-            var downloadedFile: File? = null
-            if (update != null) {
-                val apkFile = getUpdateFile(update.versionCode)
-                if (apkFile.exists()) {
-                    downloadedFile = apkFile
-                }
-                cleanOldUpdates(update.versionCode)
-            }
-            _uiState.value = _uiState.value.copy(
-                updateInfo = update,
-                downloadedFile = downloadedFile,
-                downloadProgress = if (downloadedFile != null) 1f else 0f
-            )
+            otaUpdateManager.checkForUpdatesNow()
         }
     }
 
     fun dismissUpdate() {
-        _uiState.value = _uiState.value.copy(updateInfo = null)
+        _uiState.update { it.copy(updateInfo = null) }
     }
 
     private fun getUpdateFile(versionCode: Int): File {
