@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159748,
-      "versionName": "12.0.0-alpha1st2-37-g97e234d-nightly",
+      "versionCode": 605159750,
+      "versionName": "12.0.0-alpha1st2-39-g786ba1c-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "fix: Prevent \"Job was cancelled\" error on navigation during login",
+      "changelog": "fix: Prevent libhwui SIGABRT by refactoring map rendering",
       "force": false
     },
     "release": {
-      "versionCode": 605159748,
-      "versionName": "12.0.0-alpha1st2-37-g97e234d-nightly",
+      "versionCode": 605159750,
+      "versionName": "12.0.0-alpha1st2-39-g786ba1c-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "fix: Prevent \"Job was cancelled\" error on navigation during login",
+      "changelog": "fix: Prevent libhwui SIGABRT by refactoring map rendering",
       "force": false
     }
   }
