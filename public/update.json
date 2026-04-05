@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159746,
-      "versionName": "12.0.0-alpha1st2-35-g3ed1f96-nightly",
+      "versionCode": 605159747,
+      "versionName": "12.0.0-alpha1st2-36-g5506fc0-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "refactor: remove user tier filtering from VPN API requests\n\n* refactor: remove the `Tier` query parameter from `getLogicalServers` and `getLoads` endpoints in `ProtonVpnApi`\n* refactor: update `VpnRepository` and associated unit tests to remove `userTier` arguments when fetching server data\n* chore: simplify logging in `TokenAuthenticator` by removing references to HTTP 402 and focusing on 401 Unauthorized\n* test: update `TokenAuthenticatorTest` to use realistic API endpoint URLs in mock responses to improve test fidelity",
+      "changelog": "feat: support dynamic VPN IP and DNS assignment from session data\n\n* feat: update `SessionEntity` and database schema to version 14 to include `vpnIpv4`, `vpnIpv6`, and `vpnDns` columns\n* feat: implement database migration `MIGRATION_13_14` to support new network assignment fields in the `session` table\n* feat: extend `CreateCertificateResponse` to parse IPv4, IPv6, and DNS information from the provider API\n* refactor: update `AmneziaVpnManager` and `DebugSettingsViewModel` to prioritize session-specific IP and DNS assignments over hardcoded defaults\n* feat: update `AuthRepository` and `VpnRepository` to extract and persist assigned network parameters during authentication and key registration steps",
       "force": false
     },
     "release": {
-      "versionCode": 605159746,
-      "versionName": "12.0.0-alpha1st2-35-g3ed1f96-nightly",
+      "versionCode": 605159747,
+      "versionName": "12.0.0-alpha1st2-36-g5506fc0-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "refactor: remove user tier filtering from VPN API requests\n\n* refactor: remove the `Tier` query parameter from `getLogicalServers` and `getLoads` endpoints in `ProtonVpnApi`\n* refactor: update `VpnRepository` and associated unit tests to remove `userTier` arguments when fetching server data\n* chore: simplify logging in `TokenAuthenticator` by removing references to HTTP 402 and focusing on 401 Unauthorized\n* test: update `TokenAuthenticatorTest` to use realistic API endpoint URLs in mock responses to improve test fidelity",
+      "changelog": "feat: support dynamic VPN IP and DNS assignment from session data\n\n* feat: update `SessionEntity` and database schema to version 14 to include `vpnIpv4`, `vpnIpv6`, and `vpnDns` columns\n* feat: implement database migration `MIGRATION_13_14` to support new network assignment fields in the `session` table\n* feat: extend `CreateCertificateResponse` to parse IPv4, IPv6, and DNS information from the provider API\n* refactor: update `AmneziaVpnManager` and `DebugSettingsViewModel` to prioritize session-specific IP and DNS assignments over hardcoded defaults\n* feat: update `AuthRepository` and `VpnRepository` to extract and persist assigned network parameters during authentication and key registration steps",
       "force": false
     }
   }
