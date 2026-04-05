@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159752,
-      "versionName": "12.0.0-alpha1st2-41-g197ed5f-nightly",
+      "versionCode": 605159753,
+      "versionName": "12.0.0-alpha1st2-42-g3e946ea-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "refactor: centralize OTA update state management in `OTAUpdateManager`\n\n* refactor: migrate `UpdateWorker` and `OTAUpdateViewModel` to use `OTAUpdateManager` as the primary interface for update checks\n* feat: implement a reactive `latestUpdate` StateFlow in `OTAUpdateManager` to broadcast update availability across the app\n* feat: update `SettingsViewModel` and `SettingsScreen` to observe update status and display appropriate UI feedback when a new version is available\n* refactor: simplify UI state updates in `OTAUpdateViewModel` using `MutableStateFlow.update`\n* chore: suppress lint warning for intentional division by zero in `DebugSettingsViewModel`",
+      "changelog": "feat: implement Material 3 expressive progress indicators\n\n* feat: update Compose Material 3 to `1.5.0-alpha16` in `libs.versions.toml` to access experimental expressive APIs\n* feat: create `ExpressiveCircularProgressIndicator` and `ExpressiveLinearProgressIndicator` components in `ExpressiveProgress.kt`\n* refactor: replace standard progress indicators with expressive variants across login, dashboard, OTA, and settings screens\n* docs: add GNU GPL license headers to `OTAUpdateScreen.kt` and `ExpressiveProgress.kt`",
       "force": false
     },
     "release": {
-      "versionCode": 605159752,
-      "versionName": "12.0.0-alpha1st2-41-g197ed5f-nightly",
+      "versionCode": 605159753,
+      "versionName": "12.0.0-alpha1st2-42-g3e946ea-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "refactor: centralize OTA update state management in `OTAUpdateManager`\n\n* refactor: migrate `UpdateWorker` and `OTAUpdateViewModel` to use `OTAUpdateManager` as the primary interface for update checks\n* feat: implement a reactive `latestUpdate` StateFlow in `OTAUpdateManager` to broadcast update availability across the app\n* feat: update `SettingsViewModel` and `SettingsScreen` to observe update status and display appropriate UI feedback when a new version is available\n* refactor: simplify UI state updates in `OTAUpdateViewModel` using `MutableStateFlow.update`\n* chore: suppress lint warning for intentional division by zero in `DebugSettingsViewModel`",
+      "changelog": "feat: implement Material 3 expressive progress indicators\n\n* feat: update Compose Material 3 to `1.5.0-alpha16` in `libs.versions.toml` to access experimental expressive APIs\n* feat: create `ExpressiveCircularProgressIndicator` and `ExpressiveLinearProgressIndicator` components in `ExpressiveProgress.kt`\n* refactor: replace standard progress indicators with expressive variants across login, dashboard, OTA, and settings screens\n* docs: add GNU GPL license headers to `OTAUpdateScreen.kt` and `ExpressiveProgress.kt`",
       "force": false
     }
   }
