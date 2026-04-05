@@ -49,7 +49,10 @@ class TokenAuthenticator @Inject constructor(
                           requestHost == "shimmering-stroopwafel-51675e.netlify.app" ||
                           requestHost == "api.protonnext.qzz.io"
         
-        if (!isProtonApi) {
+        // Do not attempt to authenticate if it's already an authentication or refresh request
+        val isAuthRequest = requestUrl.encodedPath.contains("auth/v4")
+        
+        if (!isProtonApi || isAuthRequest) {
             return null
         }
 

@@ -120,6 +120,8 @@
     <string name="api_bypass_strategy_netlify_desc">Спрямовує запити API через захищений проксі-сервер Netlify.</string>
     <string name="api_bypass_strategy_cloudflare">Проксі Cloudflare</string>
     <string name="api_bypass_strategy_cloudflare_desc">Маршрутизація запитів API через високопродуктивний Cloudflare worker.</string>
+    <string name="api_bypass_strategy_mirrors">Дзеркала Proton (DoH)</string>
+    <string name="api_bypass_strategy_mirrors_desc">Знаходить і використовує динамічні дзеркала Proton API через DNS-over-HTTPS fallback.</string>
 
     <!-- Custom DNS -->
     <string name="settings_custom_dns">Користувацький DNS</string>
@@ -476,6 +478,7 @@
     <string name="hint_session_json">JSON сесії</string>
     <string name="debug_btn_export_session">Експорт сесії (Буфер)</string>
     <string name="debug_btn_import_session">Імпорт сесії</string>
+    <string name="debug_btn_fetch_domains">Отримати доступні домени (буфер)</string>
     <string name="debug_export_session_title">Експорт конфіденційних даних</string>
     <string name="debug_export_session_msg">Це скопіює вашу повну сесію (включаючи токени та приватні ключі) в буфер обміну. НЕ діліться цим ні з ким!</string>
     <string name="debug_import_session_warning">УВАГА: Імпорт сесії перезапише поточну. Використовуйте з обережністю.</string>

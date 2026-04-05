@@ -46,6 +46,7 @@ class SettingsManager @Inject constructor(
     companion object {
         const val STRATEGY_NETLIFY = "netlify"
         const val STRATEGY_CLOUDFLARE = "cloudflare"
+        const val STRATEGY_PROTON_MIRRORS = "proton_mirrors"
 
         private val KILL_SWITCH = booleanPreferencesKey("kill_switch")
         private val AUTO_CONNECT = booleanPreferencesKey("auto_connect")
@@ -72,6 +73,11 @@ class SettingsManager @Inject constructor(
         // API Bypass Settings
         private val API_BYPASS_ENABLED = booleanPreferencesKey("api_bypass_enabled")
         private val API_BYPASS_STRATEGY = stringPreferencesKey("api_bypass_strategy")
+
+        // API Mirroring / Spoofing Settings
+        private val SPOOF_COUNTRY_ENABLED = booleanPreferencesKey("spoof_country_enabled")
+        private val SPOOF_COUNTRY_NULL = booleanPreferencesKey("spoof_country_null")
+        private val SPOOF_COUNTRY_CODE = stringPreferencesKey("spoof_country_code")
 
         private val OBFUSCATION_ENABLED = booleanPreferencesKey("obfuscation_enabled")
         private val OBFUSCATION_ADVANCED_MODE = booleanPreferencesKey("obfuscation_advanced_mode")
@@ -149,6 +155,10 @@ class SettingsManager @Inject constructor(
     val apiBypassEnabled: Flow<Boolean> = context.dataStore.data.map { it[API_BYPASS_ENABLED] ?: false }
     val apiBypassStrategy: Flow<String> = context.dataStore.data.map { it[API_BYPASS_STRATEGY] ?: "netlify" }
 
+    val spoofCountryEnabled: Flow<Boolean> = context.dataStore.data.map { it[SPOOF_COUNTRY_ENABLED] ?: false }
+    val spoofCountryNull: Flow<Boolean> = context.dataStore.data.map { it[SPOOF_COUNTRY_NULL] ?: false }
+    val spoofCountryCode: Flow<String> = context.dataStore.data.map { it[SPOOF_COUNTRY_CODE] ?: "" }
+
     val obfuscationEnabled: Flow<Boolean> = context.dataStore.data.map { it[OBFUSCATION_ENABLED] ?: false }
     val obfuscationAdvancedMode: Flow<Boolean> = context.dataStore.data.map { it[OBFUSCATION_ADVANCED_MODE] ?: false }
     val selectedProfileId: Flow<String> = context.dataStore.data.map { it[SELECTED_PROFILE_ID] ?: "standard_1" }
@@ -176,7 +186,15 @@ class SettingsManager @Inject constructor(
     fun isLogsEnabledSync(): Boolean = prefs.getBoolean("sentry_logs_enabled", true)
 
     fun isApiBypassEnabledSync(): Boolean = prefs.getBoolean("api_bypass_enabled", false)
-    fun getApiBypassStrategySync(): String = prefs.getString("api_bypass_strategy", "netlify") ?: "netlify"
+    fun getApiBypassStrategySync(): String {
+        val strategy = prefs.getString("api_bypass_strategy", "netlify") ?: "netlify"
+        ProtonLogger.d("SettingsManager", "Sync get strategy: $strategy")
+        return strategy
+    }
+
+    fun isSpoofCountryEnabledSync(): Boolean = prefs.getBoolean("spoof_country_enabled", false)
+    fun isSpoofCountryNullSync(): Boolean = prefs.getBoolean("spoof_country_null", false)
+    fun getSpoofCountryCodeSync(): String = prefs.getString("spoof_country_code", "") ?: ""
 
     val quickConnectStrategy: Flow<String> = context.dataStore.data.map { it[QUICK_CONNECT_STRATEGY] ?: "fastest" }
     val quickConnectTargetId: Flow<String?> = context.dataStore.data.map { it[QUICK_CONNECT_TARGET_ID] }
@@ -303,8 +321,24 @@ class SettingsManager @Inject constructor(
     }
 
     suspend fun setApiBypassStrategy(strategy: String) {
+        ProtonLogger.d("SettingsManager", "Setting strategy to: $strategy")
         prefs.edit { putString("api_bypass_strategy", strategy) }
         context.dataStore.edit { it[API_BYPASS_STRATEGY] = strategy }
+    }
+
+    suspend fun setSpoofCountryEnabled(enabled: Boolean) {
+        prefs.edit { putBoolean("spoof_country_enabled", enabled) }
+        context.dataStore.edit { it[SPOOF_COUNTRY_ENABLED] = enabled }
+    }
+
+    suspend fun setSpoofCountryNull(enabled: Boolean) {
+        prefs.edit { putBoolean("spoof_country_null", enabled) }
+        context.dataStore.edit { it[SPOOF_COUNTRY_NULL] = enabled }
+    }
+
+    suspend fun setSpoofCountryCode(code: String) {
+        prefs.edit { putString("spoof_country_code", code) }
+        context.dataStore.edit { it[SPOOF_COUNTRY_CODE] = code }
     }
 
     suspend fun setObfuscationEnabled(enabled: Boolean) {

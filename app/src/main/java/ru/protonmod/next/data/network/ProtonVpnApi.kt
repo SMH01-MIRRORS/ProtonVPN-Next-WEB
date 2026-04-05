@@ -37,6 +37,12 @@ data class CityTranslationsResponse(
     val states: Map<String, Map<String, String?>>,
 )
 
+@Serializable
+data class ConnectingDomainResponse(
+    @SerialName("Code") val code: Int,
+    @SerialName("Domain") val domain: String? = null
+)
+
 interface ProtonVpnApi {
 
     /**
@@ -84,6 +90,13 @@ interface ProtonVpnApi {
         @Header("x-pm-uid") sessionId: String,
         @Header("x-pm-locale") languageTag: String,
     ): CityTranslationsResponse
+
+    @GET("vpn/v1/servers/{serverId}")
+    suspend fun getServerDomain(
+        @Header("Authorization") authorization: String,
+        @Header("x-pm-uid") sessionId: String,
+        @retrofit2.http.Path(value = "serverId", encoded = true) serverId: String
+    ): ConnectingDomainResponse
 
     /**
      * Registers the WireGuard public key and obtains the internal VPN IP.

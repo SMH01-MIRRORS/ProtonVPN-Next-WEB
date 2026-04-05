@@ -261,6 +261,9 @@ class AuthRepository @Inject constructor(
                 return@withContext Result.failure(e)
             }
             
+            // Clear state on any non-cancellation exception to ensure clean retry
+            clearPendingAuth()
+            
             if (e !is HttpException) ProtonLogger.e(TAG, "[Login] Exception thrown", e)
             ProtonLogger.addSentryBreadcrumb(TAG, "Auth Step: Failed (${e.message})", SentryLevel.ERROR, "auth.flow")
             handleHttpError(e)
@@ -331,6 +334,9 @@ class AuthRepository @Inject constructor(
                 clearPendingAuth()
                 return@withContext Result.failure(e)
             }
+            
+            // Clear state on any non-cancellation exception to ensure clean retry
+            clearPendingAuth()
             
             if (e !is HttpException) ProtonLogger.e(TAG, "[AnonymousLogin] Exception thrown", e)
             handleHttpError(e)
@@ -430,6 +436,25 @@ class AuthRepository @Inject constructor(
         }
     }
 
+    suspend fun getAvailableDomains(type: String = "login"): Result<List<String>> = withContext(dispatcherProvider.io()) {
+        try {
+            val session = sessionDao.getSession()
+            val authHeader = session?.accessToken?.let { "Bearer $it" }
+            val response = authApi.getAvailableDomains(
+                authorization = authHeader,
+                sessionId = session?.sessionId,
+                type = type
+            )
+            if (response.code == 1000) {
+                Result.success(response.domains)
+            } else {
+                Result.failure(Exception("Failed to get available domains: Code ${response.code}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     private fun buildChallengePayload(): JsonObject {
         return buildJsonObject {
             putJsonObject("Payload") {
@@ -496,6 +521,13 @@ class AuthRepository @Inject constructor(
         if (e is HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
             val code = e.code()
+
+            // For auth errors during a failed login flow, clear cached tokens to prevent 
+            // the "invalid access token" loop on retry.
+            if (code == 401 || code == 403 || code == 422) {
+                ProtonLogger.w(TAG, "Auth-related error ($code). Clearing pending auth state to allow clean retry.")
+                clearPendingAuth()
+            }
 
             if (code == 422 && errorBody != null) {
                 try {

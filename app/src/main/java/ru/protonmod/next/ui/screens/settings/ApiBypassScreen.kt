@@ -258,6 +258,20 @@ fun ApiBypassScreen(
                                     onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_CLOUDFLARE) }
                                 )
 
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(horizontal = 24.dp),
+                                    color = colors.separatorNorm.copy(alpha = 0.2f)
+                                )
+
+                                // Strategy 3: Proton Mirrors (DoH)
+                                StrategySelectionRow(
+                                    title = stringResource(R.string.api_bypass_strategy_mirrors),
+                                    description = stringResource(R.string.api_bypass_strategy_mirrors_desc),
+                                    icon = Icons.Rounded.Public,
+                                    isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_PROTON_MIRRORS,
+                                    onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_PROTON_MIRRORS) }
+                                )
+
                                 // Future strategies can be added here easily
                             }
                         }

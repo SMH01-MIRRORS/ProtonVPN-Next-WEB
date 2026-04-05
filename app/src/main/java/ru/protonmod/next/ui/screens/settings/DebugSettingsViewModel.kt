@@ -411,4 +411,27 @@ class DebugSettingsViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(message = "Non-fatal exception captured in Sentry")
         }
     }
+
+    fun fetchAvailableDomains() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            val result = authRepository.getAvailableDomains()
+            
+            result.onSuccess { domains ->
+                val domainsList = domains.joinToString("\n")
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clip = ClipData.newPlainText("ProtonVPN Domains", domainsList)
+                clipboard.setPrimaryClip(clip)
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    message = "Fetched ${domains.size} domains and copied to clipboard"
+                )
+            }.onFailure { e ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    message = "Failed to fetch domains: ${e.message}"
+                )
+            }
+        }
+    }
 }

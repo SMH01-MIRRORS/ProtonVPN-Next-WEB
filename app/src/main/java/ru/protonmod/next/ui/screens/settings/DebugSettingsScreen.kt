@@ -32,6 +32,7 @@ import androidx.compose.material.icons.rounded.FileDownload
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Input
+import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -193,6 +194,11 @@ fun DebugSettingsScreen(
                                     icon = Icons.Rounded.Input,
                                     title = stringResource(R.string.debug_btn_import_session),
                                     onClick = { showImportDialog = true }
+                                )
+                                DebugActionRow(
+                                    icon = Icons.Rounded.Public,
+                                    title = stringResource(R.string.debug_btn_fetch_domains),
+                                    onClick = { viewModel.fetchAvailableDomains() }
                                 )
                             }
                         }

@@ -88,6 +88,12 @@ data class UserInfo(
 )
 
 @Serializable
+data class AvailableDomainsResponse(
+    @SerialName("Code") val code: Int,
+    @SerialName("Domains") val domains: List<String> = emptyList()
+)
+
+@Serializable
 data class GenericResponse(
     @SerialName("Code") val code: Int
 )
@@ -145,6 +151,13 @@ interface ProtonAuthApi {
         @Header("Authorization") authorization: String,
         @Header("x-pm-uid") sessionId: String
     ): UserResponse
+
+    @GET("core/v4/domains/available")
+    suspend fun getAvailableDomains(
+        @Header("Authorization") authorization: String? = null,
+        @Header("x-pm-uid") sessionId: String? = null,
+        @retrofit2.http.Query("Type") type: String = "login"
+    ): AvailableDomainsResponse
 
     /**
      * Invalidate the current session on the server.

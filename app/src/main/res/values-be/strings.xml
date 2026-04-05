@@ -120,6 +120,8 @@
     <string name="api_bypass_strategy_netlify_desc">Накіроўвае запыты API праз абаронены проксі-сервер Netlify.</string>
     <string name="api_bypass_strategy_cloudflare">Проксі Cloudflare</string>
     <string name="api_bypass_strategy_cloudflare_desc">Маршрутызацыя запытаў API праз высокапрадукцыйны Cloudflare worker.</string>
+    <string name="api_bypass_strategy_mirrors">Люстэрка Proton (DoH)</string>
+    <string name="api_bypass_strategy_mirrors_desc">Знаходзіць і выкарыстоўвае дынамічныя люстэрка Proton API праз DNS-over-HTTPS fallback.</string>
 
     <!-- Custom DNS -->
     <string name="settings_custom_dns">Карыстальніцкі DNS</string>
@@ -476,6 +478,7 @@
     <string name="hint_session_json">JSON сесіі</string>
     <string name="debug_btn_export_session">Экспарт сесіі (Буфер)</string>
     <string name="debug_btn_import_session">Імпарт сесіі</string>
+    <string name="debug_btn_fetch_domains">Атрымаць даступныя дамены (буфер)</string>
     <string name="debug_export_session_title">Экспарт канфідэнцыйных дадзеных</string>
     <string name="debug_export_session_msg">Гэта скапіюе вашу поўную сесію (уключаючы токены і прыватныя ключы) у буфер абмену. НЕ дзяліцеся гэтым ні з кім!</string>
     <string name="debug_import_session_warning">УВАГА: Імпарт сесіі перазапіша бягучую. Выкарыстоўвайце з асцярожнасцю.</string>

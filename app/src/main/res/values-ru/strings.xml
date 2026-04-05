@@ -122,6 +122,8 @@
     <string name="api_bypass_strategy_netlify_desc">Направляет запросы API через защищенный прокси-сервер Netlify.</string>
     <string name="api_bypass_strategy_cloudflare">Прокси Cloudflare</string>
     <string name="api_bypass_strategy_cloudflare_desc">Направляет запросы API через высокопроизводительный Cloudflare worker.</string>
+    <string name="api_bypass_strategy_mirrors">Зеркала Proton (DoH)</string>
+    <string name="api_bypass_strategy_mirrors_desc">Находит и использует динамические зеркала Proton API через DNS-over-HTTPS fallback.</string>
 
     <!-- Custom DNS -->
     <string name="settings_custom_dns">Пользовательский DNS</string>
@@ -475,6 +477,7 @@
     <string name="hint_session_json">JSON сессии</string>
     <string name="debug_btn_export_session">Экспорт сессии (Буфер)</string>
     <string name="debug_btn_import_session">Импорт сессии</string>
+    <string name="debug_btn_fetch_domains">Получить доступные домены (буфер)</string>
     <string name="debug_export_session_title">Экспорт конфиденциальных данных</string>
     <string name="debug_export_session_msg">Это скопирует вашу полную сессию (включая токены и приватные ключи) в буфер обмена. НЕ делитесь этим ни с кем!</string>
     <string name="debug_import_session_warning">ВНИМАНИЕ: Импорт сессии перезапишет текущую. Используйте с осторожностью.</string>

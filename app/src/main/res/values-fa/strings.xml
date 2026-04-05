@@ -120,6 +120,8 @@
     <string name="api_bypass_strategy_netlify_desc">درخواست‌های API را از طریق یک پراکسی امن Netlify مسیریابی می‌کند.</string>
     <string name="api_bypass_strategy_cloudflare">پراکسی Cloudflare</string>
     <string name="api_bypass_strategy_cloudflare_desc">هدایت درخواست‌های API از طریق یک ورکر با کارایی بالای کلودفلر.</string>
+    <string name="api_bypass_strategy_mirrors">آینه‌های پروتون (DoH)</string>
+    <string name="api_bypass_strategy_mirrors_desc">آینه‌های داینامیک API پروتون را از طریق سیستم جایگزین DoH شناسایی و استفاده می‌کند.</string>
 
     <!-- Custom DNS -->
     <string name="settings_custom_dns">DNS سفارشی</string>
@@ -466,6 +468,7 @@
     <string name="hint_session_json">JSON نشست</string>
     <string name="debug_btn_export_session">خروجی نشست (حافظه موقت)</string>
     <string name="debug_btn_import_session">وارد کردن نشست</string>
+    <string name="debug_btn_fetch_domains">دریافت دامنه‌های موجود (حافظه موقت)</string>
     <string name="debug_export_session_title">خروجی اطلاعات حساس</string>
     <string name="debug_export_session_msg">این کار تمام اطلاعات نشست شما (از جمله توکن‌ها و کلیدهای خصوصی) را در حافظه موقت کپی می‌کند. آن را با هیچ‌کس به اشتراک نگذارید!</string>
     <string name="debug_import_session_warning">هشدار: وارد کردن نشست جدید جایگزین نشست فعلی خواهد شد. با احتیاط استفاده کنید.</string>

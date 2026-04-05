@@ -120,6 +120,8 @@
     <string name="api_bypass_strategy_netlify_desc">通过安全的 Netlify 代理路由 API 请求。</string>
     <string name="api_bypass_strategy_cloudflare">Cloudflare 代理</string>
     <string name="api_bypass_strategy_cloudflare_desc">通过高性能 Cloudflare worker 路由 API 请求。</string>
+    <string name="api_bypass_strategy_mirrors">Proton 镜像 (DoH)</string>
+    <string name="api_bypass_strategy_mirrors_desc">通过 DNS-over-HTTPS fallback 发现并使用动态 Proton API 镜像。</string>
 
     <!-- Custom DNS -->
     <string name="settings_custom_dns">自定义 DNS</string>
@@ -461,6 +463,7 @@
     <string name="hint_session_json">会话 JSON</string>
     <string name="debug_btn_export_session">导出会话 (剪贴板)</string>
     <string name="debug_btn_import_session">导入会话</string>
+    <string name="debug_btn_fetch_domains">获取可用域 (剪贴板)</string>
     <string name="debug_export_session_title">导出敏感数据</string>
     <string name="debug_export_session_msg">这将把您的完整会话（包括令牌和私钥）复制到剪贴板。切勿与任何人共享！</string>
     <string name="debug_import_session_warning">警告：导入会话将覆盖当前的会话。请谨慎使用。</string>

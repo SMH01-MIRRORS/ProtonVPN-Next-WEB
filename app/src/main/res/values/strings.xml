@@ -122,6 +122,8 @@
     <string name="api_bypass_strategy_netlify_desc">Routes API requests through a secure Netlify proxy.</string>
     <string name="api_bypass_strategy_cloudflare">Cloudflare Proxy</string>
     <string name="api_bypass_strategy_cloudflare_desc">Routes API requests through a high-performance Cloudflare worker.</string>
+    <string name="api_bypass_strategy_mirrors">Proton Mirrors (DoH)</string>
+    <string name="api_bypass_strategy_mirrors_desc">Discovers and uses dynamic Proton API mirrors via DNS-over-HTTPS fallback.</string>
 
     <!-- Custom DNS -->
     <string name="settings_custom_dns">Custom DNS</string>
@@ -465,6 +467,7 @@
     <string name="hint_session_json">Session JSON</string>
     <string name="debug_btn_export_session">Export Session (Clipboard)</string>
     <string name="debug_btn_import_session">Import Session</string>
+    <string name="debug_btn_fetch_domains">Fetch Available Domains (Clipboard)</string>
     <string name="debug_export_session_title">Export Sensitive Data</string>
     <string name="debug_export_session_msg">This will copy your full session (including tokens and private keys) to the clipboard. DO NOT share this with anyone!</string>
     <string name="debug_import_session_warning">WARNING: Importing a session will overwrite your current one. Use with caution.</string>

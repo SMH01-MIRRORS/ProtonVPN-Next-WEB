@@ -422,6 +422,19 @@ class VpnRepository @Inject constructor(
         }
     }
 
+    suspend fun getServerDomain(accessToken: String, sessionId: String, serverId: String): Result<String> = withContext(dispatcherProvider.io()) {
+        try {
+            val response = vpnApi.getServerDomain("Bearer $accessToken", sessionId, serverId)
+            if (response.code == 1000 && response.domain != null) {
+                Result.success(response.domain)
+            } else {
+                Result.failure(Exception("Failed to get server domain: Code ${response.code}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun registerWireGuardKey(
         accessToken: String,
         sessionId: String,
