@@ -204,7 +204,7 @@ fun NavGraphBuilder.appNavGraph(
         PortSelectionScreen(
             currentPort = currentPort,
             onBack = { navController.popBackStack() },
-            onPortSelected = { port ->
+            onPortSelect = { port ->
                 if (isGlobal) {
                     viewModel.setVpnPort(port)
                 } else {
@@ -225,7 +225,7 @@ fun NavGraphBuilder.appNavGraph(
         ProtocolSelectionScreen(
             currentProtocol = currentProtocol,
             onBack = { navController.popBackStack() },
-            onProtocolSelected = { protocol ->
+            onProtocolSelect = { protocol ->
                 navController.previousBackStackEntry?.savedStateHandle?.set("selectedProtocol", protocol)
                 navController.popBackStack()
             }
@@ -241,7 +241,7 @@ fun NavGraphBuilder.appNavGraph(
         AutoOpenUrlScreen(
             currentUrl = currentUrl,
             onBack = { navController.popBackStack() },
-            onUrlSaved = { url ->
+            onUrlSave = { url ->
                 navController.previousBackStackEntry?.savedStateHandle?.set("selectedUrl", url)
                 navController.popBackStack()
             }

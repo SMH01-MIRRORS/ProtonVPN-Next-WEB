@@ -28,15 +28,14 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -44,6 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.AppTheme
@@ -56,13 +56,14 @@ import ru.protonmod.next.ui.theme.liquidGlass
 @Composable
 fun ThemeSelectionScreen(
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = ProtonNextTheme.colors
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { padding ->
@@ -75,14 +76,14 @@ fun ThemeSelectionScreen(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
+            item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }, contentType = "Header") {
                 NavigationHeader(
                     title = stringResource(R.string.settings_app_theme),
                     onBack = onBack
                 )
             }
 
-            items(AppTheme.entries) { theme ->
+            items(AppTheme.entries, key = { it.name }, contentType = { "Theme" }) { theme ->
                 ThemePreviewCard(
                     theme = theme,
                     isSelected = uiState.appTheme == theme,
@@ -175,7 +176,10 @@ fun ThemePreviewCard(
 }
 
 @Composable
-fun MiniDashboardPreview(theme: AppTheme) {
+fun MiniDashboardPreview(
+    theme: AppTheme,
+    modifier: Modifier = Modifier
+) {
     val themeColors = when (theme) {
         AppTheme.LIGHT -> ProtonColors.Light
         AppTheme.DARK -> ProtonColors.Dark
@@ -194,7 +198,7 @@ fun MiniDashboardPreview(theme: AppTheme) {
     CompositionLocalProvider(LocalColors provides themeColors) {
         val colors = ProtonNextTheme.colors
         Box(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
                 .background(colors.backgroundNorm)
         ) {

@@ -44,6 +44,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import org.json.JSONObject
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -57,11 +58,12 @@ import java.io.ByteArrayInputStream
 @Composable
 fun CaptchaScreen(
     webUrl: String,
-    sessionId: String?,
-    isApiBypassEnabled: Boolean = false,
-    apiBypassStrategy: String = "netlify",
+    onCaptchaSolve: (String) -> Unit,
     onDismiss: () -> Unit,
-    onCaptchaSolved: (String) -> Unit
+    modifier: Modifier = Modifier,
+    sessionId: String? = null,
+    isApiBypassEnabled: Boolean = false,
+    apiBypassStrategy: String = "netlify"
 ) {
     val colors = ProtonNextTheme.colors
     val coroutineScope = rememberCoroutineScope()
@@ -74,7 +76,7 @@ fun CaptchaScreen(
     val captchaHttpClient = remember {
         OkHttpClient.Builder().build()
     }
-    DisposableEffect(Unit) {
+    DisposableEffect(captchaHttpClient) {
         onDispose {
             captchaHttpClient.dispatcher.executorService.shutdown()
             captchaHttpClient.connectionPool.evictAll()
@@ -82,6 +84,7 @@ fun CaptchaScreen(
     }
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             Column {
                 TopAppBar(
@@ -199,7 +202,7 @@ fun CaptchaScreen(
 
                                             if (!token.isNullOrEmpty()) {
                                                 coroutineScope.launch {
-                                                    onCaptchaSolved(token)
+                                                    onCaptchaSolve(token)
                                                 }
                                             }
                                         }
@@ -274,10 +277,7 @@ fun CaptchaScreen(
                                                 "utf-8"
                                             }
 
-                                            val responseHeaders = response.headers.toMap().toMutableMap()
-                                            responseHeaders.keys.filter { it.equals("Content-Security-Policy", ignoreCase = true) }
-                                                .forEach { responseHeaders.remove(it) }
-                                            responseHeaders["Access-Control-Allow-Origin"] = "*"
+                                            val responseHeaders = prepareProxyResponseHeaders(response)
 
                                             var bodyStream = response.body.byteStream()
                                             if (mimeType.contains("text/html", ignoreCase = true)) {
@@ -387,4 +387,12 @@ fun CaptchaScreen(
             }
         }
     }
+}
+
+private fun prepareProxyResponseHeaders(response: Response): MutableMap<String, String> {
+    val headers = response.headers.toMap().toMutableMap()
+    headers.keys.filter { it.equals("Content-Security-Policy", ignoreCase = true) }
+        .forEach { headers.remove(it) }
+    headers["Access-Control-Allow-Origin"] = "*"
+    return headers
 }

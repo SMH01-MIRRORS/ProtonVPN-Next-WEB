@@ -44,6 +44,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentSetOf
 import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
@@ -52,11 +54,11 @@ import ru.protonmod.next.ui.utils.isTablet
 @Composable
 fun LiquidGlassBottomBar(
     selectedTarget: MainTarget?,
+    navigateTo: (MainTarget) -> Unit,
+    modifier: Modifier = Modifier,
     showCountries: Boolean = true,
     showGateways: Boolean = true,
-    notificationDots: Set<MainTarget> = emptySet(),
-    navigateTo: (MainTarget) -> Unit,
-    modifier: Modifier = Modifier
+    notificationDots: ImmutableSet<MainTarget> = persistentSetOf()
 ) {
     val isTablet = isTablet()
 
@@ -76,17 +78,17 @@ fun LiquidGlassBottomBar(
     ) {
         Box(
             modifier = Modifier
-                .padding(horizontal = 24.dp)
                 .widthIn(max = if (isTablet) 400.dp else 600.dp) // Limit width on tablets
-                .liquidGlass(
-                    shape = glassShape,
-                    alpha = 0.85f,
-                    shadowElevation = 15.dp
-                )
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = {}
+                )
+                .padding(horizontal = 24.dp)
+                .liquidGlass(
+                    shape = glassShape,
+                    alpha = 0.85f,
+                    shadowElevation = 15.dp
                 )
         ) {
             Row(

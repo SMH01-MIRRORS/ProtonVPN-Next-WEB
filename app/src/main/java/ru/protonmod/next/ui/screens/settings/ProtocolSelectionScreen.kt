@@ -24,10 +24,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -45,12 +44,13 @@ import ru.protonmod.next.ui.theme.liquidGlass
 fun ProtocolSelectionScreen(
     currentProtocol: String,
     onBack: () -> Unit,
-    onProtocolSelected: (String) -> Unit
+    onProtocolSelect: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
-    val protocols = listOf("AmneziaWG") // Add more if needed later
+    val protocols = remember { listOf("AmneziaWG") } // Add more if needed later
 
-    Box(modifier = Modifier.fillMaxSize().background(colors.backgroundNorm)) {
+    Box(modifier = modifier.fillMaxSize().background(colors.backgroundNorm)) {
         // Background gradient
         Box(
             modifier = Modifier
@@ -75,7 +75,7 @@ fun ProtocolSelectionScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                item {
+                item(contentType = "Header") {
                     NavigationHeader(
                         title = stringResource(R.string.title_select_protocol),
                         onBack = onBack,
@@ -83,7 +83,7 @@ fun ProtocolSelectionScreen(
                     )
                 }
 
-                items(protocols) { protocol ->
+                items(protocols, key = { it }, contentType = { "Protocol" }) { protocol ->
                     val isSelected = protocol == currentProtocol
                     
                     Box(
@@ -94,7 +94,7 @@ fun ProtocolSelectionScreen(
                                 alpha = if (isSelected) 0.6f else 0.4f,
                                 shadowElevation = 0.dp
                             )
-                            .clickable { onProtocolSelected(protocol) }
+                            .clickable { onProtocolSelect(protocol) }
                     ) {
                         Row(
                             modifier = Modifier
@@ -126,7 +126,7 @@ fun ProtocolSelectionScreen(
                             } else {
                                 RadioButton(
                                     selected = false,
-                                    onClick = { onProtocolSelected(protocol) },
+                                    onClick = { onProtocolSelect(protocol) },
                                     colors = RadioButtonDefaults.colors(unselectedColor = colors.shade60)
                                 )
                             }

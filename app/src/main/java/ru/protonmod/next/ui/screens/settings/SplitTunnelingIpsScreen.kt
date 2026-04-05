@@ -44,6 +44,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -51,17 +52,18 @@ import ru.protonmod.next.ui.theme.ProtonNextTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SplitTunnelingIpsScreen(
+    modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
     viewModel: SplitTunnelingIpsViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var inputValue by remember { mutableStateOf("") }
     var inputError by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
@@ -87,7 +89,7 @@ fun SplitTunnelingIpsScreen(
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                item {
+                item(contentType = "Header") {
                     NavigationHeader(
                         title = stringResource(
                             if (uiState.splitTunnelingMode == "exclude") R.string.settings_excluded_ips
@@ -97,7 +99,7 @@ fun SplitTunnelingIpsScreen(
                     )
                 }
 
-                item {
+                item(contentType = "InputRow") {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -127,7 +129,7 @@ fun SplitTunnelingIpsScreen(
                                 },
                                 keyboardOptions = KeyboardOptions(
                                     imeAction = ImeAction.Done,
-                                    keyboardType = KeyboardType.Uri
+                                    keyboardType = KeyboardType.Number
                                 ),
                                 keyboardActions = KeyboardActions(
                                     onDone = {
@@ -195,7 +197,7 @@ fun SplitTunnelingIpsScreen(
                 }
 
                 if (uiState.ips.isNotEmpty()) {
-                    item {
+                    item(contentType = "SectionHeader") {
                         Text(
                             text = stringResource(
                                 if (uiState.splitTunnelingMode == "exclude") R.string.st_excluded_ips_header
@@ -208,15 +210,15 @@ fun SplitTunnelingIpsScreen(
                         )
                     }
 
-                    items(uiState.ips) { ipEntry ->
+                    items(uiState.ips, key = { it.ip }, contentType = { "Ip" }) { ipEntry ->
                         IpListItem(
-                            modifier = Modifier.padding(horizontal = 16.dp),
                             ip = ipEntry.ip,
-                            onRemove = { viewModel.removeIp(ipEntry.ip) }
+                            onRemove = { viewModel.removeIp(ipEntry.ip) },
+                            modifier = Modifier.padding(horizontal = 16.dp)
                         )
                     }
                 } else {
-                    item {
+                    item(contentType = "EmptyState") {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -238,9 +240,9 @@ fun SplitTunnelingIpsScreen(
 
 @Composable
 fun IpListItem(
-    modifier: Modifier = Modifier,
     ip: String,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     Row(

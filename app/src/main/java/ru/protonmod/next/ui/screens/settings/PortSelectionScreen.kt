@@ -24,7 +24,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -44,13 +43,14 @@ import ru.protonmod.next.ui.theme.liquidGlass
 @Composable
 fun PortSelectionScreen(
     currentPort: Int,
+    onPortSelect: (Int) -> Unit,
     onBack: () -> Unit,
-    onPortSelected: (Int) -> Unit
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
-    val portOptions = listOf(0, 443, 123, 1194, 51820)
+    val portOptions = remember { listOf(0, 443, 123, 1194, 51820) }
 
-    Box(modifier = Modifier.fillMaxSize().background(colors.backgroundNorm)) {
+    Box(modifier = modifier.fillMaxSize().background(colors.backgroundNorm)) {
         // Background gradient
         Box(
             modifier = Modifier
@@ -75,26 +75,26 @@ fun PortSelectionScreen(
                 contentPadding = PaddingValues(bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                item {
+                item(contentType = "Header") {
                     NavigationHeader(
                         title = stringResource(R.string.settings_port),
                         onBack = onBack
                     )
                 }
 
-                items(portOptions) { port ->
+                items(portOptions, key = { it }, contentType = { "Port" }) { port ->
                     val isSelected = port == currentPort
                     
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .clickable { onPortSelect(port) }
                             .padding(horizontal = 16.dp)
                             .liquidGlass(
                                 shape = RoundedCornerShape(20.dp),
                                 alpha = if (isSelected) 0.6f else 0.4f,
                                 shadowElevation = 0.dp
                             )
-                            .clickable { onPortSelected(port) }
                     ) {
                         Row(
                             modifier = Modifier
@@ -128,7 +128,7 @@ fun PortSelectionScreen(
                             } else {
                                 RadioButton(
                                     selected = false,
-                                    onClick = { onPortSelected(port) },
+                                    onClick = { onPortSelect(port) },
                                     colors = RadioButtonDefaults.colors(unselectedColor = colors.shade60)
                                 )
                             }

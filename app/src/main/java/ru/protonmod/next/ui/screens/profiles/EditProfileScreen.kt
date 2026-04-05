@@ -51,8 +51,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.ServerLoadDisplayMode
@@ -89,14 +92,15 @@ fun EditProfileScreen(
     onNavigateToProtocolSelection: (String) -> Unit,
     onNavigateToUrlSelection: (String) -> Unit,
     navController: NavHostController,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val colors = ProtonNextTheme.colors
-    val profiles by viewModel.profiles.collectAsState()
-    val countries by viewModel.countries.collectAsState()
-    val customObfuscationConfigs by viewModel.customObfuscationConfigs.collectAsState()
-    val serverLoadDisplayMode by viewModel.serverLoadDisplayMode.collectAsState()
+    val profiles by viewModel.profiles.collectAsStateWithLifecycle()
+    val countries by viewModel.countries.collectAsStateWithLifecycle()
+    val customObfuscationConfigs by viewModel.customObfuscationConfigs.collectAsStateWithLifecycle()
+    val serverLoadDisplayMode by viewModel.serverLoadDisplayMode.collectAsStateWithLifecycle()
     val isTablet = isTablet()
 
     val editingProfile = remember(profileId, profiles) {
@@ -159,7 +163,7 @@ fun EditProfileScreen(
 
     val standardProfileName = stringResource(R.string.obfuscation_config_standard)
 
-    Box(modifier = Modifier.fillMaxSize().background(colors.backgroundNorm)) {
+    Box(modifier = modifier.fillMaxSize().background(colors.backgroundNorm)) {
         // Background gradient
         Box(
             modifier = Modifier
@@ -190,7 +194,7 @@ fun EditProfileScreen(
             ) {
                 val contentModifier = if (isTablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
 
-                item {
+                item(contentType = "Header") {
                     NavigationHeader(
                         title = if (profileId == null) stringResource(R.string.title_create_profile) else stringResource(R.string.title_edit_profile),
                         onBack = onNavigateBack,
@@ -233,8 +237,8 @@ fun EditProfileScreen(
                     )
                 }
 
-                item {
-                    Category(modifier = contentModifier.padding(horizontal = 16.dp), title = stringResource(R.string.category_general)) {
+                item(contentType = "Category") {
+                    SettingsCategory(title = stringResource(R.string.category_general), modifier = contentModifier.padding(horizontal = 16.dp)) {
                         SettingTextFieldRow(
                             label = stringResource(R.string.label_profile_name),
                             value = profileName,
@@ -243,8 +247,8 @@ fun EditProfileScreen(
                     }
                 }
 
-                item {
-                    Category(modifier = contentModifier.padding(horizontal = 16.dp), title = stringResource(R.string.category_connection)) {
+                item(contentType = "Category") {
+                    SettingsCategory(title = stringResource(R.string.category_connection), modifier = contentModifier.padding(horizontal = 16.dp)) {
                         val locationSubtitle = when {
                             targetServerId != null -> stringResource(R.string.location_server, (targetServerName ?: targetServerId) as Any)
                             targetCity != null -> {
@@ -257,34 +261,34 @@ fun EditProfileScreen(
                         }
 
                         SettingRowWithIcon(
-                            countryCode = targetCountry,
                             title = stringResource(R.string.label_location),
                             subtitle = locationSubtitle,
+                            countryCode = targetCountry,
                             onClick = { showLocationDialog = true }
                         )
 
                         SettingRowWithIcon(
-                            icon = Icons.Rounded.Security,
                             title = stringResource(R.string.label_protocol),
                             subtitle = selectedProtocol,
+                            icon = Icons.Rounded.Security,
                             onClick = { onNavigateToProtocolSelection(selectedProtocol) }
                         )
 
                         SettingRowWithIcon(
-                            icon = Icons.Rounded.Power,
                             title = stringResource(R.string.label_port),
                             subtitle = (if (selectedPort == 0) stringResource(R.string.settings_port_auto) else selectedPort.toString()),
+                            icon = Icons.Rounded.Power,
                             onClick = { onNavigateToPortSelection(selectedPort) }
                         )
                     }
                 }
 
-                item {
-                    Category(modifier = contentModifier.padding(horizontal = 16.dp), title = stringResource(R.string.category_advanced)) {
+                item(contentType = "Category") {
+                    SettingsCategory(title = stringResource(R.string.category_advanced), modifier = contentModifier.padding(horizontal = 16.dp)) {
                         SettingToggleRow(
-                            icon = Icons.Rounded.VisibilityOff,
                             title = stringResource(R.string.label_obfuscation),
                             subtitle = stringResource(R.string.obfuscation_desc),
+                            icon = Icons.Rounded.VisibilityOff,
                             checked = obfuscationEnabled,
                             onCheckedChange = { obfuscationEnabled = it }
                         )
@@ -294,9 +298,9 @@ fun EditProfileScreen(
                             val selectedConfig = allConfigs.find { it.id == obfuscationProfileId } ?: allConfigs.first()
 
                             SettingRowWithIcon(
-                                icon = Icons.Rounded.Settings,
                                 title = stringResource(R.string.label_obfuscation_config),
                                 subtitle = selectedConfig.name,
+                                icon = Icons.Rounded.Settings,
                                 onClick = { showObfuscationConfigDialog = true },
                                 modifier = Modifier.padding(start = 16.dp)
                             )
@@ -304,12 +308,12 @@ fun EditProfileScreen(
                     }
                 }
 
-                item {
-                    Category(modifier = contentModifier.padding(horizontal = 16.dp), title = stringResource(R.string.category_automation)) {
+                item(contentType = "Category") {
+                    SettingsCategory(title = stringResource(R.string.category_automation), modifier = contentModifier.padding(horizontal = 16.dp)) {
                         SettingRowWithIcon(
-                            icon = Icons.Rounded.OpenInBrowser,
                             title = stringResource(R.string.label_connect_go_website),
                             subtitle = autoOpenUrl.ifEmpty { stringResource(R.string.label_not_configured) },
+                            icon = Icons.Rounded.OpenInBrowser,
                             onClick = { onNavigateToUrlSelection(autoOpenUrl) }
                         )
                     }
@@ -323,7 +327,7 @@ fun EditProfileScreen(
                 }
 
                 if (profileId != null) {
-                    item {
+                    item(contentType = "DeleteButton") {
                         Spacer(modifier = Modifier.height(24.dp))
                         Button(
                             onClick = {
@@ -346,20 +350,21 @@ fun EditProfileScreen(
 
     if (showLocationDialog) {
         LocationSelectionDialog(
-            countries = countries,
-            selectedCountry = targetCountry,
-            selectedCity = targetCity,
-            loadDisplayMode = serverLoadDisplayMode,
-            viewModel = viewModel,
-            onDismiss = { showLocationDialog = false },
-            onLocationSelected = { country, city, cityLocalized, serverId, serverName ->
+            countries = countries.toImmutableList(),
+            onGetCities = viewModel::getCitiesForCountry,
+            onGetServers = viewModel::getServersForCity,
+            onLocationSelect = { country, city, cityLocalized, serverId, serverName ->
                 targetCountry = country
                 targetCity = city
                 targetCityLocalized = cityLocalized
                 targetServerId = serverId
                 targetServerName = serverName
                 showLocationDialog = false
-            }
+            },
+            onDismiss = { showLocationDialog = false },
+            selectedCountry = targetCountry,
+            selectedCity = targetCity,
+            loadDisplayMode = serverLoadDisplayMode
         )
     }
 
@@ -367,10 +372,10 @@ fun EditProfileScreen(
         val newConfigName = stringResource(R.string.custom_config_name, customObfuscationConfigs.size + 1)
 
         ObfuscationConfigSelectionDialog(
-            configs = listOf(ObfuscationProfile.getStandardProfile(standardProfileName)) + customObfuscationConfigs,
+            configs = (listOf(ObfuscationProfile.getStandardProfile(standardProfileName)) + customObfuscationConfigs).toImmutableList(),
             selectedId = obfuscationProfileId,
             onDismiss = { showObfuscationConfigDialog = false },
-            onConfigSelected = {
+            onConfigSelect = {
                 obfuscationProfileId = it
                 showObfuscationConfigDialog = false
             },
@@ -399,14 +404,15 @@ fun EditProfileScreen(
 @Composable
 fun SelectionCard(
     title: String,
-    icon: @Composable () -> Unit,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     load: Int? = null,
     displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
-    onClick: () -> Unit
+    icon: @Composable () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.5f)
             .clickable(onClick = onClick)
@@ -456,13 +462,15 @@ fun SelectionCard(
 
 @Composable
 fun LocationSelectionDialog(
-    countries: List<CountryDisplayItem>,
-    selectedCountry: String?,
-    selectedCity: String?,
-    loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
-    viewModel: ProfilesViewModel,
+    countries: ImmutableList<CountryDisplayItem>,
+    onGetCities: suspend (String) -> List<CityDisplayItem>,
+    onGetServers: suspend (String, String) -> List<LogicalServer>,
+    onLocationSelect: (country: String?, city: String?, cityLocalized: String?, serverId: String?, serverName: String?) -> Unit,
     onDismiss: () -> Unit,
-    onLocationSelected: (String?, String?, String?, String?, String?) -> Unit
+    modifier: Modifier = Modifier,
+    selectedCountry: String? = null,
+    selectedCity: String? = null,
+    loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
 ) {
     val context = LocalContext.current
     val colors = ProtonNextTheme.colors
@@ -477,192 +485,197 @@ fun LocationSelectionDialog(
     var cities by remember { mutableStateOf<List<CityDisplayItem>>(emptyList()) }
     var servers by remember { mutableStateOf<List<LogicalServer>>(emptyList()) }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = colors.backgroundNorm),
-            border = BorderStroke(1.dp, colors.shade100.copy(alpha = 0.05f))
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(vertical = 16.dp)
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.85f)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+    Box(modifier = modifier) {
+        Dialog(onDismissRequest = onDismiss) {
+            Box(modifier = Modifier) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = colors.backgroundNorm),
+                    border = BorderStroke(1.dp, colors.shade100.copy(alpha = 0.05f))
                 ) {
-                    if (step > 0) {
-                        IconButton(onClick = { step-- }, enabled = !isTransitioning) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                                contentDescription = stringResource(R.string.desc_back),
-                                tint = colors.textNorm
-                            )
-                        }
-                    } else {
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                    
-                    Text(
-                        text = when(step) {
-                            0 -> stringResource(R.string.title_select_country)
-                            1 -> stringResource(R.string.title_select_city)
-                            else -> stringResource(R.string.title_select_server)
-                        },
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = colors.textNorm,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.desc_close), tint = colors.iconWeak)
-                    }
-                }
-
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = colors.shade20.copy(alpha = 0.5f))
-
-                AnimatedContent(
-                    targetState = step,
-                    label = "location_step",
-                    modifier = Modifier.weight(1f)
-                ) { currentStep ->
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    Column(
+                        modifier = Modifier
+                            .padding(vertical = 16.dp)
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.85f)
                     ) {
-                        item {
-                            SelectionCard(
-                                title = when(currentStep) {
-                                    0 -> stringResource(R.string.location_fastest)
-                                    1 -> stringResource(R.string.location_fastest_in_country, CountryUtils.getCountryName(context, currentCountry))
-                                    else -> stringResource(R.string.location_fastest_in_city, getLocalizedCityName(context, currentCity ?: ""))
-                                },
-                                displayMode = loadDisplayMode,
-                                icon = {
-                                    FlagIcon(
-                                        countryFlag = R.drawable.flag_fastest,
-                                        size = DpSize(36.dp, 24.dp)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (step > 0) {
+                                IconButton(onClick = { step-- }, enabled = !isTransitioning) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                                        contentDescription = stringResource(R.string.desc_back),
+                                        tint = colors.textNorm
                                     )
+                                }
+                            } else {
+                                Spacer(modifier = Modifier.width(8.dp))
+                            }
+
+                            Text(
+                                text = when (step) {
+                                    0 -> stringResource(R.string.title_select_country)
+                                    1 -> stringResource(R.string.title_select_city)
+                                    else -> stringResource(R.string.title_select_server)
                                 },
-                                onClick = {
-                                    if (!isTransitioning) {
-                                        when(currentStep) {
-                                            0 -> onLocationSelected(null, null, null, null, null)
-                                            1 -> onLocationSelected(currentCountry, null, null, null, null)
-                                            2 -> onLocationSelected(currentCountry, currentCity, currentCityLocalized, null, null)
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = colors.textNorm,
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            IconButton(onClick = onDismiss) {
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.desc_close), tint = colors.iconWeak)
+                            }
+                        }
+
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = colors.shade20.copy(alpha = 0.5f))
+
+                        AnimatedContent(
+                            targetState = step,
+                            label = "location_step",
+                            modifier = Modifier.weight(1f)
+                        ) { currentStep ->
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                item(contentType = "QuickSelect") {
+                                    SelectionCard(
+                                        title = when (currentStep) {
+                                            0 -> stringResource(R.string.location_fastest)
+                                            1 -> stringResource(R.string.location_fastest_in_country, CountryUtils.getCountryName(context, currentCountry))
+                                            else -> stringResource(R.string.location_fastest_in_city, getLocalizedCityName(context, currentCity ?: ""))
+                                        },
+                                        displayMode = loadDisplayMode,
+                                        icon = {
+                                            FlagIcon(
+                                                countryFlag = R.drawable.flag_fastest,
+                                                size = DpSize(36.dp, 24.dp)
+                                            )
+                                        },
+                                        onClick = {
+                                            if (!isTransitioning) {
+                                                when (currentStep) {
+                                                    0 -> onLocationSelect(null, null, null, null, null)
+                                                    1 -> onLocationSelect(currentCountry, null, null, null, null)
+                                                    2 -> onLocationSelect(currentCountry, currentCity, currentCityLocalized, null, null)
+                                                }
+                                            }
+                                        }
+                                    )
+                                }
+
+                                when (currentStep) {
+                                    0 -> {
+                                        items(countries, key = { it.code }, contentType = { "Country" }) { countryItem ->
+                                            val localizedName = CountryUtils.getCountryName(context, countryItem.code)
+                                            val flagResId = CountryUtils.getFlagResource(context, countryItem.code)
+                                            SelectionCard(
+                                                title = localizedName,
+                                                icon = {
+                                                    if (flagResId != 0) {
+                                                        FlagIcon(
+                                                            countryFlag = flagResId,
+                                                            size = DpSize(36.dp, 24.dp)
+                                                        )
+                                                    } else {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .size(36.dp, 24.dp)
+                                                                .clip(RoundedCornerShape(6.dp))
+                                                                .background(colors.backgroundNorm),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            Icon(imageVector = Icons.Rounded.Public, contentDescription = null, tint = colors.iconNorm, modifier = Modifier.size(20.dp))
+                                                        }
+                                                    }
+                                                },
+                                                load = countryItem.averageLoad,
+                                                displayMode = loadDisplayMode,
+                                                onClick = {
+                                                    if (!isTransitioning) {
+                                                        scope.launch {
+                                                            isTransitioning = true
+                                                            cities = onGetCities(countryItem.code)
+                                                            currentCountry = countryItem.code
+                                                            step = 1
+                                                            isTransitioning = false
+                                                        }
+                                                    }
+                                                }
+                                            )
                                         }
                                     }
-                                }
-                            )
-                        }
-
-                        when (currentStep) {
-                            0 -> {
-                                items(countries) { countryItem ->
-                                    val localizedName = CountryUtils.getCountryName(context, countryItem.code)
-                                    val flagResId = CountryUtils.getFlagResource(context, countryItem.code)
-                                    SelectionCard(
-                                        title = localizedName,
-                                        icon = {
-                                            if (flagResId != 0) {
-                                                FlagIcon(
-                                                    countryFlag = flagResId,
-                                                    size = DpSize(36.dp, 24.dp)
-                                                )
-                                            } else {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .size(36.dp, 24.dp)
-                                                        .clip(RoundedCornerShape(6.dp))
-                                                        .background(colors.backgroundNorm),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    Icon(imageVector = Icons.Rounded.Public, contentDescription = null, tint = colors.iconNorm, modifier = Modifier.size(20.dp))
+                                    1 -> {
+                                        items(cities, key = { it.name }, contentType = { "City" }) { cityItem ->
+                                            SelectionCard(
+                                                title = cityItem.localizedName,
+                                                icon = {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(36.dp, 24.dp)
+                                                            .clip(RoundedCornerShape(6.dp))
+                                                            .background(colors.backgroundNorm),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Icon(imageVector = Icons.Default.LocationCity, contentDescription = null, tint = colors.iconNorm, modifier = Modifier.size(20.dp))
+                                                    }
+                                                },
+                                                load = cityItem.averageLoad,
+                                                displayMode = loadDisplayMode,
+                                                onClick = {
+                                                    if (!isTransitioning) {
+                                                        scope.launch {
+                                                            isTransitioning = true
+                                                            servers = onGetServers(currentCountry!!, cityItem.name)
+                                                            currentCity = cityItem.name
+                                                            currentCityLocalized = cityItem.localizedName
+                                                            step = 2
+                                                            isTransitioning = false
+                                                        }
+                                                    }
                                                 }
-                                            }
-                                        },
-                                        load = countryItem.averageLoad,
-                                        displayMode = loadDisplayMode,
-                                        onClick = {
-                                            if (!isTransitioning) {
-                                                scope.launch {
-                                                    isTransitioning = true
-                                                    cities = viewModel.getCitiesForCountry(countryItem.code)
-                                                    currentCountry = countryItem.code
-                                                    step = 1
-                                                    isTransitioning = false
+                                            )
+                                        }
+                                    }
+                                    else -> {
+                                        items(servers, key = { it.id }, contentType = { "Server" }) { server ->
+                                            SelectionCard(
+                                                title = server.name,
+                                                icon = {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(36.dp, 24.dp)
+                                                            .clip(RoundedCornerShape(6.dp))
+                                                            .background(colors.backgroundNorm),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = Icons.Rounded.Public,
+                                                            contentDescription = null,
+                                                            tint = colors.iconNorm,
+                                                            modifier = Modifier.size(20.dp)
+                                                        )
+                                                    }
+                                                },
+                                                load = server.averageLoad,
+                                                displayMode = loadDisplayMode,
+                                                onClick = {
+                                                    if (!isTransitioning) {
+                                                        onLocationSelect(currentCountry, currentCity, currentCityLocalized, server.id, server.name)
+                                                    }
                                                 }
-                                            }
+                                            )
                                         }
-                                    )
-                                }
-                            }
-                            1 -> {
-                                items(cities) { cityItem ->
-                                    SelectionCard(
-                                        title = cityItem.localizedName,
-                                        icon = {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(36.dp, 24.dp)
-                                                    .clip(RoundedCornerShape(6.dp))
-                                                    .background(colors.backgroundNorm),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Icon(imageVector = Icons.Default.LocationCity, contentDescription = null, tint = colors.iconNorm, modifier = Modifier.size(20.dp))
-                                            }
-                                        },
-                                        load = cityItem.averageLoad,
-                                        displayMode = loadDisplayMode,
-                                        onClick = {
-                                            if (!isTransitioning) {
-                                                scope.launch {
-                                                    isTransitioning = true
-                                                    servers = viewModel.getServersForCity(currentCountry!!, cityItem.name)
-                                                    currentCity = cityItem.name
-                                                    currentCityLocalized = cityItem.localizedName
-                                                    step = 2
-                                                    isTransitioning = false
-                                                }
-                                            }
-                                        }
-                                    )
-                                }
-                            }
-                            else -> {
-                                items(servers) { server ->
-                                    SelectionCard(
-                                        title = server.name,
-                                        icon = {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(36.dp, 24.dp)
-                                                    .clip(RoundedCornerShape(6.dp))
-                                                    .background(colors.backgroundNorm),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Rounded.Public,
-                                                    contentDescription = null,
-                                                    tint = colors.iconNorm,
-                                                    modifier = Modifier.size(20.dp)
-                                                )
-                                            }
-                                        },
-                                        load = server.averageLoad,
-                                        displayMode = loadDisplayMode,
-                                        onClick = {
-                                            if (!isTransitioning) {
-                                                onLocationSelected(currentCountry, currentCity, currentCityLocalized, server.id, server.name)
-                                            }
-                                        }
-                                    )
+                                    }
                                 }
                             }
                         }
@@ -674,43 +687,45 @@ fun LocationSelectionDialog(
 }
 
 @Composable
-fun Category(
-    modifier: Modifier = Modifier,
+fun SettingsCategory(
     title: String,
+    modifier: Modifier = Modifier,
     content: (@Composable ColumnScope.() -> Unit),
 ) {
     val colors = ProtonNextTheme.colors
-    if (title.isNotEmpty()) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = colors.textNorm,
-            modifier = modifier
-                .padding(start = 12.dp, top = 8.dp, bottom = 8.dp)
-                .fillMaxWidth()
-        )
-    }
+    Column(modifier = modifier) {
+        if (title.isNotEmpty()) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = colors.textNorm,
+                modifier = Modifier
+                    .padding(start = 12.dp, top = 8.dp, bottom = 8.dp)
+                    .fillMaxWidth()
+            )
+        }
 
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.5f)
-    ) {
-        Column(modifier = Modifier.padding(vertical = 4.dp)) {
-            content()
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.5f)
+        ) {
+            Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                content()
+            }
         }
     }
 }
 
 @Composable
 fun SettingRowWithIcon(
+    title: String,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     countryCode: String? = null,
-    title: String,
     subtitle: String? = null,
-    trailingContent: (@Composable () -> Unit)? = null,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    trailingContent: (@Composable () -> Unit)? = null
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
@@ -795,10 +810,11 @@ fun SettingRowWithIcon(
 @Composable
 fun SettingToggleRow(
     title: String,
-    subtitle: String? = null,
     icon: ImageVector,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null
 ) {
     val colors = ProtonNextTheme.colors
     SettingRowWithIcon(
@@ -806,6 +822,7 @@ fun SettingToggleRow(
         subtitle = subtitle,
         icon = icon,
         onClick = { onCheckedChange(!checked) },
+        modifier = modifier,
         trailingContent = {
             Switch(
                 checked = checked,
@@ -825,14 +842,15 @@ fun SettingToggleRow(
 fun SettingTextFieldRow(
     label: String,
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label) },
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         shape = RoundedCornerShape(12.dp),
@@ -850,78 +868,84 @@ fun SettingTextFieldRow(
 
 @Composable
 fun ObfuscationConfigSelectionDialog(
-    configs: List<ObfuscationProfile>,
+    configs: ImmutableList<ObfuscationProfile>,
     selectedId: String?,
     onDismiss: () -> Unit,
-    onConfigSelected: (String) -> Unit,
+    onConfigSelect: (String) -> Unit,
     onCreateNew: () -> Unit,
     onEdit: (ObfuscationProfile) -> Unit,
-    onDelete: (String) -> Unit
+    onDelete: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     var editingProfile by remember { mutableStateOf<ObfuscationProfile?>(null) }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = colors.backgroundSecondary)
-        ) {
-            Column(modifier = Modifier.padding(vertical = 16.dp)) {
-                Text(
-                    text = stringResource(R.string.title_select_obfuscation_config),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = colors.textNorm,
-                    modifier = Modifier.padding(start = 24.dp, bottom = 16.dp)
-                )
+    Box(modifier = modifier) {
+        Dialog(onDismissRequest = onDismiss) {
+            Box(modifier = Modifier) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = colors.backgroundSecondary)
+                ) {
+                    Column(modifier = Modifier.padding(vertical = 16.dp)) {
+                        Text(
+                            text = stringResource(R.string.title_select_obfuscation_config),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = colors.textNorm,
+                            modifier = Modifier.padding(start = 24.dp, bottom = 16.dp)
+                        )
 
-                LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
-                    items(configs) { config ->
-                        val isSelected = config.id == selectedId
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onConfigSelected(config.id) }
-                                .padding(vertical = 12.dp, horizontal = 24.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = config.name,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = if (isSelected) colors.brandNorm else colors.textNorm,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                )
-                                if (!config.isReadOnly) {
-                                    Text(
-                                        text = stringResource(R.string.custom_config),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = colors.textWeak
-                                    )
-                                }
-                            }
-                            if (!config.isReadOnly) {
-                                IconButton(onClick = { editingProfile = config }) {
-                                    Icon(Icons.Rounded.Edit, contentDescription = stringResource(R.string.btn_edit), tint = colors.iconNorm)
-                                }
-                                IconButton(onClick = { onDelete(config.id) }) {
-                                    Icon(Icons.Rounded.Delete, contentDescription = stringResource(R.string.btn_delete), tint = colors.iconWeak)
+                        LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
+                            items(configs, key = { it.id }, contentType = { "Config" }) { config ->
+                                val isSelected = config.id == selectedId
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onConfigSelect(config.id) }
+                                        .padding(vertical = 12.dp, horizontal = 24.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = config.name,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = if (isSelected) colors.brandNorm else colors.textNorm,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                        if (!config.isReadOnly) {
+                                            Text(
+                                                text = stringResource(R.string.custom_config),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = colors.textWeak
+                                            )
+                                        }
+                                    }
+                                    if (!config.isReadOnly) {
+                                        IconButton(onClick = { editingProfile = config }) {
+                                            Icon(Icons.Rounded.Edit, contentDescription = stringResource(R.string.btn_edit), tint = colors.iconNorm)
+                                        }
+                                        IconButton(onClick = { onDelete(config.id) }) {
+                                            Icon(Icons.Rounded.Delete, contentDescription = stringResource(R.string.btn_delete), tint = colors.iconWeak)
+                                        }
+                                    }
                                 }
                             }
                         }
+
+                        HorizontalDivider(color = colors.shade20.copy(alpha = 0.5f))
+
+                        TextButton(
+                            onClick = onCreateNew,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Icon(Icons.Rounded.Add, contentDescription = null, tint = colors.brandNorm)
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(R.string.btn_create_new_config), color = colors.brandNorm)
+                        }
                     }
-                }
-
-                HorizontalDivider(color = colors.shade20.copy(alpha = 0.5f))
-
-                TextButton(
-                    onClick = onCreateNew,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Icon(Icons.Rounded.Add, contentDescription = null, tint = colors.brandNorm)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.btn_create_new_config), color = colors.brandNorm)
                 }
             }
         }
@@ -943,7 +967,8 @@ fun ObfuscationConfigSelectionDialog(
 fun ObfuscationProfileEditDialog(
     profile: ObfuscationProfile,
     onDismiss: () -> Unit,
-    onSave: (ObfuscationProfile) -> Unit
+    onSave: (ObfuscationProfile) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     var name by remember { mutableStateOf(profile.name) }
@@ -958,127 +983,132 @@ fun ObfuscationProfileEditDialog(
     var h4 by remember { mutableStateOf(profile.h4) }
     var i1 by remember { mutableStateOf(profile.i1) }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = colors.backgroundSecondary)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.9f)
-            ) {
-                Text(
-                    text = stringResource(R.string.title_edit_obfuscation_config),
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = colors.textNorm,
-                    modifier = Modifier.padding(24.dp)
-                )
-
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+    Box(modifier = modifier) {
+        Dialog(onDismissRequest = onDismiss) {
+            Box(modifier = Modifier) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = colors.backgroundSecondary)
                 ) {
-                    item {
-                        OutlinedTextField(
-                            value = name,
-                            onValueChange = { name = it },
-                            label = { Text(stringResource(R.string.obfuscation_config_name)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = colors.brandNorm,
-                                unfocusedBorderColor = colors.shade20
-                            )
-                        )
-                    }
-
-                    // Junk
-                    item {
-                        EditCategoryHeader(title = stringResource(R.string.obfuscation_category_junk))
-                        EditSettingsCard {
-                            EditParamField(label = "Jc", value = jc.toString(), onValueChange = { jc = it.toIntOrNull() ?: 0 })
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = colors.shade20.copy(alpha = 0.5f))
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                EditParamField(modifier = Modifier.weight(1f), label = "Jmin", value = jmin.toString(), onValueChange = { jmin = it.toIntOrNull() ?: 0 })
-                                EditParamField(modifier = Modifier.weight(1f), label = "Jmax", value = jmax.toString(), onValueChange = { jmax = it.toIntOrNull() ?: 0 })
-                            }
-                        }
-                    }
-
-                    // Magic
-                    item {
-                        EditCategoryHeader(title = stringResource(R.string.obfuscation_category_magic))
-                        EditSettingsCard {
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                EditParamField(modifier = Modifier.weight(1f), label = "S1", value = s1.toString(), onValueChange = { s1 = it.toIntOrNull() ?: 0 })
-                                EditParamField(modifier = Modifier.weight(1f), label = "S2", value = s2.toString(), onValueChange = { s2 = it.toIntOrNull() ?: 0 })
-                            }
-                        }
-                    }
-
-                    // Headers
-                    item {
-                        EditCategoryHeader(title = stringResource(R.string.obfuscation_category_headers))
-                        EditSettingsCard {
-                            Column {
-                                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    EditParamField(modifier = Modifier.weight(1f), label = "H1", value = h1, isNumeric = false, onValueChange = { h1 = it })
-                                    EditParamField(modifier = Modifier.weight(1f), label = "H2", value = h2, isNumeric = false, onValueChange = { h2 = it })
-                                }
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = colors.shade20.copy(alpha = 0.5f))
-                                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    EditParamField(modifier = Modifier.weight(1f), label = "H3", value = h3, isNumeric = false, onValueChange = { h3 = it })
-                                    EditParamField(modifier = Modifier.weight(1f), label = "H4", value = h4, isNumeric = false, onValueChange = { h4 = it })
-                                }
-                            }
-                        }
-                    }
-
-                    // Advanced (I1)
-                    item {
-                        EditCategoryHeader(title = stringResource(R.string.obfuscation_category_advanced))
-                        EditSettingsCard {
-                            EditParamField(label = "I1", value = i1, isNumeric = false, onValueChange = { i1 = it })
-                        }
-                    }
-
-                    item { Spacer(modifier = Modifier.height(8.dp)) }
-                }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(onClick = onDismiss) {
-                        Text(stringResource(android.R.string.cancel), color = colors.textWeak)
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Button(
-                        onClick = {
-                            onSave(profile.copy(
-                                name = name,
-                                jc = jc,
-                                jmin = jmin,
-                                jmax = jmax,
-                                s1 = s1,
-                                s2 = s2,
-                                h1 = h1,
-                                h2 = h2,
-                                h3 = h3,
-                                h4 = h4,
-                                i1 = i1
-                            ))
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
-                        shape = RoundedCornerShape(12.dp)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.9f)
                     ) {
-                        Text(stringResource(R.string.btn_save))
+                        Text(
+                            text = stringResource(R.string.title_edit_obfuscation_config),
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = colors.textNorm,
+                            modifier = Modifier.padding(24.dp)
+                        )
+
+                        LazyColumn(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 20.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            item(contentType = "TextField") {
+                                OutlinedTextField(
+                                    value = name,
+                                    onValueChange = { name = it },
+                                    label = { Text(stringResource(R.string.obfuscation_config_name)) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = colors.brandNorm,
+                                        unfocusedBorderColor = colors.shade20
+                                    )
+                                )
+                            }
+
+                            // Junk
+                            item(contentType = "JunkSettings") {
+                                EditCategoryHeader(title = stringResource(R.string.obfuscation_category_junk))
+                                EditSettingsCard {
+                                    EditParamField(label = "Jc", value = jc.toString(), onValueChange = { jc = it.toIntOrNull() ?: 0 })
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = colors.shade20.copy(alpha = 0.5f))
+                                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        EditParamField(modifier = Modifier.weight(1f), label = "Jmin", value = jmin.toString(), onValueChange = { jmin = it.toIntOrNull() ?: 0 })
+                                        EditParamField(modifier = Modifier.weight(1f), label = "Jmax", value = jmax.toString(), onValueChange = { jmax = it.toIntOrNull() ?: 0 })
+                                    }
+                                }
+                            }
+
+                            // Magic
+                            item(contentType = "MagicSettings") {
+                                EditCategoryHeader(title = stringResource(R.string.obfuscation_category_magic))
+                                EditSettingsCard {
+                                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        EditParamField(modifier = Modifier.weight(1f), label = "S1", value = s1.toString(), onValueChange = { s1 = it.toIntOrNull() ?: 0 })
+                                        EditParamField(modifier = Modifier.weight(1f), label = "S2", value = s2.toString(), onValueChange = { s2 = it.toIntOrNull() ?: 0 })
+                                    }
+                                }
+                            }
+
+                            // Headers
+                            item(contentType = "HeaderSettings") {
+                                EditCategoryHeader(title = stringResource(R.string.obfuscation_category_headers))
+                                EditSettingsCard {
+                                    Column {
+                                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                            EditParamField(modifier = Modifier.weight(1f), label = "H1", value = h1, isNumeric = false, onValueChange = { h1 = it })
+                                            EditParamField(modifier = Modifier.weight(1f), label = "H2", value = h2, isNumeric = false, onValueChange = { h2 = it })
+                                        }
+                                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = colors.shade20.copy(alpha = 0.5f))
+                                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                            EditParamField(modifier = Modifier.weight(1f), label = "H3", value = h3, isNumeric = false, onValueChange = { h3 = it })
+                                            EditParamField(modifier = Modifier.weight(1f), label = "H4", value = h4, isNumeric = false, onValueChange = { h4 = it })
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Advanced (I1)
+                            item(contentType = "AdvancedSettings") {
+                                EditCategoryHeader(title = stringResource(R.string.obfuscation_category_advanced))
+                                EditSettingsCard {
+                                    EditParamField(label = "I1", value = i1, isNumeric = false, onValueChange = { i1 = it })
+                                }
+                            }
+
+                            item(contentType = "Spacer") { Spacer(modifier = Modifier.height(8.dp)) }
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TextButton(onClick = onDismiss) {
+                                Text(stringResource(android.R.string.cancel), color = colors.textWeak)
+                            }
+                            Spacer(Modifier.width(12.dp))
+                            Button(
+                                onClick = {
+                                    onSave(profile.copy(
+                                        name = name,
+                                        jc = jc,
+                                        jmin = jmin,
+                                        jmax = jmax,
+                                        s1 = s1,
+                                        s2 = s2,
+                                        h1 = h1,
+                                        h2 = h2,
+                                        h3 = h3,
+                                        h4 = h4,
+                                        i1 = i1
+                                    ))
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(stringResource(R.string.btn_save))
+                            }
+                        }
                     }
                 }
             }
@@ -1113,11 +1143,11 @@ private fun EditSettingsCard(content: @Composable ColumnScope.() -> Unit) {
 
 @Composable
 private fun EditParamField(
-    modifier: Modifier = Modifier,
     label: String,
     value: String,
-    isNumeric: Boolean = true,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    isNumeric: Boolean = true
 ) {
     val colors = ProtonNextTheme.colors
     TextField(

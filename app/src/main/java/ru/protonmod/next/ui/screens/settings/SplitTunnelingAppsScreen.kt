@@ -43,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -50,14 +51,15 @@ import ru.protonmod.next.ui.theme.ProtonNextTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SplitTunnelingAppsScreen(
+    modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
     viewModel: SplitTunnelingAppsViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
@@ -85,7 +87,7 @@ fun SplitTunnelingAppsScreen(
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                item {
+                item(contentType = "Header") {
                     NavigationHeader(
                         title = stringResource(
                             if (uiState.splitTunnelingMode == "exclude") R.string.settings_excluded_apps
@@ -95,7 +97,7 @@ fun SplitTunnelingAppsScreen(
                     )
                 }
 
-                item {
+                item(contentType = "SearchBar") {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -136,7 +138,7 @@ fun SplitTunnelingAppsScreen(
                 }
 
                 if (uiState.isLoading) {
-                    item {
+                    item(contentType = "Loading") {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -149,7 +151,7 @@ fun SplitTunnelingAppsScreen(
                 } else {
                     // Selected Apps Section
                     if (uiState.selectedApps.isNotEmpty()) {
-                        item {
+                        item(contentType = "SectionHeader") {
                             SectionHeader(
                                 stringResource(
                                     R.string.st_selected_apps_header,
@@ -157,19 +159,19 @@ fun SplitTunnelingAppsScreen(
                                 )
                             )
                         }
-                        items(uiState.selectedApps, key = { it.packageName }) { app ->
+                        items(uiState.selectedApps, key = { it.packageName }, contentType = { "App" }) { app ->
                             AppListItem(
-                                modifier = Modifier.padding(horizontal = 16.dp),
                                 app = app,
                                 isAdded = true,
-                                onClick = { viewModel.toggleApp(app.packageName, false) }
+                                onClick = { viewModel.toggleApp(app.packageName, false) },
+                                modifier = Modifier.padding(horizontal = 16.dp)
                             )
                         }
                     }
 
                     // Available Apps Section
                     if (uiState.availableApps.isNotEmpty()) {
-                        item {
+                        item(contentType = "SectionHeader") {
                             SectionHeader(
                                 stringResource(
                                     R.string.st_available_apps_header,
@@ -177,18 +179,18 @@ fun SplitTunnelingAppsScreen(
                                 )
                             )
                         }
-                        items(uiState.availableApps, key = { it.packageName }) { app ->
+                        items(uiState.availableApps, key = { it.packageName }, contentType = { "App" }) { app ->
                             AppListItem(
-                                modifier = Modifier.padding(horizontal = 16.dp),
                                 app = app,
                                 isAdded = false,
-                                onClick = { viewModel.toggleApp(app.packageName, true) }
+                                onClick = { viewModel.toggleApp(app.packageName, true) },
+                                modifier = Modifier.padding(horizontal = 16.dp)
                             )
                         }
                     }
 
                     // Bottom Spacer
-                    item {
+                    item(contentType = "Spacer") {
                         Spacer(modifier = Modifier.height(24.dp))
                     }
                 }
@@ -212,10 +214,10 @@ private fun SectionHeader(text: String) {
 
 @Composable
 fun AppListItem(
-    modifier: Modifier = Modifier,
     app: AppInfo,
     isAdded: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     Row(
@@ -269,7 +271,10 @@ fun AppListItem(
 }
 
 @Composable
-fun AppIconWrapper(packageName: String) {
+fun AppIconWrapper(
+    packageName: String,
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
     val colors = ProtonNextTheme.colors
 
@@ -283,7 +288,7 @@ fun AppIconWrapper(packageName: String) {
     }
 
     Box(
-        modifier = Modifier.size(40.dp),
+        modifier = modifier.size(40.dp),
         contentAlignment = Alignment.Center
     ) {
         if (drawable != null) {

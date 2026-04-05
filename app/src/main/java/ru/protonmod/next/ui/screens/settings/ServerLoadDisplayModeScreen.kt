@@ -26,40 +26,35 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.data.local.ServerLoadDisplayMode
-import ru.protonmod.next.ui.components.FlagIcon
-import ru.protonmod.next.ui.components.LoadIndicator
-import ru.protonmod.next.ui.components.LoadProgressBar
 import ru.protonmod.next.ui.screens.dashboard.ServerCard
 import ru.protonmod.next.ui.theme.ProtonNextTheme
-import ru.protonmod.next.ui.theme.liquidGlass
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServerLoadDisplayModeScreen(
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = ProtonNextTheme.colors
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { padding ->
@@ -70,14 +65,14 @@ fun ServerLoadDisplayModeScreen(
             contentPadding = PaddingValues(bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
+            item(contentType = "Header") {
                 NavigationHeader(
                     title = stringResource(R.string.settings_load_display_mode),
                     onBack = onBack
                 )
             }
 
-            items(ServerLoadDisplayMode.entries) { mode ->
+            items(ServerLoadDisplayMode.entries, key = { it.name }, contentType = { "Mode" }) { mode ->
                 LoadModePreviewCard(
                     mode = mode,
                     isSelected = uiState.serverLoadDisplayMode == mode,

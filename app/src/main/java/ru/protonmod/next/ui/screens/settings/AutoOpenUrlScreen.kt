@@ -41,12 +41,13 @@ import ru.protonmod.next.ui.theme.liquidGlass
 fun AutoOpenUrlScreen(
     currentUrl: String,
     onBack: () -> Unit,
-    onUrlSaved: (String) -> Unit
+    onUrlSave: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     var url by remember { mutableStateOf(currentUrl) }
 
-    Box(modifier = Modifier.fillMaxSize().background(colors.backgroundNorm)) {
+    Box(modifier = modifier.fillMaxSize().background(colors.backgroundNorm)) {
         // Background gradient
         Box(
             modifier = Modifier
@@ -122,7 +123,7 @@ fun AutoOpenUrlScreen(
                                 if (finalUrl.isNotBlank() && !finalUrl.contains("://")) {
                                     finalUrl = "https://$finalUrl"
                                 }
-                                onUrlSaved(finalUrl)
+                                onUrlSave(finalUrl)
                             },
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             shape = RoundedCornerShape(16.dp),

@@ -50,6 +50,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.MainHeader
@@ -66,6 +67,7 @@ fun ProfilesScreen(
     onNavigateToHome: () -> Unit,
     onCreateNewProfile: () -> Unit,
     onEditProfile: (String) -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: ProfilesViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
@@ -73,7 +75,7 @@ fun ProfilesScreen(
     val isTablet = isTablet()
 
     // Collect profiles from ViewModel
-    val profiles by viewModel.profiles.collectAsState()
+    val profiles by viewModel.profiles.collectAsStateWithLifecycle()
 
     // VPN Permission Launcher
     var pendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
@@ -105,7 +107,7 @@ fun ProfilesScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
@@ -170,14 +172,14 @@ fun ProfilesScreen(
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        item(span = { GridItemSpan(maxLineSpan) }) {
+                        item(span = { GridItemSpan(maxLineSpan) }, contentType = "Header") {
                             ProfilesHeader(
                                 isTablet = true,
                                 onCreateNewProfile = onCreateNewProfile
                             )
                         }
 
-                        items(profiles, key = { it.id }) { profile ->
+                        items(profiles, key = { it.id }, contentType = { "Profile" }) { profile ->
                             ProfileCardItem(
                                 profile = profile,
                                 onConnect = {
@@ -200,14 +202,14 @@ fun ProfilesScreen(
                         ),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        item {
+                        item(contentType = "Header") {
                             ProfilesHeader(
                                 isTablet = false,
                                 onCreateNewProfile = onCreateNewProfile
                             )
                         }
 
-                        items(profiles, key = { it.id }) { profile ->
+                        items(profiles, key = { it.id }, contentType = { "Profile" }) { profile ->
                             ProfileCardItem(
                                 profile = profile,
                                 onConnect = {
@@ -377,10 +379,13 @@ fun ProfileCardItem(
 }
 
 @Composable
-fun FeatureBadge(text: String) {
+fun FeatureBadge(
+    text: String,
+    modifier: Modifier = Modifier
+) {
     val colors = ProtonNextTheme.colors
     Box(
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(8.dp))
             .background(colors.brandNorm.copy(alpha = 0.1f))
             .padding(horizontal = 8.dp, vertical = 2.dp)

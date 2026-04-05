@@ -21,7 +21,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.BugReport
 import androidx.compose.material.icons.rounded.HourglassBottom
 import androidx.compose.material.icons.rounded.Insights
@@ -31,7 +30,6 @@ import androidx.compose.material.icons.rounded.ReportProblem
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -39,6 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -47,13 +46,14 @@ import ru.protonmod.next.ui.theme.ProtonNextTheme
 @Composable
 fun ErrorReportingScreen(
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
@@ -81,14 +81,14 @@ fun ErrorReportingScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 16.dp)
             ) {
-                item {
+                item(contentType = "Header") {
                     NavigationHeader(
                         title = stringResource(R.string.settings_error_reporting),
                         onBack = onBack
                     )
                 }
 
-                item {
+                item(contentType = "Description") {
                     Text(
                         text = stringResource(R.string.settings_error_reporting_desc),
                         style = MaterialTheme.typography.bodyMedium,
@@ -97,8 +97,8 @@ fun ErrorReportingScreen(
                     )
                 }
 
-                item {
-                    Category(
+                item(contentType = "Category") {
+                    SettingsCategory(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         title = stringResource(R.string.settings_privacy)
                     ) {
@@ -161,7 +161,7 @@ fun ErrorReportingScreen(
                     }
                 }
 
-                item {
+                item(contentType = "Sentry") {
                     SentryPoweredBy()
                 }
             }

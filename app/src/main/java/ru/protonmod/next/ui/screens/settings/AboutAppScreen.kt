@@ -57,7 +57,8 @@ import androidx.core.net.toUri
 fun AboutAppScreen(
     appVersion: String,
     onBack: () -> Unit,
-    onNavigateToLicenses: () -> Unit
+    onNavigateToLicenses: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
@@ -68,7 +69,7 @@ fun AboutAppScreen(
     var showGitHub by remember { mutableStateOf(false) }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
@@ -94,7 +95,7 @@ fun AboutAppScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 contentPadding = PaddingValues(bottom = 16.dp)
             ) {
-                item {
+                item(contentType = "Header") {
                     NavigationHeader(
                         title = stringResource(R.string.settings_about),
                         onBack = onBack
@@ -143,7 +144,7 @@ fun AboutAppScreen(
                     Spacer(modifier = Modifier.height(48.dp))
                 }
 
-                item {
+                item(contentType = "Community") {
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         Text(
                             text = stringResource(id = R.string.about_community),
@@ -159,23 +160,23 @@ fun AboutAppScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             AboutLinkCard(
-                                modifier = Modifier.weight(1f),
                                 title = stringResource(id = R.string.about_codeberg),
                                 iconResId = R.drawable.ic_codeberg,
                                 onClick = {
                                     val intent = Intent(Intent.ACTION_VIEW, codebergUrl.toUri())
                                     context.startActivity(intent)
-                                }
+                                },
+                                modifier = Modifier.weight(1f)
                             )
 
                             AboutLinkCard(
-                                modifier = Modifier.weight(1f),
                                 title = stringResource(id = R.string.about_telegram),
                                 iconResId = R.drawable.ic_telegram,
                                 onClick = {
                                     val intent = Intent(Intent.ACTION_VIEW, telegramUrl.toUri())
                                     context.startActivity(intent)
-                                }
+                                },
+                                modifier = Modifier.weight(1f)
                             )
                         }
 
@@ -254,7 +255,7 @@ fun AboutAppScreen(
                     }
                 }
 
-                item {
+                item(contentType = "Licenses") {
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         Text(
                             text = stringResource(id = R.string.settings_about),
@@ -286,7 +287,7 @@ fun AboutAppScreen(
                     }
                 }
 
-                item {
+                item(contentType = "Sentry") {
                     SentryPoweredBy()
                 }
             }
@@ -296,10 +297,10 @@ fun AboutAppScreen(
 
 @Composable
 fun AboutLinkCard(
-    modifier: Modifier = Modifier,
     title: String,
     iconResId: Int,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     Box(

@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -44,26 +45,29 @@ data class LicenseItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LicensesScreen(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
-    val licenses = listOf(
-        LicenseItem(R.string.license_app_title, R.string.license_app_desc, "https://www.gnu.org/licenses/gpl-3.0.html"),
-        LicenseItem(R.string.license_androidx_title, R.string.license_apache_2, "https://www.apache.org/licenses/LICENSE-2.0"),
-        LicenseItem(R.string.license_compose_title, R.string.license_apache_2, "https://www.apache.org/licenses/LICENSE-2.0"),
-        LicenseItem(R.string.license_kotlin_title, R.string.license_apache_2, "https://www.apache.org/licenses/LICENSE-2.0"),
-        LicenseItem(R.string.license_hilt_title, R.string.license_apache_2, "https://www.apache.org/licenses/LICENSE-2.0"),
-        LicenseItem(R.string.license_retrofit_title, R.string.license_apache_2, "https://www.apache.org/licenses/LICENSE-2.0"),
-        LicenseItem(R.string.license_sentry_title, R.string.license_bsl, "https://github.com/getsentry/sentry-android"),
-        LicenseItem(R.string.license_room_title, R.string.license_apache_2, "https://developer.android.com/training/data-storage/room"),
-        LicenseItem(R.string.license_leakcanary_title, R.string.license_apache_2, "https://square.github.io/leakcanary/"),
-        LicenseItem(R.string.license_android_svg_title, R.string.license_apache_2, "https://bigbadaboom.github.io/androidsvg/"),
-        LicenseItem(R.string.license_proton_go_vpn_title, R.string.license_app_desc, "https://github.com/ProtonMail/gopenpgp"),
-        LicenseItem(R.string.license_amneziawg_title, R.string.license_apache_2, "https://github.com/wgtunnel/amneziawg-android")
-    )
+    val licenses = remember {
+        listOf(
+            LicenseItem(R.string.license_app_title, R.string.license_app_desc, "https://www.gnu.org/licenses/gpl-3.0.html"),
+            LicenseItem(R.string.license_androidx_title, R.string.license_apache_2, "https://www.apache.org/licenses/LICENSE-2.0"),
+            LicenseItem(R.string.license_compose_title, R.string.license_apache_2, "https://www.apache.org/licenses/LICENSE-2.0"),
+            LicenseItem(R.string.license_kotlin_title, R.string.license_apache_2, "https://www.apache.org/licenses/LICENSE-2.0"),
+            LicenseItem(R.string.license_hilt_title, R.string.license_apache_2, "https://www.apache.org/licenses/LICENSE-2.0"),
+            LicenseItem(R.string.license_retrofit_title, R.string.license_apache_2, "https://www.apache.org/licenses/LICENSE-2.0"),
+            LicenseItem(R.string.license_sentry_title, R.string.license_bsl, "https://github.com/getsentry/sentry-android"),
+            LicenseItem(R.string.license_room_title, R.string.license_apache_2, "https://developer.android.com/training/data-storage/room"),
+            LicenseItem(R.string.license_leakcanary_title, R.string.license_apache_2, "https://square.github.io/leakcanary/"),
+            LicenseItem(R.string.license_android_svg_title, R.string.license_apache_2, "https://bigbadaboom.github.io/androidsvg/"),
+            LicenseItem(R.string.license_proton_go_vpn_title, R.string.license_app_desc, "https://github.com/ProtonMail/gopenpgp"),
+            LicenseItem(R.string.license_amneziawg_title, R.string.license_apache_2, "https://github.com/wgtunnel/amneziawg-android")
+        )
+    }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
@@ -88,17 +92,17 @@ fun LicensesScreen(
                 contentPadding = PaddingValues(bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                item {
+                item(contentType = "Header") {
                     NavigationHeader(
                         title = stringResource(R.string.licenses_title),
                         onBack = onBack
                     )
                 }
 
-                items(licenses) { item ->
+                items(licenses, key = { it.titleRes }, contentType = { "License" }) { item ->
                     LicenseCard(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        item = item
+                        item = item,
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
             }
@@ -108,8 +112,8 @@ fun LicensesScreen(
 
 @Composable
 fun LicenseCard(
-    modifier: Modifier = Modifier,
-    item: LicenseItem
+    item: LicenseItem,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     Box(

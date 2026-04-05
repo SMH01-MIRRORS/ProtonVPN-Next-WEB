@@ -53,6 +53,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.data.network.LogicalServer
@@ -72,11 +75,12 @@ import ru.protonmod.next.utils.ProtonLogger
 fun CountriesScreen(
     onNavigateToHome: () -> Unit,
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: CountriesViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
-    val uiState by viewModel.uiState.collectAsState()
-    val connectedServer by viewModel.connectedServer.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val connectedServer by viewModel.connectedServer.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val isTablet = isTablet()
 
@@ -112,7 +116,7 @@ fun CountriesScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = colors.backgroundNorm,
         bottomBar = {}
@@ -165,10 +169,8 @@ fun CountriesScreen(
                         }
                         is CountriesUiState.CountriesList -> {
                             CountriesListContent(
-                                countries = state.countries,
+                                countries = state.countries.toImmutableList(),
                                 connectedServer = connectedServer,
-                                isTablet = isTablet,
-                                loadDisplayMode = state.loadDisplayMode,
                                 onCountryClick = { country ->
                                     checkVpnAndConnect {
                                         viewModel.selectCountry(country.code)
@@ -177,16 +179,16 @@ fun CountriesScreen(
                                 },
                                 onCountryMore = { country ->
                                     viewModel.expandCitiesForCountry(country.code)
-                                }
+                                },
+                                isTablet = isTablet,
+                                loadDisplayMode = state.loadDisplayMode
                             )
                         }
                         is CountriesUiState.CitiesList -> {
                             CitiesListContent(
                                 countryName = state.country,
-                                cities = state.cities,
+                                cities = state.cities.toImmutableList(),
                                 connectedServer = connectedServer,
-                                isTablet = isTablet,
-                                loadDisplayMode = state.loadDisplayMode,
                                 onBack = { viewModel.backToCountries() },
                                 onCityClick = { city ->
                                     checkVpnAndConnect {
@@ -196,24 +198,26 @@ fun CountriesScreen(
                                 },
                                 onCityMore = { city ->
                                     viewModel.expandServersForCity(city.name)
-                                }
+                                },
+                                isTablet = isTablet,
+                                loadDisplayMode = state.loadDisplayMode
                             )
                         }
                         is CountriesUiState.ServersList -> {
                             ServersListContent(
                                 countryName = state.country,
                                 cityName = state.city,
-                                servers = state.servers,
+                                servers = state.servers.toImmutableList(),
                                 connectedServer = connectedServer,
-                                isTablet = isTablet,
-                                loadDisplayMode = state.loadDisplayMode,
                                 onBack = { viewModel.backToCities() },
                                 onServerClick = { server ->
                                     checkVpnAndConnect {
                                         viewModel.selectServer(server)
                                         onNavigateToHome()
                                     }
-                                }
+                                },
+                                isTablet = isTablet,
+                                loadDisplayMode = state.loadDisplayMode
                             )
                         }
                     }
@@ -225,63 +229,66 @@ fun CountriesScreen(
 
 @Composable
 fun CountriesListContent(
-    countries: List<CountryDisplayItem>,
+    countries: ImmutableList<CountryDisplayItem>,
     connectedServer: LogicalServer?,
-    isTablet: Boolean = false,
-    loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     onCountryClick: (CountryDisplayItem) -> Unit,
-    onCountryMore: (CountryDisplayItem) -> Unit
+    onCountryMore: (CountryDisplayItem) -> Unit,
+    modifier: Modifier = Modifier,
+    isTablet: Boolean = false,
+    loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
 ) {
     val colors = ProtonNextTheme.colors
 
-    if (isTablet) {
-        val configuration = LocalConfiguration.current
-        val columns = (configuration.screenWidthDp / 300).coerceAtLeast(2)
-        
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(columns),
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 140.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                MainHeader(title = stringResource(R.string.countries_title))
-            }
+    Box(modifier = modifier) {
+        if (isTablet) {
+            val configuration = LocalConfiguration.current
+            val columns = (configuration.screenWidthDp / 300).coerceAtLeast(2)
+            
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(columns),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 140.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item(span = { GridItemSpan(maxLineSpan) }, contentType = "Header") {
+                    MainHeader(title = stringResource(R.string.countries_title))
+                }
 
-            items(countries) { country ->
-                CountryCard(
-                    country = country,
-                    isConnected = connectedServer?.exitCountry == country.code,
-                    displayMode = loadDisplayMode,
-                    onClick = { onCountryClick(country) },
-                    onMoreClick = { onCountryMore(country) }
-                )
+                items(countries, key = { it.code }, contentType = { "Country" }) { country ->
+                    CountryCard(
+                        country = country,
+                        isConnected = connectedServer?.exitCountry == country.code,
+                        onClick = { onCountryClick(country) },
+                        onMoreClick = { onCountryMore(country) },
+                        displayMode = loadDisplayMode
+                    )
+                }
             }
-        }
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                top = 0.dp,
-                end = 16.dp,
-                bottom = 140.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            item {
-                MainHeader(title = stringResource(R.string.countries_title))
-            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    top = 0.dp,
+                    end = 16.dp,
+                    bottom = 140.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item(contentType = "Header") {
+                    MainHeader(title = stringResource(R.string.countries_title))
+                }
 
-            items(countries) { country ->
-                CountryCard(
-                    country = country,
-                    isConnected = connectedServer?.exitCountry == country.code,
-                    displayMode = loadDisplayMode,
-                    onClick = { onCountryClick(country) },
-                    onMoreClick = { onCountryMore(country) }
-                )
+                items(countries, key = { it.code }, contentType = { "Country" }) { country ->
+                    CountryCard(
+                        country = country,
+                        isConnected = connectedServer?.exitCountry == country.code,
+                        onClick = { onCountryClick(country) },
+                        onMoreClick = { onCountryMore(country) },
+                        displayMode = loadDisplayMode
+                    )
+                }
             }
         }
     }
@@ -290,10 +297,11 @@ fun CountriesListContent(
 @Composable
 fun CountryCard(
     country: CountryDisplayItem,
-    isConnected: Boolean = false,
-    displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     onClick: () -> Unit,
-    onMoreClick: () -> Unit
+    onMoreClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isConnected: Boolean = false,
+    displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
@@ -302,7 +310,7 @@ fun CountryCard(
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .liquidGlass(
                 shape = RoundedCornerShape(20.dp),
@@ -391,65 +399,68 @@ fun CountryCard(
 @Composable
 fun CitiesListContent(
     countryName: String, // This is actually country code
-    cities: List<CityDisplayItem>,
+    cities: ImmutableList<CityDisplayItem>,
     connectedServer: LogicalServer?,
-    isTablet: Boolean = false,
-    loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     onBack: () -> Unit,
     onCityClick: (CityDisplayItem) -> Unit,
-    onCityMore: (CityDisplayItem) -> Unit
+    onCityMore: (CityDisplayItem) -> Unit,
+    modifier: Modifier = Modifier,
+    isTablet: Boolean = false,
+    loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
 ) {
     val context = LocalContext.current
     val localizedCountry = CountryUtils.getCountryName(context, countryName)
 
-    if (isTablet) {
-        val configuration = LocalConfiguration.current
-        val columns = (configuration.screenWidthDp / 300).coerceAtLeast(2)
+    Box(modifier = modifier) {
+        if (isTablet) {
+            val configuration = LocalConfiguration.current
+            val columns = (configuration.screenWidthDp / 300).coerceAtLeast(2)
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(columns),
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 140.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                NavigationHeader(title = localizedCountry, onBack = onBack)
-            }
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(columns),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 140.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item(span = { GridItemSpan(maxLineSpan) }, contentType = "Header") {
+                    NavigationHeader(title = localizedCountry, onBack = onBack)
+                }
 
-            items(cities) { city ->
-                CityCard(
-                    city = city,
-                    isConnected = (connectedServer?.city == city.name && connectedServer.exitCountry == countryName),
-                    displayMode = loadDisplayMode,
-                    onClick = { onCityClick(city) },
-                    onMoreClick = { onCityMore(city) }
-                )
+                items(cities, key = { it.name }, contentType = { "City" }) { city ->
+                    CityCard(
+                        city = city,
+                        isConnected = (connectedServer?.city == city.name && connectedServer.exitCountry == countryName),
+                        onClick = { onCityClick(city) },
+                        onMoreClick = { onCityMore(city) },
+                        displayMode = loadDisplayMode
+                    )
+                }
             }
-        }
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                top = 0.dp,
-                end = 16.dp,
-                bottom = 140.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            item {
-                NavigationHeader(title = localizedCountry, onBack = onBack)
-            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    top = 0.dp,
+                    end = 16.dp,
+                    bottom = 140.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item(contentType = "Header") {
+                    NavigationHeader(title = localizedCountry, onBack = onBack)
+                }
 
-            items(cities) { city ->
-                CityCard(
-                    city = city,
-                    isConnected = (connectedServer?.city == city.name && connectedServer.exitCountry == countryName),
-                    displayMode = loadDisplayMode,
-                    onClick = { onCityClick(city) },
-                    onMoreClick = { onCityMore(city) }
-                )
+                items(cities, key = { it.name }, contentType = { "City" }) { city ->
+                    CityCard(
+                        city = city,
+                        isConnected = (connectedServer?.city == city.name && connectedServer.exitCountry == countryName),
+                        onClick = { onCityClick(city) },
+                        onMoreClick = { onCityMore(city) },
+                        displayMode = loadDisplayMode
+                    )
+                }
             }
         }
     }
@@ -458,16 +469,17 @@ fun CitiesListContent(
 @Composable
 fun CityCard(
     city: CityDisplayItem,
-    isConnected: Boolean = false,
-    displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     onClick: () -> Unit,
-    onMoreClick: () -> Unit
+    onMoreClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isConnected: Boolean = false,
+    displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
 ) {
     val colors = ProtonNextTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .liquidGlass(
                 shape = RoundedCornerShape(20.dp),
@@ -550,63 +562,66 @@ fun CityCard(
 fun ServersListContent(
     countryName: String, // This is actually country code
     cityName: String,
-    servers: List<LogicalServer>,
+    servers: ImmutableList<LogicalServer>,
     connectedServer: LogicalServer?,
-    isTablet: Boolean = false,
-    loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     onBack: () -> Unit,
-    onServerClick: (LogicalServer) -> Unit
+    onServerClick: (LogicalServer) -> Unit,
+    modifier: Modifier = Modifier,
+    isTablet: Boolean = false,
+    loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
     val localizedCountry = CountryUtils.getCountryName(context, countryName)
 
-    if (isTablet) {
-        val configuration = LocalConfiguration.current
-        val columns = (configuration.screenWidthDp / 300).coerceAtLeast(2)
+    Box(modifier = modifier) {
+        if (isTablet) {
+            val configuration = LocalConfiguration.current
+            val columns = (configuration.screenWidthDp / 300).coerceAtLeast(2)
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(columns),
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 140.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                NavigationHeader(title = "$localizedCountry, $cityName", onBack = onBack)
-            }
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(columns),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 140.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item(span = { GridItemSpan(maxLineSpan) }, contentType = "Header") {
+                    NavigationHeader(title = "$localizedCountry, $cityName", onBack = onBack)
+                }
 
-            items(servers) { server ->
-                ServerItemCard(
-                    server = server,
-                    isConnected = connectedServer?.id == server.id,
-                    displayMode = loadDisplayMode,
-                    onClick = { onServerClick(server) }
-                )
+                items(servers, key = { it.id }, contentType = { "Server" }) { server ->
+                    ServerItemCard(
+                        server = server,
+                        isConnected = connectedServer?.id == server.id,
+                        onClick = { onServerClick(server) },
+                        displayMode = loadDisplayMode
+                    )
+                }
             }
-        }
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                top = 8.dp,
-                end = 16.dp,
-                bottom = 140.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            item {
-                NavigationHeader(title = "$localizedCountry, $cityName", onBack = onBack)
-            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    top = 8.dp,
+                    end = 16.dp,
+                    bottom = 140.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item(contentType = "Header") {
+                    NavigationHeader(title = "$localizedCountry, $cityName", onBack = onBack)
+                }
 
-            items(servers) { server ->
-                ServerItemCard(
-                    server = server,
-                    isConnected = connectedServer?.id == server.id,
-                    displayMode = loadDisplayMode,
-                    onClick = { onServerClick(server) }
-                )
+                items(servers, key = { it.id }, contentType = { "Server" }) { server ->
+                    ServerItemCard(
+                        server = server,
+                        isConnected = connectedServer?.id == server.id,
+                        onClick = { onServerClick(server) },
+                        displayMode = loadDisplayMode
+                    )
+                }
             }
         }
     }
@@ -616,14 +631,15 @@ fun ServersListContent(
 fun ServerItemCard(
     server: LogicalServer,
     isConnected: Boolean,
-    displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
 ) {
     val colors = ProtonNextTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .liquidGlass(
                 shape = RoundedCornerShape(20.dp),

@@ -66,6 +66,9 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import ru.protonmod.next.R
 import ru.protonmod.next.data.network.LogicalServer
@@ -79,11 +82,12 @@ import ru.protonmod.next.vpn.AmneziaVpnManager
 
 // --- Extensions for UI Effects matching Original Proton ---
 
+@Composable
 fun Modifier.vpnStatusOverlayBackground(
     isConnected: Boolean,
     isConnecting: Boolean,
     colors: ProtonColors
-): Modifier = composed {
+): Modifier {
     val targetColor = when {
         isConnected -> colors.notificationSuccess.copy(alpha = 0.4f)
         isConnecting -> Color.White.copy(alpha = 0.4f)
@@ -96,7 +100,7 @@ fun Modifier.vpnStatusOverlayBackground(
         label = "Gradient Animation"
     )
 
-    background(
+    return this.background(
         Brush.verticalGradient(
             colors = listOf(gradientColor, gradientColor.copy(alpha = 0.0F))
         )
@@ -156,10 +160,10 @@ fun VpnStatusTop(
 
 // --- Masked Location Text Components ---
 
-@Composable
 private fun annotatedCountryHighlight(
     text: String,
     highlight: String,
+    colors: ProtonColors,
     displayText: String = text,
 ) = buildAnnotatedString {
     append(displayText)
@@ -169,7 +173,7 @@ private fun annotatedCountryHighlight(
         val styleEnd = (startIndex + highlight.length).coerceAtMost(displayText.length)
         if (styleStart < styleEnd) {
             addStyle(
-                style = SpanStyle(color = ProtonNextTheme.colors.textNorm, fontWeight = FontWeight.SemiBold),
+                style = SpanStyle(color = colors.textNorm, fontWeight = FontWeight.SemiBold),
                 start = styleStart,
                 end = styleEnd
             )
@@ -183,10 +187,10 @@ private fun annotatedCountryHighlight(
  */
 @Composable
 private fun ObscurableText(
-    modifier: Modifier = Modifier,
     targetText: String,
     highlightText: String,
     isObscured: Boolean,
+    modifier: Modifier = Modifier,
     duration: Int = 30, // Animation speed per character
     targetCharacter: Char = '*',
     preserveCharacters: CharArray = charArrayOf('.', ' ', '-', ':')
@@ -208,6 +212,12 @@ private fun ObscurableText(
     var fixedWidth by remember { mutableStateOf<Int?>(null) }
     // Track the previous target string to rebuild the base perfectly when the IP changes
     var previousTargetText by remember { mutableStateOf(targetText) }
+
+    val indicesToAnimate = remember(isObscured, targetText) {
+        targetText.indices
+            .filter { !preserveCharacters.contains(targetText[it]) }
+            .shuffled()
+    }
 
     LaunchedEffect(isObscured, targetText) {
         val targetChars = targetText.toCharArray()
@@ -243,15 +253,10 @@ private fun ObscurableText(
         }
 
         // Animate the differences character by character
-        val indicesToAnimate = targetText.indices
-            .filter { !preserveCharacters.contains(targetText[it]) }
-            .filter {
-                if (isObscured) currentChars[it] != targetCharacter
-                else currentChars[it] != targetChars[it]
-            }
-            .shuffled()
-
         for (i in indicesToAnimate) {
+            if (isObscured && currentChars[i] == targetCharacter) continue
+            if (!isObscured && currentChars[i] == targetChars[i]) continue
+
             delay(duration.toLong())
             val newChar = if (isObscured) targetCharacter else targetChars[i]
             currentChars[i] = newChar
@@ -259,35 +264,38 @@ private fun ObscurableText(
         }
     }
 
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-        Layout(
-            content = {
-                Text(
-                    text = annotatedCountryHighlight(
-                        text = targetText,
-                        highlight = highlightText,
-                        displayText = displayText
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = ProtonNextTheme.colors.textWeak,
-                    modifier = Modifier.onGloballyPositioned {
-                        // Prevent layout jumping while animating asterisks
-                        if (fixedWidth == null || fixedWidth!! < it.size.width) {
-                            fixedWidth = it.size.width
-                        }
-                    },
-                )
-            },
-            modifier = modifier,
-            measurePolicy = { measurables, constraints ->
-                val placeable = measurables.first().measure(constraints)
-                val width = fixedWidth ?: placeable.width
-                val offsetX = (width - placeable.width) / 2
-                layout(width, placeable.height) {
-                    placeable.placeRelative(offsetX, 0)
+    Box(modifier = modifier) {
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+            val colors = ProtonNextTheme.colors
+            Layout(
+                content = {
+                    Text(
+                        text = annotatedCountryHighlight(
+                            text = targetText,
+                            highlight = highlightText,
+                            colors = colors,
+                            displayText = displayText
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = ProtonNextTheme.colors.textWeak,
+                        modifier = Modifier.onGloballyPositioned {
+                            // Prevent layout jumping while animating asterisks
+                            if (fixedWidth == null || fixedWidth!! < it.size.width) {
+                                fixedWidth = it.size.width
+                            }
+                        },
+                    )
+                },
+                measurePolicy = { measurables, constraints ->
+                    val placeable = measurables.first().measure(constraints)
+                    val width = fixedWidth ?: placeable.width
+                    val offsetX = (width - placeable.width) / 2
+                    layout(width, placeable.height) {
+                        placeable.placeRelative(offsetX, 0)
+                    }
                 }
-            }
-        )
+            )
+        }
     }
 }
 
@@ -299,37 +307,39 @@ private fun LocationTextElement(
     modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
-    Surface(
-        color = colors.backgroundSecondary.copy(alpha = 0.86F),
-        border = BorderStroke(
-            1.dp,
-            Brush.verticalGradient(listOf(colors.shade100.copy(alpha = 0.08f), colors.shade100.copy(alpha = 0.02f)))
-        ),
-        shape = RoundedCornerShape(12.dp),
-        modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick) // Makes the entire IP block clickable to toggle privacy mode
-    ) {
-        val unknown = stringResource(R.string.unknown)
-        
-        // Data is now sanitized at the Mapper level, so we only need simple fallbacks
-        val safeIp = locationText.ip.ifBlank { unknown }
-        
-        val safeCountry = if (locationText.ip.isBlank()) {
-            unknown
-        } else {
-            locationText.country.ifBlank { stringResource(R.string.status_not_connected) }
+    Box(modifier = modifier) {
+        Surface(
+            color = colors.backgroundSecondary.copy(alpha = 0.86F),
+            border = BorderStroke(
+                1.dp,
+                Brush.verticalGradient(listOf(colors.shade100.copy(alpha = 0.08f), colors.shade100.copy(alpha = 0.02f)))
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .clickable(onClick = onClick) // Makes the entire IP block clickable to toggle privacy mode
+        ) {
+            val unknown = stringResource(R.string.unknown)
+            
+            // Data is now sanitized at the Mapper level, so we only need simple fallbacks
+            val safeIp = locationText.ip.ifBlank { unknown }
+            
+            val safeCountry = if (locationText.ip.isBlank()) {
+                unknown
+            } else {
+                locationText.country.ifBlank { stringResource(R.string.status_not_connected) }
+            }
+
+            val country = BidiFormatter.getInstance().unicodeWrap(safeCountry)
+            val fullText = stringResource(R.string.location_format, country, safeIp)
+
+            ObscurableText(
+                targetText = fullText,
+                highlightText = country,
+                isObscured = isObscured,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+            )
         }
-
-        val country = BidiFormatter.getInstance().unicodeWrap(safeCountry)
-        val fullText = stringResource(R.string.location_format, country, safeIp)
-
-        ObscurableText(
-            targetText = fullText,
-            highlightText = country,
-            isObscured = isObscured,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-        )
     }
 }
 
@@ -337,10 +347,11 @@ private fun LocationTextElement(
 
 @Composable
 fun DashboardScreen(
+    modifier: Modifier = Modifier,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var pendingServer by remember { mutableStateOf<LogicalServer?>(null) }
     var isQuickConnectPending by remember { mutableStateOf(false) }
@@ -401,7 +412,7 @@ fun DashboardScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = colors.backgroundNorm,
         bottomBar = {}
@@ -436,11 +447,11 @@ fun DashboardScreen(
                     .fillMaxHeight(if (isTablet) 1f else 0.6f)
             ) {
                 HomeMap(
-                    modifier = Modifier.fillMaxSize(),
-                    allServers = successState?.servers ?: emptyList(),
+                    allServers = (successState?.servers ?: emptyList()).toImmutableList(),
                     connectedServer = successState?.connectedServer,
-                    userCountryCode = successState?.originalLocationText?.countryCode,
                     isConnecting = isConnecting,
+                    modifier = Modifier.fillMaxSize(),
+                    userCountryCode = successState?.originalLocationText?.countryCode,
                     isInteractive = isTablet
                 )
 
@@ -530,8 +541,8 @@ fun DashboardScreen(
                                     onDismiss = { showQuickConnectConfig = false },
                                     currentStrategy = state.quickConnectStrategy,
                                     currentTargetId = state.quickConnectTargetId,
-                                    profiles = state.profiles,
-                                    recentServers = state.recentConnections,
+                                    profiles = state.profiles.toImmutableList(),
+                                    recentServers = state.recentConnections.toImmutableList(),
                                     onStrategySelect = { strategy, targetId ->
                                         viewModel.setQuickConnectStrategy(strategy, targetId)
                                     }
@@ -548,169 +559,172 @@ fun DashboardScreen(
 @Composable
 fun DashboardContent(
     state: DashboardUiState.Success,
-    isTablet: Boolean = false,
     onServerClick: (LogicalServer) -> Unit,
     onQuickConnect: () -> Unit,
     onDisconnect: () -> Unit,
     onRefreshCert: () -> Unit,
     onToggleIpVisibility: () -> Unit,
-    onChangeQuickConnect: () -> Unit
+    onChangeQuickConnect: () -> Unit,
+    modifier: Modifier = Modifier,
+    isTablet: Boolean = false
 ) {
     val colors = ProtonNextTheme.colors
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     
-    if (isTablet) {
-        // Tablet Layout: Split connection (Left) and recent connections (Right)
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 32.dp)
-                .padding(bottom = 140.dp), // Increased for the centered bottom bar
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(32.dp)
-        ) {
-            // Left Side: Connection Status
-            Column(
+    Box(modifier = modifier) {
+        if (isTablet) {
+            // Tablet Layout: Split connection (Left) and recent connections (Right)
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                verticalArrangement = Arrangement.Center
+                    .fillMaxSize()
+                    .padding(horizontal = 32.dp)
+                    .padding(bottom = 140.dp), // Increased for the centered bottom bar
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(32.dp)
             ) {
-                CertificateBanner(
-                    state = state.certificateState,
-                    onRefresh = onRefreshCert,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                ConnectionStatusCard(
-                    isConnected = state.isConnected,
-                    isConnecting = state.isConnecting,
-                    connectedServer = state.connectedServer,
-                    allServers = state.servers,
-                    originalLocationText = state.originalLocationText,
-                    vpnLocationText = state.vpnLocationText,
-                    isIpHidden = state.isIpHidden,
-                    quickConnectStrategy = state.quickConnectStrategy,
-                    quickConnectTargetId = state.quickConnectTargetId,
-                    profiles = state.profiles,
-                    onToggleIpVisibility = onToggleIpVisibility,
-                    onToggleConnection = {
-                        if (state.isConnected) onDisconnect() else onQuickConnect()
-                    },
-                    onChangeQuickConnect = onChangeQuickConnect
-                )
-            }
-
-            // Right Side: Recent Connections
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                verticalArrangement = Arrangement.Center
-            ) {
-                if (state.recentConnections.isNotEmpty()) {
-                    Text(
-                        text = stringResource(R.string.title_recent_connections),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = colors.textNorm,
+                // Left Side: Connection Status
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CertificateBanner(
+                        state = state.certificateState,
+                        onRefresh = onRefreshCert,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(colors.backgroundNorm.copy(alpha = 0.5f)),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                                items(state.recentConnections, key = { it.id }) { server ->
-                            ServerCard(
-                                server = server,
-                                isConnected = state.connectedServer?.id == server.id,
-                                isConnecting = state.isConnecting && state.connectedServer?.id == server.id,
-                                displayMode = state.serverLoadDisplayMode,
-                                onClick = { onServerClick(server) }
-                            )
-                        }
-                    }
+                    ConnectionStatusCard(
+                        isConnected = state.isConnected,
+                        isConnecting = state.isConnecting,
+                        originalLocationText = state.originalLocationText,
+                        vpnLocationText = state.vpnLocationText,
+                        isIpHidden = state.isIpHidden,
+                        quickConnectStrategy = state.quickConnectStrategy,
+                        quickConnectTargetId = state.quickConnectTargetId,
+                        profiles = state.profiles.toImmutableList(),
+                        onToggleIpVisibility = onToggleIpVisibility,
+                        onToggleConnection = {
+                            if (state.isConnected) onDisconnect() else onQuickConnect()
+                        },
+                        onChangeQuickConnect = onChangeQuickConnect,
+                        connectedServer = state.connectedServer,
+                        allServers = state.servers.toImmutableList()
+                    )
                 }
-            }
-        }
-    } else {
-        // Phone Layout (original LazyColumn)
-        val topSpacerHeight = (screenHeight * 0.55f).coerceAtLeast(400.dp)
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 140.dp)
-        ) {
-            item {
-                Spacer(modifier = Modifier.height(topSpacerHeight))
-            }
-
-            item {
-                CertificateBanner(
-                    state = state.certificateState,
-                    onRefresh = onRefreshCert,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-            }
-
-            item {
-                ConnectionStatusCard(
-                    isConnected = state.isConnected,
-                    isConnecting = state.isConnecting,
-                    connectedServer = state.connectedServer,
-                    allServers = state.servers,
-                    originalLocationText = state.originalLocationText,
-                    vpnLocationText = state.vpnLocationText,
-                    isIpHidden = state.isIpHidden,
-                    quickConnectStrategy = state.quickConnectStrategy,
-                    quickConnectTargetId = state.quickConnectTargetId,
-                    profiles = state.profiles,
-                    onToggleIpVisibility = onToggleIpVisibility,
-                    onToggleConnection = {
-                        if (state.isConnected) onDisconnect() else onQuickConnect()
-                    },
-                    onChangeQuickConnect = onChangeQuickConnect
-                )
-            }
-
-            if (state.recentConnections.isNotEmpty()) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(
-                                brush = Brush.verticalGradient(
-                                    colors = listOf(Color.Transparent, colors.backgroundNorm)
-                                )
-                            )
-                            .padding(top = 24.dp)
-                    ) {
+                // Right Side: Recent Connections
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    if (state.recentConnections.isNotEmpty()) {
                         Text(
                             text = stringResource(R.string.title_recent_connections),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = colors.textNorm,
-                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                            modifier = Modifier.padding(bottom = 16.dp)
                         )
+
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(colors.backgroundNorm.copy(alpha = 0.5f)),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(state.recentConnections, key = { it.id }, contentType = { "Server" }) { server ->
+                                ServerCard(
+                                    server = server,
+                                    isConnected = state.connectedServer?.id == server.id,
+                                    isConnecting = state.isConnecting && state.connectedServer?.id == server.id,
+                                    displayMode = state.serverLoadDisplayMode,
+                                    onClick = { onServerClick(server) }
+                                )
+                            }
+                        }
                     }
                 }
+            }
+        } else {
+            // Phone Layout (original LazyColumn)
+            val topSpacerHeight = (screenHeight * 0.55f).coerceAtLeast(400.dp)
 
-                items(state.recentConnections, key = { it.id }) { server ->
-                    Box(modifier = Modifier.background(colors.backgroundNorm)) {
-                        ServerCard(
-                            server = server,
-                            isConnected = state.connectedServer?.id == server.id,
-                            isConnecting = state.isConnecting && state.connectedServer?.id == server.id,
-                            displayMode = state.serverLoadDisplayMode,
-                            onClick = { onServerClick(server) },
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
-                        )
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 140.dp)
+            ) {
+                item(contentType = "Spacer") {
+                    Spacer(modifier = Modifier.height(topSpacerHeight))
+                }
+
+                item(contentType = "CertificateBanner") {
+                    CertificateBanner(
+                        state = state.certificateState,
+                        onRefresh = onRefreshCert,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+
+                item(contentType = "ConnectionStatus") {
+                    ConnectionStatusCard(
+                        isConnected = state.isConnected,
+                        isConnecting = state.isConnecting,
+                        originalLocationText = state.originalLocationText,
+                        vpnLocationText = state.vpnLocationText,
+                        isIpHidden = state.isIpHidden,
+                        quickConnectStrategy = state.quickConnectStrategy,
+                        quickConnectTargetId = state.quickConnectTargetId,
+                        profiles = state.profiles.toImmutableList(),
+                        onToggleIpVisibility = onToggleIpVisibility,
+                        onToggleConnection = {
+                            if (state.isConnected) onDisconnect() else onQuickConnect()
+                        },
+                        onChangeQuickConnect = onChangeQuickConnect,
+                        connectedServer = state.connectedServer,
+                        allServers = state.servers.toImmutableList()
+                    )
+                }
+
+                if (state.recentConnections.isNotEmpty()) {
+                    item(contentType = "RecentConnectionsHeader") {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    brush = Brush.verticalGradient(
+                                        colors = listOf(Color.Transparent, colors.backgroundNorm)
+                                    )
+                                )
+                                .padding(top = 24.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.title_recent_connections),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = colors.textNorm,
+                                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                            )
+                        }
+                    }
+
+                    items(state.recentConnections, key = { it.id }, contentType = { "Server" }) { server ->
+                        Box(modifier = Modifier.background(colors.backgroundNorm)) {
+                            ServerCard(
+                                server = server,
+                                isConnected = state.connectedServer?.id == server.id,
+                                isConnecting = state.isConnecting && state.connectedServer?.id == server.id,
+                                displayMode = state.serverLoadDisplayMode,
+                                onClick = { onServerClick(server) },
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -830,17 +844,18 @@ private data class Quadruple<out A, out B, out C, out D>(
 fun ConnectionStatusCard(
     isConnected: Boolean,
     isConnecting: Boolean,
-    connectedServer: LogicalServer?,
-    allServers: List<LogicalServer> = emptyList(),
     originalLocationText: LocationText?,
     vpnLocationText: LocationText?,
     isIpHidden: Boolean,
     quickConnectStrategy: String,
     quickConnectTargetId: String?,
-    profiles: List<ru.protonmod.next.data.local.VpnProfileEntity>,
+    profiles: ImmutableList<ru.protonmod.next.data.local.VpnProfileEntity>,
     onToggleIpVisibility: () -> Unit,
     onToggleConnection: () -> Unit,
-    onChangeQuickConnect: () -> Unit
+    onChangeQuickConnect: () -> Unit,
+    modifier: Modifier = Modifier,
+    connectedServer: LogicalServer? = null,
+    allServers: ImmutableList<LogicalServer> = kotlinx.collections.immutable.persistentListOf()
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
@@ -848,7 +863,7 @@ fun ConnectionStatusCard(
     val contentColor = colors.textNorm
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .liquidGlass(
@@ -1067,9 +1082,9 @@ fun ServerCard(
     server: LogicalServer,
     isConnected: Boolean,
     isConnecting: Boolean,
+    modifier: Modifier = Modifier,
     displayMode: ru.protonmod.next.data.local.ServerLoadDisplayMode = ru.protonmod.next.data.local.ServerLoadDisplayMode.ALL,
     onClick: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current

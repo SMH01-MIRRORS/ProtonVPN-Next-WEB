@@ -39,6 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableList
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.VpnProfileEntity
 import ru.protonmod.next.ui.components.FlagIcon
@@ -55,15 +56,17 @@ fun QuickConnectBottomSheet(
     onDismiss: () -> Unit,
     currentStrategy: String,
     currentTargetId: String?,
-    profiles: List<VpnProfileEntity>,
-    recentServers: List<ru.protonmod.next.data.network.LogicalServer>,
-    onStrategySelect: (String, String?) -> Unit
+    profiles: ImmutableList<VpnProfileEntity>,
+    recentServers: ImmutableList<ru.protonmod.next.data.network.LogicalServer>,
+    onStrategySelect: (String, String?) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        modifier = modifier,
         containerColor = colors.backgroundNorm,
         dragHandle = { BottomSheetDefaults.DragHandle(color = colors.iconWeak) }
     ) {
@@ -85,7 +88,7 @@ fun QuickConnectBottomSheet(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                item {
+                item(contentType = "Strategy") {
                     StrategyItem(
                         title = stringResource(R.string.qc_strategy_fastest),
                         description = stringResource(R.string.qc_strategy_fastest_desc),
@@ -98,7 +101,7 @@ fun QuickConnectBottomSheet(
                     )
                 }
 
-                item {
+                item(contentType = "Strategy") {
                     StrategyItem(
                         title = stringResource(R.string.qc_strategy_recent),
                         description = stringResource(R.string.qc_strategy_recent_desc),
@@ -112,7 +115,7 @@ fun QuickConnectBottomSheet(
                 }
 
                 if (profiles.isNotEmpty()) {
-                    item {
+                    item(contentType = "Header") {
                         Text(
                             text = stringResource(R.string.qc_header_profiles),
                             style = MaterialTheme.typography.labelLarge,
@@ -121,7 +124,7 @@ fun QuickConnectBottomSheet(
                         )
                     }
 
-                    items(profiles) { profile ->
+                    items(profiles, key = { it.id }, contentType = { "ProfileStrategy" }) { profile ->
                         StrategyItem(
                             title = profile.name,
                             description = stringResource(R.string.qc_strategy_profile_desc),
@@ -136,7 +139,7 @@ fun QuickConnectBottomSheet(
                 }
 
                 if (recentServers.isNotEmpty()) {
-                    item {
+                    item(contentType = "Header") {
                         Text(
                             text = stringResource(R.string.qc_header_recent),
                             style = MaterialTheme.typography.labelLarge,
@@ -145,7 +148,7 @@ fun QuickConnectBottomSheet(
                         )
                     }
 
-                    items(recentServers) { server ->
+                    items(recentServers, key = { it.id }, contentType = { "ServerStrategy" }) { server ->
                         val countryName = CountryUtils.getCountryName(context, server.exitCountry)
                         val flagResId = CountryUtils.getFlagResource(context, server.exitCountry)
                         
@@ -171,16 +174,17 @@ fun QuickConnectBottomSheet(
 private fun StrategyItem(
     title: String,
     description: String,
-    icon: ImageVector? = null,
-    flagResId: Int = 0,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    flagResId: Int = 0
 ) {
     val colors = ProtonNextTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .liquidGlass(
                 shape = RoundedCornerShape(20.dp),

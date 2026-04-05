@@ -28,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.GppMaybe
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +39,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -45,13 +48,14 @@ import ru.protonmod.next.ui.theme.ProtonNextTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KillSwitchScreen(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
@@ -124,13 +128,16 @@ fun KillSwitchScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
+                val step1 = stringResource(R.string.kill_switch_step_1)
+                val step2 = stringResource(R.string.kill_switch_step_2)
+                val step3 = stringResource(R.string.kill_switch_step_3)
+                val steps = remember(step1, step2, step3) {
+                    listOf(step1, step2, step3).toImmutableList()
+                }
+
                 InstructionCard(
-                    modifier = Modifier.padding(horizontal = 24.dp),
-                    steps = listOf(
-                        stringResource(R.string.kill_switch_step_1),
-                        stringResource(R.string.kill_switch_step_2),
-                        stringResource(R.string.kill_switch_step_3)
-                    )
+                    steps = steps,
+                    modifier = Modifier.padding(horizontal = 24.dp)
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -163,8 +170,8 @@ fun KillSwitchScreen(
 
 @Composable
 private fun InstructionCard(
-    modifier: Modifier = Modifier,
-    steps: List<String>
+    steps: ImmutableList<String>,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     Card(

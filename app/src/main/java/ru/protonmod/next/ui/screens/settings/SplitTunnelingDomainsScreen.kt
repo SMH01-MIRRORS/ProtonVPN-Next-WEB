@@ -44,6 +44,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -51,17 +52,18 @@ import ru.protonmod.next.ui.theme.ProtonNextTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SplitTunnelingDomainsScreen(
+    modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
     viewModel: SplitTunnelingDomainsViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var inputValue by remember { mutableStateOf("") }
     var inputError by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
@@ -87,7 +89,7 @@ fun SplitTunnelingDomainsScreen(
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                item {
+                item(contentType = "Header") {
                     NavigationHeader(
                         title = stringResource(
                             if (uiState.splitTunnelingMode == "exclude") R.string.settings_excluded_domains
@@ -97,7 +99,7 @@ fun SplitTunnelingDomainsScreen(
                     )
                 }
 
-                item {
+                item(contentType = "InputRow") {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -195,7 +197,7 @@ fun SplitTunnelingDomainsScreen(
                 }
 
                 if (uiState.domains.isNotEmpty()) {
-                    item {
+                    item(contentType = "SectionHeader") {
                         Text(
                             text = stringResource(
                                 if (uiState.splitTunnelingMode == "exclude") R.string.st_excluded_domains_header
@@ -208,15 +210,15 @@ fun SplitTunnelingDomainsScreen(
                         )
                     }
 
-                    items(uiState.domains) { domainEntry ->
+                    items(uiState.domains, key = { it.domain }, contentType = { "Domain" }) { domainEntry ->
                         DomainListItem(
-                            modifier = Modifier.padding(horizontal = 16.dp),
                             domain = domainEntry.domain,
-                            onRemove = { viewModel.removeDomain(domainEntry.domain) }
+                            onRemove = { viewModel.removeDomain(domainEntry.domain) },
+                            modifier = Modifier.padding(horizontal = 16.dp)
                         )
                     }
                 } else {
-                    item {
+                    item(contentType = "EmptyState") {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -238,9 +240,9 @@ fun SplitTunnelingDomainsScreen(
 
 @Composable
 fun DomainListItem(
-    modifier: Modifier = Modifier,
     domain: String,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     Row(

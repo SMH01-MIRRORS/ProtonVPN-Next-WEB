@@ -17,7 +17,6 @@
 
 package ru.protonmod.next.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Public
@@ -33,7 +32,11 @@ import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 @Composable
-fun LoadIndicator(load: Int, displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL) {
+fun LoadIndicator(
+    load: Int,
+    modifier: Modifier = Modifier,
+    displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
+) {
     if (displayMode == ServerLoadDisplayMode.HIDDEN || displayMode == ServerLoadDisplayMode.LINE) return
 
     val colors = ProtonNextTheme.colors
@@ -43,7 +46,10 @@ fun LoadIndicator(load: Int, displayMode: ServerLoadDisplayMode = ServerLoadDisp
         else -> colors.notificationError
     }
 
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Icon(
             imageVector = Icons.Rounded.Public,
             contentDescription = null,
@@ -61,7 +67,11 @@ fun LoadIndicator(load: Int, displayMode: ServerLoadDisplayMode = ServerLoadDisp
 }
 
 @Composable
-fun LoadProgressBar(load: Int, displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL) {
+fun LoadProgressBar(
+    load: Int,
+    modifier: Modifier = Modifier,
+    displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
+) {
     if (displayMode == ServerLoadDisplayMode.HIDDEN || displayMode == ServerLoadDisplayMode.PERCENT) return
 
     val colors = ProtonNextTheme.colors
@@ -73,7 +83,7 @@ fun LoadProgressBar(load: Int, displayMode: ServerLoadDisplayMode = ServerLoadDi
 
     LinearProgressIndicator(
         progress = { load / 100f },
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(4.dp),
         color = color,

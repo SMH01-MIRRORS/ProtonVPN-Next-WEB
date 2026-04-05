@@ -36,7 +36,6 @@ import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.ui.components.NavigationHeader
@@ -62,11 +62,12 @@ import ru.protonmod.next.ui.utils.isTablet
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ApiBypassScreen(
+    modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isTablet = isTablet()
 
     // Assuming the ViewModel exposes whether ANY VPN (ours or third-party) is active
@@ -77,7 +78,7 @@ fun ApiBypassScreen(
     val isEffectivelyEnabled = uiState.apiBypassEnabled && !isAnyVpnActive
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
@@ -278,12 +279,13 @@ private fun StrategySelectionRow(
     description: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp),

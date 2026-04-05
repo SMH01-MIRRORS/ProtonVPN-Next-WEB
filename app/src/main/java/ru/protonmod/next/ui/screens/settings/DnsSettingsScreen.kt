@@ -30,9 +30,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -42,13 +42,14 @@ import ru.protonmod.next.ui.theme.liquidGlass
 @Composable
 fun DnsSettingsScreen(
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var inputText by remember(uiState.customDns) { mutableStateOf(uiState.customDns) }
 
-    Box(modifier = Modifier.fillMaxSize().background(colors.backgroundNorm)) {
+    Box(modifier = modifier.fillMaxSize().background(colors.backgroundNorm)) {
         // Background gradient (Fullscreen)
         Box(
             modifier = Modifier
@@ -111,7 +112,7 @@ fun DnsSettingsScreen(
                                 unfocusedBorderColor = colors.shade20,
                                 focusedTextColor = colors.textNorm,
                                 unfocusedTextColor = colors.textNorm
-                            ),
+                              ),
                             modifier = Modifier.fillMaxWidth()
                         )
 

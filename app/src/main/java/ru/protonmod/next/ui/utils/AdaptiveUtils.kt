@@ -21,6 +21,7 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.Modifier
 
 enum class DeviceType {
     Phone, Tablet
@@ -29,12 +30,20 @@ enum class DeviceType {
 val LocalDeviceType = compositionLocalOf { DeviceType.Phone }
 
 @Composable
-fun ProvideDeviceType(windowWidthSizeClass: WindowWidthSizeClass, content: @Composable () -> Unit) {
+fun ProvideDeviceType(
+    windowWidthSizeClass: WindowWidthSizeClass,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
     val deviceType = when (windowWidthSizeClass) {
         WindowWidthSizeClass.Expanded -> DeviceType.Tablet
         else -> DeviceType.Phone
     }
-    CompositionLocalProvider(LocalDeviceType provides deviceType, content = content)
+    androidx.compose.foundation.layout.Box(modifier = modifier) {
+        CompositionLocalProvider(LocalDeviceType provides deviceType) {
+            content()
+        }
+    }
 }
 
 @Composable

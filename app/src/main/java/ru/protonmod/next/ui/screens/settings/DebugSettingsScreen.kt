@@ -43,6 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.data.network.LogicalServer
@@ -53,10 +54,11 @@ import ru.protonmod.next.ui.theme.liquidGlass
 @Composable
 fun DebugSettingsScreen(
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: DebugSettingsViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showNukeConfirm by remember { mutableStateOf(false) }
     var showServerSelect by remember { mutableStateOf(false) }
     var showExportConfirm by remember { mutableStateOf(false) }
@@ -73,7 +75,7 @@ fun DebugSettingsScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -99,7 +101,7 @@ fun DebugSettingsScreen(
                 contentPadding = PaddingValues(bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                item {
+                item(contentType = "Header") {
                     NavigationHeader(
                         title = stringResource(R.string.debug_title),
                         onBack = onBack
@@ -107,7 +109,7 @@ fun DebugSettingsScreen(
                 }
 
                 // Session & Certificate Info
-                item {
+                item(contentType = "DebugSection") {
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         DebugSection(title = stringResource(R.string.debug_session_header)) {
                             uiState.session?.let { session ->
@@ -167,7 +169,7 @@ fun DebugSettingsScreen(
                 }
 
                 // Exports
-                item {
+                item(contentType = "DebugSection") {
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         DebugSection(title = stringResource(R.string.debug_exports_header)) {
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -197,7 +199,7 @@ fun DebugSettingsScreen(
                 }
 
                 // Device Info
-                item {
+                item(contentType = "DebugSection") {
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         DebugSection(title = stringResource(R.string.debug_device_header)) {
                             Text(
@@ -211,7 +213,7 @@ fun DebugSettingsScreen(
                 }
 
                 // Sentry Tests
-                item {
+                item(contentType = "DebugSection") {
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         DebugSection(
                             title = stringResource(R.string.debug_sentry_header),
@@ -269,7 +271,7 @@ fun DebugSettingsScreen(
                 }
 
                 // Danger Zone
-                item {
+                item(contentType = "DebugSection") {
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         DebugSection(
                             title = stringResource(R.string.debug_danger_header),

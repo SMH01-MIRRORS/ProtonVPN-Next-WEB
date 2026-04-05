@@ -42,8 +42,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
-import ru.protonmod.next.ui.components.MainHeader
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.isTablet
@@ -53,11 +53,12 @@ import ru.protonmod.next.ui.utils.isTablet
 fun LoginScreen(
     onBackClick: () -> Unit,
     onLoginSuccess: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val isApiBypassEnabled by viewModel.isApiBypassEnabled.collectAsState()
-    val apiBypassStrategy by viewModel.apiBypassStrategy.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isApiBypassEnabled by viewModel.isApiBypassEnabled.collectAsStateWithLifecycle()
+    val apiBypassStrategy by viewModel.apiBypassStrategy.collectAsStateWithLifecycle()
     val colors = ProtonNextTheme.colors
     val isTablet = isTablet()
 
@@ -70,7 +71,7 @@ fun LoginScreen(
     var showTokenLoginDialog by remember { mutableStateOf(false) }
     var sessionJson by remember { mutableStateOf("") }
 
-    LaunchedEffect(uiState) {
+    LaunchedEffect(uiState, onLoginSuccess) {
         if (uiState is LoginUiState.Success) {
             onLoginSuccess()
         }
@@ -78,7 +79,8 @@ fun LoginScreen(
 
     AnimatedContent(
         targetState = uiState,
-        label = "login_transitions"
+        label = "login_transitions",
+        modifier = modifier
     ) { state ->
         when (state) {
             is LoginUiState.RequiresCaptcha -> {
@@ -88,7 +90,7 @@ fun LoginScreen(
                     isApiBypassEnabled = isApiBypassEnabled,
                     apiBypassStrategy = apiBypassStrategy,
                     onDismiss = { viewModel.resetError() },
-                    onCaptchaSolved = { verifiedToken ->
+                    onCaptchaSolve = { verifiedToken ->
                         viewModel.retryWithCaptcha(state, verifiedToken)
                     }
                 )

@@ -45,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -57,24 +58,25 @@ fun WelcomeScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToApiBypassSettings: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
-    val uiState by viewModel.uiState.collectAsState()
-    val isApiBypassEnabled by viewModel.isApiBypassEnabled.collectAsState()
-    val apiBypassStrategy by viewModel.apiBypassStrategy.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isApiBypassEnabled by viewModel.isApiBypassEnabled.collectAsStateWithLifecycle()
+    val apiBypassStrategy by viewModel.apiBypassStrategy.collectAsStateWithLifecycle()
     val isTablet = isTablet()
 
     var isVisible by remember { mutableStateOf(false) }
 
     // Start entry animations
-    LaunchedEffect(Unit) {
+    LaunchedEffect(viewModel) {
         delay(100)
         isVisible = true
     }
 
     // Handle successful login/guest auth
-    LaunchedEffect(uiState) {
+    LaunchedEffect(uiState, onNavigateToHome) {
         if (uiState is LoginUiState.Success) {
             onNavigateToHome()
         }
@@ -84,7 +86,8 @@ fun WelcomeScreen(
 
     AnimatedContent(
         targetState = captchaState,
-        label = "welcome_to_captcha_transition"
+        label = "welcome_to_captcha_transition",
+        modifier = modifier
     ) { currentCaptcha ->
         if (currentCaptcha != null) {
             CaptchaScreen(
@@ -93,7 +96,7 @@ fun WelcomeScreen(
                 isApiBypassEnabled = isApiBypassEnabled,
                 apiBypassStrategy = apiBypassStrategy,
                 onDismiss = { viewModel.resetError() },
-                onCaptchaSolved = { verifiedToken ->
+                onCaptchaSolve = { verifiedToken ->
                     viewModel.retryWithCaptcha(currentCaptcha, verifiedToken)
                 }
             )

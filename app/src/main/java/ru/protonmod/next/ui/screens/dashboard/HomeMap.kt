@@ -37,6 +37,7 @@ import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.caverock.androidsvg.RenderOptions
 import com.caverock.androidsvg.SVG
 import kotlinx.coroutines.*
+import kotlinx.collections.immutable.ImmutableList
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import kotlin.math.max
@@ -601,11 +602,11 @@ class MapView(context: Context) : View(context) {
 
 @Composable
 fun HomeMap(
-    modifier: Modifier = Modifier,
-    allServers: List<LogicalServer>,
+    allServers: ImmutableList<LogicalServer>,
     connectedServer: LogicalServer?,
-    userCountryCode: String? = null,
     isConnecting: Boolean,
+    modifier: Modifier = Modifier,
+    userCountryCode: String? = null,
     isInteractive: Boolean = false,
     onNodeClick: ((String) -> Unit)? = null
 ) {

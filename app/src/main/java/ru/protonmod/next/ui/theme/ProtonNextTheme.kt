@@ -18,6 +18,7 @@
 package ru.protonmod.next.ui.theme
 
 import android.app.Activity
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -30,6 +31,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.structuralEqualityPolicy
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -628,6 +630,7 @@ val LocalColors = staticCompositionLocalOf { ProtonColors.Light }
 
 @Composable
 fun ProtonNextTheme(
+    modifier: Modifier = Modifier,
     appTheme: AppTheme = AppTheme.DARK,
     content: @Composable () -> Unit
 ) {
@@ -657,14 +660,16 @@ fun ProtonNextTheme(
         }
     }
 
-    CompositionLocalProvider(LocalColors provides protonColors) {
-        MaterialTheme(
-            colorScheme = protonColors.toMaterial3ThemeColors(),
-        ) {
-            Surface(
-                color = protonColors.backgroundNorm,
-                content = content
-            )
+    Box(modifier = modifier) {
+        CompositionLocalProvider(LocalColors provides protonColors) {
+            MaterialTheme(
+                colorScheme = protonColors.toMaterial3ThemeColors(),
+            ) {
+                Surface(
+                    color = protonColors.backgroundNorm,
+                    content = content
+                )
+            }
         }
     }
 }

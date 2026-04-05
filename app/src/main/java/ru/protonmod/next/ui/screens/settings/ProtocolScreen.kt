@@ -48,12 +48,13 @@ import ru.protonmod.next.ui.theme.liquidGlass
 fun ProtocolScreen(
     onBack: () -> Unit,
     onNavigateToObfuscation: (() -> Unit)?,
+    modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
@@ -82,14 +83,14 @@ fun ProtocolScreen(
                 contentPadding = PaddingValues(bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                item {
+                item(contentType = "Header") {
                     NavigationHeader(
                         title = stringResource(R.string.protocol_title),
                         onBack = onBack
                     )
                 }
 
-                item {
+                item(contentType = "ProtocolList") {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -126,12 +127,13 @@ fun ProtocolItemRow(
     description: String,
     isSelected: Boolean,
     onSelect: () -> Unit,
+    modifier: Modifier = Modifier,
     onSettingsClick: (() -> Unit)? = null
 ) {
     val colors = ProtonNextTheme.colors
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onSelect)
             .padding(16.dp),
