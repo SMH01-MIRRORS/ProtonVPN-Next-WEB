@@ -37,6 +37,7 @@ import java.net.ConnectException
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.repository.AuthRepository
+import ru.protonmod.next.vpn.WarpManager
 import javax.inject.Inject
 
 // --- API Error Models ---
@@ -74,7 +75,8 @@ sealed class LoginUiState {
         val passwordRaw: String,
         val captchaToken: String,
         val isAnonymous: Boolean = false,
-        val sessionId: String? = null // Passed to WebView headers
+        val sessionId: String? = null, // Passed to WebView headers
+        val nonce: Long = System.currentTimeMillis() // Forces UI refresh on repeated challenges
     ) : LoginUiState()
 
     data class Requires2FA(
@@ -94,11 +96,15 @@ sealed class LoginUiState {
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val settingsManager: SettingsManager
+    private val settingsManager: SettingsManager,
+    private val warpManager: WarpManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+
+    private val _isWarpLoading = MutableStateFlow(false)
+    val isWarpLoading = _isWarpLoading.asStateFlow()
 
     val isApiBypassEnabled = settingsManager.apiBypassEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
@@ -117,65 +123,90 @@ class LoginViewModel @Inject constructor(
     }
 
     fun login(username: String, passwordRaw: String, captchaToken: String? = null) {
-        if (username.isBlank() || passwordRaw.isBlank()) return
+        if (username.isBlank() || passwordRaw.isBlank() || _uiState.value is LoginUiState.Loading) return
 
         ProtonLogger.action("Login", "User clicked Login (Username: $username)")
         val startTime = System.currentTimeMillis()
         _uiState.value = LoginUiState.Loading
         viewModelScope.launch {
-            authRepository.login(username, passwordRaw, captchaToken)
-                .onSuccess { response ->
-                    ProtonLogger.i("Login", "Login successful for $username")
-                    // Metrics
-                    val duration = System.currentTimeMillis() - startTime
-                    Sentry.metrics().distribution("login_latency", duration.toDouble())
-                    Sentry.metrics().count("login_success", 1.0)
-
-                    val scopes = response.scopes
-                    if (scopes.contains("twofactor")) {
-                        ProtonLogger.i("Login", "2FA required for $username")
-                        _uiState.value = LoginUiState.Requires2FA(
-                            sessionId = response.sessionId ?: "",
-                            tempAccessToken = response.accessToken ?: "",
-                            refreshToken = response.refreshToken ?: ""
-                        )
-                    } else {
-                        _uiState.value = LoginUiState.Success(
-                            accessToken = response.accessToken ?: "",
-                            userId = response.userId ?: ""
-                        )
-                    }
+            val strategy = apiBypassStrategy.value
+            val useWarp = isApiBypassEnabled.value && strategy == SettingsManager.STRATEGY_WARP
+            
+            if (useWarp) {
+                _isWarpLoading.value = true
+                if (!warpManager.isConfigLoaded()) {
+                    warpManager.fetchWarpConfig()
                 }
-                .onFailure { exception ->
-                    if (exception is CancellationException) return@onFailure
+                warpManager.startWarpTunnel()
+                _isWarpLoading.value = false
+            }
 
-                    // Metrics
-                    Sentry.metrics().count("login_error", 1.0)
+            var isSuccessful = false
+            try {
+                authRepository.login(username, passwordRaw, captchaToken)
+                    .onSuccess { response ->
+                        ProtonLogger.i("Login", "Login successful for $username")
+                        // Metrics
+                        val duration = System.currentTimeMillis() - startTime
+                        Sentry.metrics().distribution("login_latency", duration.toDouble())
+                        Sentry.metrics().count("login_success", 1.0)
 
-                    if (exception is CaptchaRequiredException) {
-                        // CaptchaRequiredException is expected flow — do NOT log as error or send to Sentry
-                        ProtonLogger.w("Login", "Captcha required for $username")
-                        _uiState.value = LoginUiState.RequiresCaptcha(
-                            webUrl = exception.webUrl,
-                            username = username,
-                            passwordRaw = passwordRaw,
-                            captchaToken = exception.token,
-                            isAnonymous = false,
-                            sessionId = exception.sessionId
-                        )
-                    } else if (exception is SocketTimeoutException || exception is ConnectException) {
-                        // Network timeout errors - log with context but don't crash
-                        ProtonLogger.w("Login", "Network error during login for $username: ${exception.message}")
-                        _uiState.value = LoginUiState.Error(
-                            "Connection timeout. Please check your internet and try again."
-                        )
-                    } else {
-                        ProtonLogger.e("Login", "Login failed for $username: ${exception.message}", exception)
-                        _uiState.value = LoginUiState.Error(
-                            exception.localizedMessage ?: "An unexpected authentication error occurred"
-                        )
+                        val scopes = response.scopes
+                        if (scopes.contains("twofactor")) {
+                            ProtonLogger.i("Login", "2FA required for $username")
+                            _uiState.value = LoginUiState.Requires2FA(
+                                sessionId = response.sessionId ?: "",
+                                tempAccessToken = response.accessToken ?: "",
+                                refreshToken = response.refreshToken ?: ""
+                            )
+                        } else {
+                            isSuccessful = true
+                            _uiState.value = LoginUiState.Success(
+                                accessToken = response.accessToken ?: "",
+                                userId = response.userId ?: ""
+                            )
+                        }
                     }
+                    .onFailure { exception ->
+                        if (exception is CancellationException) return@onFailure
+
+                        // Metrics
+                        Sentry.metrics().count("login_error", 1.0)
+
+                        if (exception is CaptchaRequiredException) {
+                            // CaptchaRequiredException is expected flow — do NOT log as error or send to Sentry
+                            ProtonLogger.w("Login", "Captcha required for $username")
+                            _uiState.value = LoginUiState.RequiresCaptcha(
+                                webUrl = exception.webUrl,
+                                username = username,
+                                passwordRaw = passwordRaw,
+                                captchaToken = exception.token,
+                                isAnonymous = false,
+                                sessionId = exception.sessionId
+                            )
+                        } else if (exception is SocketTimeoutException || exception is ConnectException) {
+                            // Network timeout errors - log with context but don't crash
+                            ProtonLogger.w("Login", "Network error during login for $username: ${exception.message}")
+                            _uiState.value = LoginUiState.Error(
+                                "Connection timeout. Please check your internet and try again."
+                            )
+                        } else {
+                            ProtonLogger.e("Login", "Login failed for $username: ${exception.message}", exception)
+                            _uiState.value = LoginUiState.Error(
+                                exception.localizedMessage ?: "An unexpected authentication error occurred"
+                            )
+                        }
+                    }
+            } finally {
+                // Only stop the WARP tunnel if the login was NOT successful AND not in a pending state like Captcha/2FA.
+                // If login was successful, we leave the tunnel UP so Dashboard can use it
+                // for the initial server list fetch. It will be replaced when user connects to VPN.
+                val nextState = _uiState.value
+                val isPending = nextState is LoginUiState.RequiresCaptcha || nextState is LoginUiState.Requires2FA
+                if (useWarp && !isSuccessful && !isPending) {
+                    warpManager.stopWarpTunnel()
                 }
+            }
         }
     }
 
@@ -206,57 +237,101 @@ class LoginViewModel @Inject constructor(
 
         _uiState.value = LoginUiState.Loading
         viewModelScope.launch {
-            authRepository.verify2FA(sessionId, tempAccessToken, refreshToken, totpCode)
-                .onSuccess { response ->
-                    _uiState.value = LoginUiState.Success(
-                        accessToken = response.accessToken ?: "",
-                        userId = response.userId ?: ""
-                    )
+            val strategy = apiBypassStrategy.value
+            val useWarp = isApiBypassEnabled.value && strategy == SettingsManager.STRATEGY_WARP
+            
+            if (useWarp) {
+                _isWarpLoading.value = true
+                if (!warpManager.isConfigLoaded()) {
+                    warpManager.fetchWarpConfig()
                 }
-                .onFailure { exception ->
-                    if (exception is CancellationException) return@onFailure
-                    _uiState.value = LoginUiState.Error(exception.localizedMessage ?: "Two-factor verification failed")
+                warpManager.startWarpTunnel()
+                _isWarpLoading.value = false
+            }
+
+            var isSuccessful = false
+            try {
+                authRepository.verify2FA(sessionId, tempAccessToken, refreshToken, totpCode)
+                    .onSuccess { response ->
+                        isSuccessful = true
+                        _uiState.value = LoginUiState.Success(
+                            accessToken = response.accessToken ?: "",
+                            userId = response.userId ?: ""
+                        )
+                    }
+                    .onFailure { exception ->
+                        if (exception is CancellationException) return@onFailure
+                        _uiState.value = LoginUiState.Error(exception.localizedMessage ?: "Two-factor verification failed")
+                    }
+            } finally {
+                if (useWarp && !isSuccessful) {
+                    warpManager.stopWarpTunnel()
                 }
+            }
         }
     }
 
     fun loginAnonymous(captchaToken: String? = null) {
+        if (_uiState.value is LoginUiState.Loading) return
+
         ProtonLogger.action("Login", "User clicked Login Anonymous")
         viewModelScope.launch {
-            _uiState.value = LoginUiState.Loading
-            authRepository.loginAnonymous(captchaToken)
-                .onSuccess { response ->
-                    ProtonLogger.i("Login", "Anonymous login successful")
-                    _uiState.value = LoginUiState.Success(
-                        accessToken = response.accessToken ?: "",
-                        userId = response.userId ?: ""
-                    )
+            val strategy = apiBypassStrategy.value
+            val useWarp = isApiBypassEnabled.value && strategy == SettingsManager.STRATEGY_WARP
+            
+            if (useWarp) {
+                _isWarpLoading.value = true
+                if (!warpManager.isConfigLoaded()) {
+                    warpManager.fetchWarpConfig()
                 }
-                .onFailure { exception ->
-                    if (exception is CancellationException) return@onFailure
+                warpManager.startWarpTunnel()
+                _isWarpLoading.value = false
+            }
 
-                    if (exception is CaptchaRequiredException) {
-                        // CaptchaRequiredException is expected flow — do NOT log as error or send to Sentry
-                        ProtonLogger.w("Login", "Anonymous login requires captcha")
-                        _uiState.value = LoginUiState.RequiresCaptcha(
-                            webUrl = exception.webUrl,
-                            username = "",
-                            passwordRaw = "",
-                            captchaToken = exception.token,
-                            isAnonymous = true,
-                            sessionId = exception.sessionId
+            var isSuccessful = false
+            try {
+                _uiState.value = LoginUiState.Loading
+                authRepository.loginAnonymous(captchaToken)
+                    .onSuccess { response ->
+                        ProtonLogger.i("Login", "Anonymous login successful")
+                        isSuccessful = true
+                        _uiState.value = LoginUiState.Success(
+                            accessToken = response.accessToken ?: "",
+                            userId = response.userId ?: ""
                         )
-                    } else if (exception is SocketTimeoutException || exception is ConnectException) {
-                        // Network timeout errors - log with context but don't crash
-                        ProtonLogger.w("Login", "Network error during anonymous login: ${exception.message}")
-                        _uiState.value = LoginUiState.Error(
-                            "Connection timeout. Please check your internet and try again."
-                        )
-                    } else {
-                        ProtonLogger.e("Login", "Anonymous login failed: ${exception.message}", exception)
-                        _uiState.value = LoginUiState.Error(exception.localizedMessage ?: "Guest login failed")
                     }
+                    .onFailure { exception ->
+                        if (exception is CancellationException) return@onFailure
+
+                        if (exception is CaptchaRequiredException) {
+                            // CaptchaRequiredException is expected flow — do NOT log as error or send to Sentry
+                            ProtonLogger.w("Login", "Anonymous login requires captcha")
+                            _uiState.value = LoginUiState.RequiresCaptcha(
+                                webUrl = exception.webUrl,
+                                username = "",
+                                passwordRaw = "",
+                                captchaToken = exception.token,
+                                isAnonymous = true,
+                                sessionId = exception.sessionId
+                            )
+                        } else if (exception is SocketTimeoutException || exception is ConnectException) {
+                            // Network timeout errors - log with context but don't crash
+                            ProtonLogger.w("Login", "Network error during anonymous login: ${exception.message}")
+                            _uiState.value = LoginUiState.Error(
+                                "Connection timeout. Please check your internet and try again."
+                            )
+                        } else {
+                            ProtonLogger.e("Login", "Anonymous login failed: ${exception.message}", exception)
+                            _uiState.value = LoginUiState.Error(exception.localizedMessage ?: "Guest login failed")
+                        }
+                    }
+            } finally {
+                val nextState = _uiState.value
+                val isPending = nextState is LoginUiState.RequiresCaptcha
+                if (useWarp && !isSuccessful && !isPending) {
+                    warpManager.stopWarpTunnel()
                 }
+            }
         }
     }
 
@@ -269,6 +344,9 @@ class LoginViewModel @Inject constructor(
     }
 
     fun resetError() {
+        if (_uiState.value is LoginUiState.RequiresCaptcha) {
+            authRepository.clearPendingAuth()
+        }
         if (_uiState.value is LoginUiState.Error || _uiState.value is LoginUiState.RequiresCaptcha) {
             _uiState.value = LoginUiState.Idle
         }

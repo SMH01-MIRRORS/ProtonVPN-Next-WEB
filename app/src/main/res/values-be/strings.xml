@@ -122,6 +122,13 @@
     <string name="api_bypass_strategy_cloudflare_desc">Маршрутызацыя запытаў API праз высокапрадукцыйны Cloudflare worker.</string>
     <string name="api_bypass_strategy_mirrors">Люстэрка Proton (DoH)</string>
     <string name="api_bypass_strategy_mirrors_desc">Знаходзіць і выкарыстоўвае дынамічныя люстэрка Proton API праз DNS-over-HTTPS fallback.</string>
+    <string name="api_bypass_strategy_warp">WARP (Cloudflare)</string>
+    <string name="api_bypass_strategy_warp_desc">Выкарыстанне часовага тунэля WARP для запытаў да API. Высокая надзейнасць.</string>
+    <string name="warp_fetching_config">Атрыманне канфігурацыі WARP…</string>
+    <string name="warp_error_fetching">Не ўдалося атрымаць канфігурацыю. Праверце падключэнне.</string>
+    <string name="warp_permission_title">Патрабуецца дазвол на VPN</string>
+    <string name="warp_permission_desc">Для WARP патрабуецца дазвол на стварэнне лакальнага тунэля для абыходу блакіровак API. Ніякія даныя не перадаюцца па-за межы Cloudflare.</string>
+    <string name="btn_allow">Дазволіць</string>
     <string name="api_bypass_strategy_custom">Свой проксі (SOCKS5/HTTPS)</string>
     <string name="api_bypass_strategy_custom_desc">Накіроўвае запыты да API праз ваш уласны SOCKS5 або HTTPS проксі-сервер.</string>
     <string name="api_proxy_host">Хост проксі</string>

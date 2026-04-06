@@ -25,11 +25,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
+import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.network.*
 import ru.protonmod.next.data.local.VpnProfileEntity
 import ru.protonmod.next.data.local.ServerDao
@@ -44,8 +46,10 @@ import ru.protonmod.next.data.local.ProfileDao
 import ru.protonmod.next.data.local.RecentConnectionDao
 import ru.protonmod.next.di.ApplicationScope
 import ru.protonmod.next.utils.coroutines.DispatcherProvider
+import ru.protonmod.next.vpn.AmneziaVpnManager
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Singleton
@@ -58,6 +62,8 @@ class VpnRepository @Inject constructor(
     private val profileDao: ProfileDao,
     private val recentConnectionDao: RecentConnectionDao,
     private val cityRepository: CityRepository,
+    private val settingsManager: SettingsManager,
+    private val amneziaVpnManager: Provider<AmneziaVpnManager>,
     private val dispatcherProvider: DispatcherProvider,
     @ApplicationScope private val managerScope: CoroutineScope
 ) {
@@ -92,13 +98,23 @@ class VpnRepository @Inject constructor(
             while (isActive) {
                 val session = withContext(dispatcherProvider.io()) { sessionDao.getSession() }
                 if (session != null) {
-                    ProtonLogger.d(TAG, "Auto-update: Fetching fresh server data for user tier ${session.userTier}")
-                    getServers(
-                        session.accessToken,
-                        session.sessionId,
-                        session.userTier,
-                        forceRefresh = false
-                    )
+                    val apiBypassEnabled = settingsManager.apiBypassEnabled.first()
+                    val strategy = settingsManager.apiBypassStrategy.first()
+                    val isVpnActive = amneziaVpnManager.get().tunnelState.value == org.amnezia.awg.backend.Tunnel.State.UP
+
+                    // User requirement: if WARP bypass is enabled, only update servers if VPN is active.
+                    // This prevents unblocked background traffic when WARP is not supposed to be active (it's only for manual/vpn-active use).
+                    if (apiBypassEnabled && strategy == SettingsManager.STRATEGY_WARP && !isVpnActive) {
+                        ProtonLogger.d(TAG, "Auto-update: WARP bypass enabled but VPN is inactive. Skipping background refresh.")
+                    } else {
+                        ProtonLogger.d(TAG, "Auto-update: Fetching fresh server data for user tier ${session.userTier}")
+                        getServers(
+                            session.accessToken,
+                            session.sessionId,
+                            session.userTier,
+                            forceRefresh = false
+                        )
+                    }
                 } else {
                     ProtonLogger.w(TAG, "Auto-update: No active session, skipping this cycle")
                 }

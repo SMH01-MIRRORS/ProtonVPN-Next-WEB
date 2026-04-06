@@ -100,12 +100,14 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         const val ACTION_DISCONNECT = "ru.protonmod.next.vpn.DISCONNECT"
         const val ACTION_STATE_CHANGED = "ru.protonmod.next.vpn.STATE_CHANGED"
         const val ACTION_UPDATE_SETTINGS = "ru.protonmod.next.vpn.UPDATE_SETTINGS"
+        const val ACTION_STATS_UPDATED = "ru.protonmod.next.vpn.STATS_UPDATED"
 
         // Intent Extras
         const val EXTRA_CONFIG = "config_string"
         const val EXTRA_EXCLUDED_APPS = "excluded_apps"
         const val EXTRA_EXCLUDED_IPS = "excluded_ips"
         const val EXTRA_STATE = "state"
+        const val EXTRA_SPEED = "speed"
         const val EXTRA_NOTIFICATIONS_ENABLED = "notifications_enabled"
         const val EXTRA_KILL_SWITCH_ENABLED = "kill_switch_enabled"
         const val EXTRA_NON_FATAL_ENABLED = "non_fatal_enabled"
@@ -135,11 +137,13 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         override fun getName() = TUNNEL_NAME
 
         override fun onStateChange(newState: Tunnel.State) {
-            if (currentTunnelState == newState) return
+            val wasConnecting = isCurrentlyConnecting
+            if (currentTunnelState == newState && !wasConnecting) return
+            
             currentTunnelState = newState
             isCurrentlyConnecting = false
 
-            ProtonLogger.d(TAG, "VPN State changed to $newState")
+            ProtonLogger.d(TAG, "VPN State changed to $newState (wasConnecting=$wasConnecting)")
             ProtonLogger.addSentryBreadcrumb(TAG, "VPN State Changed: $newState", SentryLevel.INFO, "vpn.state")
 
             // Broadcast the new state to the rest of the application
@@ -366,6 +370,13 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                         val upStr = formatSpeed(deltaTx)
                         val downStr = formatSpeed(deltaRx)
                         lastSpeedText = getString(R.string.vpn_speed_format, upStr, downStr)
+
+                        // Broadcast speed updates to UI components
+                        val speedBroadcast = Intent(ACTION_STATS_UPDATED).apply {
+                            putExtra(EXTRA_SPEED, lastSpeedText)
+                            setPackage(packageName)
+                        }
+                        sendBroadcast(speedBroadcast)
 
                         if (notificationsEnabled && currentTunnelState == Tunnel.State.UP) {
                             // Update notification directly on the IO thread to avoid blocking the main thread.

@@ -42,11 +42,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.launch
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONObject
 import ru.protonmod.next.R
+import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.ExpressiveLinearProgressIndicator
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -71,6 +73,7 @@ fun CaptchaScreen(
     val coroutineScope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(true) }
     var progress by remember { mutableIntStateOf(0) }
+    var hasSolved by remember { mutableStateOf(false) }
     val isTablet = isTablet()
 
     // Single OkHttpClient for the lifetime of this composable.  DisposableEffect guarantees its
@@ -170,20 +173,80 @@ fun CaptchaScreen(
                 modifier = (if (isTablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth())
                     .weight(1f)
             ) {
+                var webView by remember { mutableStateOf<WebView?>(null) }
+
+                val shouldProxyDirectly = isApiBypassEnabled && (
+                    apiBypassStrategy == SettingsManager.STRATEGY_NETLIFY ||
+                    apiBypassStrategy == SettingsManager.STRATEGY_CLOUDFLARE
+                )
+
+                val proxyBaseUrl = if (apiBypassStrategy == SettingsManager.STRATEGY_CLOUDFLARE) {
+                    "https://api.protonnext.qzz.io"
+                } else {
+                    "https://shimmering-stroopwafel-51675e.netlify.app"
+                }
+
+                LaunchedEffect(webUrl, sessionId, webView) {
+                    val wv = webView ?: return@LaunchedEffect
+                    
+                    // 1. First, always normalize the webUrl back to direct Proton domain 
+                    // if it arrived as a mirror from the API.
+                    val directWebUrl = try {
+                        val httpUrl = webUrl.toHttpUrl()
+                        val host = httpUrl.host
+                        if (host.endsWith("netlify.app") || host.endsWith("qzz.io")) {
+                            val isApi = host.contains("-api") || httpUrl.encodedPath.contains("/verify-api")
+                            val directHost = if (isApi) "verify-api.proton.me" else "verify.proton.me"
+                            httpUrl.newBuilder().host(directHost).build().toString()
+                        } else {
+                            webUrl
+                        }
+                    } catch (_: Exception) {
+                        webUrl
+                    }
+
+                    // 2. Then, if we are in a mirror strategy, rewrite it to our selected mirror.
+                    val effectiveWebUrl = if (shouldProxyDirectly) {
+                        when {
+                            directWebUrl.startsWith("https://verify-api.proton.me") ->
+                                directWebUrl.replace("https://verify-api.proton.me", "$proxyBaseUrl/verify-api")
+                            directWebUrl.startsWith("https://verify.proton.me") ->
+                                directWebUrl.replace("https://verify.proton.me", "$proxyBaseUrl/verify")
+                            else -> directWebUrl
+                        }
+                    } else {
+                        directWebUrl
+                    }
+
+                    val optimizedUrl = buildString {
+                        append(effectiveWebUrl)
+                        if (!effectiveWebUrl.contains("?")) append("?") else append("&")
+                        append("embed=true&theme=1&vpn=true")
+                    }
+
+                    val extraHeaders = mutableMapOf(
+                        "x-pm-appversion" to "android-vpn@${DeviceInfoProvider.SPOOFED_APP_VERSION}-dev+play",
+                        "x-pm-apiversion" to "4",
+                        "Accept" to "application/vnd.protonmail.v1+json"
+                    )
+                    if (sessionId != null) {
+                        extraHeaders["x-pm-uid"] = sessionId
+                    }
+
+                    ProtonLogger.d("CaptchaScreen", "Loading optimized URL: $optimizedUrl")
+                    wv.loadUrl(optimizedUrl, extraHeaders)
+                }
+
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
                     factory = { context ->
                         WebView(context).apply {
                             setBackgroundColor(android.graphics.Color.TRANSPARENT)
 
-                            val proxyBaseUrl = if (apiBypassStrategy == "cloudflare") {
-                                "https://api.protonnext.qzz.io"
-                            } else {
-                                "https://shimmering-stroopwafel-51675e.netlify.app"
-                            }
-
                             settings.javaScriptEnabled = true
                             settings.domStorageEnabled = true
+                            settings.databaseEnabled = true
+                            settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
                             val customUserAgent = DeviceInfoProvider.getSpoofedUserAgent()
                             settings.userAgentString = customUserAgent
@@ -198,11 +261,12 @@ fun CaptchaScreen(
                                         val json = JSONObject(response)
                                         val type = json.optString("type")
 
-                                        if (type == "HUMAN_VERIFICATION_SUCCESS" || type == "Success") {
+                                        if ((type == "HUMAN_VERIFICATION_SUCCESS" || type == "Success") && !hasSolved) {
                                             val payload = json.optJSONObject("payload")
                                             val token = payload?.optString("token")
 
                                             if (!token.isNullOrEmpty()) {
+                                                hasSolved = true
                                                 coroutineScope.launch {
                                                     onCaptchaSolve(token)
                                                 }
@@ -226,17 +290,34 @@ fun CaptchaScreen(
                             }
 
                             webViewClient = object : WebViewClient() {
-                                // captchaHttpClient is the composable-scoped instance managed by
-                                // DisposableEffect; no new client is created here.
                                 private val okHttpClient = captchaHttpClient
+
+                                override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                                    super.onPageStarted(view, url, favicon)
+                                    ProtonLogger.d("CaptchaScreen", "Page load started: $url")
+                                }
+
+                                override fun onPageFinished(view: WebView?, url: String?) {
+                                    super.onPageFinished(view, url)
+                                    ProtonLogger.d("CaptchaScreen", "Page load finished: $url")
+                                    isLoading = false
+                                }
+
+                                override fun onReceivedError(
+                                    view: WebView?,
+                                    request: WebResourceRequest?,
+                                    error: android.webkit.WebResourceError?
+                                ) {
+                                    super.onReceivedError(view, request, error)
+                                    ProtonLogger.e("CaptchaScreen", "WebView Error (${error?.errorCode}): ${error?.description} at ${request?.url}")
+                                    isLoading = false
+                                }
 
                                 override fun onRenderProcessGone(
                                     view: WebView?,
                                     detail: RenderProcessGoneDetail?
                                 ): Boolean {
                                     ProtonLogger.e("CaptchaScreen", "WebView renderer process gone (crashed: ${detail?.didCrash()})")
-                                    // Handle the renderer crash gracefully by dismissing the captcha screen
-                                    // Returning true prevents the entire app from being killed by the system
                                     onDismiss()
                                     return true
                                 }
@@ -245,7 +326,7 @@ fun CaptchaScreen(
                                     view: WebView,
                                     request: WebResourceRequest
                                 ): WebResourceResponse? {
-                                    if (!isApiBypassEnabled) return super.shouldInterceptRequest(view, request)
+                                    if (!shouldProxyDirectly) return super.shouldInterceptRequest(view, request)
 
                                     val originalUrl = request.url.toString()
                                     if (request.method != "GET") return super.shouldInterceptRequest(view, request)
@@ -335,38 +416,7 @@ fun CaptchaScreen(
                                     return super.shouldInterceptRequest(view, request)
                                 }
                             }
-
-                            // When API bypass is enabled, proxy the captcha URL through the
-                            // netlify proxy so that captcha requests are not blocked by regional
-                            // restrictions. The interceptor handles subsequent resource requests,
-                            // but the initial page load URL must also be rewritten here.
-                            val effectiveWebUrl = if (isApiBypassEnabled) {
-                                when {
-                                    webUrl.startsWith("https://verify-api.proton.me") ->
-                                        webUrl.replace("https://verify-api.proton.me", "$proxyBaseUrl/verify-api")
-                                    webUrl.startsWith("https://verify.proton.me") ->
-                                        webUrl.replace("https://verify.proton.me", "$proxyBaseUrl/verify")
-                                    else -> webUrl
-                                }
-                            } else {
-                                webUrl
-                            }
-
-                            val optimizedUrl = buildString {
-                                append(effectiveWebUrl)
-                                if (!effectiveWebUrl.contains("?")) append("?") else append("&")
-                                append("embed=true&theme=1&vpn=true")
-                            }
-
-                            val extraHeaders = mutableMapOf(
-                                "x-pm-appversion" to "android-vpn@${DeviceInfoProvider.SPOOFED_APP_VERSION}-dev+play",
-                                "x-pm-apiversion" to "4",
-                                "Accept" to "application/vnd.protonmail.v1+json"
-                            )
-                            if (sessionId != null) {
-                                extraHeaders["x-pm-uid"] = sessionId
-                            }
-                            loadUrl(optimizedUrl, extraHeaders)
+                            webView = this
                         }
                     },
                     update = { /* No-op */ }
@@ -393,8 +443,11 @@ fun CaptchaScreen(
 
 private fun prepareProxyResponseHeaders(response: Response): MutableMap<String, String> {
     val headers = response.headers.toMap().toMutableMap()
-    headers.keys.filter { it.equals("Content-Security-Policy", ignoreCase = true) }
-        .forEach { headers.remove(it) }
+    // Strip CSP and X-Frame-Options to allow mirrored content
+    headers.keys.filter { 
+        it.equals("Content-Security-Policy", ignoreCase = true) || 
+        it.equals("X-Frame-Options", ignoreCase = true) 
+    }.forEach { headers.remove(it) }
     headers["Access-Control-Allow-Origin"] = "*"
     return headers
 }

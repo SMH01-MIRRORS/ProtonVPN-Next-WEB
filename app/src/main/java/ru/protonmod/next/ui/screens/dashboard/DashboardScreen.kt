@@ -533,7 +533,8 @@ fun DashboardScreen(
                                 onDisconnect = { viewModel.disconnect() },
                                 onRefreshCert = { viewModel.refreshCertificate() },
                                 onToggleIpVisibility = { viewModel.toggleIpVisibility() },
-                                onChangeQuickConnect = { showQuickConnectConfig = true }
+                                onChangeQuickConnect = { showQuickConnectConfig = true },
+                                speed = state.speed
                             )
 
                             if (showQuickConnectConfig) {
@@ -566,7 +567,8 @@ fun DashboardContent(
     onToggleIpVisibility: () -> Unit,
     onChangeQuickConnect: () -> Unit,
     modifier: Modifier = Modifier,
-    isTablet: Boolean = false
+    isTablet: Boolean = false,
+    speed: String? = null
 ) {
     val colors = ProtonNextTheme.colors
     val configuration = LocalConfiguration.current
@@ -611,7 +613,8 @@ fun DashboardContent(
                         },
                         onChangeQuickConnect = onChangeQuickConnect,
                         connectedServer = state.connectedServer,
-                        allServers = state.servers.toImmutableList()
+                        allServers = state.servers.toImmutableList(),
+                        speed = speed
                     )
                 }
 
@@ -688,7 +691,8 @@ fun DashboardContent(
                         },
                         onChangeQuickConnect = onChangeQuickConnect,
                         connectedServer = state.connectedServer,
-                        allServers = state.servers.toImmutableList()
+                        allServers = state.servers.toImmutableList(),
+                        speed = speed
                     )
                 }
 
@@ -855,7 +859,8 @@ fun ConnectionStatusCard(
     onChangeQuickConnect: () -> Unit,
     modifier: Modifier = Modifier,
     connectedServer: LogicalServer? = null,
-    allServers: ImmutableList<LogicalServer> = kotlinx.collections.immutable.persistentListOf()
+    allServers: ImmutableList<LogicalServer> = kotlinx.collections.immutable.persistentListOf(),
+    speed: String? = null
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
@@ -913,6 +918,16 @@ fun ConnectionStatusCard(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            if (!speed.isNullOrBlank() && isConnected) {
+                Text(
+                    text = speed,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = colors.brandNorm,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+            }
 
             Row(
                 modifier = Modifier

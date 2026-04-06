@@ -122,6 +122,13 @@
     <string name="api_bypass_strategy_cloudflare_desc">通过高性能 Cloudflare worker 路由 API 请求。</string>
     <string name="api_bypass_strategy_mirrors">Proton 镜像 (DoH)</string>
     <string name="api_bypass_strategy_mirrors_desc">通过 DNS-over-HTTPS fallback 发现并使用动态 Proton API 镜像。</string>
+    <string name="api_bypass_strategy_warp">WARP (Cloudflare)</string>
+    <string name="api_bypass_strategy_warp_desc">使用临时 WARP 隧道进行 API 请求。可靠性高。</string>
+    <string name="warp_fetching_config">正在获取 WARP 配置…</string>
+    <string name="warp_error_fetching">获取配置失败。请检查您的连接。</string>
+    <string name="warp_permission_title">需要 VPN 权限</string>
+    <string name="warp_permission_desc">WARP 需要权限才能创建用于绕过 API 阻止的本地隧道。没有任何数据会发送到 Cloudflare 之外。</string>
+    <string name="btn_allow">允许</string>
     <string name="api_bypass_strategy_custom">自定义代理 (SOCKS5/HTTPS)</string>
     <string name="api_bypass_strategy_custom_desc">通过您自己的 SOCKS5 或 HTTPS 代理服务器路由 API 请求。</string>
     <string name="api_proxy_host">代理主机</string>

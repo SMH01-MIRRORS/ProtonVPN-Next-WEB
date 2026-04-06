@@ -80,7 +80,8 @@ sealed class DashboardUiState {
         val originalLocationText: LocationText? = null,
         val vpnLocationText: LocationText? = null,
         val isIpHidden: Boolean = false,
-        val serverLoadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
+        val serverLoadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
+        val speed: String? = null
     ) : DashboardUiState()
     data class Error(val message: String, val isSessionError: Boolean = false) : DashboardUiState()
 }
@@ -138,7 +139,8 @@ class DashboardViewModel @Inject constructor(
         settingsManager.serverLoadDisplayMode,
         _originalLocationText,
         _vpnLocationText,
-        _isIpHidden
+        _isIpHidden,
+        amneziaVpnManager.speed
     ) { args: Array<Any?> ->
         @Suppress("UNCHECKED_CAST")
         val servers = args[0] as List<LogicalServer>
@@ -158,6 +160,7 @@ class DashboardViewModel @Inject constructor(
         val originalLocationText = args[12] as LocationText?
         val vpnLocationText = args[13] as LocationText?
         val isIpHidden = args[14] as Boolean
+        val speed = args[15] as String?
 
         if (isUpdating && servers.isEmpty()) {
             DashboardUiState.Loading
@@ -183,7 +186,8 @@ class DashboardViewModel @Inject constructor(
                 originalLocationText = originalLocationText,
                 vpnLocationText = vpnLocationText,
                 isIpHidden = isIpHidden,
-                serverLoadDisplayMode = loadMode
+                serverLoadDisplayMode = loadMode,
+                speed = speed
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.Loading)
@@ -420,6 +424,13 @@ class DashboardViewModel @Inject constructor(
             if (session == null) {
                 _errorMessage.value = context.getString(R.string.error_session_not_found)
                 return@launch
+            }
+
+            // Proactively ensure WARP is active if configured, before fetching
+            val apiBypassEnabled = settingsManager.apiBypassEnabled.first()
+            val apiBypassStrategy = settingsManager.apiBypassStrategy.first()
+            if (apiBypassEnabled && apiBypassStrategy == SettingsManager.STRATEGY_WARP) {
+                amneziaVpnManager.ensureWarpBypass(true)
             }
 
             vpnRepository.getServers(session.accessToken, session.sessionId, session.userTier)

@@ -41,6 +41,7 @@ import ru.protonmod.next.ota.OTAUpdateManager
 import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.utils.crypto.QuicI1Generator
 import ru.protonmod.next.vpn.AmneziaVpnManager
+import ru.protonmod.next.vpn.WarpManager
 import ru.protonmod.next.data.repository.UpdateRepository
 import javax.inject.Inject
 
@@ -66,6 +67,10 @@ data class SettingsUiState(
     val apiProxyUsername: String = "",
     val apiProxyPassword: String = "",
     val isAnyVpnActive: Boolean = false,
+
+    // WARP state
+    val isWarpFetching: Boolean = false,
+    val warpConfigLoaded: Boolean = false,
 
     // Customization
     val appTheme: AppTheme = AppTheme.DARK,
@@ -122,10 +127,11 @@ data class SettingsUiState(
 @Suppress("UNCHECKED_CAST")
 class SettingsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    amneziaVpnManager: AmneziaVpnManager,
+    private val amneziaVpnManager: AmneziaVpnManager,
     private val settingsManager: SettingsManager,
     private val authRepository: AuthRepository,
     private val updateRepository: UpdateRepository,
+    private val warpManager: WarpManager,
     private val otaUpdateManager: OTAUpdateManager
 ) : ViewModel() {
 
@@ -222,6 +228,7 @@ class SettingsViewModel @Inject constructor(
         settingsManager.serverLoadDisplayMode,
         settingsManager.otaUpdateFrequency,
         settingsManager.otaUpdateChannel,
+        warpManager.isFetching,
         _availableChannels,
         _isAnyVpnActive,
         _isCheckingForUpdates,
@@ -279,10 +286,12 @@ class SettingsViewModel @Inject constructor(
             serverLoadDisplayMode = args[48] as ServerLoadDisplayMode,
             otaUpdateFrequency = args[49] as String,
             otaUpdateChannel = args[50] as String,
-            availableChannels = args[51] as Map<String, Boolean>,
-            isAnyVpnActive = args[52] as Boolean,
-            isCheckingForUpdates = args[53] as Boolean,
-            isUpdateAvailable = args[54] as Boolean
+            isWarpFetching = args[51] as Boolean,
+            warpConfigLoaded = warpManager.isConfigLoaded(),
+            availableChannels = args[52] as Map<String, Boolean>,
+            isAnyVpnActive = args[53] as Boolean,
+            isCheckingForUpdates = args[54] as Boolean,
+            isUpdateAvailable = args[55] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -372,13 +381,27 @@ class SettingsViewModel @Inject constructor(
 
     fun setApiBypassEnabled(enabled: Boolean) {
         viewModelScope.launch {
+            if (!enabled) {
+                amneziaVpnManager.ensureWarpBypass(false)
+            }
             settingsManager.setApiBypassEnabled(enabled)
         }
     }
 
     fun setApiBypassStrategy(strategy: String) {
         viewModelScope.launch {
+            if (strategy == SettingsManager.STRATEGY_WARP && !warpManager.isConfigLoaded()) {
+                warpManager.fetchWarpConfig()
+            } else if (strategy != SettingsManager.STRATEGY_WARP) {
+                amneziaVpnManager.ensureWarpBypass(false)
+            }
             settingsManager.setApiBypassStrategy(strategy)
+        }
+    }
+
+    fun fetchWarpConfig() {
+        viewModelScope.launch {
+            warpManager.fetchWarpConfig()
         }
     }
 

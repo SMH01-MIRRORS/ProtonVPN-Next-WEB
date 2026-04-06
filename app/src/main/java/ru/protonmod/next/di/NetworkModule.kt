@@ -198,20 +198,23 @@ object NetworkModule {
             val settings = settingsManagerProvider.get()
             val strategy = settings.getApiBypassStrategySync()
             
-            if (useProxy && (strategy == SettingsManager.STRATEGY_PROTON_MIRRORS || strategy == SettingsManager.STRATEGY_CUSTOM_PROXY)) {
+            if (useProxy && (strategy == SettingsManager.STRATEGY_PROTON_MIRRORS || 
+                            strategy == SettingsManager.STRATEGY_WARP || 
+                            strategy == SettingsManager.STRATEGY_CUSTOM_PROXY)) {
                 // For Proton Mirrors strategy, we rely on DohFallbackInterceptor and dynamicDns
+                // For WARP strategy, we rely on the VPN tunnel being up for specific actions.
                 // For Custom Proxy strategy, we rely on ProxySelector and use original Host.
                 // No URL rewriting needed here, just proceed with original Host.
                 val builder = request.newBuilder()
-                    .addHeader("User-Agent", userAgent)
-                    .addHeader("x-pm-appversion", "android-vpn@$spoofedVersion-dev+play")
-                    .addHeader("x-pm-apiversion", "4")
-                    .addHeader("Accept", "application/vnd.protonmail.v1+json")
+                    .header("User-Agent", userAgent)
+                    .header("x-pm-appversion", "android-vpn@$spoofedVersion-dev+play")
+                    .header("x-pm-apiversion", "4")
+                    .header("Accept", "application/vnd.protonmail.v1+json")
                     .apply {
                         if (settings.isSpoofCountryEnabledSync()) {
                             if (!settings.isSpoofCountryNullSync()) {
                                 val code = settings.getSpoofCountryCodeSync().uppercase()
-                                if (code.length == 2) addHeader("x-pm-country", code)
+                                if (code.length == 2) header("x-pm-country", code)
                             }
                         }
                     }
@@ -238,10 +241,10 @@ object NetworkModule {
 
             val newRequest = request.newBuilder()
                 .url(newUrl)
-                .addHeader("User-Agent", userAgent)
-                .addHeader("x-pm-appversion", "android-vpn@$spoofedVersion-dev+play")
-                .addHeader("x-pm-apiversion", "4")
-                .addHeader("Accept", "application/vnd.protonmail.v1+json")
+                .header("User-Agent", userAgent)
+                .header("x-pm-appversion", "android-vpn@$spoofedVersion-dev+play")
+                .header("x-pm-apiversion", "4")
+                .header("Accept", "application/vnd.protonmail.v1+json")
                 .apply {
                     val settings = settingsManagerProvider.get()
                     if (settings.isSpoofCountryEnabledSync()) {
@@ -251,7 +254,7 @@ object NetworkModule {
                         } else {
                             val code = settings.getSpoofCountryCodeSync().uppercase()
                             if (code.length == 2) {
-                                addHeader("x-pm-country", code)
+                                header("x-pm-country", code)
                             }
                         }
                     }
@@ -398,11 +401,10 @@ object NetworkModule {
             .certificatePinner(certificatePinner)
             .sslSocketFactory(sslContext.socketFactory, trustManager)
             .hostnameVerifier(hostnameVerifier)
-            // Reduced timeouts to detect network failures faster and prevent JNI reference leaks
-            // Original: 30s connect timeout. On mobile, 15s is more responsive and safer.
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(45, TimeUnit.SECONDS)
-            .writeTimeout(45, TimeUnit.SECONDS)
+            // Connect timeout increased to 30s to allow WARP tunnel stabilization
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
             .build()
     }
 
@@ -429,4 +431,8 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideUpdateApi(retrofit: Retrofit): UpdateApi = retrofit.create(UpdateApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideWarpApi(retrofit: Retrofit): WarpApi = retrofit.create(WarpApi::class.java)
 }

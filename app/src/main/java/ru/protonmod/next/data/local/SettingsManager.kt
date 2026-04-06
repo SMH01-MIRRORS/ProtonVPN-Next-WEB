@@ -47,6 +47,7 @@ class SettingsManager @Inject constructor(
         const val STRATEGY_NETLIFY = "netlify"
         const val STRATEGY_CLOUDFLARE = "cloudflare"
         const val STRATEGY_PROTON_MIRRORS = "proton_mirrors"
+        const val STRATEGY_WARP = "warp"
         const val STRATEGY_CUSTOM_PROXY = "custom_proxy"
 
         const val PROXY_TYPE_HTTP = "http"

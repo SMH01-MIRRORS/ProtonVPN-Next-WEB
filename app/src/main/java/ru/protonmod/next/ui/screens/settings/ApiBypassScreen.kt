@@ -17,6 +17,10 @@
 
 package ru.protonmod.next.ui.screens.settings
 
+import android.app.Activity
+import android.net.VpnService
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -45,14 +49,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.components.SmoothOutlinedTextField
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -73,10 +80,21 @@ fun ApiBypassScreen(
     val colors = ProtonNextTheme.colors
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isTablet = isTablet()
+    val context = LocalContext.current
 
     // Assuming the ViewModel exposes whether ANY VPN (ours or third-party) is active
     // via ConnectivityManager NetworkCapabilities.TRANSPORT_VPN
     val isAnyVpnActive = uiState.isAnyVpnActive
+
+    var showWarpPermissionDialog by remember { mutableStateOf(false) }
+
+    val vpnPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_WARP)
+        }
+    }
 
     // Force disable the feature if VPN is active
     val isEffectivelyEnabled = uiState.apiBypassEnabled && !isAnyVpnActive
@@ -281,7 +299,25 @@ fun ApiBypassScreen(
                                     color = colors.separatorNorm.copy(alpha = 0.2f)
                                 )
 
-                                // Strategy 4: Custom Proxy (SOCKS5/HTTPS)
+                                // Strategy 4: WARP (Cloudflare Tunnel)
+                                StrategySelectionRow(
+                                    title = stringResource(R.string.api_bypass_strategy_warp),
+                                    description = stringResource(R.string.api_bypass_strategy_warp_desc),
+                                    icon = Icons.Rounded.Security,
+                                    isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_WARP,
+                                    onClick = {
+                                        if (uiState.apiBypassStrategy != SettingsManager.STRATEGY_WARP) {
+                                            showWarpPermissionDialog = true
+                                        }
+                                    }
+                                )
+
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(horizontal = 24.dp),
+                                    color = colors.separatorNorm.copy(alpha = 0.2f)
+                                )
+
+                                // Strategy 5: Custom Proxy (SOCKS5/HTTPS)
                                 StrategySelectionRow(
                                     title = stringResource(R.string.api_bypass_strategy_custom),
                                     description = stringResource(R.string.api_bypass_strategy_custom_desc),
@@ -358,6 +394,68 @@ fun ApiBypassScreen(
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            if (showWarpPermissionDialog) {
+                AlertDialog(
+                    onDismissRequest = { showWarpPermissionDialog = false },
+                    title = { Text(stringResource(R.string.warp_permission_title)) },
+                    text = { Text(stringResource(R.string.warp_permission_desc)) },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showWarpPermissionDialog = false
+                            try {
+                                val intent = VpnService.prepare(context)
+                                if (intent != null) {
+                                    vpnPermissionLauncher.launch(intent)
+                                } else {
+                                    viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_WARP)
+                                }
+                            } catch (_: SecurityException) {
+                                // Fallback for cases where prepare throws SecurityException
+                                viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_WARP)
+                            }
+                        }) {
+                            Text(stringResource(R.string.btn_allow))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showWarpPermissionDialog = false }) {
+                            Text(stringResource(R.string.btn_cancel))
+                        }
+                    },
+                    containerColor = colors.backgroundSecondary,
+                    titleContentColor = colors.textNorm,
+                    textContentColor = colors.textWeak
+                )
+            }
+
+            // WARP Configuration Loading Overlay
+            if (uiState.isWarpFetching) {
+                Dialog(onDismissRequest = {}) {
+                    Surface(
+                        shape = RoundedCornerShape(24.dp),
+                        color = colors.backgroundSecondary,
+                        tonalElevation = 8.dp
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            ExpressiveCircularProgressIndicator(
+                                modifier = Modifier.size(64.dp),
+                                color = colors.brandNorm
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text(
+                                text = stringResource(R.string.warp_fetching_config),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = colors.textNorm,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
             }
         }
     }
