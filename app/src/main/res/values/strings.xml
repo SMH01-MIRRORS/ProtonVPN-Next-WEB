@@ -124,6 +124,13 @@
     <string name="api_bypass_strategy_cloudflare_desc">Routes API requests through a high-performance Cloudflare worker.</string>
     <string name="api_bypass_strategy_mirrors">Proton Mirrors (DoH)</string>
     <string name="api_bypass_strategy_mirrors_desc">Discovers and uses dynamic Proton API mirrors via DNS-over-HTTPS fallback.</string>
+    <string name="api_bypass_strategy_custom">Custom Proxy (SOCKS5/HTTPS)</string>
+    <string name="api_bypass_strategy_custom_desc">Routes API requests through your own SOCKS5 or HTTPS proxy server.</string>
+    <string name="api_proxy_host">Proxy Host</string>
+    <string name="api_proxy_port">Proxy Port</string>
+    <string name="api_proxy_type">Proxy Type</string>
+    <string name="api_proxy_type_http">HTTPS / HTTP</string>
+    <string name="api_proxy_type_socks">SOCKS5</string>
 
     <!-- Custom DNS -->
     <string name="settings_custom_dns">Custom DNS</string>

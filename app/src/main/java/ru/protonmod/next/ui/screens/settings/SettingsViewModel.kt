@@ -60,6 +60,9 @@ data class SettingsUiState(
     // API Bypass Feature
     val apiBypassEnabled: Boolean = false,
     val apiBypassStrategy: String = "netlify",
+    val apiProxyHost: String = "",
+    val apiProxyPort: Int = 1080,
+    val apiProxyType: String = SettingsManager.PROXY_TYPE_SOCKS,
     val isAnyVpnActive: Boolean = false,
 
     // Customization
@@ -208,6 +211,9 @@ class SettingsViewModel @Inject constructor(
         settingsManager.sentryLogsEnabled,
         settingsManager.apiBypassEnabled,
         settingsManager.apiBypassStrategy,
+        settingsManager.apiProxyHost,
+        settingsManager.apiProxyPort,
+        settingsManager.apiProxyType,
         settingsManager.appTheme,
         settingsManager.serverLoadDisplayMode,
         settingsManager.otaUpdateFrequency,
@@ -260,14 +266,17 @@ class SettingsViewModel @Inject constructor(
             isSentryLogsEnabled = args[39] as Boolean,
             apiBypassEnabled = args[40] as Boolean,
             apiBypassStrategy = args[41] as String,
-            appTheme = args[42] as AppTheme,
-            serverLoadDisplayMode = args[43] as ServerLoadDisplayMode,
-            otaUpdateFrequency = args[44] as String,
-            otaUpdateChannel = args[45] as String,
-            availableChannels = args[46] as Map<String, Boolean>,
-            isAnyVpnActive = args[47] as Boolean,
-            isCheckingForUpdates = args[48] as Boolean,
-            isUpdateAvailable = args[49] as Boolean
+            apiProxyHost = args[42] as String,
+            apiProxyPort = args[43] as Int,
+            apiProxyType = args[44] as String,
+            appTheme = args[45] as AppTheme,
+            serverLoadDisplayMode = args[46] as ServerLoadDisplayMode,
+            otaUpdateFrequency = args[47] as String,
+            otaUpdateChannel = args[48] as String,
+            availableChannels = args[49] as Map<String, Boolean>,
+            isAnyVpnActive = args[50] as Boolean,
+            isCheckingForUpdates = args[51] as Boolean,
+            isUpdateAvailable = args[52] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -364,6 +373,24 @@ class SettingsViewModel @Inject constructor(
     fun setApiBypassStrategy(strategy: String) {
         viewModelScope.launch {
             settingsManager.setApiBypassStrategy(strategy)
+        }
+    }
+
+    fun setApiProxyHost(host: String) {
+        viewModelScope.launch {
+            settingsManager.setApiProxyHost(host)
+        }
+    }
+
+    fun setApiProxyPort(port: Int) {
+        viewModelScope.launch {
+            settingsManager.setApiProxyPort(port)
+        }
+    }
+
+    fun setApiProxyType(type: String) {
+        viewModelScope.launch {
+            settingsManager.setApiProxyType(type)
         }
     }
 

@@ -122,6 +122,13 @@
     <string name="api_bypass_strategy_cloudflare_desc">Маршрутызацыя запытаў API праз высокапрадукцыйны Cloudflare worker.</string>
     <string name="api_bypass_strategy_mirrors">Люстэрка Proton (DoH)</string>
     <string name="api_bypass_strategy_mirrors_desc">Знаходзіць і выкарыстоўвае дынамічныя люстэрка Proton API праз DNS-over-HTTPS fallback.</string>
+    <string name="api_bypass_strategy_custom">Свой проксі (SOCKS5/HTTPS)</string>
+    <string name="api_bypass_strategy_custom_desc">Накіроўвае запыты да API праз ваш уласны SOCKS5 або HTTPS проксі-сервер.</string>
+    <string name="api_proxy_host">Хост проксі</string>
+    <string name="api_proxy_port">Порт проксі</string>
+    <string name="api_proxy_type">Тып проксі</string>
+    <string name="api_proxy_type_http">HTTPS / HTTP</string>
+    <string name="api_proxy_type_socks">SOCKS5</string>
 
     <!-- Custom DNS -->
     <string name="settings_custom_dns">Карыстальніцкі DNS</string>

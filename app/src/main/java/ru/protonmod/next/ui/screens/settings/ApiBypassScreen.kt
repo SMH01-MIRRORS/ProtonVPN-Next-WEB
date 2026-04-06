@@ -37,6 +37,9 @@ import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -272,6 +275,61 @@ fun ApiBypassScreen(
                                     onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_PROTON_MIRRORS) }
                                 )
 
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(horizontal = 24.dp),
+                                    color = colors.separatorNorm.copy(alpha = 0.2f)
+                                )
+
+                                // Strategy 4: Custom Proxy (SOCKS5/HTTPS)
+                                StrategySelectionRow(
+                                    title = stringResource(R.string.api_bypass_strategy_custom),
+                                    description = stringResource(R.string.api_bypass_strategy_custom_desc),
+                                    icon = Icons.Rounded.Security,
+                                    isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_CUSTOM_PROXY,
+                                    onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_CUSTOM_PROXY) }
+                                )
+
+                                // Configuration for Custom Proxy
+                                AnimatedVisibility(
+                                    visible = uiState.apiBypassStrategy == SettingsManager.STRATEGY_CUSTOM_PROXY,
+                                    enter = fadeIn() + expandVertically(),
+                                    exit = fadeOut() + shrinkVertically()
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                                            .background(colors.backgroundSecondary.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                                            .padding(12.dp)
+                                    ) {
+                                        // Host input
+                                        SettingInputRow(
+                                            label = stringResource(R.string.api_proxy_host),
+                                            value = uiState.apiProxyHost,
+                                            onValueChange = { viewModel.setApiProxyHost(it) },
+                                            placeholder = "127.0.0.1"
+                                        )
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+
+                                        // Port input
+                                        SettingInputRow(
+                                            label = stringResource(R.string.api_proxy_port),
+                                            value = uiState.apiProxyPort.toString(),
+                                            onValueChange = { it.toIntOrNull()?.let { port -> viewModel.setApiProxyPort(port) } },
+                                            placeholder = "1080",
+                                            isNumber = true
+                                        )
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+
+                                        // Proxy Type selection
+                                        ProxyTypeDropdown(
+                                            selectedType = uiState.apiProxyType,
+                                            onTypeSelected = { viewModel.setApiProxyType(it) }
+                                        )
+                                    }
+                                }
+
                                 // Future strategies can be added here easily
                             }
                         }
@@ -281,6 +339,102 @@ fun ApiBypassScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
+    }
+}
+
+@Composable
+private fun ProxyTypeDropdown(
+    selectedType: String,
+    onTypeSelected: (String) -> Unit
+) {
+    val colors = ProtonNextTheme.colors
+    var expanded by remember { mutableStateOf(false) }
+
+    Column {
+        Text(
+            text = stringResource(R.string.api_proxy_type),
+            style = MaterialTheme.typography.labelMedium,
+            color = colors.textWeak,
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
+        
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(colors.backgroundNorm.copy(alpha = 0.5f))
+                .clickable { expanded = true }
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+        ) {
+            Text(
+                text = if (selectedType == SettingsManager.PROXY_TYPE_HTTP) 
+                    stringResource(R.string.api_proxy_type_http) 
+                else stringResource(R.string.api_proxy_type_socks),
+                color = colors.textNorm,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.background(colors.backgroundNorm)
+            ) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.api_proxy_type_socks), color = colors.textNorm) },
+                    onClick = {
+                        onTypeSelected(SettingsManager.PROXY_TYPE_SOCKS)
+                        expanded = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.api_proxy_type_http), color = colors.textNorm) },
+                    onClick = {
+                        onTypeSelected(SettingsManager.PROXY_TYPE_HTTP)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingInputRow(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String = "",
+    isNumber: Boolean = false
+) {
+    val colors = ProtonNextTheme.colors
+
+    Column {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = colors.textWeak,
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text(placeholder, color = colors.textWeak) },
+            singleLine = true,
+            shape = RoundedCornerShape(8.dp),
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = if (isNumber) androidx.compose.ui.text.input.KeyboardType.Number 
+                              else androidx.compose.ui.text.input.KeyboardType.Text
+            ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = colors.brandNorm,
+                unfocusedBorderColor = colors.separatorNorm,
+                focusedTextColor = colors.textNorm,
+                unfocusedTextColor = colors.textNorm,
+                cursorColor = colors.brandNorm
+            ),
+            textStyle = MaterialTheme.typography.bodyMedium
+        )
     }
 }
 

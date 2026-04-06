@@ -47,6 +47,10 @@ class SettingsManager @Inject constructor(
         const val STRATEGY_NETLIFY = "netlify"
         const val STRATEGY_CLOUDFLARE = "cloudflare"
         const val STRATEGY_PROTON_MIRRORS = "proton_mirrors"
+        const val STRATEGY_CUSTOM_PROXY = "custom_proxy"
+
+        const val PROXY_TYPE_HTTP = "http"
+        const val PROXY_TYPE_SOCKS = "socks"
 
         private val KILL_SWITCH = booleanPreferencesKey("kill_switch")
         private val AUTO_CONNECT = booleanPreferencesKey("auto_connect")
@@ -73,6 +77,10 @@ class SettingsManager @Inject constructor(
         // API Bypass Settings
         private val API_BYPASS_ENABLED = booleanPreferencesKey("api_bypass_enabled")
         private val API_BYPASS_STRATEGY = stringPreferencesKey("api_bypass_strategy")
+
+        private val API_PROXY_HOST = stringPreferencesKey("api_proxy_host")
+        private val API_PROXY_PORT = intPreferencesKey("api_proxy_port")
+        private val API_PROXY_TYPE = stringPreferencesKey("api_proxy_type") // "http" or "socks"
 
         // API Mirroring / Spoofing Settings
         private val SPOOF_COUNTRY_ENABLED = booleanPreferencesKey("spoof_country_enabled")
@@ -155,6 +163,10 @@ class SettingsManager @Inject constructor(
     val apiBypassEnabled: Flow<Boolean> = context.dataStore.data.map { it[API_BYPASS_ENABLED] ?: false }
     val apiBypassStrategy: Flow<String> = context.dataStore.data.map { it[API_BYPASS_STRATEGY] ?: "netlify" }
 
+    val apiProxyHost: Flow<String> = context.dataStore.data.map { it[API_PROXY_HOST] ?: "" }
+    val apiProxyPort: Flow<Int> = context.dataStore.data.map { it[API_PROXY_PORT] ?: 1080 }
+    val apiProxyType: Flow<String> = context.dataStore.data.map { it[API_PROXY_TYPE] ?: PROXY_TYPE_SOCKS }
+
     val spoofCountryEnabled: Flow<Boolean> = context.dataStore.data.map { it[SPOOF_COUNTRY_ENABLED] ?: false }
     val spoofCountryNull: Flow<Boolean> = context.dataStore.data.map { it[SPOOF_COUNTRY_NULL] ?: false }
     val spoofCountryCode: Flow<String> = context.dataStore.data.map { it[SPOOF_COUNTRY_CODE] ?: "" }
@@ -191,6 +203,10 @@ class SettingsManager @Inject constructor(
         ProtonLogger.d("SettingsManager", "Sync get strategy: $strategy")
         return strategy
     }
+
+    fun getApiProxyHostSync(): String = prefs.getString("api_proxy_host", "") ?: ""
+    fun getApiProxyPortSync(): Int = prefs.getInt("api_proxy_port", 1080)
+    fun getApiProxyTypeSync(): String = prefs.getString("api_proxy_type", PROXY_TYPE_SOCKS) ?: PROXY_TYPE_SOCKS
 
     fun isSpoofCountryEnabledSync(): Boolean = prefs.getBoolean("spoof_country_enabled", false)
     fun isSpoofCountryNullSync(): Boolean = prefs.getBoolean("spoof_country_null", false)
@@ -324,6 +340,21 @@ class SettingsManager @Inject constructor(
         ProtonLogger.d("SettingsManager", "Setting strategy to: $strategy")
         prefs.edit { putString("api_bypass_strategy", strategy) }
         context.dataStore.edit { it[API_BYPASS_STRATEGY] = strategy }
+    }
+
+    suspend fun setApiProxyHost(host: String) {
+        prefs.edit { putString("api_proxy_host", host) }
+        context.dataStore.edit { it[API_PROXY_HOST] = host }
+    }
+
+    suspend fun setApiProxyPort(port: Int) {
+        prefs.edit { putInt("api_proxy_port", port) }
+        context.dataStore.edit { it[API_PROXY_PORT] = port }
+    }
+
+    suspend fun setApiProxyType(type: String) {
+        prefs.edit { putString("api_proxy_type", type) }
+        context.dataStore.edit { it[API_PROXY_TYPE] = type }
     }
 
     suspend fun setSpoofCountryEnabled(enabled: Boolean) {

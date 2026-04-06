@@ -45,9 +45,8 @@ import ru.protonmod.next.utils.DeviceInfoProvider
 import ru.protonmod.next.utils.ProtonLogger
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import org.amnezia.awg.backend.Tunnel
-import java.net.InetAddress
-import java.net.SocketTimeoutException
-import java.net.ConnectException
+import java.io.IOException
+import java.net.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Provider
 import javax.inject.Singleton
@@ -195,9 +194,10 @@ object NetworkModule {
             val settings = settingsManagerProvider.get()
             val strategy = settings.getApiBypassStrategySync()
             
-            if (useProxy && strategy == SettingsManager.STRATEGY_PROTON_MIRRORS) {
+            if (useProxy && (strategy == SettingsManager.STRATEGY_PROTON_MIRRORS || strategy == SettingsManager.STRATEGY_CUSTOM_PROXY)) {
                 // For Proton Mirrors strategy, we rely on DohFallbackInterceptor and dynamicDns
-                // No URL rewriting needed here, just proceed with original Host and let DNS handle it.
+                // For Custom Proxy strategy, we rely on ProxySelector and use original Host.
+                // No URL rewriting needed here, just proceed with original Host.
                 val builder = request.newBuilder()
                     .addHeader("User-Agent", userAgent)
                     .addHeader("x-pm-appversion", "android-vpn@$spoofedVersion-dev+play")
@@ -212,7 +212,7 @@ object NetworkModule {
                         }
                     }
                 
-                // Ensure correct Host header is set even if rewritten by other mechanisms
+                // Ensure correct Host header is set
                 builder.header("Host", originalUrl.host)
                 
                 return@Interceptor chain.proceed(builder.build())
@@ -333,11 +333,42 @@ object NetworkModule {
             result
         }
 
+        // Custom Proxy Selector
+        val proxySelector = object : ProxySelector() {
+            override fun select(uri: URI?): MutableList<Proxy> {
+                val useProxy = shouldUseApiBypass(context, vpnManagerProvider, settingsManagerProvider)
+                val settings = settingsManagerProvider.get()
+                val strategy = settings.getApiBypassStrategySync()
+
+                if (useProxy && strategy == SettingsManager.STRATEGY_CUSTOM_PROXY) {
+                    val host = settings.getApiProxyHostSync()
+                    val port = settings.getApiProxyPortSync()
+                    val type = settings.getApiProxyTypeSync()
+
+                    if (host.isNotEmpty()) {
+                        val proxyType = if (type == SettingsManager.PROXY_TYPE_HTTP) Proxy.Type.HTTP else Proxy.Type.SOCKS
+                        try {
+                            val address = InetSocketAddress.createUnresolved(host, port)
+                            return mutableListOf(Proxy(proxyType, address))
+                        } catch (e: Exception) {
+                            ProtonLogger.e("NetworkModule", "Failed to create proxy address: $host:$port", e)
+                        }
+                    }
+                }
+                return mutableListOf(Proxy.NO_PROXY)
+            }
+
+            override fun connectFailed(uri: URI?, sa: SocketAddress?, ioe: IOException?) {
+                ProtonLogger.e("NetworkModule", "Proxy connection failed for $uri: ${ioe?.message}")
+            }
+        }
+
         return OkHttpClient.Builder()
             .addInterceptor(dynamicBaseUrlInterceptor)
             .addInterceptor(dohFallbackInterceptor)
             .authenticator(tokenAuthenticator)
             .dns(dynamicDns)
+            .proxySelector(proxySelector)
             .certificatePinner(certificatePinner)
             .sslSocketFactory(sslContext.socketFactory, trustManager)
             .hostnameVerifier(hostnameVerifier)

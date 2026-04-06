@@ -122,6 +122,13 @@
     <string name="api_bypass_strategy_cloudflare_desc">هدایت درخواست‌های API از طریق یک ورکر با کارایی بالای کلودفلر.</string>
     <string name="api_bypass_strategy_mirrors">آینه‌های پروتون (DoH)</string>
     <string name="api_bypass_strategy_mirrors_desc">آینه‌های داینامیک API پروتون را از طریق سیستم جایگزین DoH شناسایی و استفاده می‌کند.</string>
+    <string name="api_bypass_strategy_custom">پراکسی سفارشی (SOCKS5/HTTPS)</string>
+    <string name="api_bypass_strategy_custom_desc">درخواست‌های API را از طریق پراکسی SOCKS5 یا HTTPS خودتان مسیریابی می‌کند.</string>
+    <string name="api_proxy_host">هاست پراکسی</string>
+    <string name="api_proxy_port">پورت پراکسی</string>
+    <string name="api_proxy_type">نوع پراکسی</string>
+    <string name="api_proxy_type_http">HTTPS / HTTP</string>
+    <string name="api_proxy_type_socks">SOCKS5</string>
 
     <!-- Custom DNS -->
     <string name="settings_custom_dns">DNS سفارشی</string>

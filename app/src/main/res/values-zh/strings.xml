@@ -122,6 +122,13 @@
     <string name="api_bypass_strategy_cloudflare_desc">通过高性能 Cloudflare worker 路由 API 请求。</string>
     <string name="api_bypass_strategy_mirrors">Proton 镜像 (DoH)</string>
     <string name="api_bypass_strategy_mirrors_desc">通过 DNS-over-HTTPS fallback 发现并使用动态 Proton API 镜像。</string>
+    <string name="api_bypass_strategy_custom">自定义代理 (SOCKS5/HTTPS)</string>
+    <string name="api_bypass_strategy_custom_desc">通过您自己的 SOCKS5 或 HTTPS 代理服务器路由 API 请求。</string>
+    <string name="api_proxy_host">代理主机</string>
+    <string name="api_proxy_port">代理端口</string>
+    <string name="api_proxy_type">代理类型</string>
+    <string name="api_proxy_type_http">HTTPS / HTTP</string>
+    <string name="api_proxy_type_socks">SOCKS5</string>
 
     <!-- Custom DNS -->
     <string name="settings_custom_dns">自定义 DNS</string>
