@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159754,
-      "versionName": "12.0.0-alpha1st2-43-g97a67a9-nightly",
+      "versionCode": 605159756,
+      "versionName": "12.0.0-alpha1st2-45-gf916ee4-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "feat: implement Proton API mirrors strategy via DNS-over-HTTPS fallback\n\n* feat: add \"Proton Mirrors (DoH)\" API bypass strategy to discover and use dynamic API mirrors\n* feat: implement `DohFallbackInterceptor` and `DohClient` to resolve alternative API hosts using encrypted DNS queries\n* feat: implement `MirrorTrustManager` and manual certificate pinning to allow secure connections via direct IP and mirror domains\n* feat: add support for `x-pm-country` header spoofing based on user settings\n* refactor: improve authentication stability by clearing pending auth state on specific HTTP errors (401, 403, 422)\n* feat: add debug utility to fetch available Proton domains and copy them to the clipboard\n* fix: prevent `TokenAuthenticator` from attempting to authenticate on existing auth-related requests to avoid loops\n* feat: implement `Base32` utility for encoding hostnames in DoH queries",
+      "changelog": "feat: update app branding and modernize icon implementation\n\n* feat: redesign `ic_notification.xml` with a new vector path, updated viewport, and scaling\n* refactor: replace `AndroidView` in `AboutAppScreen.kt` with a Compose-native `Box` layout to layer adaptive icon background and foreground resources\n* chore: remove legacy `.webp` launcher and round launcher icons across all density folders\n* chore: update `ic_launcher-playstore.png` asset",
       "force": false
     },
     "release": {
-      "versionCode": 605159754,
-      "versionName": "12.0.0-alpha1st2-43-g97a67a9-nightly",
+      "versionCode": 605159756,
+      "versionName": "12.0.0-alpha1st2-45-gf916ee4-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "feat: implement Proton API mirrors strategy via DNS-over-HTTPS fallback\n\n* feat: add \"Proton Mirrors (DoH)\" API bypass strategy to discover and use dynamic API mirrors\n* feat: implement `DohFallbackInterceptor` and `DohClient` to resolve alternative API hosts using encrypted DNS queries\n* feat: implement `MirrorTrustManager` and manual certificate pinning to allow secure connections via direct IP and mirror domains\n* feat: add support for `x-pm-country` header spoofing based on user settings\n* refactor: improve authentication stability by clearing pending auth state on specific HTTP errors (401, 403, 422)\n* feat: add debug utility to fetch available Proton domains and copy them to the clipboard\n* fix: prevent `TokenAuthenticator` from attempting to authenticate on existing auth-related requests to avoid loops\n* feat: implement `Base32` utility for encoding hostnames in DoH queries",
+      "changelog": "feat: update app branding and modernize icon implementation\n\n* feat: redesign `ic_notification.xml` with a new vector path, updated viewport, and scaling\n* refactor: replace `AndroidView` in `AboutAppScreen.kt` with a Compose-native `Box` layout to layer adaptive icon background and foreground resources\n* chore: remove legacy `.webp` launcher and round launcher icons across all density folders\n* chore: update `ic_launcher-playstore.png` asset",
       "force": false
     }
   }
