@@ -129,6 +129,8 @@
     <string name="api_proxy_type">Тип проксі</string>
     <string name="api_proxy_type_http">HTTPS / HTTP</string>
     <string name="api_proxy_type_socks">SOCKS5</string>
+    <string name="api_proxy_username">Ім\'я користувача (необов\'язково)</string>
+    <string name="api_proxy_password">Пароль (необов\'язково)</string>
 
     <!-- Custom DNS -->
     <string name="settings_custom_dns">Користувацький DNS</string>

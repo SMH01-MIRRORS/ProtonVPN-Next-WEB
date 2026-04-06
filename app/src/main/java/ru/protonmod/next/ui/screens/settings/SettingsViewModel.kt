@@ -63,6 +63,8 @@ data class SettingsUiState(
     val apiProxyHost: String = "",
     val apiProxyPort: Int = 1080,
     val apiProxyType: String = SettingsManager.PROXY_TYPE_SOCKS,
+    val apiProxyUsername: String = "",
+    val apiProxyPassword: String = "",
     val isAnyVpnActive: Boolean = false,
 
     // Customization
@@ -214,6 +216,8 @@ class SettingsViewModel @Inject constructor(
         settingsManager.apiProxyHost,
         settingsManager.apiProxyPort,
         settingsManager.apiProxyType,
+        settingsManager.apiProxyUsername,
+        settingsManager.apiProxyPassword,
         settingsManager.appTheme,
         settingsManager.serverLoadDisplayMode,
         settingsManager.otaUpdateFrequency,
@@ -269,14 +273,16 @@ class SettingsViewModel @Inject constructor(
             apiProxyHost = args[42] as String,
             apiProxyPort = args[43] as Int,
             apiProxyType = args[44] as String,
-            appTheme = args[45] as AppTheme,
-            serverLoadDisplayMode = args[46] as ServerLoadDisplayMode,
-            otaUpdateFrequency = args[47] as String,
-            otaUpdateChannel = args[48] as String,
-            availableChannels = args[49] as Map<String, Boolean>,
-            isAnyVpnActive = args[50] as Boolean,
-            isCheckingForUpdates = args[51] as Boolean,
-            isUpdateAvailable = args[52] as Boolean
+            apiProxyUsername = args[45] as String,
+            apiProxyPassword = args[46] as String,
+            appTheme = args[47] as AppTheme,
+            serverLoadDisplayMode = args[48] as ServerLoadDisplayMode,
+            otaUpdateFrequency = args[49] as String,
+            otaUpdateChannel = args[50] as String,
+            availableChannels = args[51] as Map<String, Boolean>,
+            isAnyVpnActive = args[52] as Boolean,
+            isCheckingForUpdates = args[53] as Boolean,
+            isUpdateAvailable = args[54] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -391,6 +397,18 @@ class SettingsViewModel @Inject constructor(
     fun setApiProxyType(type: String) {
         viewModelScope.launch {
             settingsManager.setApiProxyType(type)
+        }
+    }
+
+    fun setApiProxyUsername(username: String) {
+        viewModelScope.launch {
+            settingsManager.setApiProxyUsername(username)
+        }
+    }
+
+    fun setApiProxyPassword(password: String) {
+        viewModelScope.launch {
+            settingsManager.setApiProxyPassword(password)
         }
     }
 

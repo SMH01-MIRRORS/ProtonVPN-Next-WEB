@@ -81,6 +81,8 @@ class SettingsManager @Inject constructor(
         private val API_PROXY_HOST = stringPreferencesKey("api_proxy_host")
         private val API_PROXY_PORT = intPreferencesKey("api_proxy_port")
         private val API_PROXY_TYPE = stringPreferencesKey("api_proxy_type") // "http" or "socks"
+        private val API_PROXY_USERNAME = stringPreferencesKey("api_proxy_username")
+        private val API_PROXY_PASSWORD = stringPreferencesKey("api_proxy_password")
 
         // API Mirroring / Spoofing Settings
         private val SPOOF_COUNTRY_ENABLED = booleanPreferencesKey("spoof_country_enabled")
@@ -166,6 +168,8 @@ class SettingsManager @Inject constructor(
     val apiProxyHost: Flow<String> = context.dataStore.data.map { it[API_PROXY_HOST] ?: "" }
     val apiProxyPort: Flow<Int> = context.dataStore.data.map { it[API_PROXY_PORT] ?: 1080 }
     val apiProxyType: Flow<String> = context.dataStore.data.map { it[API_PROXY_TYPE] ?: PROXY_TYPE_SOCKS }
+    val apiProxyUsername: Flow<String> = context.dataStore.data.map { it[API_PROXY_USERNAME] ?: "" }
+    val apiProxyPassword: Flow<String> = context.dataStore.data.map { it[API_PROXY_PASSWORD] ?: "" }
 
     val spoofCountryEnabled: Flow<Boolean> = context.dataStore.data.map { it[SPOOF_COUNTRY_ENABLED] ?: false }
     val spoofCountryNull: Flow<Boolean> = context.dataStore.data.map { it[SPOOF_COUNTRY_NULL] ?: false }
@@ -207,6 +211,8 @@ class SettingsManager @Inject constructor(
     fun getApiProxyHostSync(): String = prefs.getString("api_proxy_host", "") ?: ""
     fun getApiProxyPortSync(): Int = prefs.getInt("api_proxy_port", 1080)
     fun getApiProxyTypeSync(): String = prefs.getString("api_proxy_type", PROXY_TYPE_SOCKS) ?: PROXY_TYPE_SOCKS
+    fun getApiProxyUsernameSync(): String = prefs.getString("api_proxy_username", "") ?: ""
+    fun getApiProxyPasswordSync(): String = prefs.getString("api_proxy_password", "") ?: ""
 
     fun isSpoofCountryEnabledSync(): Boolean = prefs.getBoolean("spoof_country_enabled", false)
     fun isSpoofCountryNullSync(): Boolean = prefs.getBoolean("spoof_country_null", false)
@@ -355,6 +361,16 @@ class SettingsManager @Inject constructor(
     suspend fun setApiProxyType(type: String) {
         prefs.edit { putString("api_proxy_type", type) }
         context.dataStore.edit { it[API_PROXY_TYPE] = type }
+    }
+
+    suspend fun setApiProxyUsername(username: String) {
+        prefs.edit { putString("api_proxy_username", username) }
+        context.dataStore.edit { it[API_PROXY_USERNAME] = username }
+    }
+
+    suspend fun setApiProxyPassword(password: String) {
+        prefs.edit { putString("api_proxy_password", password) }
+        context.dataStore.edit { it[API_PROXY_PASSWORD] = password }
     }
 
     suspend fun setSpoofCountryEnabled(enabled: Boolean) {

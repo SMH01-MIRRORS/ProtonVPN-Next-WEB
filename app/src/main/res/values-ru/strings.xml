@@ -131,6 +131,8 @@
     <string name="api_proxy_type">Тип прокси</string>
     <string name="api_proxy_type_http">HTTPS / HTTP</string>
     <string name="api_proxy_type_socks">SOCKS5</string>
+    <string name="api_proxy_username">Имя пользователя (необязательно)</string>
+    <string name="api_proxy_password">Пароль (необязательно)</string>
 
     <!-- Custom DNS -->
     <string name="settings_custom_dns">Пользовательский DNS</string>

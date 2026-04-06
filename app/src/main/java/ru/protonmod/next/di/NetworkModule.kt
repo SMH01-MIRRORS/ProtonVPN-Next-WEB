@@ -27,13 +27,17 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
+import okhttp3.Authenticator
 import okhttp3.CertificatePinner
+import okhttp3.Credentials
 import okhttp3.Dns
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttp
 import okhttp3.OkHttpClient
+import okhttp3.Response
+import okhttp3.Route
 import okhttp3.dnsoverhttps.DnsOverHttps
 import retrofit2.Retrofit
 import ru.protonmod.next.data.local.SessionDao
@@ -363,10 +367,32 @@ object NetworkModule {
             }
         }
 
+        val proxyAuthenticator = object : Authenticator {
+            override fun authenticate(route: Route?, response: Response): okhttp3.Request? {
+                val settings = settingsManagerProvider.get()
+                val useProxy = shouldUseApiBypass(context, vpnManagerProvider, settingsManagerProvider)
+                val strategy = settings.getApiBypassStrategySync()
+
+                if (useProxy && strategy == SettingsManager.STRATEGY_CUSTOM_PROXY) {
+                    val username = settings.getApiProxyUsernameSync()
+                    val password = settings.getApiProxyPasswordSync()
+
+                    if (username.isNotEmpty()) {
+                        val credential = Credentials.basic(username, password)
+                        return response.request.newBuilder()
+                            .header("Proxy-Authorization", credential)
+                            .build()
+                    }
+                }
+                return null
+            }
+        }
+
         return OkHttpClient.Builder()
             .addInterceptor(dynamicBaseUrlInterceptor)
             .addInterceptor(dohFallbackInterceptor)
             .authenticator(tokenAuthenticator)
+            .proxyAuthenticator(proxyAuthenticator)
             .dns(dynamicDns)
             .proxySelector(proxySelector)
             .certificatePinner(certificatePinner)

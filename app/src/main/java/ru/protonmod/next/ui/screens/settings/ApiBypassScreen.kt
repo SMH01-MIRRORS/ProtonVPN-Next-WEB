@@ -328,6 +328,26 @@ fun ApiBypassScreen(
                                             selectedType = uiState.apiProxyType,
                                             onTypeSelect = { viewModel.setApiProxyType(it) }
                                         )
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+
+                                        // Username input
+                                        SettingInputRow(
+                                            label = stringResource(R.string.api_proxy_username),
+                                            value = uiState.apiProxyUsername,
+                                            onValueChange = { viewModel.setApiProxyUsername(it) },
+                                            placeholder = "user123"
+                                        )
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+
+                                        // Password input
+                                        SettingInputRow(
+                                            label = stringResource(R.string.api_proxy_password),
+                                            value = uiState.apiProxyPassword,
+                                            onValueChange = { viewModel.setApiProxyPassword(it) },
+                                            placeholder = "password"
+                                        )
                                     }
                                 }
 
