@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159756,
-      "versionName": "12.0.0-alpha1st2-45-gf916ee4-nightly",
+      "versionCode": 605159758,
+      "versionName": "12.0.0-alpha1st2-47-g5ba95a5-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "feat: update app branding and modernize icon implementation\n\n* feat: redesign `ic_notification.xml` with a new vector path, updated viewport, and scaling\n* refactor: replace `AndroidView` in `AboutAppScreen.kt` with a Compose-native `Box` layout to layer adaptive icon background and foreground resources\n* chore: remove legacy `.webp` launcher and round launcher icons across all density folders\n* chore: update `ic_launcher-playstore.png` asset",
+      "changelog": "feat: implement smooth text field components to handle asynchronous state updates\n\n* feat: add `SmoothTextField` and `SmoothOutlinedTextField` components to manage local `TextFieldValue` state, ensuring smooth typing and cursor stability when using asynchronous data sources like DataStore\n* refactor: migrate `LoginScreen`, `EditProfileScreen`, and various settings screens (DNS, Debug, Obfuscation, API Bypass) to use the new smooth text field components\n* chore: update GNU GPL license headers across multiple files for consistency\n* refactor: rename `onTypeSelected` to `onTypeSelect` in `ProxyTypeDropdown` within `ApiBypassScreen` for consistency with other UI callbacks",
       "force": false
     },
     "release": {
-      "versionCode": 605159756,
-      "versionName": "12.0.0-alpha1st2-45-gf916ee4-nightly",
+      "versionCode": 605159758,
+      "versionName": "12.0.0-alpha1st2-47-g5ba95a5-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "feat: update app branding and modernize icon implementation\n\n* feat: redesign `ic_notification.xml` with a new vector path, updated viewport, and scaling\n* refactor: replace `AndroidView` in `AboutAppScreen.kt` with a Compose-native `Box` layout to layer adaptive icon background and foreground resources\n* chore: remove legacy `.webp` launcher and round launcher icons across all density folders\n* chore: update `ic_launcher-playstore.png` asset",
+      "changelog": "feat: implement smooth text field components to handle asynchronous state updates\n\n* feat: add `SmoothTextField` and `SmoothOutlinedTextField` components to manage local `TextFieldValue` state, ensuring smooth typing and cursor stability when using asynchronous data sources like DataStore\n* refactor: migrate `LoginScreen`, `EditProfileScreen`, and various settings screens (DNS, Debug, Obfuscation, API Bypass) to use the new smooth text field components\n* chore: update GNU GPL license headers across multiple files for consistency\n* refactor: rename `onTypeSelected` to `onTypeSelect` in `ProxyTypeDropdown` within `ApiBypassScreen` for consistency with other UI callbacks",
       "force": false
     }
   }
