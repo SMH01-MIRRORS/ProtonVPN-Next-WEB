@@ -76,8 +76,6 @@ fun CaptchaScreen(
     var hasSolved by remember { mutableStateOf(false) }
     val isTablet = isTablet()
 
-    // Single OkHttpClient for the lifetime of this composable.  DisposableEffect guarantees its
-    // thread pool and connection pool are released as soon as the screen leaves the composition.
     val captchaHttpClient = remember {
         OkHttpClient.Builder().build()
     }
@@ -176,9 +174,9 @@ fun CaptchaScreen(
                 var webView by remember { mutableStateOf<WebView?>(null) }
 
                 val shouldProxyDirectly = isApiBypassEnabled && (
-                    apiBypassStrategy == SettingsManager.STRATEGY_NETLIFY ||
-                    apiBypassStrategy == SettingsManager.STRATEGY_CLOUDFLARE
-                )
+                        apiBypassStrategy == SettingsManager.STRATEGY_NETLIFY ||
+                                apiBypassStrategy == SettingsManager.STRATEGY_CLOUDFLARE
+                        )
 
                 val proxyBaseUrl = if (apiBypassStrategy == SettingsManager.STRATEGY_CLOUDFLARE) {
                     "https://api.protonnext.qzz.io"
@@ -188,9 +186,8 @@ fun CaptchaScreen(
 
                 LaunchedEffect(webUrl, sessionId, webView) {
                     val wv = webView ?: return@LaunchedEffect
-                    
-                    // 1. First, always normalize the webUrl back to direct Proton domain 
-                    // if it arrived as a mirror from the API.
+
+                    // Always normalize to direct URL so shouldInterceptRequest can match it
                     val directWebUrl = try {
                         val httpUrl = webUrl.toHttpUrl()
                         val host = httpUrl.host
@@ -205,22 +202,13 @@ fun CaptchaScreen(
                         webUrl
                     }
 
-                    // 2. Then, if we are in a mirror strategy, rewrite it to our selected mirror.
-                    val effectiveWebUrl = if (shouldProxyDirectly) {
-                        when {
-                            directWebUrl.startsWith("https://verify-api.proton.me") ->
-                                directWebUrl.replace("https://verify-api.proton.me", "$proxyBaseUrl/verify-api")
-                            directWebUrl.startsWith("https://verify.proton.me") ->
-                                directWebUrl.replace("https://verify.proton.me", "$proxyBaseUrl/verify")
-                            else -> directWebUrl
-                        }
-                    } else {
-                        directWebUrl
-                    }
-
+                    // FIX: We must load the direct URL into the WebView here!
+                    // This forces the WebView to trigger `shouldInterceptRequest` with "https://verify.proton.me"
+                    // If we pass the effective (proxy) URL directly, the interceptor ignores it, the JS is never injected,
+                    // and critical headers are lost causing 12087!
                     val optimizedUrl = buildString {
-                        append(effectiveWebUrl)
-                        if (!effectiveWebUrl.contains("?")) append("?") else append("&")
+                        append(directWebUrl)
+                        if (!directWebUrl.contains("?")) append("?") else append("&")
                         append("embed=true&theme=1&vpn=true")
                     }
 
@@ -233,7 +221,7 @@ fun CaptchaScreen(
                         extraHeaders["x-pm-uid"] = sessionId
                     }
 
-                    ProtonLogger.d("CaptchaScreen", "Loading optimized URL: $optimizedUrl")
+                    ProtonLogger.d("CaptchaScreen", "Loading URL: $optimizedUrl")
                     wv.loadUrl(optimizedUrl, extraHeaders)
                 }
 
@@ -294,12 +282,10 @@ fun CaptchaScreen(
 
                                 override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                                     super.onPageStarted(view, url, favicon)
-                                    ProtonLogger.d("CaptchaScreen", "Page load started: $url")
                                 }
 
                                 override fun onPageFinished(view: WebView?, url: String?) {
                                     super.onPageFinished(view, url)
-                                    ProtonLogger.d("CaptchaScreen", "Page load finished: $url")
                                     isLoading = false
                                 }
 
@@ -309,15 +295,11 @@ fun CaptchaScreen(
                                     error: android.webkit.WebResourceError?
                                 ) {
                                     super.onReceivedError(view, request, error)
-                                    ProtonLogger.e("CaptchaScreen", "WebView Error (${error?.errorCode}): ${error?.description} at ${request?.url}")
+                                    ProtonLogger.e("CaptchaScreen", "WebView Error (${error?.errorCode}): ${error?.description}")
                                     isLoading = false
                                 }
 
-                                override fun onRenderProcessGone(
-                                    view: WebView?,
-                                    detail: RenderProcessGoneDetail?
-                                ): Boolean {
-                                    ProtonLogger.e("CaptchaScreen", "WebView renderer process gone (crashed: ${detail?.didCrash()})")
+                                override fun onRenderProcessGone(view: WebView?, detail: RenderProcessGoneDetail?): Boolean {
                                     onDismiss()
                                     return true
                                 }
@@ -343,10 +325,24 @@ fun CaptchaScreen(
                                             val okRequest = Request.Builder()
                                                 .url(targetProxyUrl)
                                                 .apply {
-                                                    request.requestHeaders?.forEach { (key, value) ->
+                                                    val headersMap = request.requestHeaders ?: emptyMap()
+                                                    headersMap.forEach { (key, value) ->
                                                         if (!key.equals("Host", ignoreCase = true)) {
                                                             addHeader(key, value)
                                                         }
+                                                    }
+
+                                                    // FIX 12087: WebResourceRequest OFTEN strips custom headers provided to loadUrl()
+                                                    // We MUST manually re-inject x-pm-uid here so OkHttpClient passes it to the backend.
+                                                    // If we don't, the backend generates a new session and 12087 occurs!
+                                                    if (sessionId != null && !headersMap.keys.any { it.equals("x-pm-uid", ignoreCase = true) }) {
+                                                        addHeader("x-pm-uid", sessionId)
+                                                    }
+                                                    if (!headersMap.keys.any { it.equals("x-pm-appversion", ignoreCase = true) }) {
+                                                        addHeader("x-pm-appversion", "android-vpn@${DeviceInfoProvider.SPOOFED_APP_VERSION}-dev+play")
+                                                    }
+                                                    if (!headersMap.keys.any { it.equals("x-pm-apiversion", ignoreCase = true) }) {
+                                                        addHeader("x-pm-apiversion", "4")
                                                     }
                                                 }
                                                 .build()
@@ -443,10 +439,9 @@ fun CaptchaScreen(
 
 private fun prepareProxyResponseHeaders(response: Response): MutableMap<String, String> {
     val headers = response.headers.toMap().toMutableMap()
-    // Strip CSP and X-Frame-Options to allow mirrored content
-    headers.keys.filter { 
-        it.equals("Content-Security-Policy", ignoreCase = true) || 
-        it.equals("X-Frame-Options", ignoreCase = true) 
+    headers.keys.filter {
+        it.equals("Content-Security-Policy", ignoreCase = true) ||
+                it.equals("X-Frame-Options", ignoreCase = true)
     }.forEach { headers.remove(it) }
     headers["Access-Control-Allow-Origin"] = "*"
     return headers
