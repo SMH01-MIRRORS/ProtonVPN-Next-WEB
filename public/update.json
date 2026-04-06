@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159758,
-      "versionName": "12.0.0-alpha1st2-47-g5ba95a5-nightly",
+      "versionCode": 605159759,
+      "versionName": "12.0.0-alpha1st2-48-g67b71c7-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "feat: implement smooth text field components to handle asynchronous state updates\n\n* feat: add `SmoothTextField` and `SmoothOutlinedTextField` components to manage local `TextFieldValue` state, ensuring smooth typing and cursor stability when using asynchronous data sources like DataStore\n* refactor: migrate `LoginScreen`, `EditProfileScreen`, and various settings screens (DNS, Debug, Obfuscation, API Bypass) to use the new smooth text field components\n* chore: update GNU GPL license headers across multiple files for consistency\n* refactor: rename `onTypeSelected` to `onTypeSelect` in `ProxyTypeDropdown` within `ApiBypassScreen` for consistency with other UI callbacks",
+      "changelog": "feat: add authentication support for custom API proxy\n\n* feat: implement username and password storage in `SettingsManager` using DataStore and SharedPreferences\n* feat: add a `proxyAuthenticator` to `OkHttpClient` to handle basic authentication for custom proxies\n* feat: update `SettingsViewModel` to manage state and persistence for proxy credentials\n* ui: add username and password input fields to the `ApiBypassScreen`\n* docs: add localized strings for proxy authentication in English, Chinese, Ukrainian, Belarusian, Russian, and Persian",
       "force": false
     },
     "release": {
-      "versionCode": 605159758,
-      "versionName": "12.0.0-alpha1st2-47-g5ba95a5-nightly",
+      "versionCode": 605159759,
+      "versionName": "12.0.0-alpha1st2-48-g67b71c7-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "feat: implement smooth text field components to handle asynchronous state updates\n\n* feat: add `SmoothTextField` and `SmoothOutlinedTextField` components to manage local `TextFieldValue` state, ensuring smooth typing and cursor stability when using asynchronous data sources like DataStore\n* refactor: migrate `LoginScreen`, `EditProfileScreen`, and various settings screens (DNS, Debug, Obfuscation, API Bypass) to use the new smooth text field components\n* chore: update GNU GPL license headers across multiple files for consistency\n* refactor: rename `onTypeSelected` to `onTypeSelect` in `ProxyTypeDropdown` within `ApiBypassScreen` for consistency with other UI callbacks",
+      "changelog": "feat: add authentication support for custom API proxy\n\n* feat: implement username and password storage in `SettingsManager` using DataStore and SharedPreferences\n* feat: add a `proxyAuthenticator` to `OkHttpClient` to handle basic authentication for custom proxies\n* feat: update `SettingsViewModel` to manage state and persistence for proxy credentials\n* ui: add username and password input fields to the `ApiBypassScreen`\n* docs: add localized strings for proxy authentication in English, Chinese, Ukrainian, Belarusian, Russian, and Persian",
       "force": false
     }
   }
