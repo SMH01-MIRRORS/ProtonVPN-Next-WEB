@@ -48,6 +48,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.components.SmoothOutlinedTextField
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
@@ -396,19 +397,19 @@ fun DebugSettingsScreen(
                         color = colors.notificationError,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
-                    OutlinedTextField(
-                        value = importJson,
-                        onValueChange = { importJson = it },
-                        label = { Text(stringResource(R.string.hint_session_json)) },
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = colors.brandNorm,
-                            unfocusedBorderColor = colors.shade20,
-                            focusedTextColor = colors.textNorm,
-                            unfocusedTextColor = colors.textNorm
+                        SmoothOutlinedTextField(
+                            value = importJson,
+                            onValueChange = { importJson = it },
+                            label = { Text(stringResource(R.string.hint_session_json)) },
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = colors.brandNorm,
+                                unfocusedBorderColor = colors.shade20,
+                                focusedTextColor = colors.textNorm,
+                                unfocusedTextColor = colors.textNorm
+                            )
                         )
-                    )
                 }
             },
             confirmButton = {

@@ -12,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  See <https://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package ru.protonmod.next.ui.screens.settings
@@ -43,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.components.SmoothOutlinedTextField
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
@@ -354,7 +355,7 @@ fun ObfuscationSettingsScreen(
                                                     Column {
                                                         Text(stringResource(R.string.obfuscation_dialog_domain_desc), style = MaterialTheme.typography.bodySmall, color = colors.textWeak)
                                                         Spacer(modifier = Modifier.height(16.dp))
-                                                        OutlinedTextField(
+                                                        SmoothOutlinedTextField(
                                                             value = domainInput,
                                                             onValueChange = { domainInput = it },
                                                             placeholder = { Text("google.com", color = colors.textWeak.copy(alpha = 0.5f)) },
@@ -577,7 +578,7 @@ fun ObfuscationSettingsScreen(
                                     onDismissRequest = { showSaveDialog = false },
                                     title = { Text(stringResource(R.string.obfuscation_save_config), color = colors.textNorm) },
                                     text = {
-                                        OutlinedTextField(
+                                        SmoothOutlinedTextField(
                                             value = newProfileName,
                                             onValueChange = { newProfileName = it },
                                             label = { Text(stringResource(R.string.obfuscation_config_name)) },
@@ -707,7 +708,7 @@ fun ObfuscationParamField(
             color = colors.textWeak
         )
         Spacer(modifier = Modifier.height(4.dp))
-        OutlinedTextField(
+        SmoothOutlinedTextField(
             value = value,
             onValueChange = onValueChange,
             enabled = isEnabled,

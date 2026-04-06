@@ -12,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  See <https://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package ru.protonmod.next.ui.screens.settings
@@ -35,6 +35,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.components.SmoothOutlinedTextField
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 
@@ -101,7 +102,7 @@ fun DnsSettingsScreen(
                             modifier = Modifier.padding(bottom = 24.dp)
                         )
 
-                        OutlinedTextField(
+                        SmoothOutlinedTextField(
                             value = inputText,
                             onValueChange = { inputText = it },
                             placeholder = { Text(stringResource(R.string.settings_custom_dns_placeholder)) },

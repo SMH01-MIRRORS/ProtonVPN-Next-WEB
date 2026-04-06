@@ -12,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  See <https://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package ru.protonmod.next.ui.screens.settings
@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.components.SmoothOutlinedTextField
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 
@@ -99,7 +100,7 @@ fun AutoOpenUrlScreen(
                             modifier = Modifier.padding(bottom = 24.dp)
                         )
 
-                        OutlinedTextField(
+                        SmoothOutlinedTextField(
                             value = url,
                             onValueChange = { url = it },
                             label = { Text(stringResource(R.string.label_enter_url)) },

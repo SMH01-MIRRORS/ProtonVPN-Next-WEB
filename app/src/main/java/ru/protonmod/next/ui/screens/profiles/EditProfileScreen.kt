@@ -12,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  See <https://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package ru.protonmod.next.ui.screens.profiles
@@ -64,6 +64,8 @@ import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.LoadIndicator
 import ru.protonmod.next.ui.components.LoadProgressBar
+import ru.protonmod.next.ui.components.SmoothOutlinedTextField
+import ru.protonmod.next.ui.components.SmoothTextField
 import ru.protonmod.next.ui.screens.countries.CityDisplayItem
 import ru.protonmod.next.ui.screens.countries.CountryDisplayItem
 import ru.protonmod.next.ui.components.MainHeader
@@ -846,7 +848,7 @@ fun SettingTextFieldRow(
     modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
-    OutlinedTextField(
+    SmoothOutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label) },
@@ -1010,7 +1012,7 @@ fun ObfuscationProfileEditDialog(
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             item(contentType = "TextField") {
-                                OutlinedTextField(
+                                SmoothOutlinedTextField(
                                     value = name,
                                     onValueChange = { name = it },
                                     label = { Text(stringResource(R.string.obfuscation_config_name)) },
@@ -1150,7 +1152,7 @@ private fun EditParamField(
     isNumeric: Boolean = true
 ) {
     val colors = ProtonNextTheme.colors
-    TextField(
+    SmoothTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label, style = MaterialTheme.typography.labelMedium) },

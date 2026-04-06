@@ -54,6 +54,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.components.SmoothOutlinedTextField
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
@@ -325,7 +326,7 @@ fun ApiBypassScreen(
                                         // Proxy Type selection
                                         ProxyTypeDropdown(
                                             selectedType = uiState.apiProxyType,
-                                            onTypeSelected = { viewModel.setApiProxyType(it) }
+                                            onTypeSelect = { viewModel.setApiProxyType(it) }
                                         )
                                     }
                                 }
@@ -345,7 +346,7 @@ fun ApiBypassScreen(
 @Composable
 private fun ProxyTypeDropdown(
     selectedType: String,
-    onTypeSelected: (String) -> Unit
+    onTypeSelect: (String) -> Unit
 ) {
     val colors = ProtonNextTheme.colors
     var expanded by remember { mutableStateOf(false) }
@@ -382,14 +383,14 @@ private fun ProxyTypeDropdown(
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.api_proxy_type_socks), color = colors.textNorm) },
                     onClick = {
-                        onTypeSelected(SettingsManager.PROXY_TYPE_SOCKS)
+                        onTypeSelect(SettingsManager.PROXY_TYPE_SOCKS)
                         expanded = false
                     }
                 )
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.api_proxy_type_http), color = colors.textNorm) },
                     onClick = {
-                        onTypeSelected(SettingsManager.PROXY_TYPE_HTTP)
+                        onTypeSelect(SettingsManager.PROXY_TYPE_HTTP)
                         expanded = false
                     }
                 )
@@ -415,7 +416,7 @@ private fun SettingInputRow(
             color = colors.textWeak,
             modifier = Modifier.padding(bottom = 4.dp)
         )
-        OutlinedTextField(
+        SmoothOutlinedTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),

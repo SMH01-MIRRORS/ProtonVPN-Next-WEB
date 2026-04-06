@@ -46,6 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.components.SmoothOutlinedTextField
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.isTablet
 
@@ -143,7 +144,7 @@ fun LoginScreen(
 
                             Spacer(modifier = Modifier.height(32.dp))
 
-                            OutlinedTextField(
+                            SmoothOutlinedTextField(
                                 value = totpCode,
                                 onValueChange = { totpCode = it },
                                 label = { Text(stringResource(R.string.hint_2fa_code)) },
@@ -248,7 +249,7 @@ fun LoginScreen(
                             Spacer(modifier = Modifier.height(32.dp))
 
                             Column(modifier = Modifier.padding(horizontal = 24.dp)) {
-                                OutlinedTextField(
+                                SmoothOutlinedTextField(
                                     value = username,
                                     onValueChange = { username = it },
                                     label = { Text(stringResource(R.string.hint_username)) },
@@ -266,7 +267,7 @@ fun LoginScreen(
 
                                 Spacer(modifier = Modifier.height(16.dp))
 
-                                OutlinedTextField(
+                                SmoothOutlinedTextField(
                                     value = password,
                                     onValueChange = { password = it },
                                     label = { Text(stringResource(R.string.hint_password)) },
@@ -374,7 +375,7 @@ fun LoginScreen(
                                     color = colors.textWeak,
                                     modifier = Modifier.padding(bottom = 16.dp)
                                 )
-                                OutlinedTextField(
+                                SmoothOutlinedTextField(
                                     value = sessionJson,
                                     onValueChange = { sessionJson = it },
                                     label = { Text(stringResource(R.string.hint_session_json)) },
