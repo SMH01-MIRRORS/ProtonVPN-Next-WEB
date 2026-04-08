@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159761,
-      "versionName": "12.0.0-alpha1st2-50-gcce0504-nightly",
+      "versionCode": 605159762,
+      "versionName": "12.0.0-alpha1st2-51-gda4e34a-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "fix: resolve login CAPTCHA validation issues and 12087 session errors\n\n* fix: prevent duplicate CAPTCHA token consumption in `AuthRepository` by ensuring the token is only sent once across login phases\n* fix: manually re-inject critical headers (`x-pm-uid`, `x-pm-appversion`, `x-pm-apiversion`) in `CaptchaScreen` to prevent WebView from stripping them during proxying\n* fix: force a fresh session restart when encountering error 12087 (CAPTCHA session expired) instead of retrying an invalidated session\n* refactor: load direct Proton URLs in `CaptchaScreen` to ensure `shouldInterceptRequest` correctly identifies and proxies traffic\n* refactor: simplify `LoginViewModel` and `AuthRepository` by removing redundant comments and internal metrics logging\n* feat: add a failsafe to require a valid session ID before triggering the CAPTCHA flow to ensure proper token binding",
+      "changelog": "fix: Prevent libhwui SIGABRT during map zoom animations",
       "force": false
     },
     "release": {
-      "versionCode": 605159761,
-      "versionName": "12.0.0-alpha1st2-50-gcce0504-nightly",
+      "versionCode": 605159762,
+      "versionName": "12.0.0-alpha1st2-51-gda4e34a-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "fix: resolve login CAPTCHA validation issues and 12087 session errors\n\n* fix: prevent duplicate CAPTCHA token consumption in `AuthRepository` by ensuring the token is only sent once across login phases\n* fix: manually re-inject critical headers (`x-pm-uid`, `x-pm-appversion`, `x-pm-apiversion`) in `CaptchaScreen` to prevent WebView from stripping them during proxying\n* fix: force a fresh session restart when encountering error 12087 (CAPTCHA session expired) instead of retrying an invalidated session\n* refactor: load direct Proton URLs in `CaptchaScreen` to ensure `shouldInterceptRequest` correctly identifies and proxies traffic\n* refactor: simplify `LoginViewModel` and `AuthRepository` by removing redundant comments and internal metrics logging\n* feat: add a failsafe to require a valid session ID before triggering the CAPTCHA flow to ensure proper token binding",
+      "changelog": "fix: Prevent libhwui SIGABRT during map zoom animations",
       "force": false
     }
   }
