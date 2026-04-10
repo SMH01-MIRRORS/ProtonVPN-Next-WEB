@@ -4,6 +4,8 @@
 
 ---
 
+GitHub mirror - https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR
+
 ## English
 
 **Proton VPN-Next** is a modern, high-performance **unofficial** Android client for Proton VPN. Built with a focus on privacy, speed, and a sleek Material 3 interface, it leverages AmneziaWG to ensure stable connectivity even in restrictive environments.
