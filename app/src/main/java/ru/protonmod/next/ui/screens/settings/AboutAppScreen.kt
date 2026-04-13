@@ -18,12 +18,6 @@
 package ru.protonmod.next.ui.screens.settings
 
 import android.content.Intent
-import android.widget.ImageView
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -48,7 +42,6 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -61,15 +54,13 @@ fun AboutAppScreen(
     appVersion: String,
     onBack: () -> Unit,
     onNavigateToLicenses: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
     val githubUrl = stringResource(R.string.url_github)
     val codebergUrl = stringResource(R.string.url_codeberg)
     val telegramUrl = stringResource(R.string.url_telegram)
-
-    var showGitHub by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -164,9 +155,23 @@ fun AboutAppScreen(
                         )
 
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(IntrinsicSize.Max),
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
+                            AboutLinkCard(
+                                title = stringResource(id = R.string.about_github),
+                                iconResId = R.drawable.ic_github,
+                                onClick = {
+                                    val intent = Intent(Intent.ACTION_VIEW, githubUrl.toUri())
+                                    context.startActivity(intent)
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                            )
+
                             AboutLinkCard(
                                 title = stringResource(id = R.string.about_codeberg),
                                 iconResId = R.drawable.ic_codeberg,
@@ -174,7 +179,9 @@ fun AboutAppScreen(
                                     val intent = Intent(Intent.ACTION_VIEW, codebergUrl.toUri())
                                     context.startActivity(intent)
                                 },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
                             )
 
                             AboutLinkCard(
@@ -184,79 +191,10 @@ fun AboutAppScreen(
                                     val intent = Intent(Intent.ACTION_VIEW, telegramUrl.toUri())
                                     context.startActivity(intent)
                                 },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
                             )
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // GitHub Hidden Section
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .liquidGlass(
-                                    shape = RoundedCornerShape(16.dp),
-                                    alpha = 0.4f,
-                                    shadowElevation = 0.dp
-                                )
-                                .clickable { showGitHub = !showGitHub }
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.ic_github),
-                                        contentDescription = null,
-                                        tint = colors.textWeak,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = stringResource(
-                                            R.string.about_github_unavailable,
-                                            stringResource(R.string.about_unavailable)
-                                        ),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = colors.textWeak
-                                    )
-                                }
-
-                                AnimatedVisibility(
-                                    visible = showGitHub,
-                                    enter = fadeIn() + expandVertically(),
-                                    exit = fadeOut() + shrinkVertically()
-                                ) {
-                                    Column(
-                                        modifier = Modifier.padding(top = 12.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Button(
-                                            onClick = {
-                                                val intent = Intent(
-                                                    Intent.ACTION_VIEW,
-                                                    githubUrl.toUri()
-                                                )
-                                                context.startActivity(intent)
-                                            },
-                                            shape = RoundedCornerShape(12.dp),
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = colors.brandNorm
-                                            )
-                                        ) {
-                                            Text(
-                                                stringResource(R.string.about_github),
-                                                color = colors.textInverted
-                                            )
-                                        }
-                                    }
-                                }
-                            }
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))
@@ -313,14 +251,14 @@ fun AboutLinkCard(
     val colors = ProtonNextTheme.colors
     Box(
         modifier = modifier
-            .aspectRatio(1.2f)
             .liquidGlass(shape = RoundedCornerShape(16.dp), alpha = 0.4f, shadowElevation = 0.dp)
             .clickable(onClick = onClick)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .padding(vertical = 16.dp, horizontal = 8.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
