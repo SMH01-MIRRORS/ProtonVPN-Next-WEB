@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159745,
-      "versionName": "12.0.0-alpha1st2-34-ga672226-nightly",
+      "versionCode": 605159767,
+      "versionName": "12.0.0-alpha1st2-56-ge2ef922-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "chore: update API proxy domain to api.protonnext.qzz.io\n\n* chore: update the authorized Proton API host in `TokenAuthenticator.kt` to reflect the new proxy domain\n* chore: update the Cloudflare bypass base URL in `CaptchaScreen.kt` to use the new hostname",
+      "changelog": "feat: update GitHub repository URL and modernize About screen links\n\n* chore: update GitHub mirror URL in `strings.xml` across all supported locales\n* refactor: replace the \"hidden\" GitHub section in `AboutAppScreen` with a standard link card for improved visibility\n* ui: improve `AboutLinkCard` layout by using intrinsic sizing and uniform padding to ensure consistent height across link cards\n* refactor: remove unused animation and view interop imports from `AboutAppScreen.kt`",
       "force": false
     },
     "release": {
-      "versionCode": 605159745,
-      "versionName": "12.0.0-alpha1st2-34-ga672226-nightly",
+      "versionCode": 605159767,
+      "versionName": "12.0.0-alpha1st2-56-ge2ef922-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "chore: update API proxy domain to api.protonnext.qzz.io\n\n* chore: update the authorized Proton API host in `TokenAuthenticator.kt` to reflect the new proxy domain\n* chore: update the Cloudflare bypass base URL in `CaptchaScreen.kt` to use the new hostname",
+      "changelog": "feat: update GitHub repository URL and modernize About screen links\n\n* chore: update GitHub mirror URL in `strings.xml` across all supported locales\n* refactor: replace the \"hidden\" GitHub section in `AboutAppScreen` with a standard link card for improved visibility\n* ui: improve `AboutLinkCard` layout by using intrinsic sizing and uniform padding to ensure consistent height across link cards\n* refactor: remove unused animation and view interop imports from `AboutAppScreen.kt`",
       "force": false
     }
   }
