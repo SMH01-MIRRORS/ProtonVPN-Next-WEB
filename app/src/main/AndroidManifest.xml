@@ -46,12 +46,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ProtonVPNNext">
 
-        <!-- This app requires 64-bit native libraries (arm64-v8a or x86_64).
-             32-bit devices are not supported. -->
-        <uses-native-library
-            android:name="libam-go.so"
-            android:required="true" />
-
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
