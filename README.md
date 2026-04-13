@@ -56,14 +56,7 @@ Ensure you have the Android SDK and JDK 17 installed.
 - **Persistence:** Room Database
 - **VPN Engine:** AmneziaWG (via Maven dependency)
 ### 💎 Infrastructure & Sponsors
-- **[Sentry](https://sentry.io/):** Error monitoring and performance tracking (Business Plan provided for the project).
-- **[Cloudflare](https://www.cloudflare.com/):** High-performance infrastructure using **Cloudflare Pages** (hosting) and **R2 Storage** (asset storage).
-- **[DigitalPlat FreeDomain](https://domain.digitalplat.org/):**
-  This project uses DigitalPlat FreeDomain, an open domain infrastructure maintained by Edward Hsing. Built on DigitalPlat FreeDomain for domain provisioning, with credit to the platform and its maintainer.
-
- ---
-
-### 💎 Infrastructure & Sponsors
+- **[1Password](https://1password.com/):** Password management and security (Teams subscription provided for open source development).
 - **[Sentry](https://sentry.io/):** Error monitoring and performance tracking (Business Plan provided for the project).
 - **[Cloudflare](https://www.cloudflare.com/):** High-performance infrastructure using **Cloudflare Pages** (hosting) and **R2 Storage** (asset storage).
 - **[DigitalPlat FreeDomain](https://freedomain.digiplat.org/):**
@@ -124,9 +117,10 @@ Ensure you have the Android SDK and JDK 17 installed.
 - **VPN Engine:** AmneziaWG (через Maven-зависимость)
 
 ### 💎 Инфраструктура и Спонсоры
+- **[1Password](https://1password.com/):** Менеджер паролей и безопасность (предоставлена подписка Teams для разработки Open Source проектов).
 - **[Sentry](https://sentry.io/):** Мониторинг ошибок и отслеживание производительности (предоставлен Business Plan для проекта).
 - **[Cloudflare](https://www.cloudflare.com/):** Высокопроизводительная инфраструктура с использованием **Cloudflare Pages** (хостинг) и **R2 Storage** (хранилище объектов).
-- **[DigitalPlat FreeDomain](https://domain.digitalplat.org/):**
+- **[DigitalPlat FreeDomain](https://freedomain.digiplat.org/):**
   This project uses DigitalPlat FreeDomain, an open domain infrastructure maintained by Edward Hsing. Built on DigitalPlat FreeDomain for domain provisioning, with credit to the platform and its maintainer.
 
 ---
