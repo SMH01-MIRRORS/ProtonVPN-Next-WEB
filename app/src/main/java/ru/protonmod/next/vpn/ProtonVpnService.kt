@@ -17,6 +17,7 @@
 
 package ru.protonmod.next.vpn
 
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -211,7 +212,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
 
         // Verify 64-bit runtime (failsafe for 32-bit device detection)
         if (System.getProperty("ro.product.cpu.abi")?.contains("armeabi") == true ||
-            System.getProperty("ro.product.cpu.abi")?.contains("x86") == true && 
+            System.getProperty("ro.product.cpu.abi")?.contains("x86") == true &&
             System.getProperty("ro.product.cpu.abi")?.contains("x86_64") == false) {
             ProtonLogger.e(TAG, "FATAL: App requires 64-bit CPU (arm64-v8a or x86_64). This device is 32-bit and not supported.")
         }
@@ -422,7 +423,16 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     /**
      * Starts background collection of tunnel-specific logs from Logcat
      * and explicitly forwards critical AmneziaWG logs to Sentry as Breadcrumbs.
+     *
+     * To prevent CPU saturation (which can cause background ANRs on the main thread):
+     * - Repetitive log lines are deduplicated within a rolling time window.
+     * - Unimportant logs are filtered out using isImportantAwgLog().
+     * - A small coroutine yield is inserted between each line so the IO thread
+     * is not monopolised, allowing other work to be scheduled.
+     * - The expensive Sentry Logs API (addSentryLog) is intentionally NOT called
+     * here; breadcrumbs alone are sufficient for tunnel diagnostics.
      */
+    @SuppressLint("LogTagMismatch")
     private fun startLogcatCollection() {
         if (logcatJob?.isActive == true) {
             ProtonLogger.v(TAG, "Logcat collection already running, skipping restart.")
@@ -448,6 +458,14 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 return@launch
             }
 
+            // Deduplication: track last seen message and when it was last forwarded.
+            // High-frequency identical messages (e.g. repeated handshake/keepalive lines
+            // during a degraded tunnel) are suppressed to avoid flooding Sentry and
+            // saturating DefaultDispatcher-worker threads.
+            var lastLine = ""
+            var lastLineEmittedAt = 0L
+            val deduplicationWindowMs = 5_000L // suppress exact duplicates within 5 s
+
             try {
                 process.inputStream.bufferedReader().useLines { lines ->
                     lines.forEach { line ->
@@ -460,13 +478,38 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
 
                         val cleanLine = line.substring(msgSeparatorIndex + 2).trim()
 
-                        // Drop unimportant or empty logs to reduce spam and Sentry noise
+                        // Drop completely empty logs or logs that are not considered important
+                        // to reduce spam and Sentry noise.
                         if (cleanLine.isBlank() || !isImportantAwgLog(cleanLine)) return@forEach
 
-                        // Local debug and Sentry (breadcrumb + log)
-                        // BREAKS INFINITE LOOP: Using "AWG" tag instead of "Tun/proton_awg"
-                        // so logcat doesn't re-capture our own output.
-                        ProtonLogger.d("AWG", cleanLine)
+                        val now = System.currentTimeMillis()
+
+                        // Suppress exact duplicate lines within the deduplication window.
+                        if (cleanLine == lastLine && now - lastLineEmittedAt < deduplicationWindowMs) {
+                            return@forEach
+                        }
+                        lastLine = cleanLine
+                        lastLineEmittedAt = now
+
+                        // Add as breadcrumb (will be sent IF a crash/error happens later).
+                        // Note: we deliberately do NOT call ProtonLogger.d() here because that
+                        // would trigger addSentryLog() — an extra Sentry SDK IPC call per line
+                        // that is unnecessary for routine tunnel noise and adds significant cost.
+                        ProtonLogger.addSentryBreadcrumb(
+                            "AmneziaWG",
+                            cleanLine,
+                            SentryLevel.DEBUG,
+                            "vpn.awg"
+                        )
+
+                        // Local logcat output (debug builds only, no Sentry overhead)
+                        if (android.util.Log.isLoggable("Tun/proton_awg", android.util.Log.DEBUG)) {
+                            android.util.Log.d("Tun/proton_awg", cleanLine)
+                        }
+
+                        // Yield to the coroutine dispatcher so this hot loop does not
+                        // monopolise a DefaultDispatcher worker thread and starve the UI.
+                        kotlinx.coroutines.yield()
                     }
                 }
             } catch (e: Exception) {
