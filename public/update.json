@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159770,
-      "versionName": "12.0.0-alpha1st2-59-gae71e1c-nightly",
+      "versionCode": 605159771,
+      "versionName": "12.0.0-alpha1st2-60-g1eaf98a-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "perf: Prevent ANR from EmojiCompat auto-initialization",
+      "changelog": "feat: implement network monitoring and optimize server and certificate management\n\n* feat: add `NetworkMonitor` to track connectivity changes and trigger automatic server list refreshes\n* feat: optimize server list updates by using `StatusID` from the API to skip redundant processing when data hasn't changed\n* feat: improve WireGuard certificate lifecycle by storing and honoring `ExpirationTime` and `RefreshTime` from the API\n* feat: implement `getOrRegisterWireGuardKey` in `VpnRepository` to handle certificate validation and proactive background refreshes\n* feat: add an `Error` state to `CertificateState` and update the dashboard UI to handle certificate-related failures\n* refactor: update `SessionEntity` and `ServersCacheEntity` database schemas to persist certificate timestamps and server status identifiers\n* chore: update dependency injection and unit tests to accommodate new `NetworkMonitor` and repository logic",
       "force": false
     },
     "release": {
-      "versionCode": 605159770,
-      "versionName": "12.0.0-alpha1st2-59-gae71e1c-nightly",
+      "versionCode": 605159771,
+      "versionName": "12.0.0-alpha1st2-60-g1eaf98a-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "perf: Prevent ANR from EmojiCompat auto-initialization",
+      "changelog": "feat: implement network monitoring and optimize server and certificate management\n\n* feat: add `NetworkMonitor` to track connectivity changes and trigger automatic server list refreshes\n* feat: optimize server list updates by using `StatusID` from the API to skip redundant processing when data hasn't changed\n* feat: improve WireGuard certificate lifecycle by storing and honoring `ExpirationTime` and `RefreshTime` from the API\n* feat: implement `getOrRegisterWireGuardKey` in `VpnRepository` to handle certificate validation and proactive background refreshes\n* feat: add an `Error` state to `CertificateState` and update the dashboard UI to handle certificate-related failures\n* refactor: update `SessionEntity` and `ServersCacheEntity` database schemas to persist certificate timestamps and server status identifiers\n* chore: update dependency injection and unit tests to accommodate new `NetworkMonitor` and repository logic",
       "force": false
     }
   }
