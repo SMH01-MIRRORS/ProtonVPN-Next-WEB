@@ -460,19 +460,13 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
 
                         val cleanLine = line.substring(msgSeparatorIndex + 2).trim()
 
-                        // Drop completely empty logs (which cause the "staircase" effect in Sentry)
-                        if (cleanLine.isBlank()) return@forEach
+                        // Drop unimportant or empty logs to reduce spam and Sentry noise
+                        if (cleanLine.isBlank() || !isImportantAwgLog(cleanLine)) return@forEach
 
-                        // Add as breadcrumb (will be sent IF a crash/error happens later)
-                        ProtonLogger.addSentryBreadcrumb(
-                            "AmneziaWG",
-                            cleanLine,
-                            SentryLevel.DEBUG,
-                            "vpn.awg"
-                        )
-
-                        // Local debug as well
-                        ProtonLogger.d("Tun/proton_awg", cleanLine)
+                        // Local debug and Sentry (breadcrumb + log)
+                        // BREAKS INFINITE LOOP: Using "AWG" tag instead of "Tun/proton_awg"
+                        // so logcat doesn't re-capture our own output.
+                        ProtonLogger.d("AWG", cleanLine)
                     }
                 }
             } catch (e: Exception) {
@@ -481,6 +475,23 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 process.destroy()
             }
         }
+    }
+
+    /**
+     * Filters AWG logs to keep only actionable/important events.
+     */
+    private fun isImportantAwgLog(msg: String): Boolean {
+        val importantKeywords = listOf(
+            "handshake",
+            "keepalive",
+            "keypair",
+            "cookie",
+            "Rekeying",
+            "Retrying",
+            "Receiving",
+            "Sending"
+        )
+        return importantKeywords.any { msg.contains(it, ignoreCase = true) }
     }
 
     private fun stopLogcatCollection() {
