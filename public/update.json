@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159772,
-      "versionName": "12.0.0-alpha1st2-61-gec5b054-nightly",
+      "versionCode": 605159774,
+      "versionName": "12.0.0-alpha1st2-63-g855008d-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "fix: Room schema migration for new Session and ServersCache columns",
+      "changelog": "perf: optimize tunnel logging to prevent background ANRs and Sentry flooding\n\n* perf: implement rate-limiting in `ProtonLogger` for Sentry breadcrumbs using a message-prefix deduplication key and a `ConcurrentHashMap`\n* perf: add local message deduplication and a 5-second suppression window for tunnel logs in `ProtonVpnService`\n* refactor: replace high-overhead `ProtonLogger.d()` calls with direct `addSentryBreadcrumb` in the tunnel log loop to reduce Sentry SDK IPC overhead\n* perf: insert `yield()` in the logcat collection coroutine to prevent worker thread monopolization during high-frequency log bursts\n* chore: switch to direct `android.util.Log` for local tunnel debugging to bypass additional logging wrapper logic",
       "force": false
     },
     "release": {
-      "versionCode": 605159772,
-      "versionName": "12.0.0-alpha1st2-61-gec5b054-nightly",
+      "versionCode": 605159774,
+      "versionName": "12.0.0-alpha1st2-63-g855008d-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "fix: Room schema migration for new Session and ServersCache columns",
+      "changelog": "perf: optimize tunnel logging to prevent background ANRs and Sentry flooding\n\n* perf: implement rate-limiting in `ProtonLogger` for Sentry breadcrumbs using a message-prefix deduplication key and a `ConcurrentHashMap`\n* perf: add local message deduplication and a 5-second suppression window for tunnel logs in `ProtonVpnService`\n* refactor: replace high-overhead `ProtonLogger.d()` calls with direct `addSentryBreadcrumb` in the tunnel log loop to reduce Sentry SDK IPC overhead\n* perf: insert `yield()` in the logcat collection coroutine to prevent worker thread monopolization during high-frequency log bursts\n* chore: switch to direct `android.util.Log` for local tunnel debugging to bypass additional logging wrapper logic",
       "force": false
     }
   }
