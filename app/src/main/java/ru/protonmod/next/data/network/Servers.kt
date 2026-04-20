@@ -23,6 +23,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class LogicalServersResponse(
     @SerialName("Code") val code: Int,
+    @SerialName("StatusID") val statusId: String? = null,
     @SerialName("LogicalServers") val logicalServers: List<LogicalServer> = emptyList()
 )
 

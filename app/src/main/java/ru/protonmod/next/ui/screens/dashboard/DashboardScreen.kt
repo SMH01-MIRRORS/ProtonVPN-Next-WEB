@@ -777,6 +777,12 @@ fun CertificateBanner(
                 msg
             )
         }
+        is AmneziaVpnManager.CertificateState.Error -> Quadruple(
+            colors.notificationError.copy(alpha = 0.1f),
+            colors.notificationError,
+            Icons.Default.ErrorOutline,
+            state.message
+        )
     }
 
     val isRefreshing = state is AmneziaVpnManager.CertificateState.Refreshing

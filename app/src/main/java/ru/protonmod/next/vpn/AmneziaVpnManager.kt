@@ -101,6 +101,7 @@ class AmneziaVpnManager @Inject constructor(
         data object Expired : CertificateState()
         data class RefreshFailed(val error: String, val isFullyExpired: Boolean) : CertificateState()
         data object Refreshing : CertificateState()
+        data class Error(val message: String) : CertificateState()
     }
 
     private val _certState = MutableStateFlow<CertificateState>(CertificateState.Valid)
@@ -225,20 +226,14 @@ class AmneziaVpnManager @Inject constructor(
         val currentSession = sessionDao.getSession() ?: return Result.failure<String>(Exception("No session")).also {
             ProtonLogger.e(TAG, "Certificate refresh failed: No active session found in database")
         }
-        updateCertificateState(currentSession.wgCertificate)
-
-        if (!force && _certState.value is CertificateState.Valid) {
-            ProtonLogger.d(TAG, "Certificate is still valid, skipping refresh")
-            return Result.success(currentSession.wgCertificate ?: "")
-        }
 
         val previousState = _certState.value
         _certState.value = CertificateState.Refreshing
         ProtonLogger.i(TAG, "Starting certificate refresh (force=$force, previous state: $previousState)")
 
         val useWarp = settingsManager.isApiBypassEnabledSync() &&
-                      settingsManager.getApiBypassStrategySync() == SettingsManager.STRATEGY_WARP
-        
+                settingsManager.getApiBypassStrategySync() == SettingsManager.STRATEGY_WARP
+
         if (useWarp) {
             val wm = warpManager.get()
             // Only start WARP if main VPN is NOT active
@@ -252,24 +247,22 @@ class AmneziaVpnManager @Inject constructor(
             val keyPair = cryptoWrapper.generateVpnKeyPair()
             ProtonLogger.v(TAG, "Generated new VPN keypair for registration")
 
-            val result = vpnRepositoryProvider.get().registerWireGuardKey(
+            val result = vpnRepositoryProvider.get().getOrRegisterWireGuardKey(
                 accessToken = currentSession.accessToken,
                 sessionId = currentSession.sessionId,
                 publicKeyPem = keyPair.publicKeyPem
             )
-            return if (result.isSuccess) {
-                val newCert = result.getOrNull()?.certificate
+
+            if (result.isSuccess) {
+                val newCert = result.getOrNull()
                 if (newCert != null) {
-                    ProtonLogger.i(TAG, "Successfully registered new WireGuard key and received certificate")
-                    
+                    ProtonLogger.i(TAG, "Successfully obtained WireGuard certificate")
+
                     // Metrics
                     Sentry.metrics().count("cert_refresh_success", 1.0)
-                    
-                    sessionDao.updateVpnKeys(
-                        privateKey = keyPair.privateKeyX25519,
-                        publicKeyPem = keyPair.publicKeyPem,
-                        certificate = newCert
-                    )
+
+                    // updateVpnKeys is now updated to handle expiration times inside Repository
+                    // but we still need to update local state
                     updateCertificateState(newCert)
                     Result.success(newCert)
                 } else {
@@ -280,7 +273,7 @@ class AmneziaVpnManager @Inject constructor(
             } else {
                 val error = result.exceptionOrNull()?.message ?: "Unknown error"
                 ProtonLogger.e(TAG, "Failed to register WireGuard key with Proton API: $error", result.exceptionOrNull())
-                
+
                 // Metrics
                 Sentry.metrics().count("cert_refresh_error", 1.0)
 

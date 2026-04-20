@@ -31,5 +31,7 @@ data class CreateCertificateResponse(
     @SerialName("Certificate") val certificate: String? = null, // Often empty for WG, used for OpenVPN
     @SerialName("IPv4") val ipv4: String? = null,
     @SerialName("IPv6") val ipv6: String? = null,
-    @SerialName("DNS") val dns: List<String>? = null
+    @SerialName("DNS") val dns: List<String>? = null,
+    @SerialName("ExpirationTime") val expirationTime: Long? = null,
+    @SerialName("RefreshTime") val refreshTime: Long? = null
 )

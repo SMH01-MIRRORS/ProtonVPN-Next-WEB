@@ -60,13 +60,16 @@ class LoginViewModelTest {
     @Mock
     private lateinit var settingsManager: SettingsManager
 
+    @Mock
+    private lateinit var warpManager: ru.protonmod.next.vpn.WarpManager
+
     private lateinit var viewModel: LoginViewModel
 
     @Before
     fun setup() {
         MockitoAnnotations.openMocks(this)
         whenever(settingsManager.apiBypassEnabled).thenReturn(flowOf(false))
-        viewModel = LoginViewModel(authRepository, settingsManager)
+        viewModel = LoginViewModel(authRepository, settingsManager, warpManager)
     }
 
     @Test

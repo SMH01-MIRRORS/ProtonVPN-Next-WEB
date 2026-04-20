@@ -46,6 +46,7 @@ import ru.protonmod.next.data.network.*
 import ru.protonmod.next.data.network.ota.UpdateApi
 import ru.protonmod.next.data.repository.AuthRepository
 import ru.protonmod.next.utils.DeviceInfoProvider
+import ru.protonmod.next.utils.NetworkMonitor
 import ru.protonmod.next.utils.ProtonLogger
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import org.amnezia.awg.backend.Tunnel
@@ -133,7 +134,8 @@ object NetworkModule {
         settingsManagerProvider: Provider<SettingsManager>,
         tokenAuthenticator: TokenAuthenticator,
         dohFallbackInterceptor: DohFallbackInterceptor,
-        dohFallbackStore: DohFallbackStore
+        dohFallbackStore: DohFallbackStore,
+        networkMonitor: NetworkMonitor
     ): OkHttpClient {
         try {
             OkHttp.initialize(context)

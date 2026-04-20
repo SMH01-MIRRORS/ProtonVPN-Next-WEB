@@ -271,7 +271,7 @@ class VpnRepository @Inject constructor(
             // Refresh city translations whenever we fetch servers
             refreshCityTranslations(accessToken, sessionId)
 
-            ProtonLogger.i(TAG, "Fetching servers from Proton API... (If-Modified-Since: $ifModifiedSince)")
+            ProtonLogger.i(TAG, "Fetching servers from Proton API... (If-Modified-Since: $ifModifiedSince, StatusID: ${cacheInfo?.statusId})")
             val response = vpnApi.getLogicalServers(
                 authorization = bearer,
                 sessionId = sessionId,
@@ -279,18 +279,26 @@ class VpnRepository @Inject constructor(
                 protocols = "wireguard"
             )
 
-            val (serversList, newLastModified) = when (response.code()) {
+            val (serversList, newLastModified, newStatusId) = when (response.code()) {
                 304 -> {
                     ProtonLogger.i(TAG, "Proton API: Servers not modified (304). Re-using existing DB entries.")
                     val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
-                    dbServers to cacheInfo?.lastModified
+                    Triple(dbServers, cacheInfo?.lastModified, cacheInfo?.statusId)
                 }
                 200 -> {
                     val body = response.body()
                     if (body?.code == 1000) {
-                        ProtonLogger.i(TAG, "Proton API: Received ${body.logicalServers.size} logical servers")
+                        ProtonLogger.i(TAG, "Proton API: Received ${body.logicalServers.size} logical servers (StatusID: ${body.statusId})")
                         ProtonLogger.addSentryBreadcrumb(TAG, "VPN Repository: Servers Updated (${body.logicalServers.size})", SentryLevel.INFO, "vpn.repo")
-                        body.logicalServers to response.headers()["Last-Modified"]
+                        
+                        val isSameStatus = body.statusId != null && body.statusId == cacheInfo?.statusId
+                        if (isSameStatus && !forceRefresh) {
+                            ProtonLogger.i(TAG, "StatusID matches. Skipping full server list processing.")
+                            val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
+                            Triple(dbServers, response.headers()["Last-Modified"] ?: cacheInfo.lastModified, body.statusId)
+                        } else {
+                            Triple(body.logicalServers, response.headers()["Last-Modified"], body.statusId)
+                        }
                     } else {
                         ProtonLogger.e(TAG, "Proton API Error: Code ${body?.code}")
                         return@withContext Result.failure(Exception("API error: ${body?.code}"))
@@ -358,16 +366,18 @@ class VpnRepository @Inject constructor(
                 serversList.forEach { it.averageLoad = dbServers[it.id] ?: 0 }
             }
 
-            // Save to DB AFTER fetching loads, ensuring the DB has the latest load values
-            val entities = serversList.map { ServerMapper.toEntity(it) }
-            serverDao.insertServers(entities)
-            ProtonLogger.d(TAG, "Saved ${entities.size} servers to local database")
+            // Save to DB only if we actually got new data (either statusId changed or it was forceRefresh)
+            if (response.code() == 200 && (newStatusId != cacheInfo?.statusId || forceRefresh)) {
+                serverDao.insertServers(serversList.map { ServerMapper.toEntity(it) })
+                ProtonLogger.d(TAG, "Saved servers to local database")
+            }
 
             // Update cache metadata
             val newCacheInfo = ServersCacheEntity(
                 cachedAt = now,
                 expiresAt = now + CACHE_DURATION_MILLIS,
-                lastModified = newLastModified
+                lastModified = newLastModified,
+                statusId = newStatusId
             )
             serversCacheDao.saveCacheInfo(newCacheInfo)
 
@@ -465,8 +475,11 @@ class VpnRepository @Inject constructor(
 
             if (response.code == 1000) {
                 val cert = response.certificate
+                val expiresAt = response.expirationTime ?: 0
+                val refreshAt = response.refreshTime ?: 0
+                
                 if (cert != null) {
-                    sessionDao.updateCertificate(cert)
+                    sessionDao.updateCertificate(cert, expiresAt, refreshAt)
                 }
 
                 // Update vpn information (ipv4, ipv6, dns) returned from the certificate response.
@@ -492,6 +505,17 @@ class VpnRepository @Inject constructor(
         }
     }
 
+    /**
+     * Triggered by NetworkMonitor to refresh servers when connectivity changes.
+     */
+    fun refreshServersOnNetworkChange() {
+        managerScope.launch {
+            val session = sessionDao.getSession() ?: return@launch
+            ProtonLogger.i(TAG, "Network changed. Refreshing server list.")
+            getServers(session.accessToken, session.sessionId, session.userTier, forceRefresh = true)
+        }
+    }
+
     suspend fun clearCache() = withContext(dispatcherProvider.io()) {
         ProtonLogger.d(TAG, "Clearing VPN cache and user data...")
         serverDao.clearAllServers()
@@ -502,6 +526,36 @@ class VpnRepository @Inject constructor(
         recentConnectionDao.clearHistory()
         cityRepository.clearCache()
         cachedServers = emptyList()
+    }
+
+    /**
+     * Checks if the current certificate is valid and returns it.
+     * If expired or missing, triggers a fresh registration.
+     */
+    suspend fun getOrRegisterWireGuardKey(
+        accessToken: String,
+        sessionId: String,
+        publicKeyPem: String
+    ): Result<String> = withContext(dispatcherProvider.io()) {
+        val session = sessionDao.getSession()
+        val now = System.currentTimeMillis() / 1000
+
+        if (session != null && !session.wgCertificate.isNullOrEmpty() &&
+            session.wgPublicKeyPem == publicKeyPem &&
+            (session.certExpiresAt == 0L || session.certExpiresAt > now)
+        ) {
+            // Check if we should refresh in background
+            if (session.certRefreshAt != 0L && session.certRefreshAt < now) {
+                ProtonLogger.i(TAG, "Certificate is valid but needs refresh. Triggering background update.")
+                managerScope.launch {
+                    registerWireGuardKey(accessToken, sessionId, publicKeyPem)
+                }
+            }
+            return@withContext Result.success(session.wgCertificate ?: "")
+        }
+
+        ProtonLogger.i(TAG, "No valid certificate found. Registering new WireGuard key.")
+        registerWireGuardKey(accessToken, sessionId, publicKeyPem).map { it.certificate ?: "" }
     }
 
     private suspend fun refreshCityTranslations(accessToken: String, sessionId: String) {

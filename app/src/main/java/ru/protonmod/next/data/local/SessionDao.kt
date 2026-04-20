@@ -40,6 +40,8 @@ data class SessionEntity(
     val wgPrivateKey: String? = null,
     val wgPublicKeyPem: String? = null,
     val wgCertificate: String? = null,
+    val certExpiresAt: Long = 0, // Unix timestamp in seconds
+    val certRefreshAt: Long = 0,
     val vpnIpv4: String? = null,
     val vpnIpv6: String? = null,
     val vpnDns: String? = null // Comma-separated list
@@ -50,7 +52,8 @@ data class ServersCacheEntity(
     @PrimaryKey val id: Int = 1, // We only store one cache entry
     val cachedAt: Long, // Timestamp in milliseconds
     val expiresAt: Long, // Timestamp when cache expires
-    val lastModified: String? = null // RFC 1123 header from server
+    val lastModified: String? = null, // RFC 1123 header from server
+    val statusId: String? = null
 )
 
 
@@ -73,14 +76,14 @@ interface SessionDao {
     @Query("UPDATE session SET userTier = :tier WHERE id = 1")
     suspend fun updateUserTier(tier: Int)
 
-    @Query("UPDATE session SET wgCertificate = :certificate WHERE id = 1")
-    suspend fun updateCertificate(certificate: String)
+    @Query("UPDATE session SET wgCertificate = :certificate, certExpiresAt = :expiresAt, certRefreshAt = :refreshAt WHERE id = 1")
+    suspend fun updateCertificate(certificate: String, expiresAt: Long, refreshAt: Long)
 
     @Query("UPDATE session SET vpnIpv4 = :ipv4, vpnIpv6 = :ipv6, vpnDns = :dns WHERE id = 1")
     suspend fun updateVpnConnectionInfo(ipv4: String?, ipv6: String?, dns: String?)
 
-    @Query("UPDATE session SET wgPrivateKey = :privateKey, wgPublicKeyPem = :publicKeyPem, wgCertificate = :certificate WHERE id = 1")
-    suspend fun updateVpnKeys(privateKey: String, publicKeyPem: String, certificate: String)
+    @Query("UPDATE session SET wgPrivateKey = :privateKey, wgPublicKeyPem = :publicKeyPem, wgCertificate = :certificate, certExpiresAt = :expiresAt, certRefreshAt = :refreshAt WHERE id = 1")
+    suspend fun updateVpnKeys(privateKey: String, publicKeyPem: String, certificate: String, expiresAt: Long, refreshAt: Long)
 }
 
 @Dao

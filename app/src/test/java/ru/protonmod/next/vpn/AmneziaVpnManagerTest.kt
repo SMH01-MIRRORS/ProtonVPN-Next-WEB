@@ -68,6 +68,9 @@ class AmneziaVpnManagerTest {
     @Mock
     private lateinit var amneziaConfigGenerator: AmneziaConfigGenerator
 
+    @Mock
+    private lateinit var warpManager: ru.protonmod.next.vpn.WarpManager
+
     private val testDispatcher = UnconfinedTestDispatcher()
     private val testScope = TestScope(testDispatcher)
     
@@ -106,6 +109,7 @@ class AmneziaVpnManagerTest {
             systemContextWrapper,
             cryptoWrapper,
             amneziaConfigGenerator,
+            { warpManager },
             testDispatcherProvider,
             testScope
         )
@@ -133,7 +137,7 @@ class AmneziaVpnManagerTest {
         val newKeys = VpnKeyPair("new_pub_pem", "new_priv")
         whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(newKeys)
         
-        val refreshResponse = CreateCertificateResponse(code = 1000, certificate = "new_cert")
+        val refreshResponse = CreateCertificateResponse(code = 1000, certificate = "new_cert", expirationTime = 0, refreshTime = 0)
         whenever(vpnRepository.registerWireGuardKey(eq("at"), eq("sid"), eq("new_pub_pem")))
             .thenReturn(Result.success(refreshResponse))
         
@@ -143,7 +147,9 @@ class AmneziaVpnManagerTest {
         verify(sessionDao).updateVpnKeys(
             privateKey = eq("new_priv"),
             publicKeyPem = eq("new_pub_pem"),
-            certificate = eq("new_cert")
+            certificate = eq("new_cert"),
+            expiresAt = eq(0L),
+            refreshAt = eq(0L)
         )
     }
 
@@ -173,7 +179,7 @@ class AmneziaVpnManagerTest {
 
             whenever(sessionDao.getSession()).thenReturn(session)
             whenever(vpnRepository.registerWireGuardKey(any(), any(), any())).thenReturn(
-                Result.success(CreateCertificateResponse(code = 1000, certificate = "new_cert"))
+                Result.success(CreateCertificateResponse(code = 1000, certificate = "new_cert", expirationTime = 0L, refreshTime = 0L))
             )
 
             // We mock it to avoid internal refresh during test if possible

@@ -66,6 +66,12 @@ class VpnRepositoryTest {
     @Mock
     private lateinit var cityRepository: ru.protonmod.next.data.repository.CityRepository
 
+    @Mock
+    private lateinit var settingsManager: ru.protonmod.next.data.local.SettingsManager
+
+    @Mock
+    private lateinit var amneziaVpnManager: ru.protonmod.next.vpn.AmneziaVpnManager
+
     private val testDispatcher = StandardTestDispatcher()
     
     private val testDispatcherProvider = object : DispatcherProvider {
@@ -84,7 +90,8 @@ class VpnRepositoryTest {
         repository = VpnRepository(
             vpnApi, serverDao, sessionDao, serversCacheDao,
             cityTranslationDao, profileDao, recentConnectionDao,
-            cityRepository, testDispatcherProvider, testScope
+            cityRepository, settingsManager, { amneziaVpnManager }, 
+            testDispatcherProvider, testScope
         )
     }
 
