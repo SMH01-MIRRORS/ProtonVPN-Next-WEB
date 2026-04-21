@@ -139,6 +139,15 @@
     <string name="api_proxy_username">Імя карыстальніка (неабавязкова)</string>
     <string name="api_proxy_password">Пароль (неабавязкова)</string>
 
+    <!-- Country Spoofing -->
+    <string name="settings_country_spoofing_title">Падмена краіны</string>
+    <string name="settings_country_spoofing_description">Падмена кода краіны, які адпраўляецца ў API, для імітацыі іншага фізічнага месцазнаходжання.</string>
+    <string name="settings_country_spoofing_null_label">Null-падмена</string>
+    <string name="settings_country_spoofing_null_desc">Не адпраўляць загаловак з кодам краіны ў API.</string>
+    <string name="settings_country_spoofing_code_label">Код краіны (ISO 3166-1 alpha-2)</string>
+    <string name="settings_country_spoofing_code_hint">напр. US, DE, RU</string>
+    <string name="settings_country_spoofing_update_toast">Абнаўленне спісу сервераў…</string>
+
     <!-- Custom DNS -->
     <string name="settings_custom_dns">Карыстальніцкі DNS</string>
     <string name="settings_custom_dns_default">Па змаўчанні (Proton DNS)</string>

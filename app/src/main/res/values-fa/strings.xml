@@ -139,6 +139,15 @@
     <string name="api_proxy_username">نام کاربری (اختیاری)</string>
     <string name="api_proxy_password">رمز عبور (اختیاری)</string>
 
+    <!-- Country Spoofing -->
+    <string name="settings_country_spoofing_title">جعل کشور</string>
+    <string name="settings_country_spoofing_description">جایگزینی کد کشور ارسال شده به API برای شبیه‌سازی یک مکان فیزیکی متفاوت.</string>
+    <string name="settings_country_spoofing_null_label">جعل تهی (Null Spoof)</string>
+    <string name="settings_country_spoofing_null_desc">هیچ هدر کد کشوری به API ارسال نشود.</string>
+    <string name="settings_country_spoofing_code_label">کد کشور (ISO 3166-1 alpha-2)</string>
+    <string name="settings_country_spoofing_code_hint">به عنوان مثال US, DE, RU</string>
+    <string name="settings_country_spoofing_update_toast">در حال به‌روزرسانی لیست سرورها…</string>
+
     <!-- Custom DNS -->
     <string name="settings_custom_dns">DNS سفارشی</string>
     <string name="settings_custom_dns_default">پیش‌فرض (Proton DNS)</string>

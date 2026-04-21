@@ -139,6 +139,15 @@
     <string name="api_proxy_username">用户名 (可选)</string>
     <string name="api_proxy_password">密码 (可选)</string>
 
+    <!-- Country Spoofing -->
+    <string name="settings_country_spoofing_title">国家伪装</string>
+    <string name="settings_country_spoofing_description">覆盖发送到 API 的国家代码，以模拟不同的物理位置。</string>
+    <string name="settings_country_spoofing_null_label">空伪装 (Null Spoof)</string>
+    <string name="settings_country_spoofing_null_desc">不向 API 发送任何国家代码标头。</string>
+    <string name="settings_country_spoofing_code_label">国家代码 (ISO 3166-1 alpha-2)</string>
+    <string name="settings_country_spoofing_code_hint">例如 US, DE, RU</string>
+    <string name="settings_country_spoofing_update_toast">正在更新服务器列表…</string>
+
     <!-- Custom DNS -->
     <string name="settings_custom_dns">自定义 DNS</string>
     <string name="settings_custom_dns_default">默认 (Proton DNS)</string>

@@ -141,6 +141,15 @@
     <string name="api_proxy_username">Username (Optional)</string>
     <string name="api_proxy_password">Password (Optional)</string>
 
+    <!-- Country Spoofing -->
+    <string name="settings_country_spoofing_title">Country Spoofing</string>
+    <string name="settings_country_spoofing_description">Override the country code sent to the API to simulate a different physical location.</string>
+    <string name="settings_country_spoofing_null_label">Null Spoof</string>
+    <string name="settings_country_spoofing_null_desc">Do not send any country code header to the API.</string>
+    <string name="settings_country_spoofing_code_label">Country Code (ISO 3166-1 alpha-2)</string>
+    <string name="settings_country_spoofing_code_hint">e.g. US, DE, RU</string>
+    <string name="settings_country_spoofing_update_toast">Updating server list…</string>
+
     <!-- Custom DNS -->
     <string name="settings_custom_dns">Custom DNS</string>
     <string name="settings_custom_dns_default">Default (Proton DNS)</string>

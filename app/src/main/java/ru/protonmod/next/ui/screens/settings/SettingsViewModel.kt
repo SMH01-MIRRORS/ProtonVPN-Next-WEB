@@ -42,7 +42,9 @@ import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.utils.crypto.QuicI1Generator
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import ru.protonmod.next.vpn.WarpManager
+import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.repository.UpdateRepository
+import ru.protonmod.next.data.repository.VpnRepository
 import javax.inject.Inject
 
 data class SettingsUiState(
@@ -71,6 +73,11 @@ data class SettingsUiState(
     // WARP state
     val isWarpFetching: Boolean = false,
     val warpConfigLoaded: Boolean = false,
+
+    // API Mirroring / Spoofing
+    val spoofCountryEnabled: Boolean = false,
+    val spoofCountryNull: Boolean = false,
+    val spoofCountryCode: String = "",
 
     // Customization
     val appTheme: AppTheme = AppTheme.DARK,
@@ -128,6 +135,8 @@ data class SettingsUiState(
 class SettingsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val amneziaVpnManager: AmneziaVpnManager,
+    private val vpnRepository: VpnRepository,
+    private val sessionDao: SessionDao,
     private val settingsManager: SettingsManager,
     private val authRepository: AuthRepository,
     private val updateRepository: UpdateRepository,
@@ -226,6 +235,9 @@ class SettingsViewModel @Inject constructor(
         settingsManager.apiProxyPassword,
         settingsManager.appTheme,
         settingsManager.serverLoadDisplayMode,
+        settingsManager.spoofCountryEnabled,
+        settingsManager.spoofCountryNull,
+        settingsManager.spoofCountryCode,
         settingsManager.otaUpdateFrequency,
         settingsManager.otaUpdateChannel,
         warpManager.isFetching,
@@ -284,14 +296,17 @@ class SettingsViewModel @Inject constructor(
             apiProxyPassword = args[46] as String,
             appTheme = args[47] as AppTheme,
             serverLoadDisplayMode = args[48] as ServerLoadDisplayMode,
-            otaUpdateFrequency = args[49] as String,
-            otaUpdateChannel = args[50] as String,
-            isWarpFetching = args[51] as Boolean,
+            spoofCountryEnabled = args[49] as Boolean,
+            spoofCountryNull = args[50] as Boolean,
+            spoofCountryCode = args[51] as String,
+            otaUpdateFrequency = args[52] as String,
+            otaUpdateChannel = args[53] as String,
+            isWarpFetching = args[54] as Boolean,
             warpConfigLoaded = warpManager.isConfigLoaded(),
-            availableChannels = args[52] as Map<String, Boolean>,
-            isAnyVpnActive = args[53] as Boolean,
-            isCheckingForUpdates = args[54] as Boolean,
-            isUpdateAvailable = args[55] as Boolean
+            availableChannels = args[55] as Map<String, Boolean>,
+            isAnyVpnActive = args[56] as Boolean,
+            isCheckingForUpdates = args[57] as Boolean,
+            isUpdateAvailable = args[58] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -432,6 +447,40 @@ class SettingsViewModel @Inject constructor(
     fun setApiProxyPassword(password: String) {
         viewModelScope.launch {
             settingsManager.setApiProxyPassword(password)
+        }
+    }
+
+    fun setSpoofCountryEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setSpoofCountryEnabled(enabled)
+            // Trigger refresh if we have a session
+            sessionDao.getSession()?.let {
+                vpnRepository.refreshServersBackground(it.accessToken, it.sessionId, it.userTier, forceRefresh = true)
+            }
+        }
+    }
+
+    fun setSpoofCountryNull(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setSpoofCountryNull(enabled)
+            // Trigger refresh
+            sessionDao.getSession()?.let {
+                vpnRepository.refreshServersBackground(it.accessToken, it.sessionId, it.userTier, forceRefresh = true)
+            }
+        }
+    }
+
+    fun setSpoofCountryCode(code: String) {
+        viewModelScope.launch {
+            settingsManager.setSpoofCountryCode(code)
+        }
+    }
+
+    fun refreshServersAfterSpoofChange() {
+        viewModelScope.launch {
+            sessionDao.getSession()?.let {
+                vpnRepository.refreshServersBackground(it.accessToken, it.sessionId, it.userTier, forceRefresh = true)
+            }
         }
     }
 

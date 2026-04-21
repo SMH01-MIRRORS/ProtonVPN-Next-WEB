@@ -66,6 +66,7 @@ fun SettingsScreen(
     onNavigateToLoadDisplayMode: (() -> Unit)? = null,
     onNavigateToDebug: (() -> Unit)? = null,
     onNavigateToCustomDns: (() -> Unit)? = null,
+    onNavigateToCountrySpoofing: (() -> Unit)? = null,
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -115,6 +116,7 @@ fun SettingsScreen(
                 onNavigateToLoadDisplayMode = onNavigateToLoadDisplayMode,
                 onNavigateToDebug = onNavigateToDebug,
                 onNavigateToCustomDns = onNavigateToCustomDns,
+                onNavigateToCountrySpoofing = onNavigateToCountrySpoofing,
                 onNavigateToPortSelection = onNavigateToPortSelection,
                 onOtaFrequencyChange = viewModel::setOtaUpdateFrequency,
                 onOtaChannelChange = viewModel::setOtaUpdateChannel,
@@ -146,6 +148,7 @@ fun SettingsContent(
     onNavigateToLoadDisplayMode: (() -> Unit)? = null,
     onNavigateToDebug: (() -> Unit)? = null,
     onNavigateToCustomDns: (() -> Unit)? = null,
+    onNavigateToCountrySpoofing: (() -> Unit)? = null,
     onNavigateToPortSelection: ((Int) -> Unit)? = null
 ) {
     LazyColumn(
@@ -198,6 +201,7 @@ fun SettingsContent(
                         PrivacySettingsSection(
                             state = state,
                             onNavigateToCustomDns = onNavigateToCustomDns,
+                            onNavigateToCountrySpoofing = onNavigateToCountrySpoofing,
                             onNavigateToKillSwitch = onNavigateToKillSwitch,
                             onNavigateToErrorReporting = onNavigateToErrorReporting,
                             onNotificationsChange = onNotificationsChange
@@ -259,6 +263,7 @@ fun SettingsContent(
                     onNotificationsChange = onNotificationsChange,
                     modifier = contentModifier,
                     onNavigateToCustomDns = onNavigateToCustomDns,
+                    onNavigateToCountrySpoofing = onNavigateToCountrySpoofing,
                     onNavigateToKillSwitch = onNavigateToKillSwitch,
                     onNavigateToErrorReporting = onNavigateToErrorReporting
                 )
@@ -552,6 +557,7 @@ private fun PrivacySettingsSection(
     onNotificationsChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     onNavigateToCustomDns: (() -> Unit)? = null,
+    onNavigateToCountrySpoofing: (() -> Unit)? = null,
     onNavigateToKillSwitch: (() -> Unit)? = null,
     onNavigateToErrorReporting: (() -> Unit)? = null
 ) {
@@ -565,6 +571,13 @@ private fun PrivacySettingsSection(
             title = stringResource(R.string.settings_custom_dns),
             subtitle = currentDnsSubtitle,
             onClick = onNavigateToCustomDns
+        )
+
+        SettingRowWithIcon(
+            icon = Icons.Rounded.Public,
+            title = stringResource(R.string.settings_country_spoofing_title),
+            subtitle = if (state.spoofCountryEnabled) stringResource(R.string.settings_on) else stringResource(R.string.settings_off),
+            onClick = onNavigateToCountrySpoofing
         )
 
         SettingRowWithIcon(

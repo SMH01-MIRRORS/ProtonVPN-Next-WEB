@@ -232,9 +232,9 @@ class VpnRepository @Inject constructor(
      * Triggers a server update in the application-level background scope.
      * Use this when you don't need to wait for the result immediately (e.g., during login).
      */
-    fun refreshServersBackground(accessToken: String, sessionId: String, userTier: Int) {
+    fun refreshServersBackground(accessToken: String, sessionId: String, userTier: Int, forceRefresh: Boolean = false) {
         managerScope.launch {
-            getServers(accessToken, sessionId, userTier)
+            getServers(accessToken, sessionId, userTier, forceRefresh)
         }
     }
 
