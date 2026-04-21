@@ -1,0 +1,42 @@
+/*
+ * Copyright (c) 2026 SMH01
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package ru.protonmod.next.utils
+
+import android.graphics.RectF
+import kotlin.math.max
+
+fun RectF.scale(sx: Float, sy: Float) =
+    RectF(left * sx, top * sy, right * sx, bottom * sy)
+
+/* Translates rect to coordinate system based on some other rectangle (width and height of that
+   rect in this coordinate system have value 1. */
+fun RectF.inCoordsOf(o: RectF) = RectF(
+    left - o.left,
+    top - o.top,
+    right - o.left,
+    bottom - o.top
+).scale(1f / o.width(), 1f / o.height())
+
+// Applies padding defined as a fraction of max(w, h)
+fun RectF.relativePadding(paddingSizeRelative: Float): RectF {
+    val padding = max(width(), height()) * paddingSizeRelative
+    return RectF(left - padding, top - padding, right + padding, bottom + padding)
+}
+
+fun RectF.withPadding(size: Float) =
+    RectF(left - size, top - size, right + size, bottom + size)

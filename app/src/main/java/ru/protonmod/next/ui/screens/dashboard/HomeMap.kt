@@ -17,37 +17,33 @@
 
 package ru.protonmod.next.ui.screens.dashboard
 
-import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
-import ru.protonmod.next.utils.ProtonLogger
-import android.view.GestureDetector
-import android.view.MotionEvent
+import android.os.SystemClock
+import android.provider.Settings
 import android.view.View
-import android.view.animation.LinearInterpolator
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
+import android.view.animation.DecelerateInterpolator
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.interpolator.view.animation.FastOutSlowInInterpolator
-import com.caverock.androidsvg.RenderOptions
-import com.caverock.androidsvg.SVG
-import kotlinx.coroutines.*
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import ru.protonmod.next.R
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.theme.ProtonNextTheme
-import kotlin.math.max
-import kotlin.math.min
+import ru.protonmod.next.utils.inCoordsOf
+import ru.protonmod.next.utils.relativePadding
+import ru.protonmod.next.utils.scale
+import ru.protonmod.next.utils.toPx
+import ru.protonmod.next.utils.withPadding
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 // --- Constants & Coordinates ---
-
-private const val MAP_ASSET_NAME = "world.svg"
-private const val MAP_ORIGINAL_WIDTH = 1538.434f
-private const val MAP_ORIGINAL_HEIGHT = 700f
 
 object MapCoordinates {
     val codeToMapCountryName = mapOf(
@@ -204,422 +200,325 @@ object MapCoordinates {
         "Vietnam" to RectF(1142.3848f, 276.1580f, 1180.8430f, 350.7600f)
     )
 
-    fun getPointForCountry(countryCode: String?): PointF {
-        val baseCode = countryCode?.split('-')?.getOrNull(0)?.uppercase()?.trim()
-            ?: return PointF(MAP_ORIGINAL_WIDTH/2, MAP_ORIGINAL_HEIGHT/2)
-            
-        val name = codeToMapCountryName[baseCode]
-        val bounds = tvMapNameToBounds[name]
-
-        if (bounds != null) {
-            return PointF(bounds.centerX(), bounds.centerY())
-        }
-
-        // Fallback for completely unknown countries - deterministic scatter
-        val hash = baseCode.hashCode()
-        val x = MAP_ORIGINAL_WIDTH * (0.2f + (Math.abs(hash % 100) / 100f) * 0.6f)
-        val y = MAP_ORIGINAL_HEIGHT * (0.2f + (Math.abs((hash / 100) % 100) / 100f) * 0.6f)
-        return PointF(x, y)
-    }
-
-    fun getFocusRegion(countryCode: String?): RectF {
-        if (countryCode == null) {
-            // Default full map view (zoomed out)
-            return RectF(150f, 50f, MAP_ORIGINAL_WIDTH - 150f, MAP_ORIGINAL_HEIGHT - 50f)
-        }
-        val baseCode = countryCode.split('-')[0].uppercase().trim()
-        val name = codeToMapCountryName[baseCode]
-        val bounds = tvMapNameToBounds[name]
-
-        if (bounds != null) {
-            val cx = bounds.centerX()
-            val cy = bounds.centerY()
-            
-            // Proton-like consistent zoom:
-            // We use a fixed viewport size for most countries, but expand it for very large ones (like Russia/USA)
-            val baseSize = 280f 
-            val w = max(bounds.width() * 1.6f, baseSize)
-            val h = max(bounds.height() * 1.6f, baseSize * 0.6f) // Maintain aspect ratio roughly
-            
-            val finalW = max(w, h * 2f)
-            val finalH = max(h, w / 2f)
-
-            return RectF(cx - finalW/2, cy - finalH/2, cx + finalW/2, cy + finalH/2)
-        }
-        // Fallback to a slightly zoomed in world view if country unknown
-        return RectF(100f, 20f, MAP_ORIGINAL_WIDTH - 100f, MAP_ORIGINAL_HEIGHT - 20f)
-    }
+    val oldMapLocations = mapOf(
+        "AE" to PointF(3103.0f, 976.0f),
+        "AL" to PointF(2560.0f, 665.0f),
+        "AR" to PointF(1300.0f, 2000.0f),
+        "AT" to PointF(2485.0f, 550.0f),
+        "AU" to PointF(4355.0f, 1855.0f),
+        "BA" to PointF(2527.0f, 661.0f),
+        "BE" to PointF(2343.0f, 495.0f),
+        "BG" to PointF(2660.0f, 631.0f),
+        "BR" to PointF(1469.0f, 1577.0f),
+        "CA" to PointF(875.0f, 400.0f),
+        "CH" to PointF(2390.0f, 564.0f),
+        "CL" to PointF(1170.0f, 1951.0f),
+        "CO" to PointF(1100.0f, 1339.0f),
+        "CR" to PointF(925.0f, 1231.0f),
+        "CY" to PointF(2759.0f, 777.0f),
+        "CZ" to PointF(2482.0f, 509.0f),
+        "DE" to PointF(2420.0f, 495.0f),
+        "DK" to PointF(2413.0f, 401.0f),
+        "EC" to PointF(1010.0f, 1440.0f),
+        "EE" to PointF(2615.0f, 356.0f),
+        "EG" to PointF(2742.0f, 863.0f),
+        "ES" to PointF(2215.0f, 690.0f),
+        "FI" to PointF(2615.0f, 295.0f),
+        "FR" to PointF(2310.0f, 567.0f),
+        "GB" to PointF(2265.0f, 475.0f),
+        "GE" to PointF(2915.0f, 648.0f),
+        "GR" to PointF(2600.0f, 720.0f),
+        "HK" to PointF(4033.0f, 999.0f),
+        "HR" to PointF(2495.0f, 608.0f),
+        "HU" to PointF(2550.0f, 558.0f),
+        "ID" to PointF(4159.0f, 1481.0f),
+        "IE" to PointF(2176.0f, 458.0f),
+        "IL" to PointF(2793.0f, 830.0f),
+        "IN" to PointF(3483.0f, 1071.0f),
+        "IS" to PointF(2080.0f, 260.0f),
+        "IT" to PointF(2456.0f, 647.0f),
+        "JP" to PointF(4330.0f, 755.0f),
+        "KH" to PointF(3911.0f, 1194.0f),
+        "KR" to PointF(4171.0f, 743.0f),
+        "LT" to PointF(2604.0f, 420.0f),
+        "LU" to PointF(2363.0f, 513.0f),
+        "LV" to PointF(2612.0f, 388.0f),
+        "MA" to PointF(2145.0f, 860.0f),
+        "MD" to PointF(2679.0f, 561.0f),
+        "MK" to PointF(2585.0f, 657.0f),
+        "MM" to PointF(3755.0f, 1032.0f),
+        "MT" to PointF(2483.0f, 765.0f),
+        "MX" to PointF(667.0f, 976.0f),
+        "MY" to PointF(3878.0f, 1335.0f),
+        "NG" to PointF(2385.0f, 1235.0f),
+        "NL" to PointF(2355.0f, 466.0f),
+        "NO" to PointF(2411.0f, 311.0f),
+        "NZ" to PointF(4760.0f, 2171.0f),
+        "PE" to PointF(1056.0f, 1589.0f),
+        "PH" to PointF(4159.0f, 1135.0f),
+        "PK" to PointF(3330.0f, 860.0f),
+        "PL" to PointF(2554.0f, 472.0f),
+        "PR" to PointF(1216.0f, 1076.0f),
+        "PS" to PointF(2798.0f, 828.0f),
+        "PT" to PointF(2148.0f, 688.0f),
+        "RO" to PointF(2636.0f, 583.0f),
+        "RS" to PointF(2569.0f, 607.0f),
+        "RU" to PointF(2833.0f, 366.0f),
+        "SE" to PointF(2485.0f, 300.0f),
+        "SG" to PointF(3905.0f, 1379.0f),
+        "SI" to PointF(2481.0f, 578.0f),
+        "SK" to PointF(2552.0f, 527.0f),
+        "TH" to PointF(3848.0f, 1128.0f),
+        "TR" to PointF(2779.0f, 696.0f),
+        "TW" to PointF(4135.0f, 975.0f),
+        "UA" to PointF(2715.0f, 517.0f),
+        "UK" to PointF(2265.0f, 475.0f),
+        "US" to PointF(760.0f, 700.0f),
+        "VN" to PointF(3961.0f, 1144.0f),
+        "ZA" to PointF(2629.0f, 1950.0f)
+    )
 }
 
 // --- Native MapView Implementation ---
 
-/**
- * A custom View that renders the SVG map using AndroidSVG and handles automatic
- * smooth pan & zoom animations to the focused country.
- */
+data class PinInfo(val pos: MapRegion, val highlight: CountryHighlight)
+
+private val FUZZY_BORDER_COUNTRIES = setOf("India")
+
 @SuppressLint("ClickableViewAccessibility")
-class MapView(context: Context) : View(context) {
+class MapView constructor(
+    context: Context
+) : View(context) {
 
-    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-    private var renderJob: Job? = null
+    // When and what highlight stage started.
+    private var renderTimeInfo: Pair<Long, CountryHighlight?>? = null
+    private var currentRenderData: RenderData? = null
+    private var targetRenderData: RenderData? = null
+    private var renderedMap: RenderedMap? = null
 
-    // SVG rendering via Picture/Canvas
-    private var mapPicture: Picture? = null
-    private var mapRasterBitmap: Bitmap? = null
-    private var mapAnimationBitmap: Bitmap? = null
-    private var mapCacheBitmap: Bitmap? = null
-    private val cacheCanvas = Canvas()
-    private val animationCanvas = Canvas()
+    data class RenderData(
+        val region: MapRegion,
+        val pins: List<PinInfo>,
+        val stage: CountryHighlight?,
+        val id: Long // id will link rendered map to region and pins
+    )
 
-    // Matrix interpolation for smooth zooms
-    private val currentMatrix = Matrix()
-    private val targetMatrix = Matrix()
-    private val startMatrix = Matrix()
+    // Pre-allocated structs to avoid allocations in onDraw
+    private var viewRect = RectF(0f, 0f, 1f, 1f)
+    private val pinInterpolator = DecelerateInterpolator(1.5f)
 
-    private val startVals = FloatArray(9)
-    private val endVals = FloatArray(9)
-    private val currVals = FloatArray(9)
-    private var matrixAnimator: ValueAnimator? = null
-    private var isFirstZoom = true
-    private var isSvgRendered = false
+    private val outerPinBitmapDisconnected by lazy { BitmapFactory.decodeResource(resources, R.drawable.map_pin_outer_disconnected) }
+    private val outerPinBitmapProtected by lazy { BitmapFactory.decodeResource(resources, R.drawable.map_pin_outer_protected) }
+    private val innerPinPaintOutside = Paint().apply { color = Color.WHITE; isAntiAlias = true }
 
-    // Server data
-    var allServers: List<LogicalServer> = emptyList()
-    var connectedServer: LogicalServer? = null
-    var userCountryCode: String? = null
-    var isConnecting: Boolean = false
-    var isInteractive: Boolean = false
-    var onNodeClick: ((String) -> Unit)? = null
+    private lateinit var mapRenderer: TvMapRenderer
+    private lateinit var elapsedClockMs: () -> Long
+    private lateinit var pinColorPaints: Map<CountryHighlight, Paint>
+    private var animate: Boolean = true
 
-    // Colors
-    var bgColor: Int = android.graphics.Color.BLACK
-        set(value) { if (field != value) { field = value; invalidate() } }
-    var baseMapColor: Int = android.graphics.Color.DKGRAY
-        set(value) { if (field != value) { field = value; isSvgRendered = false; invalidate() } }
-    var borderMapColor: Int = android.graphics.Color.GRAY
-        set(value) { if (field != value) { field = value; isSvgRendered = false; invalidate() } }
-    var pinColor: Int = android.graphics.Color.GREEN
-        set(value) { if (field != value) { field = value; invalidate() } }
+    fun init(
+        config: MapRendererConfig,
+        pinColorConfig: Map<CountryHighlight, Int>,
+        fadeInDurationMs: Long,
+        elapsedClockMs: () -> Long,
+        scope: CoroutineScope
+    ) {
+        this.elapsedClockMs = elapsedClockMs
+        this.pinColorPaints = pinColorConfig.mapValues { Paint().apply { color = it.value; isAntiAlias = true } }
+        alpha = 0f
+        animate = Settings.Global.getFloat(
+            context.contentResolver,
+            Settings.Global.ANIMATOR_DURATION_SCALE, 1f
+        ) != 0f
+        setLayerType(LAYER_TYPE_HARDWARE, null)
+        mapRenderer = TvMapRenderer(
+            context,
+            scope,
+            config,
+            FUZZY_BORDER_COUNTRIES
+        ) { map, id ->
+            targetRenderData?.let { renderData ->
+                if (id == renderData.id) {
+                    if (renderedMap == null) {
+                        animate()
+                            .alpha(1f)
+                            .duration = fadeInDurationMs
+                    }
+                    renderedMap = map
+                    renderTimeInfo = Pair(elapsedClockMs(), renderData.stage)
+                    currentRenderData = targetRenderData
 
-    // Continuous Animations
-    private var waveFraction = 0f
-    private var pulseAnimator: ValueAnimator? = null
-
-    // Paints
-    private val pinPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
-    // Increased stroke width to make the wave more prominent
-    private val pulsePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 6f }
-    private val dotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = android.graphics.Color.WHITE; style = Paint.Style.FILL }
-
-    private var pendingCountryFocus: String? = null
-
-    private val gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
-        override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-            if (!isInteractive) return false
-
-            // Map click from Screen coordinates -> SVG Original coordinates
-            val pts = floatArrayOf(e.x, e.y)
-            val inverse = Matrix()
-            currentMatrix.invert(inverse)
-            inverse.mapPoints(pts)
-
-            val svgX = pts[0]
-            val svgY = pts[1]
-
-            var closest: String? = null
-            var minDist = Float.MAX_VALUE
-
-            val uniqueCodes = allServers.map { it.exitCountry }.distinct()
-            for (code in uniqueCodes) {
-                val pt = MapCoordinates.getPointForCountry(code)
-                val dx = pt.x - svgX
-                val dy = pt.y - svgY
-                val distSq = dx*dx + dy*dy
-                if (distSq < minDist) {
-                    minDist = distSq
-                    closest = code
-                }
-            }
-
-            // Allow tap within ~40 units in SVG space
-            if (minDist < 40f * 40f) {
-                closest?.let { onNodeClick?.invoke(it) }
-            }
-
-            return true
-        }
-    })
-
-    init {
-        // SVG rendering via Picture/Canvas is often more stable in Software mode 
-        // on various Android drivers, avoiding GPU command buffer overflows.
-        setLayerType(LAYER_TYPE_SOFTWARE, null)
-
-        // Slow down the wave for a more premium effect
-        pulseAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
-            duration = 2500
-            repeatCount = ValueAnimator.INFINITE
-            interpolator = LinearInterpolator()
-            addUpdateListener { anim ->
-                // Only invalidate if there is something animated to draw (the pulse)
-                if (connectedServer != null || isConnecting) {
-                    waveFraction = anim.animatedFraction
                     invalidate()
                 }
-            }
-            start()
-        }
-    }
-
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        scope.cancel()
-        pulseAnimator?.cancel()
-        matrixAnimator?.cancel()
-        mapPicture = null
-        mapRasterBitmap?.recycle()
-        mapRasterBitmap = null
-        mapAnimationBitmap?.recycle()
-        mapAnimationBitmap = null
-        mapCacheBitmap?.recycle()
-        mapCacheBitmap = null
-    }
-
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (!isInteractive) return super.onTouchEvent(event)
-        gestureDetector.onTouchEvent(event)
-        return true
-    }
-
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super.onSizeChanged(w, h, oldw, oldh)
-        if (w > 0 && h > 0) {
-            val focusTarget = connectedServer?.exitCountry ?: userCountryCode
-            animateToCountry(focusTarget)
-        }
-    }
-
-    fun onServerStateChanged(newServer: LogicalServer?, newUserCountry: String? = null) {
-        val oldTarget = connectedServer?.exitCountry ?: userCountryCode
-        connectedServer = newServer
-        userCountryCode = newUserCountry
-
-        val newTarget = connectedServer?.exitCountry ?: userCountryCode
-
-        // Render once upon initialization
-        if (!isSvgRendered) {
-            renderSvgInBackground()
-        }
-
-        if (oldTarget != newTarget) {
-            if (width > 0 && height > 0) {
-                animateToCountry(newTarget)
-            } else {
-                pendingCountryFocus = newTarget
-            }
-        }
-    }
-
-    private fun animateToCountry(countryCode: String?) {
-        if (width == 0 || height == 0) return
-
-        val targetRect = MapCoordinates.getFocusRegion(countryCode)
-
-        val scaleX = width.toFloat() / targetRect.width()
-        val scaleY = height.toFloat() / targetRect.height()
-        val fitScale = min(scaleX, scaleY)
-
-        val dx = (width.toFloat() - targetRect.width() * fitScale) / 2f - targetRect.left * fitScale
-        val dy = (height.toFloat() - targetRect.height() * fitScale) / 2f - targetRect.top * fitScale
-
-        targetMatrix.reset()
-        targetMatrix.postScale(fitScale, fitScale)
-        targetMatrix.postTranslate(dx, dy)
-
-        if (isFirstZoom) {
-            isFirstZoom = false
-            currentMatrix.set(targetMatrix)
-            invalidate()
-            return
-        }
-
-        startMatrix.set(currentMatrix)
-
-        matrixAnimator?.cancel()
-        matrixAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
-            duration = 1200 // Smoother cinematic zoom
-            interpolator = FastOutSlowInInterpolator()
-            addUpdateListener { anim ->
-                val f = anim.animatedFraction
-                startMatrix.getValues(startVals)
-                targetMatrix.getValues(endVals)
-                for (i in 0..8) {
-                    currVals[i] = startVals[i] + (endVals[i] - startVals[i]) * f
-                }
-                currentMatrix.setValues(currVals)
-                invalidate()
-            }
-            start()
-        }
-    }
-
-    private fun renderSvgInBackground() {
-        isSvgRendered = true
-        renderJob?.cancel()
-        renderJob = scope.launch(Dispatchers.IO) {
-            try {
-                val svg = SVG.getFromAsset(context.assets, MAP_ASSET_NAME)
-
-                val baseHex = String.format("#%06X", (0xFFFFFF and baseMapColor))
-                val borderHex = String.format("#%06X", (0xFFFFFF and borderMapColor))
-
-                // Using vector-effect: non-scaling-stroke so borders stay thin upon infinite zoom!
-                // Removed the country highlight so the animated dot stands out prominently
-                val cssBuilder = StringBuilder()
-                cssBuilder.append("path { fill: $baseHex; stroke: $borderHex; stroke-width: 1.5px; vector-effect: non-scaling-stroke; } ")
-
-                val renderOptions = RenderOptions().css(cssBuilder.toString())
-
-                // Draw SVG into a Picture object. This keeps vector quality infinite!
-                val picture = Picture()
-                val canvas = picture.beginRecording(MAP_ORIGINAL_WIDTH.toInt(), MAP_ORIGINAL_HEIGHT.toInt())
-                svg.renderToCanvas(canvas, renderOptions)
-                picture.endRecording()
-
-                // Pre-rasterize the Picture to a Bitmap to avoid libhwui GPU driver bugs
-                // when applying matrix transformations. This approach is more stable across
-                // different Android versions and GPU drivers.
-                val rasterBitmap = Bitmap.createBitmap(MAP_ORIGINAL_WIDTH.toInt(), MAP_ORIGINAL_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
-                val rasterCanvas = Canvas(rasterBitmap)
-                rasterCanvas.drawPicture(picture)
-
-                withContext(Dispatchers.Main) {
-                    mapPicture = picture
-                    mapRasterBitmap = rasterBitmap
-                    invalidate()
-                }
-            } catch (e: Exception) {
-                ProtonLogger.e("HomeMap", "Failed to render SVG. Check if world.svg is in assets folder.", e)
             }
         }
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        // No drawColor here, letting the background gradient show through
+        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+        if (width == 0 || height == 0)
+            return
 
-        if (mapRasterBitmap == null) return
+        val renderData = currentRenderData ?: return
+        val region = renderData.region
+        renderedMap?.let { renderedMap ->
+            if (region.w == 0f || renderedMap.region.isEmpty)
+                return
 
-        val isAnimating = matrixAnimator?.isRunning == true
+            val regionRect = region.toRectF()
+            val src = regionRect
+                .and(renderedMap.region)
+                .inCoordsOf(renderedMap.region)
+                .scale(renderedMap.bitmap.width.toFloat(), renderedMap.bitmap.height.toFloat())
 
-        if (isAnimating) {
-            // During zoom animation, render to intermediate bitmap first to avoid GPU assertion failures.
-            // This isolates matrix transformation from the final rendering pipeline.
-            mapRasterBitmap?.let { bitmap ->
-                mapAnimationBitmap?.recycle()
-                mapAnimationBitmap = renderToIntermediateBitmap(bitmap, currentMatrix)
-                mapAnimationBitmap?.let { intermediateBitmap ->
-                    try {
-                        canvas.drawBitmap(intermediateBitmap, 0f, 0f, null)
-                    } catch (e: Exception) {
-                        ProtonLogger.e("HomeMap", "Failed to draw animation bitmap", e)
-                    }
-                }
-            }
-            // Invalidate cache since zoom changed
-            mapCacheBitmap = null
-        } else {
-            // Static zoom level - use cached bitmap for high performance (60fps pulse)
-            if (width > 0 && height > 0 && (mapCacheBitmap == null || mapCacheBitmap?.width != width || mapCacheBitmap?.height != height)) {
-                mapCacheBitmap?.recycle()
-                mapCacheBitmap = null
-                mapRasterBitmap?.let { bitmap ->
-                    // Use intermediate rendering approach for consistency and stability
-                    mapCacheBitmap = renderToIntermediateBitmap(bitmap, currentMatrix)
-                    if (mapCacheBitmap == null) {
-                        ProtonLogger.e("HomeMap", "Failed to create cached bitmap")
-                        // Fallback: try intermediate rendering directly for this frame
-                        renderToIntermediateBitmap(bitmap, currentMatrix)?.let { intermediateBitmap ->
-                            try {
-                                canvas.drawBitmap(intermediateBitmap, 0f, 0f, null)
-                            } catch (e: Exception) {
-                                ProtonLogger.e("HomeMap", "Failed to draw fallback bitmap", e)
-                            }
-                            intermediateBitmap.recycle()
-                        }
-                        return
-                    }
-                }
-            }
-            mapCacheBitmap?.let { 
-                if (!it.isRecycled) {
-                    canvas.drawBitmap(it, 0f, 0f, null)
-                }
-            }
-        }
+            val dstHeight = width.toFloat() * src.height() / src.width()
+            val dstTop = (height - dstHeight) / 2
+            viewRect.set(0f, dstTop, width.toFloat(), dstTop + dstHeight)
+            canvas.drawBitmap(renderedMap.bitmap, Rect().apply { src.round(this) }, viewRect, null)
 
-        // 2. Draw animated active server pin (drawn over map to prevent zoom distortion)
-        pinPaint.color = pinColor
-        val connectedCode = connectedServer?.exitCountry
-
-        if (connectedCode != null && (isConnected() || isConnecting)) {
-            val pts = FloatArray(2)
-            val pt = MapCoordinates.getPointForCountry(connectedCode)
-            pts[0] = pt.x
-            pts[1] = pt.y
-
-            // Translate from Vector coordinates to absolute Screen coordinates
-            currentMatrix.mapPoints(pts)
-            val targetScreenX = pts[0]
-            val targetScreenY = pts[1]
-
-            // Radius of the point is strictly fixed in screen pixels (doubled from 14f to 28f)
-            val screenRadius = 28f
-            val maxPulseScale = 5f
-
-            // First outer wave
-            val scale1 = 1f + waveFraction * (maxPulseScale - 1f)
-            val alpha1 = 1f - waveFraction
-            pulsePaint.color = pinColor
-            pulsePaint.alpha = (alpha1 * 200).toInt()
-            canvas.drawCircle(targetScreenX, targetScreenY, screenRadius * scale1, pulsePaint)
-
-            // Second inner wave (shifted by half a cycle)
-            val waveFraction2 = (waveFraction + 0.5f) % 1.0f
-            val scale2 = 1f + waveFraction2 * (maxPulseScale - 1f)
-            val alpha2 = 1f - waveFraction2
-            pulsePaint.alpha = (alpha2 * 200).toInt()
-            canvas.drawCircle(targetScreenX, targetScreenY, screenRadius * scale2, pulsePaint)
-
-            // Solid target pin
-            canvas.drawCircle(targetScreenX, targetScreenY, screenRadius, pinPaint)
-            canvas.drawCircle(targetScreenX, targetScreenY, screenRadius * 0.4f, dotPaint)
+            canvas.drawPins(regionRect, renderData.pins)
         }
     }
 
-    private fun isConnected() = connectedServer != null && !isConnecting
+    private fun innerPinRadius(elapsedS: Float, stage: CountryHighlight?): Float? {
+        if (!animate || stage == CountryHighlight.CONNECTED) return INNER_PIN_SIZE
 
-    /**
-     * Renders the rasterized bitmap with transformation applied to an intermediate bitmap.
-     * This avoids GPU assertion failures that occur when applying transformation matrices
-     * directly to large bitmaps during final rendering.
-     */
-    private fun renderToIntermediateBitmap(bitmap: Bitmap, matrix: Matrix): Bitmap? {
-        if (width <= 0 || height <= 0) return null
+        if (elapsedS < INNER_PIN_START_DELAY_S) return null
+        val stageS = elapsedS - INNER_PIN_START_DELAY_S
+        return if (stageS < INNER_PIN_SHOW_DURATION_S)
+            INNER_PIN_SIZE * pinInterpolator.getInterpolation(stageS / INNER_PIN_SHOW_DURATION_S)
+        else
+            INNER_PIN_SIZE
+    }
 
-        return try {
-            val intermediateBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-            animationCanvas.setBitmap(intermediateBitmap)
-            animationCanvas.drawColor(android.graphics.Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
-            
-            val paint = Paint().apply { isFilterBitmap = true }
-            animationCanvas.drawBitmap(bitmap, matrix, paint)
-            
-            intermediateBitmap
-        } catch (e: Exception) {
-            ProtonLogger.e("HomeMap", "Failed to render intermediate bitmap", e)
-            null
+    private fun outerPinRadius(elapsedS: Float, stage: CountryHighlight?): Float? {
+        if (!animate) return OUTER_PIN_FULL_SIZE
+
+        val startDelay = if (stage == CountryHighlight.CONNECTED) 0f else OUTER_PIN_START_DELAY_S
+        if (elapsedS < startDelay) return null
+        val stageS = elapsedS - startDelay
+        return if (stageS < OUTER_PIN_SHOW_DURATION_S) {
+            // Showing
+            OUTER_PIN_FULL_SIZE * pinInterpolator.getInterpolation(stageS / OUTER_PIN_SHOW_DURATION_S)
+        } else {
+            // Pulsing
+            val pulseStageS = (stageS - OUTER_PIN_SHOW_DURATION_S) % OUTER_PIN_PULSE_DURATION_S
+            val halfPulse = OUTER_PIN_PULSE_DURATION_S / 2
+            val size = if (pulseStageS > halfPulse) {
+                // Growing phase
+                pinInterpolator.getInterpolation((pulseStageS - halfPulse) / halfPulse)
+            } else {
+                // Shrinking phase
+                1f - pinInterpolator.getInterpolation(pulseStageS / halfPulse)
+            }
+            val diff = OUTER_PIN_FULL_SIZE - OUTER_PIN_SMALL_SIZE
+            OUTER_PIN_SMALL_SIZE + diff * size
         }
+    }
+
+    private fun Canvas.drawPins(regionRect: RectF, pins: List<PinInfo>) {
+        renderTimeInfo?.let { timeInfo ->
+            val animationElapsedS = (elapsedClockMs() - timeInfo.first) / 1000f
+
+            for (pin in pins) {
+                val pinInViewCoord = pin.pos.toRectF()
+                    .inCoordsOf(regionRect)
+                    .scale(width.toFloat(), height.toFloat())
+
+                val outerPinBitmap = when (pin.highlight) {
+                    CountryHighlight.SELECTED -> outerPinBitmapDisconnected
+                    CountryHighlight.CONNECTED -> outerPinBitmapProtected
+                    CountryHighlight.CONNECTING -> null // No outer bitmap when connecting
+                }
+                if (outerPinBitmap != null) {
+                    outerPinRadius(animationElapsedS, timeInfo.second)?.let { sizePx ->
+                        val left = pinInViewCoord.centerX() - sizePx / 2f
+                        val top = pinInViewCoord.centerY() - sizePx / 2f
+                        val right = left + sizePx
+                        val bottom = top + sizePx
+                        drawBitmap(
+                            outerPinBitmap,
+                            null,
+                            RectF(left, top, right, bottom),
+                            null
+                        )
+                    }
+                }
+                innerPinRadius(animationElapsedS, timeInfo.second)?.let { radius ->
+                    pinColorPaints[pin.highlight]?.let { innerPaint ->
+                        drawCircle(pinInViewCoord.centerX(), pinInViewCoord.centerY(), radius, innerPinPaintOutside)
+                        drawCircle(pinInViewCoord.centerX(), pinInViewCoord.centerY(), radius / 2, innerPaint)
+                    }
+                }
+            }
+            // Keep animating pins
+            if (pins.isNotEmpty() && animate)
+                invalidate()
+        }
+    }
+
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        super.onLayout(changed, l, t, r, b)
+        var w = r - l
+        var h = b - t
+
+        if (w > 0 && h > 0) {
+            // Limit bitmap size to avoid OOM on devices with very high res
+            if (w * h > BITMAP_MAX_PIXELS) {
+                val normalH = h.toFloat() / w
+                w = sqrt(BITMAP_MAX_PIXELS / normalH).roundToInt()
+                h = (w * normalH).roundToInt()
+            }
+            val newId = mapRenderer.updateSize(w, h)
+            if (newId != null)
+                targetRenderData = targetRenderData?.copy(id = newId)
+        }
+    }
+
+    // Crops to show given region without animation putts it in the center of the viewport
+    // (with given bias). Will not keep resulting region in map bounds (will add padding to keep
+    // focused region in the center).
+    fun focusRegionInCenter(
+        mainScope: CoroutineScope,
+        focusRegion: MapRegion,
+        newHighlights: List<CountryHighlightInfo>?,
+        newPins: List<PinInfo>,
+        highlightStage: CountryHighlight?,
+        bias: Float,
+    ) = mainScope.launch {
+        if (width <= 0 || height <= 0) return@launch
+        val viewportNormalH = height / width.toFloat()
+        val newRegion = focusRegion.expandToAspectRatio(viewportNormalH, bias)
+        val id = mapRenderer.update(
+            newMapRegion = newRegion,
+            newHighlights = newHighlights,
+        )
+        targetRenderData = RenderData(newRegion, newPins, highlightStage, id)
+    }
+
+    companion object {
+        const val BITMAP_MAX_PIXELS = 5_000_000 // ~2.7k
+
+        const val INNER_PIN_START_DELAY_S = 0.2f
+        const val INNER_PIN_SHOW_DURATION_S = 0.4f
+
+        const val OUTER_PIN_START_DELAY_S = 0.7f
+        const val OUTER_PIN_SHOW_DURATION_S = 1f
+        const val OUTER_PIN_PULSE_DURATION_S = 3f
+
+        val OUTER_PIN_FULL_SIZE = 48.toPx().toFloat()
+        val OUTER_PIN_SMALL_SIZE = 32.toPx().toFloat()
+        val INNER_PIN_SIZE = 12.toPx().toFloat()
+    }
+
+    private fun RectF.and(other: RectF): RectF {
+        return RectF(
+            kotlin.math.max(left, other.left),
+            kotlin.math.max(top, other.top),
+            kotlin.math.min(right, other.right),
+            kotlin.math.min(bottom, other.bottom)
+        )
     }
 }
 
@@ -636,39 +535,90 @@ fun HomeMap(
     onNodeClick: ((String) -> Unit)? = null
 ) {
     val colors = ProtonNextTheme.colors
+    val scope = rememberCoroutineScope()
 
-    val baseMapColor = colors.shade15.toArgb()
-    val borderMapColor = colors.shade50.toArgb()
-
-    val isConnected = connectedServer != null && !isConnecting
-    val pinColorValue = animateColorAsState(
-        targetValue = when {
-            isConnected -> colors.notificationSuccess
-            isConnecting -> colors.brandNorm
-            else -> androidx.compose.ui.graphics.Color.Transparent
-        },
-        animationSpec = tween(durationMillis = 500),
-        label = "pinColor"
+    val mapConfig = MapRendererConfig(
+        background = Color.TRANSPARENT,
+        country = colors.shade15.toArgb(),
+        border = colors.shade50.toArgb(),
+        selected = colors.shade40.toArgb(),
+        connecting = colors.shade40.toArgb(),
+        connected = colors.shade40.toArgb(),
+        borderWidth = 3f,
+        zoomIndependentBorderWidth = true
     )
+
+    val pinColorConfig = mapOf(
+        CountryHighlight.SELECTED to colors.notificationError.toArgb(),
+        CountryHighlight.CONNECTING to colors.brandNorm.toArgb(),
+        CountryHighlight.CONNECTED to colors.notificationSuccess.toArgb(),
+    )
+
+    val mapState = remember(connectedServer, isConnecting, userCountryCode) {
+        val isConnected = connectedServer != null && !isConnecting
+        val highlight = when {
+            isConnected -> CountryHighlight.CONNECTED
+            isConnecting -> CountryHighlight.CONNECTING
+            else -> CountryHighlight.SELECTED
+        }
+        val targetCode = if (isConnected || isConnecting) {
+            connectedServer?.exitCountry ?: userCountryCode
+        } else {
+            userCountryCode
+        }
+        targetCode?.let { it to highlight }
+    }
 
     AndroidView(
         modifier = modifier.fillMaxSize(),
         factory = { context ->
             MapView(context).apply {
-                this.baseMapColor = baseMapColor
-                this.borderMapColor = borderMapColor
-                this.userCountryCode = userCountryCode
+                init(
+                    config = mapConfig,
+                    pinColorConfig = pinColorConfig,
+                    fadeInDurationMs = 250L,
+                    elapsedClockMs = { SystemClock.elapsedRealtime() },
+                    scope = scope
+                )
             }
         },
         update = { mapView ->
-            mapView.allServers = allServers
-            mapView.isConnecting = isConnecting
-            mapView.isInteractive = isInteractive
-            mapView.onNodeClick = onNodeClick
-            mapView.pinColor = pinColorValue.value.toArgb()
-
-            // Passes state down safely, triggering background SVG renders and Matrix animations if needed
-            mapView.onServerStateChanged(connectedServer, userCountryCode)
+            updateMapView(mapView, scope, mapState)
         }
     )
+}
+
+private fun updateMapView(
+    mapView: MapView,
+    scope: CoroutineScope,
+    mapHighlight: Pair<String, CountryHighlight>?
+) {
+    var region = TvMapRenderer.DEFAULT_PORTRAIT_REGION
+    var highlights = emptyList<CountryHighlightInfo>()
+    var pins = emptyList<PinInfo>()
+
+    mapHighlight?.let { (countryCode, highlight) ->
+        val countryName = MapCoordinates.codeToMapCountryName[countryCode]
+        val bounds = MapCoordinates.tvMapNameToBounds[countryName]
+        if (bounds != null && countryName != null) {
+            region = bounds
+                .relativePadding(.1f)
+                .translateMapCoordinatesToRegion()
+                .withPadding(0.015f)
+
+            highlights = listOf(CountryHighlightInfo(countryName, highlight))
+
+            val translatedPinPosition = MapCoordinates.oldMapLocations[countryCode]?.let {
+                PointF(it.x, it.y).translateOldToNewMapCoordinates()
+            }
+
+            val pinPosition = if (translatedPinPosition != null && bounds.contains(translatedPinPosition))
+                translatedPinPosition
+            else
+                RectF(bounds.centerX(), bounds.centerY(), bounds.centerX(), bounds.centerY())
+
+            pins = listOf(PinInfo(pinPosition.translateMapCoordinatesToRegion(), highlight))
+        }
+    }
+    mapView.focusRegionInCenter(scope, region, highlights, pins, bias = 0.4f, highlightStage = mapHighlight?.second)
 }
