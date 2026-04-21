@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159776,
-      "versionName": "12.0.0-alpha1st2-65-g08add9c-nightly",
+      "versionCode": 605159777,
+      "versionName": "12.0.0-alpha1st2-66-gf81bc29-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "refactor: optimize WARP bypass lifecycle and background synchronization\n\n* refactor: implement `isTunnelActive` state tracking in `WarpManager` to monitor tunnel status\n* refactor: prevent periodic certificate refreshes in `AmneziaVpnManager` from triggering background WARP activity when the VPN is inactive\n* refactor: update `DashboardViewModel` to only trigger proactive WARP activation during server fetches if no servers are cached or if the tunnel is already active\n* refactor: ensure WARP bypass is properly released in `DashboardViewModel` server fetching using a `finally` block\n* refactor: restrict background server updates in `VpnRepository` when the WARP bypass strategy is enabled but the tunnel is idle to prevent unnecessary traffic",
+      "changelog": "feat: implement country spoofing for API location overrides\n\n* feat: add `CountrySpoofingScreen` to allow users to manually set an ISO country code or enable \"Null Spoofing\" to omit the country header\n* feat: integrate country spoofing into the Privacy settings section and navigation graph\n* feat: update `SettingsViewModel` to manage spoofing state and trigger background server list refreshes when settings change\n* refactor: extend `VpnRepository.refreshServersBackground` to support forced refresh logic\n* docs: add localized strings for country spoofing features in English, Russian, Ukrainian, Chinese, Belarusian, and Persian",
       "force": false
     },
     "release": {
-      "versionCode": 605159776,
-      "versionName": "12.0.0-alpha1st2-65-g08add9c-nightly",
+      "versionCode": 605159777,
+      "versionName": "12.0.0-alpha1st2-66-gf81bc29-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "refactor: optimize WARP bypass lifecycle and background synchronization\n\n* refactor: implement `isTunnelActive` state tracking in `WarpManager` to monitor tunnel status\n* refactor: prevent periodic certificate refreshes in `AmneziaVpnManager` from triggering background WARP activity when the VPN is inactive\n* refactor: update `DashboardViewModel` to only trigger proactive WARP activation during server fetches if no servers are cached or if the tunnel is already active\n* refactor: ensure WARP bypass is properly released in `DashboardViewModel` server fetching using a `finally` block\n* refactor: restrict background server updates in `VpnRepository` when the WARP bypass strategy is enabled but the tunnel is idle to prevent unnecessary traffic",
+      "changelog": "feat: implement country spoofing for API location overrides\n\n* feat: add `CountrySpoofingScreen` to allow users to manually set an ISO country code or enable \"Null Spoofing\" to omit the country header\n* feat: integrate country spoofing into the Privacy settings section and navigation graph\n* feat: update `SettingsViewModel` to manage spoofing state and trigger background server list refreshes when settings change\n* refactor: extend `VpnRepository.refreshServersBackground` to support forced refresh logic\n* docs: add localized strings for country spoofing features in English, Russian, Ukrainian, Chinese, Belarusian, and Persian",
       "force": false
     }
   }
