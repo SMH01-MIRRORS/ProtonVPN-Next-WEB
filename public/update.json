@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159778,
-      "versionName": "12.0.0-alpha1st2-67-gd19a2df-nightly",
+      "versionCode": 605159779,
+      "versionName": "12.0.0-alpha1st2-68-g87ac12a-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "refactor: overhaul dashboard map rendering and animation system\n\n* feat: implement `TvMapRenderer` to handle background SVG rendering and CSS-based country highlighting via a dedicated render thread\n* feat: introduce `MapRegion` data class to manage map coordinates, aspect ratio expansion, and viewport padding\n* refactor: rewrite `HomeMap` and `MapView` to utilize the new rendering pipeline and implement enhanced pin animations\n* feat: add new map pin assets and logic for distinct \"protected,\" \"connecting,\" and \"disconnected\" visual states\n* refactor: simplify the `DashboardScreen` background by replacing the vertical gradient with a solid color\n* chore: extract reusable geometry and coordinate logic into `MathUtils` and `ViewUtils` utility files",
+      "changelog": "chore: update dependencies in `libs.versions.toml`\n\n* chore: update Sentry to 6.4.0 and Sentry Android to 8.39.1\n* chore: update Kotlin serialization JSON to 1.11.0\n* chore: update Compose Material 3 to 1.5.0-alpha17",
       "force": false
     },
     "release": {
-      "versionCode": 605159778,
-      "versionName": "12.0.0-alpha1st2-67-gd19a2df-nightly",
+      "versionCode": 605159779,
+      "versionName": "12.0.0-alpha1st2-68-g87ac12a-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "refactor: overhaul dashboard map rendering and animation system\n\n* feat: implement `TvMapRenderer` to handle background SVG rendering and CSS-based country highlighting via a dedicated render thread\n* feat: introduce `MapRegion` data class to manage map coordinates, aspect ratio expansion, and viewport padding\n* refactor: rewrite `HomeMap` and `MapView` to utilize the new rendering pipeline and implement enhanced pin animations\n* feat: add new map pin assets and logic for distinct \"protected,\" \"connecting,\" and \"disconnected\" visual states\n* refactor: simplify the `DashboardScreen` background by replacing the vertical gradient with a solid color\n* chore: extract reusable geometry and coordinate logic into `MathUtils` and `ViewUtils` utility files",
+      "changelog": "chore: update dependencies in `libs.versions.toml`\n\n* chore: update Sentry to 6.4.0 and Sentry Android to 8.39.1\n* chore: update Kotlin serialization JSON to 1.11.0\n* chore: update Compose Material 3 to 1.5.0-alpha17",
       "force": false
     }
   }
