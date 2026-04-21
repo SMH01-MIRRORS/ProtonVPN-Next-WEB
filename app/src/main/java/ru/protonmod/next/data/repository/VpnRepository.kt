@@ -47,6 +47,7 @@ import ru.protonmod.next.data.local.RecentConnectionDao
 import ru.protonmod.next.di.ApplicationScope
 import ru.protonmod.next.utils.coroutines.DispatcherProvider
 import ru.protonmod.next.vpn.AmneziaVpnManager
+import ru.protonmod.next.vpn.WarpManager
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Provider
@@ -64,6 +65,7 @@ class VpnRepository @Inject constructor(
     private val cityRepository: CityRepository,
     private val settingsManager: SettingsManager,
     private val amneziaVpnManager: Provider<AmneziaVpnManager>,
+    private val warpManager: Provider<WarpManager>,
     private val dispatcherProvider: DispatcherProvider,
     @ApplicationScope private val managerScope: CoroutineScope
 ) {
@@ -101,10 +103,11 @@ class VpnRepository @Inject constructor(
                     val apiBypassEnabled = settingsManager.apiBypassEnabled.first()
                     val strategy = settingsManager.apiBypassStrategy.first()
                     val isVpnActive = amneziaVpnManager.get().tunnelState.value == org.amnezia.awg.backend.Tunnel.State.UP
+                    val isWarpActive = warpManager.get().isTunnelActive
 
                     // User requirement: if WARP bypass is enabled, only update servers if VPN is active.
                     // This prevents unblocked background traffic when WARP is not supposed to be active (it's only for manual/vpn-active use).
-                    if (apiBypassEnabled && strategy == SettingsManager.STRATEGY_WARP && !isVpnActive) {
+                    if (apiBypassEnabled && strategy == SettingsManager.STRATEGY_WARP && !isVpnActive && !isWarpActive) {
                         ProtonLogger.d(TAG, "Auto-update: WARP bypass enabled but VPN is inactive. Skipping background refresh.")
                     } else {
                         ProtonLogger.d(TAG, "Auto-update: Fetching fresh server data for user tier ${session.userTier}")

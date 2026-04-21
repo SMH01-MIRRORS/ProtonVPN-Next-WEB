@@ -53,6 +53,7 @@ import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.ui.utils.CountryUtils
 import ru.protonmod.next.vpn.AmneziaVpnManager
+import ru.protonmod.next.vpn.WarpManager
 import io.sentry.Sentry
 import java.net.Proxy
 import javax.inject.Inject
@@ -93,6 +94,7 @@ class DashboardViewModel @Inject constructor(
     private val sessionDao: SessionDao,
     private val settingsManager: SettingsManager,
     private val amneziaVpnManager: AmneziaVpnManager,
+    private val warpManager: WarpManager,
     private val connectedServerState: ConnectedServerState,
     private val profileDao: ProfileDao,
     private val recentConnectionDao: ru.protonmod.next.data.local.RecentConnectionDao
@@ -429,17 +431,32 @@ class DashboardViewModel @Inject constructor(
             // Proactively ensure WARP is active if configured, before fetching
             val apiBypassEnabled = settingsManager.apiBypassEnabled.first()
             val apiBypassStrategy = settingsManager.apiBypassStrategy.first()
-            if (apiBypassEnabled && apiBypassStrategy == SettingsManager.STRATEGY_WARP) {
-                amneziaVpnManager.ensureWarpBypass(true)
-            }
+            val isWarpActive = warpManager.isTunnelActive
+            val hasServers = vpnRepository.getCachedServers().isNotEmpty()
 
-            vpnRepository.getServers(session.accessToken, session.sessionId, session.userTier)
-                .onFailure { error ->
-                    val cachedServers = vpnRepository.getCachedServers()
-                    if (cachedServers.isEmpty()) {
-                        _errorMessage.value = error.localizedMessage ?: context.getString(R.string.error_unknown)
+            val startedWarp = if (apiBypassEnabled && apiBypassStrategy == SettingsManager.STRATEGY_WARP) {
+                // Only start warp proactively if it's already active (e.g. from login) 
+                // OR if we have NO servers at all (first run).
+                // This prevents redundant "connecting to cf" on every app start.
+                if (isWarpActive || !hasServers) {
+                    amneziaVpnManager.ensureWarpBypass(true)
+                    true
+                } else false
+            } else false
+
+            try {
+                vpnRepository.getServers(session.accessToken, session.sessionId, session.userTier)
+                    .onFailure { error ->
+                        val cachedServers = vpnRepository.getCachedServers()
+                        if (cachedServers.isEmpty()) {
+                            _errorMessage.value = error.localizedMessage ?: context.getString(R.string.error_unknown)
+                        }
                     }
+            } finally {
+                if (startedWarp) {
+                    amneziaVpnManager.ensureWarpBypass(false)
                 }
+            }
         }
     }
 

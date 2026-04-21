@@ -50,6 +50,9 @@ class WarpManager @Inject constructor(
     private val fetchMutex = Mutex()
     private var cachedConfig: WarpResponse? = null
 
+    var isTunnelActive: Boolean = false
+        private set
+
     init {
         loadCachedConfig()
     }
@@ -150,7 +153,7 @@ class WarpManager @Inject constructor(
         )
         
         // Wait for tunnel to be UP with a timeout
-        return withContext(dispatcherProvider.io()) {
+        val success = withContext(dispatcherProvider.io()) {
             val isUp = withTimeoutOrNull(20000) {
                 vpnManagerProvider.get().tunnelState.first { it == Tunnel.State.UP }
                 true
@@ -165,11 +168,14 @@ class WarpManager @Inject constructor(
             }
             isUp
         }
+        isTunnelActive = success
+        return success
     }
 
     suspend fun stopWarpTunnel() {
         ProtonLogger.i(TAG, "Stopping WARP tunnel...")
         systemContextWrapper.stopVpnService()
+        isTunnelActive = false
         delay(500)
     }
 }

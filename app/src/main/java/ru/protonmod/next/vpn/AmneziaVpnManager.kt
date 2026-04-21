@@ -297,10 +297,22 @@ class AmneziaVpnManager @Inject constructor(
                 val session = sessionDao.getSession() ?: break
                 updateCertificateState(session.wgCertificate)
 
+                val useWarp = settingsManager.isApiBypassEnabledSync() &&
+                        settingsManager.getApiBypassStrategySync() == SettingsManager.STRATEGY_WARP
+                val isConnected = _tunnelState.value == Tunnel.State.UP
+
                 if (_certState.value is CertificateState.Valid) {
                     // All good, check again in 2 hours
                     delay(PERIODIC_REFRESH_MS)
                     currentRetryDelay = 5000L
+                    continue
+                }
+
+                // If using WARP, we only refresh certificate when connecting or already connected.
+                // This avoids periodic WARP tunnel bring-ups in the background.
+                if (useWarp && !isConnected && !_isConnecting.value) {
+                    ProtonLogger.d(TAG, "Proactive refresh: WARP enabled but VPN inactive. Skipping background periodic refresh.")
+                    delay(PERIODIC_REFRESH_MS)
                     continue
                 }
 
