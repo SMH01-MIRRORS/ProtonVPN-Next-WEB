@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159775,
-      "versionName": "12.0.0-alpha1st2-64-g8e600b9-nightly",
+      "versionCode": 605159776,
+      "versionName": "12.0.0-alpha1st2-65-g08add9c-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "feat: update Warp API endpoint and add request headers\n\n* feat: update the default Warp API URL to `https://warp-vercel-murex.vercel.app/api/warp-data`\n* feat: add browser-like HTTP headers to `getWarpData`, including User-Agent, Referer, and CORS metadata, to improve request compatibility",
+      "changelog": "refactor: optimize WARP bypass lifecycle and background synchronization\n\n* refactor: implement `isTunnelActive` state tracking in `WarpManager` to monitor tunnel status\n* refactor: prevent periodic certificate refreshes in `AmneziaVpnManager` from triggering background WARP activity when the VPN is inactive\n* refactor: update `DashboardViewModel` to only trigger proactive WARP activation during server fetches if no servers are cached or if the tunnel is already active\n* refactor: ensure WARP bypass is properly released in `DashboardViewModel` server fetching using a `finally` block\n* refactor: restrict background server updates in `VpnRepository` when the WARP bypass strategy is enabled but the tunnel is idle to prevent unnecessary traffic",
       "force": false
     },
     "release": {
-      "versionCode": 605159775,
-      "versionName": "12.0.0-alpha1st2-64-g8e600b9-nightly",
+      "versionCode": 605159776,
+      "versionName": "12.0.0-alpha1st2-65-g08add9c-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "feat: update Warp API endpoint and add request headers\n\n* feat: update the default Warp API URL to `https://warp-vercel-murex.vercel.app/api/warp-data`\n* feat: add browser-like HTTP headers to `getWarpData`, including User-Agent, Referer, and CORS metadata, to improve request compatibility",
+      "changelog": "refactor: optimize WARP bypass lifecycle and background synchronization\n\n* refactor: implement `isTunnelActive` state tracking in `WarpManager` to monitor tunnel status\n* refactor: prevent periodic certificate refreshes in `AmneziaVpnManager` from triggering background WARP activity when the VPN is inactive\n* refactor: update `DashboardViewModel` to only trigger proactive WARP activation during server fetches if no servers are cached or if the tunnel is already active\n* refactor: ensure WARP bypass is properly released in `DashboardViewModel` server fetching using a `finally` block\n* refactor: restrict background server updates in `VpnRepository` when the WARP bypass strategy is enabled but the tunnel is idle to prevent unnecessary traffic",
       "force": false
     }
   }
