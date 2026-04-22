@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159780,
-      "versionName": "12.0.0-alpha1st2-69-gf9aeeeb-nightly",
+      "versionCode": 605159781,
+      "versionName": "12.0.0-alpha1st2-70-g34f22ee-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "feat: implement auto-connect and update VPN key persistence logic\n\n* feat: implement auto-connect functionality in `DashboardViewModel` to automatically initiate a connection on app startup if enabled\n* feat: update `AmneziaVpnManager` to explicitly persist new VPN private keys, certificates, and expiration timestamps via `sessionDao` after registration\n* refactor: integrate `WarpManager` dependency into `VpnRepository` and `DashboardViewModel`\n* refactor: change default values for `autoConnectEnabled` to `false` and `vpnPort` to `0` in `SettingsManager`\n* test: update `AuthRepositoryTest` to reflect changes in error handling, specifically mapping error code 12087 to a generic exception for expired captcha sessions\n* test: update `DashboardViewModelTest` and `VpnRepositoryTest` to include `WarpManager` mocks and satisfy new constructor requirements",
+      "changelog": "feat: implement connection verification and granular VPN states\n\n* feat: introduce `VpnNetworkMonitor` to detect when the VPN network reaches the `NET_CAPABILITY_VALIDATED` state\n* refactor: update `AmneziaVpnManager` to use a new `VpnState` enum (`DISCONNECTED`, `CONNECTING`, `VERIFYING`, `CONNECTED`, `DISCONNECTING`)\n* feat: implement a verification step after the tunnel is established to ensure traffic is actually flowing before marking the connection as \"Connected\"\n* feat: update `DashboardScreen` and `DashboardViewModel` to display specific UI feedback for verifying and disconnecting states\n* feat: update `ProtonVpnService` to show a \"Verifying connection...\" notification while waiting for system network validation\n* docs: add localized strings for \"Verifying\" and \"Disconnecting\" statuses in multiple languages",
       "force": false
     },
     "release": {
-      "versionCode": 605159780,
-      "versionName": "12.0.0-alpha1st2-69-gf9aeeeb-nightly",
+      "versionCode": 605159781,
+      "versionName": "12.0.0-alpha1st2-70-g34f22ee-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "feat: implement auto-connect and update VPN key persistence logic\n\n* feat: implement auto-connect functionality in `DashboardViewModel` to automatically initiate a connection on app startup if enabled\n* feat: update `AmneziaVpnManager` to explicitly persist new VPN private keys, certificates, and expiration timestamps via `sessionDao` after registration\n* refactor: integrate `WarpManager` dependency into `VpnRepository` and `DashboardViewModel`\n* refactor: change default values for `autoConnectEnabled` to `false` and `vpnPort` to `0` in `SettingsManager`\n* test: update `AuthRepositoryTest` to reflect changes in error handling, specifically mapping error code 12087 to a generic exception for expired captcha sessions\n* test: update `DashboardViewModelTest` and `VpnRepositoryTest` to include `WarpManager` mocks and satisfy new constructor requirements",
+      "changelog": "feat: implement connection verification and granular VPN states\n\n* feat: introduce `VpnNetworkMonitor` to detect when the VPN network reaches the `NET_CAPABILITY_VALIDATED` state\n* refactor: update `AmneziaVpnManager` to use a new `VpnState` enum (`DISCONNECTED`, `CONNECTING`, `VERIFYING`, `CONNECTED`, `DISCONNECTING`)\n* feat: implement a verification step after the tunnel is established to ensure traffic is actually flowing before marking the connection as \"Connected\"\n* feat: update `DashboardScreen` and `DashboardViewModel` to display specific UI feedback for verifying and disconnecting states\n* feat: update `ProtonVpnService` to show a \"Verifying connection...\" notification while waiting for system network validation\n* docs: add localized strings for \"Verifying\" and \"Disconnecting\" statuses in multiple languages",
       "force": false
     }
   }
