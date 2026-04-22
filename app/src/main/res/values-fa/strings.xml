@@ -51,6 +51,8 @@
     <string name="title_recent_connections">اتصال‌های اخیر</string>
     <string name="status_connected">متصل شد</string>
     <string name="status_connecting">در حال اتصال…</string>
+    <string name="status_verifying">در حال تایید…</string>
+    <string name="status_disconnecting">در حال قطع اتصال…</string>
     <string name="status_disconnected">قطع شد</string>
     <string name="status_not_connected">متصل نیست</string>
     <string name="msg_traffic_not_protected">ترافیک شما محافظت نمی‌شود</string>
@@ -346,6 +348,7 @@
     <string name="notification_channel_name">وضعیت VPN</string>
     <string name="notification_channel_desc">وضعیت فعلی اتصال VPN را نشان می‌دهد</string>
     <string name="notification_title_connected">متصل به %1$s</string>
+    <string name="notification_title_verifying">در حال تایید اتصال…</string>
     <string name="notification_title_disconnected">قطع شد</string>
     <string name="notification_title_connecting">در حال اتصال…</string>
     <string name="notification_action_disconnect">قطع اتصال</string>

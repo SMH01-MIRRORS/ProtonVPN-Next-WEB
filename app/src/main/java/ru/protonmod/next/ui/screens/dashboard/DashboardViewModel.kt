@@ -77,6 +77,7 @@ sealed class DashboardUiState {
         val isConnected: Boolean = false,
         val connectedServer: LogicalServer? = null,
         val isConnecting: Boolean = false,
+        val vpnState: AmneziaVpnManager.VpnState = AmneziaVpnManager.VpnState.DISCONNECTED,
         val certificateState: AmneziaVpnManager.CertificateState = AmneziaVpnManager.CertificateState.Valid,
         val originalLocationText: LocationText? = null,
         val vpnLocationText: LocationText? = null,
@@ -130,8 +131,7 @@ class DashboardViewModel @Inject constructor(
         vpnRepository.getServersFlow(),
         vpnRepository.isUpdating,
         _errorMessage,
-        amneziaVpnManager.tunnelState,
-        amneziaVpnManager.isConnecting,
+        amneziaVpnManager.vpnState,
         amneziaVpnManager.certState,
         connectedServerState.connectedServer,
         recentConnectionDao.getRecentConnections(),
@@ -148,28 +148,28 @@ class DashboardViewModel @Inject constructor(
         val servers = args[0] as List<LogicalServer>
         val isUpdating = args[1] as Boolean
         val error = args[2] as String?
-        val tunnelState = args[3] as Tunnel.State
-        val isConnecting = args[4] as Boolean
-        val certState = args[5] as AmneziaVpnManager.CertificateState
-        val connectedServer = args[6] as LogicalServer?
+        val vpnState = args[3] as AmneziaVpnManager.VpnState
+        val certState = args[4] as AmneziaVpnManager.CertificateState
+        val connectedServer = args[5] as LogicalServer?
         @Suppress("UNCHECKED_CAST")
-        val recentEntities = args[7] as List<RecentConnectionEntity>
+        val recentEntities = args[6] as List<RecentConnectionEntity>
         @Suppress("UNCHECKED_CAST")
-        val profiles = args[8] as List<VpnProfileEntity>
-        val qcStrategy = args[9] as String
-        val qcTargetId = args[10] as String?
-        val loadMode = args[11] as ServerLoadDisplayMode
-        val originalLocationText = args[12] as LocationText?
-        val vpnLocationText = args[13] as LocationText?
-        val isIpHidden = args[14] as Boolean
-        val speed = args[15] as String?
+        val profiles = args[7] as List<VpnProfileEntity>
+        val qcStrategy = args[8] as String
+        val qcTargetId = args[9] as String?
+        val loadMode = args[10] as ServerLoadDisplayMode
+        val originalLocationText = args[11] as LocationText?
+        val vpnLocationText = args[12] as LocationText?
+        val isIpHidden = args[13] as Boolean
+        val speed = args[14] as String?
 
         if (isUpdating && servers.isEmpty()) {
             DashboardUiState.Loading
         } else if (error != null && servers.isEmpty()) {
             DashboardUiState.Error(error)
         } else {
-            val isConnected = tunnelState == Tunnel.State.UP
+            val isConnected = vpnState == AmneziaVpnManager.VpnState.CONNECTED
+            val isConnecting = vpnState == AmneziaVpnManager.VpnState.CONNECTING || vpnState == AmneziaVpnManager.VpnState.VERIFYING
 
             val recentServers = recentEntities.mapNotNull { entity ->
                 servers.find { it.id == entity.serverId }
@@ -184,6 +184,7 @@ class DashboardViewModel @Inject constructor(
                 isConnected = isConnected,
                 connectedServer = connectedServer,
                 isConnecting = isConnecting,
+                vpnState = vpnState,
                 certificateState = certState,
                 originalLocationText = originalLocationText,
                 vpnLocationText = vpnLocationText,
@@ -221,16 +222,16 @@ class DashboardViewModel @Inject constructor(
             }
         }
 
-        // Use collectLatest on both tunnelState AND connectedServer.
+        // Use collectLatest on both vpnState AND connectedServer.
         // This ensures that if the server changes while already connected, we restart the delay and fetch the new IP.
         viewModelScope.launch {
             combine(
-                amneziaVpnManager.tunnelState,
+                amneziaVpnManager.vpnState,
                 connectedServerState.connectedServer
             ) { state, server ->
                 Pair(state, server)
             }.collectLatest { (state, server) ->
-                if (state == Tunnel.State.UP && server != null) {
+                if (state == AmneziaVpnManager.VpnState.CONNECTED && server != null) {
                     // Give the tunnel 1 second to stabilize routing before starting fetch attempts
                     delay(1000)
 
@@ -248,7 +249,7 @@ class DashboardViewModel @Inject constructor(
 
                     // Refresh server loads after connection is established
                     loadServers()
-                } else if (state == Tunnel.State.DOWN) {
+                } else if (state == AmneziaVpnManager.VpnState.DISCONNECTED) {
                     _vpnLocationText.value = null
                 }
             }
@@ -496,7 +497,7 @@ class DashboardViewModel @Inject constructor(
             val isTargetServerConnected = currentState.connectedServer?.id == server.id
 
             if (isConnectedToAny) {
-                if (isTargetServerConnected) {
+                if (isTargetServerConnected && currentState.isConnected) {
                     disconnect()
                 } else {
                     initiateConnection(server)
@@ -580,10 +581,9 @@ class DashboardViewModel @Inject constructor(
         }
 
         connectedServerState.setConnectedServer(targetServer)
-        val tunnelState = amneziaVpnManager.tunnelState.value
-        val isConnecting = amneziaVpnManager.isConnecting.value
+        val vpnState = amneziaVpnManager.vpnState.value
 
-        if (tunnelState == Tunnel.State.UP || isConnecting) {
+        if (vpnState != AmneziaVpnManager.VpnState.DISCONNECTED) {
             amneziaVpnManager.reconnect(
                 targetServer.id, physicalServer, session,
                 overridePort = profile.port,
@@ -629,9 +629,8 @@ class DashboardViewModel @Inject constructor(
 
         if (physicalServer != null) {
             connectedServerState.setConnectedServer(server)
-            val tunnelState = amneziaVpnManager.tunnelState.value
-            val isConnecting = amneziaVpnManager.isConnecting.value
-            if (tunnelState == Tunnel.State.UP || isConnecting) {
+            val vpnState = amneziaVpnManager.vpnState.value
+            if (vpnState != AmneziaVpnManager.VpnState.DISCONNECTED) {
                 amneziaVpnManager.reconnect(server.id, physicalServer, session, logicalServer = server)
             } else {
                 amneziaVpnManager.connect(server.id, physicalServer, session, logicalServer = server)

@@ -51,6 +51,8 @@
     <string name="title_recent_connections">Недавние подключения</string>
     <string name="status_connected">Подключено</string>
     <string name="status_connecting">Подключение…</string>
+    <string name="status_verifying">Проверка…</string>
+    <string name="status_disconnecting">Отключение…</string>
     <string name="status_disconnected">Отключено</string>
     <string name="status_not_connected">Не подключено</string>
     <string name="msg_traffic_not_protected">Ваш трафик не защищен</string>
@@ -356,6 +358,7 @@
     <string name="notification_channel_name">Статус VPN</string>
     <string name="notification_channel_desc">Отображает текущий статус подключения VPN</string>
     <string name="notification_title_connected">Подключено к %1$s</string>
+    <string name="notification_title_verifying">Проверка соединения…</string>
     <string name="notification_title_disconnected">Отключено</string>
     <string name="notification_title_connecting">Подключение…</string>
     <string name="notification_action_disconnect">Отключить</string>

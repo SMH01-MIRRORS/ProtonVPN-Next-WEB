@@ -64,4 +64,11 @@ class SystemContextWrapper @Inject constructor(
         }
         context.sendBroadcast(intent)
     }
+
+    fun setVpnVerified() {
+        val intent = Intent(context, ProtonVpnService::class.java).apply {
+            action = ProtonVpnService.ACTION_SET_VERIFIED
+        }
+        context.startService(intent)
+    }
 }

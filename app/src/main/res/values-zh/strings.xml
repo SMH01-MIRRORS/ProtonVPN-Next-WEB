@@ -51,6 +51,8 @@
     <string name="title_recent_connections">最近连接</string>
     <string name="status_connected">已连接</string>
     <string name="status_connecting">正在连接…</string>
+    <string name="status_verifying">正在验证…</string>
+    <string name="status_disconnecting">正在断开连接…</string>
     <string name="status_disconnected">已断开</string>
     <string name="status_not_connected">未连接</string>
     <string name="msg_traffic_not_protected">您的流量未受保护</string>
@@ -341,6 +343,7 @@
     <string name="notification_channel_name">VPN 状态</string>
     <string name="notification_channel_desc">显示 VPN 的当前连接状态</string>
     <string name="notification_title_connected">已连接到 %1$s</string>
+    <string name="notification_title_verifying">正在验证连接…</string>
     <string name="notification_title_disconnected">已断开连接</string>
     <string name="notification_title_connecting">正在连接…</string>
     <string name="notification_action_disconnect">断开连接</string>

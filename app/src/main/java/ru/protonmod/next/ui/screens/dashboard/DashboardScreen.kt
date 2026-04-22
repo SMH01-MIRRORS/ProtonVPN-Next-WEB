@@ -112,17 +112,18 @@ fun Modifier.vpnStatusOverlayBackground(
 fun VpnStatusTop(
     isConnected: Boolean,
     isConnecting: Boolean,
+    vpnState: AmneziaVpnManager.VpnState,
     modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
 
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         AnimatedContent(
-            targetState = Pair(isConnected, isConnecting),
+            targetState = vpnState,
             label = "VpnStatusTopTransition"
-        ) { (connected, connecting) ->
-            when {
-                connected -> {
+        ) { state ->
+            when (state) {
+                AmneziaVpnManager.VpnState.CONNECTED -> {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_proton_lock_filled),
@@ -139,7 +140,7 @@ fun VpnStatusTop(
                         )
                     }
                 }
-                connecting -> {
+                AmneziaVpnManager.VpnState.CONNECTING, AmneziaVpnManager.VpnState.VERIFYING -> {
                     ExpressiveCircularProgressIndicator(
                         color = colors.iconNorm,
                         modifier = Modifier.size(32.dp)
@@ -476,6 +477,7 @@ fun DashboardScreen(
             VpnStatusTop(
                 isConnected = isConnected,
                 isConnecting = isConnecting,
+                vpnState = successState?.vpnState ?: AmneziaVpnManager.VpnState.DISCONNECTED,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .windowInsetsPadding(WindowInsets.statusBars)
@@ -604,6 +606,7 @@ fun DashboardContent(
                             if (state.isConnected) onDisconnect() else onQuickConnect()
                         },
                         onChangeQuickConnect = onChangeQuickConnect,
+                        vpnState = state.vpnState,
                         connectedServer = state.connectedServer,
                         allServers = state.servers.toImmutableList(),
                         speed = speed
@@ -682,6 +685,7 @@ fun DashboardContent(
                             if (state.isConnected) onDisconnect() else onQuickConnect()
                         },
                         onChangeQuickConnect = onChangeQuickConnect,
+                        vpnState = state.vpnState,
                         connectedServer = state.connectedServer,
                         allServers = state.servers.toImmutableList(),
                         speed = speed
@@ -856,6 +860,7 @@ fun ConnectionStatusCard(
     onToggleConnection: () -> Unit,
     onChangeQuickConnect: () -> Unit,
     modifier: Modifier = Modifier,
+    vpnState: AmneziaVpnManager.VpnState = AmneziaVpnManager.VpnState.DISCONNECTED,
     connectedServer: LogicalServer? = null,
     allServers: ImmutableList<LogicalServer> = kotlinx.collections.immutable.persistentListOf(),
     speed: String? = null
@@ -882,9 +887,11 @@ fun ConnectionStatusCard(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = when {
-                        isConnected -> stringResource(R.string.status_connected)
-                        isConnecting -> stringResource(R.string.status_connecting)
+                    text = when (vpnState) {
+                        AmneziaVpnManager.VpnState.CONNECTED -> stringResource(R.string.status_connected)
+                        AmneziaVpnManager.VpnState.CONNECTING -> stringResource(R.string.status_connecting)
+                        AmneziaVpnManager.VpnState.VERIFYING -> stringResource(R.string.status_verifying)
+                        AmneziaVpnManager.VpnState.DISCONNECTING -> stringResource(R.string.status_disconnecting)
                         else -> stringResource(R.string.status_not_connected)
                     },
                     style = MaterialTheme.typography.labelLarge,

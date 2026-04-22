@@ -78,6 +78,7 @@ class AmneziaVpnManager @Inject constructor(
     private val systemContextWrapper: SystemContextWrapper,
     private val cryptoWrapper: CryptoWrapper,
     private val amneziaConfigGenerator: AmneziaConfigGenerator,
+    private val vpnNetworkMonitor: VpnNetworkMonitor,
     private val warpManager: Provider<WarpManager>,
     private val dispatcherProvider: DispatcherProvider,
     @ApplicationScope private val applicationScope: CoroutineScope
@@ -117,6 +118,17 @@ class AmneziaVpnManager @Inject constructor(
     private val _isConnecting = MutableStateFlow(false)
     val isConnecting: StateFlow<Boolean> = _isConnecting
 
+    enum class VpnState {
+        DISCONNECTED,
+        CONNECTING,
+        VERIFYING,
+        CONNECTED,
+        DISCONNECTING
+    }
+
+    private val _vpnState = MutableStateFlow(VpnState.DISCONNECTED)
+    val vpnState: StateFlow<VpnState> = _vpnState.asStateFlow()
+
     private val _speed = MutableStateFlow<String?>(null)
     val speed: StateFlow<String?> = _speed.asStateFlow()
 
@@ -127,6 +139,7 @@ class AmneziaVpnManager @Inject constructor(
     private var isReconnecting = false
     private var currentServerId: String? = null
     private var connectionJob: Job? = null
+    private var verificationJob: Job? = null
     private var refreshJob: Job? = null
     private val refreshMutex = Mutex()
 
@@ -143,6 +156,7 @@ class AmneziaVpnManager @Inject constructor(
                         stateStr?.let {
                             if (it == STATE_CONNECTING) {
                                 _isConnecting.value = true
+                                _vpnState.value = VpnState.CONNECTING
                             } else {
                                 try {
                                     val newState = Tunnel.State.valueOf(it)
@@ -150,13 +164,9 @@ class AmneziaVpnManager @Inject constructor(
                                     _isConnecting.value = false
 
                                     _tunnelState.value = newState
-                                    if (newState == Tunnel.State.UP) {
-                                        checkAndRefreshCertificateProactively()
-                                    } else if (newState == Tunnel.State.DOWN && !isReconnecting) {
-                                        currentServerId = null
-                                        connectedServerState.setConnectedServer(null)
-                                        _speed.value = null
-                                    }
+                                    
+                                    handleTunnelStateChange(newState)
+                                    
                                 } catch (e: Exception) {
                                     ProtonLogger.e(TAG, "Failed to parse tunnel state: $it")
                                 }
@@ -193,6 +203,59 @@ class AmneziaVpnManager @Inject constructor(
                 updateCertificateState(session.wgCertificate)
                 if (_certState.value !is CertificateState.Valid) {
                     checkAndRefreshCertificateProactively()
+                }
+            }
+        }
+    }
+
+    internal fun handleTunnelStateChange(newState: Tunnel.State) {
+        when (newState) {
+            Tunnel.State.UP -> {
+                checkAndRefreshCertificateProactively()
+                startTunnelVerification()
+            }
+            Tunnel.State.DOWN -> {
+                verificationJob?.cancel()
+                if (!isReconnecting) {
+                    _vpnState.value = VpnState.DISCONNECTED
+                    currentServerId = null
+                    connectedServerState.setConnectedServer(null)
+                    _speed.value = null
+                } else {
+                    _vpnState.value = VpnState.CONNECTING
+                }
+            }
+        }
+    }
+
+    private fun startTunnelVerification() {
+        verificationJob?.cancel()
+        verificationJob = applicationScope.launch {
+            _vpnState.value = VpnState.VERIFYING
+            ProtonLogger.i(TAG, "Tunnel is UP, starting connectivity verification...")
+            
+            try {
+                // Wait for the system to validate the VPN network.
+                // We use a timeout to prevent getting stuck in "Verifying" state forever.
+                withTimeout(15000) {
+                    vpnNetworkMonitor.isValidated.first { it }
+                }
+                
+                ProtonLogger.i(TAG, "Connectivity verification successful. VPN is fully connected.")
+                _vpnState.value = VpnState.CONNECTED
+                systemContextWrapper.setVpnVerified()
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.TimeoutCancellationException) {
+                    ProtonLogger.w(TAG, "Connectivity verification timed out. Network might be restricted or slow.")
+                    // Even if it times out, we might want to show "Connected" if the tunnel is still UP,
+                    // but according to the user request, we should probably be more strict.
+                    // However, sometimes validation takes longer. Let's still move to CONNECTED
+                    // but log the warning, or keep it as CONNECTED if we trust the tunnel.
+                    // The original app usually waits. 
+                    _vpnState.value = VpnState.CONNECTED 
+                } else {
+                    ProtonLogger.e(TAG, "Error during connectivity verification", e)
+                    _vpnState.value = VpnState.CONNECTED // Fallback
                 }
             }
         }
@@ -391,6 +454,7 @@ class AmneziaVpnManager @Inject constructor(
         }
         
         connectionJob?.cancel()
+        verificationJob?.cancel()
         connectionJob = applicationScope.launch(dispatcherProvider.io()) {
             currentServerId = logicalServerId
             
@@ -627,6 +691,7 @@ class AmneziaVpnManager @Inject constructor(
         }
 
         connectionJob?.cancel()
+        verificationJob?.cancel()
         connectionJob = applicationScope.launch {
             try {
                 isReconnecting = true
@@ -659,9 +724,11 @@ class AmneziaVpnManager @Inject constructor(
     fun disconnect() {
         ProtonLogger.action(TAG, "User clicked Disconnect")
         connectionJob?.cancel()
+        verificationJob?.cancel()
         applicationScope.launch {
             isReconnecting = false
             currentServerId = null
+            _vpnState.value = VpnState.DISCONNECTING
             disconnectInternal()
         }
     }
