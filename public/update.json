@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159779,
-      "versionName": "12.0.0-alpha1st2-68-g87ac12a-nightly",
+      "versionCode": 605159780,
+      "versionName": "12.0.0-alpha1st2-69-gf9aeeeb-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "chore: update dependencies in `libs.versions.toml`\n\n* chore: update Sentry to 6.4.0 and Sentry Android to 8.39.1\n* chore: update Kotlin serialization JSON to 1.11.0\n* chore: update Compose Material 3 to 1.5.0-alpha17",
+      "changelog": "feat: implement auto-connect and update VPN key persistence logic\n\n* feat: implement auto-connect functionality in `DashboardViewModel` to automatically initiate a connection on app startup if enabled\n* feat: update `AmneziaVpnManager` to explicitly persist new VPN private keys, certificates, and expiration timestamps via `sessionDao` after registration\n* refactor: integrate `WarpManager` dependency into `VpnRepository` and `DashboardViewModel`\n* refactor: change default values for `autoConnectEnabled` to `false` and `vpnPort` to `0` in `SettingsManager`\n* test: update `AuthRepositoryTest` to reflect changes in error handling, specifically mapping error code 12087 to a generic exception for expired captcha sessions\n* test: update `DashboardViewModelTest` and `VpnRepositoryTest` to include `WarpManager` mocks and satisfy new constructor requirements",
       "force": false
     },
     "release": {
-      "versionCode": 605159779,
-      "versionName": "12.0.0-alpha1st2-68-g87ac12a-nightly",
+      "versionCode": 605159780,
+      "versionName": "12.0.0-alpha1st2-69-gf9aeeeb-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "chore: update dependencies in `libs.versions.toml`\n\n* chore: update Sentry to 6.4.0 and Sentry Android to 8.39.1\n* chore: update Kotlin serialization JSON to 1.11.0\n* chore: update Compose Material 3 to 1.5.0-alpha17",
+      "changelog": "feat: implement auto-connect and update VPN key persistence logic\n\n* feat: implement auto-connect functionality in `DashboardViewModel` to automatically initiate a connection on app startup if enabled\n* feat: update `AmneziaVpnManager` to explicitly persist new VPN private keys, certificates, and expiration timestamps via `sessionDao` after registration\n* refactor: integrate `WarpManager` dependency into `VpnRepository` and `DashboardViewModel`\n* refactor: change default values for `autoConnectEnabled` to `false` and `vpnPort` to `0` in `SettingsManager`\n* test: update `AuthRepositoryTest` to reflect changes in error handling, specifically mapping error code 12087 to a generic exception for expired captcha sessions\n* test: update `DashboardViewModelTest` and `VpnRepositoryTest` to include `WarpManager` mocks and satisfy new constructor requirements",
       "force": false
     }
   }
