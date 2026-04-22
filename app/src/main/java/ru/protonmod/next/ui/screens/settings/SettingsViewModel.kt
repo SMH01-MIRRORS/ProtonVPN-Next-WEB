@@ -49,7 +49,7 @@ import javax.inject.Inject
 
 data class SettingsUiState(
     val killSwitchEnabled: Boolean = false,
-    val autoConnectEnabled: Boolean = true,
+    val autoConnectEnabled: Boolean = false,
     val notificationsEnabled: Boolean = true,
 
     // Connection configs
@@ -58,7 +58,7 @@ data class SettingsUiState(
     val excludedApps: Set<String> = emptySet(),
     val excludedIps: Set<String> = emptySet(),
     val excludedDomains: Set<String> = emptySet(),
-    val vpnPort: Int = 1194,
+    val vpnPort: Int = 0,
 
     // API Bypass Feature
     val apiBypassEnabled: Boolean = false,

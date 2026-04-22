@@ -21,6 +21,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
+import okhttp3.Headers
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -196,7 +197,18 @@ class AuthRepositoryTest {
                 }
             }
         """.trimIndent()
-        val response = Response.error<LoginResponse>(422, errorJson.toResponseBody("application/json".toResponseBody().contentType()))
+        
+        val headers = Headers.Builder().add("X-PM-Session-ID", "pending_uid").build()
+        val response = Response.error<LoginResponse>(
+            errorJson.toResponseBody("application/json".toResponseBody().contentType()),
+            okhttp3.Response.Builder()
+                .code(422)
+                .message("Unprocessable Entity")
+                .protocol(okhttp3.Protocol.HTTP_1_1)
+                .request(okhttp3.Request.Builder().url("https://api.proton.me/auth/v4").build())
+                .headers(headers)
+                .build()
+        )
         val exception = HttpException(response)
 
         whenever(authApi.createAnonymousSession(any(), anyOrNull(), anyOrNull())).thenThrow(exception)
@@ -212,7 +224,7 @@ class AuthRepositoryTest {
     }
 
     @Test
-    fun `login returns CaptchaRequiredException on 12087 error`() = runTest(testDispatcher) {
+    fun `login returns generic Exception on 12087 error`() = runTest(testDispatcher) {
         // Arrange
         val errorJson = """
             {
@@ -235,8 +247,8 @@ class AuthRepositoryTest {
         // Assert
         assertTrue(result.isFailure)
         val caught = result.exceptionOrNull()
-        assertTrue("Expected CaptchaRequiredException but was $caught", caught is CaptchaRequiredException)
-        assertEquals("https://fresh.captcha.url", (caught as CaptchaRequiredException).webUrl)
+        assertTrue("Expected generic Exception but was $caught", caught !is CaptchaRequiredException)
+        assertEquals("Captcha session expired. Please click Login to try again.", caught?.message)
     }
 
     @Test

@@ -247,22 +247,30 @@ class AmneziaVpnManager @Inject constructor(
             val keyPair = cryptoWrapper.generateVpnKeyPair()
             ProtonLogger.v(TAG, "Generated new VPN keypair for registration")
 
-            val result = vpnRepositoryProvider.get().getOrRegisterWireGuardKey(
+            val result = vpnRepositoryProvider.get().registerWireGuardKey(
                 accessToken = currentSession.accessToken,
                 sessionId = currentSession.sessionId,
                 publicKeyPem = keyPair.publicKeyPem
             )
 
             if (result.isSuccess) {
-                val newCert = result.getOrNull()
+                val response = result.getOrNull()
+                val newCert = response?.certificate
                 if (newCert != null) {
                     ProtonLogger.i(TAG, "Successfully obtained WireGuard certificate")
 
                     // Metrics
                     Sentry.metrics().count("cert_refresh_success", 1.0)
 
-                    // updateVpnKeys is now updated to handle expiration times inside Repository
-                    // but we still need to update local state
+                    // Persist the NEW private key along with the NEW certificate and expiration times
+                    sessionDao.updateVpnKeys(
+                        privateKey = keyPair.privateKeyX25519,
+                        publicKeyPem = keyPair.publicKeyPem,
+                        certificate = newCert,
+                        expiresAt = response.expirationTime ?: 0,
+                        refreshAt = response.refreshTime ?: 0
+                    )
+
                     updateCertificateState(newCert)
                     Result.success(newCert)
                 } else {

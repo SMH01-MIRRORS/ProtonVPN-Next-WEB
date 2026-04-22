@@ -194,9 +194,23 @@ class DashboardViewModel @Inject constructor(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.Loading)
 
+    private var hasAttemptedAutoConnect = false
+
     init {
         loadServers()
         fetchOriginalLocation()
+
+        viewModelScope.launch {
+            val autoConnect = settingsManager.autoConnectEnabled.first()
+            if (autoConnect && !hasAttemptedAutoConnect) {
+                uiState.first { it is DashboardUiState.Success && it.servers.isNotEmpty() }
+                val currentState = uiState.value as? DashboardUiState.Success
+                if (currentState != null && !currentState.isConnected && !currentState.isConnecting) {
+                    hasAttemptedAutoConnect = true
+                    quickConnect()
+                }
+            }
+        }
 
         // Global listener: Any time the VPN starts connecting (even from other screens), clear the old IP.
         viewModelScope.launch {
