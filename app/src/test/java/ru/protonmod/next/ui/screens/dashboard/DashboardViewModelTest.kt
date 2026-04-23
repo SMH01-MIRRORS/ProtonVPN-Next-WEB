@@ -118,7 +118,7 @@ class DashboardViewModelTest {
             whenever(vpnRepository.getCachedServers()).thenReturn(listOf(testServer))
         }
         whenever(vpnRepository.isUpdating).thenReturn(MutableStateFlow(false))
-        whenever(amneziaVpnManager.tunnelState).thenReturn(MutableStateFlow(Tunnel.State.DOWN))
+        whenever(amneziaVpnManager.vpnState).thenReturn(MutableStateFlow(AmneziaVpnManager.VpnState.DISCONNECTED))
         whenever(amneziaVpnManager.isConnecting).thenReturn(MutableStateFlow(false))
         whenever(amneziaVpnManager.certState).thenReturn(MutableStateFlow(AmneziaVpnManager.CertificateState.Valid))
         whenever(amneziaVpnManager.speed).thenReturn(MutableStateFlow(null))
@@ -173,10 +173,10 @@ class DashboardViewModelTest {
 
     @Test
     fun `dashboard updates when VPN state changes`() = runTest {
-        val tunnelStateFlow = MutableStateFlow(Tunnel.State.DOWN)
-        whenever(amneziaVpnManager.tunnelState).thenReturn(tunnelStateFlow)
+        val vpnStateFlow = MutableStateFlow(AmneziaVpnManager.VpnState.DISCONNECTED)
+        whenever(amneziaVpnManager.vpnState).thenReturn(vpnStateFlow)
         
-        // Re-init viewModel to use the new tunnelState mock
+        // Re-init viewModel to use the new vpnState mock
         viewModel = DashboardViewModel(
             context, vpnRepository, sessionDao, settingsManager, amneziaVpnManager,
             warpManager, connectedServerState, profileDao, recentConnectionDao
@@ -185,7 +185,7 @@ class DashboardViewModelTest {
         val collectJob = launch(UnconfinedTestDispatcher()) { viewModel.uiState.collect() }
         advanceUntilIdle()
         
-        tunnelStateFlow.value = Tunnel.State.UP
+        vpnStateFlow.value = AmneziaVpnManager.VpnState.CONNECTED
         advanceUntilIdle()
         
         val state = viewModel.uiState.value
