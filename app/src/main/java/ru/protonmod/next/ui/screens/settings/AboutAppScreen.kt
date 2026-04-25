@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
+import androidx.compose.material.icons.rounded.Policy
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -54,6 +55,7 @@ fun AboutAppScreen(
     appVersion: String,
     onBack: () -> Unit,
     onNavigateToLicenses: () -> Unit,
+    onNavigateToPrivacyPolicy: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = ProtonNextTheme.colors
@@ -204,7 +206,7 @@ fun AboutAppScreen(
                 item(contentType = "Licenses") {
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         Text(
-                            text = stringResource(id = R.string.settings_about),
+                            text = stringResource(id = R.string.settings_legal),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = colors.textNorm,
                             modifier = Modifier
@@ -227,6 +229,17 @@ fun AboutAppScreen(
                                     title = stringResource(R.string.settings_licenses),
                                     subtitle = stringResource(R.string.settings_licenses_desc),
                                     onClick = onNavigateToLicenses
+                                )
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    thickness = 0.5.dp,
+                                    color = colors.separatorNorm
+                                )
+                                SettingRowWithIcon(
+                                    icon = Icons.Rounded.Policy,
+                                    title = stringResource(R.string.settings_privacy_policy),
+                                    subtitle = stringResource(R.string.settings_disclaimer),
+                                    onClick = onNavigateToPrivacyPolicy
                                 )
                             }
                         }

@@ -107,6 +107,9 @@ class SettingsManager @Inject constructor(
         private val QUICK_CONNECT_STRATEGY = stringPreferencesKey("quick_connect_strategy") // "fastest", "recent", "profile"
         private val QUICK_CONNECT_TARGET_ID = stringPreferencesKey("quick_connect_target_id")
 
+        private val POLICY_ACCEPTED_VERSION = intPreferencesKey("policy_accepted_version")
+        const val CURRENT_POLICY_VERSION = 20260425
+
         private val AWG_JC = intPreferencesKey("awg_jc")
         private val AWG_JMIN = intPreferencesKey("awg_jmin")
         private val AWG_JMAX = intPreferencesKey("awg_jmax")
@@ -221,6 +224,8 @@ class SettingsManager @Inject constructor(
 
     val quickConnectStrategy: Flow<String> = context.dataStore.data.map { it[QUICK_CONNECT_STRATEGY] ?: "fastest" }
     val quickConnectTargetId: Flow<String?> = context.dataStore.data.map { it[QUICK_CONNECT_TARGET_ID] }
+
+    val policyAcceptedVersion: Flow<Int> = context.dataStore.data.map { it[POLICY_ACCEPTED_VERSION] ?: 0 }
 
     val customProfiles: Flow<List<ObfuscationProfile>> = context.dataStore.data.map { preferences ->
         val jsonString = preferences[CUSTOM_PROFILES] ?: "[]"
@@ -441,6 +446,12 @@ class SettingsManager @Inject constructor(
     suspend fun setSentryLogsEnabled(enabled: Boolean) {
         prefs.edit { putBoolean("sentry_logs_enabled", enabled) }
         context.dataStore.edit { it[SENTRY_LOGS_ENABLED] = enabled }
+    }
+
+    suspend fun setPolicyAcceptedVersion(version: Int) {
+        ProtonLogger.d("SettingsManager", "Saving policy accepted version: $version")
+        context.dataStore.edit { it[POLICY_ACCEPTED_VERSION] = version }
+        ProtonLogger.d("SettingsManager", "Policy accepted version saved.")
     }
 
     suspend fun setQuickConnectStrategy(strategy: String, targetId: String? = null) {

@@ -24,6 +24,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.BuildConfig
+import ru.protonmod.next.MainViewModel
 import ru.protonmod.next.ui.screens.countries.CountriesScreen
 import ru.protonmod.next.ui.screens.dashboard.DashboardScreen
 import ru.protonmod.next.ui.screens.profiles.*
@@ -69,6 +70,8 @@ sealed class Screen(val route: String) {
 
     data object AboutApp : Screen("about_app")
     data object Licenses : Screen("licenses")
+    data object PrivacyPolicy : Screen("privacy_policy")
+    data object PolicyAcceptance : Screen("policy_acceptance")
 }
 
 // Enum representing the bottom navigation targets, matching Proton Next style
@@ -184,12 +187,19 @@ fun NavGraphBuilder.appNavGraph(
         AboutAppScreen(
             onBack = { navController.popBackStack() },
             appVersion = BuildConfig.VERSION_NAME,
-            onNavigateToLicenses = { navController.navigate(Screen.Licenses.route) }
+            onNavigateToLicenses = { navController.navigate(Screen.Licenses.route) },
+            onNavigateToPrivacyPolicy = { navController.navigate(Screen.PrivacyPolicy.route) }
         )
     }
 
     composable(Screen.Licenses.route) {
         LicensesScreen(
+            onBack = { navController.popBackStack() }
+        )
+    }
+
+    composable(Screen.PrivacyPolicy.route) {
+        PrivacyPolicyScreen(
             onBack = { navController.popBackStack() }
         )
     }

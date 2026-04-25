@@ -104,6 +104,10 @@
     <string name="settings_version">Version %1$s</string>
     <string name="settings_version_short">v%1$s</string>
     <string name="settings_licenses">Open Source Licenses</string>
+    <string name="settings_privacy_policy">Privacy Policy</string>
+    <string name="settings_disclaimer">Disclaimer</string>
+    <string name="settings_legal">Legal Information</string>
+    <string name="welcome_agreement_text">By continuing, you agree to our %1$s and %2$s.</string>
     <string name="settings_licenses_desc">Third-party software used in the app</string>
     <string name="settings_on">On</string>
     <string name="settings_off">Off</string>
@@ -133,6 +137,7 @@
     <string name="warp_permission_title">VPN Permission Required</string>
     <string name="warp_permission_desc">WARP needs permission to create a local tunnel for API bypass. No data is sent outside Cloudflare.</string>
     <string name="btn_allow">Allow</string>
+    <string name="btn_accept">Accept</string>
     <string name="api_bypass_strategy_custom">Custom Proxy (SOCKS5/HTTPS)</string>
     <string name="api_bypass_strategy_custom_desc">Routes API requests through your own SOCKS5 or HTTPS proxy server.</string>
     <string name="api_proxy_host">Proxy Host</string>

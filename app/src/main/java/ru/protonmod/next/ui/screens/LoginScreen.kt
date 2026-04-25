@@ -352,6 +352,18 @@ fun LoginScreen(
                                     }
                                 }
 
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Button(
+                                    onClick = { /* TODO: Registration flow */ },
+                                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = colors.interactionNorm, contentColor = colors.textInverted),
+                                    enabled = uiState !is LoginUiState.Loading
+                                ) {
+                                    Text(text = stringResource(R.string.btn_create_account), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                                }
+
                                 if (uiState is LoginUiState.Error) {
                                     Text(
                                         text = (uiState as LoginUiState.Error).message,

@@ -103,6 +103,10 @@
     <string name="settings_about">О приложении</string>
     <string name="settings_version">Версия %1$s</string>
     <string name="settings_version_short">v%1$s</string>
+    <string name="settings_privacy_policy">Политика конфиденциальности</string>
+    <string name="settings_disclaimer">Отказ от ответственности</string>
+    <string name="settings_legal">Юридическая информация</string>
+    <string name="welcome_agreement_text">Продолжая, вы соглашаетесь с нашей %1$s и %2$s.</string>
     <string name="settings_licenses">Лицензии открытого ПО</string>
     <string name="settings_licenses_desc">Стороннее ПО, используемое в приложении</string>
     <string name="settings_on">Вкл</string>
@@ -133,6 +137,7 @@
     <string name="warp_permission_title">Требуется разрешение на VPN</string>
     <string name="warp_permission_desc">Для WARP требуется разрешение на создание локального туннеля для обхода блокировок API. Никакие данные не передаются за пределы Cloudflare.</string>
     <string name="btn_allow">Разрешить</string>
+    <string name="btn_accept">Принять</string>
     <string name="api_bypass_strategy_custom">Свой прокси (SOCKS5/HTTPS)</string>
     <string name="api_bypass_strategy_custom_desc">Направляет запросы к API через ваш собственный SOCKS5 или HTTPS прокси-сервер.</string>
     <string name="api_proxy_host">Хост прокси</string>

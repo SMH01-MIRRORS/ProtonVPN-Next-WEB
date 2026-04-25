@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CloudSync
@@ -46,6 +47,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -66,6 +69,7 @@ fun WelcomeScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToApiBypassSettings: () -> Unit,
+    onNavigateToPrivacyPolicy: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
@@ -138,23 +142,25 @@ fun WelcomeScreen(
             } else {
                 if (isTablet) {
                     WelcomeTabletContent(
-                    isVisible = isVisible,
-                    uiState = uiState,
-                    onLoginAnonymous = checkVpnAndLoginAnonymous,
-                    onNavigateToRegister = onNavigateToRegister,
-                    onNavigateToLogin = onNavigateToLogin,
-                    onNavigateToApiBypassSettings = onNavigateToApiBypassSettings
-                )
-            } else {
-                WelcomePhoneContent(
-                    isVisible = isVisible,
-                    uiState = uiState,
-                    onLoginAnonymous = checkVpnAndLoginAnonymous,
-                    onNavigateToRegister = onNavigateToRegister,
-                    onNavigateToLogin = onNavigateToLogin,
-                    onNavigateToApiBypassSettings = onNavigateToApiBypassSettings
-                )
-            }
+                        isVisible = isVisible,
+                        uiState = uiState,
+                        onLoginAnonymous = checkVpnAndLoginAnonymous,
+                        onNavigateToRegister = onNavigateToRegister,
+                        onNavigateToLogin = onNavigateToLogin,
+                        onNavigateToApiBypassSettings = onNavigateToApiBypassSettings,
+                        onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy
+                    )
+                } else {
+                    WelcomePhoneContent(
+                        isVisible = isVisible,
+                        uiState = uiState,
+                        onLoginAnonymous = checkVpnAndLoginAnonymous,
+                        onNavigateToRegister = onNavigateToRegister,
+                        onNavigateToLogin = onNavigateToLogin,
+                        onNavigateToApiBypassSettings = onNavigateToApiBypassSettings,
+                        onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy
+                    )
+                }
             }
         }
 
@@ -166,6 +172,7 @@ fun WelcomeScreen(
                     color = colors.backgroundSecondary,
                     tonalElevation = 8.dp
                 ) {
+                    val colors = ProtonNextTheme.colors
                     Column(
                         modifier = Modifier.padding(32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -195,7 +202,8 @@ private fun WelcomePhoneContent(
     onLoginAnonymous: () -> Unit,
     onNavigateToRegister: () -> Unit,
     onNavigateToLogin: () -> Unit,
-    onNavigateToApiBypassSettings: () -> Unit
+    onNavigateToApiBypassSettings: () -> Unit,
+    onNavigateToPrivacyPolicy: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
     Column(
@@ -228,7 +236,7 @@ private fun WelcomePhoneContent(
                 painter = painterResource(id = R.drawable.vpn_welcome_globe),
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize(0.9f)
+                modifier = Modifier.fillMaxSize(0.6f)
             )
 
             // Top Right Action Buttons
@@ -248,50 +256,59 @@ private fun WelcomePhoneContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 32.dp),
+                .weight(1.2f),
+            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            AnimatedVisibility(
-                visible = isVisible,
-                enter = fadeIn(tween(800, delayMillis = 200)) + slideInVertically(tween(800, delayMillis = 200)) { it / 4 }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = stringResource(R.string.welcome_title),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = colors.textNorm,
-                    textAlign = TextAlign.Center
-                )
-            }
+                AnimatedVisibility(
+                    visible = isVisible,
+                    enter = fadeIn(tween(800, delayMillis = 200)) + slideInVertically(tween(800, delayMillis = 200)) { it / 4 }
+                ) {
+                    Text(
+                        text = stringResource(R.string.welcome_title),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.textNorm,
+                        textAlign = TextAlign.Center
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            AnimatedVisibility(
-                visible = isVisible,
-                enter = fadeIn(tween(800, delayMillis = 400)) + slideInVertically(tween(800, delayMillis = 400)) { it / 4 }
-            ) {
-                Text(
-                    text = stringResource(R.string.welcome_subtitle),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = colors.textWeak,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                )
-            }
+                AnimatedVisibility(
+                    visible = isVisible,
+                    enter = fadeIn(tween(800, delayMillis = 400)) + slideInVertically(tween(800, delayMillis = 400)) { it / 4 }
+                ) {
+                    Text(
+                        text = stringResource(R.string.welcome_subtitle),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = colors.textWeak,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(48.dp))
+                Spacer(modifier = Modifier.height(48.dp))
 
-            AnimatedVisibility(
-                visible = isVisible,
-                enter = fadeIn(tween(800, delayMillis = 600)) + slideInVertically(tween(800, delayMillis = 600)) { it / 4 }
-            ) {
-                WelcomeButtons(
-                    uiState = uiState,
-                    onLoginAnonymous = onLoginAnonymous,
-                    onNavigateToRegister = onNavigateToRegister,
-                    onNavigateToLogin = onNavigateToLogin
-                )
+                AnimatedVisibility(
+                    visible = isVisible,
+                    enter = fadeIn(tween(800, delayMillis = 600)) + slideInVertically(tween(800, delayMillis = 600)) { it / 4 }
+                ) {
+                    WelcomeButtons(
+                        uiState = uiState,
+                        onLoginAnonymous = onLoginAnonymous,
+                        onNavigateToRegister = onNavigateToRegister,
+                        onNavigateToLogin = onNavigateToLogin,
+                        onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy
+                    )
+                }
             }
         }
     }
@@ -304,7 +321,8 @@ private fun WelcomeTabletContent(
     onLoginAnonymous: () -> Unit,
     onNavigateToRegister: () -> Unit,
     onNavigateToLogin: () -> Unit,
-    onNavigateToApiBypassSettings: () -> Unit
+    onNavigateToApiBypassSettings: () -> Unit,
+    onNavigateToPrivacyPolicy: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
     Row(
@@ -389,7 +407,8 @@ private fun WelcomeTabletContent(
                         uiState = uiState,
                         onLoginAnonymous = onLoginAnonymous,
                         onNavigateToRegister = onNavigateToRegister,
-                        onNavigateToLogin = onNavigateToLogin
+                        onNavigateToLogin = onNavigateToLogin,
+                        onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy
                     )
                 }
             }
@@ -404,13 +423,15 @@ private fun WelcomeButtons(
     uiState: LoginUiState,
     onLoginAnonymous: () -> Unit,
     onNavigateToRegister: () -> Unit,
-    onNavigateToLogin: () -> Unit
+    onNavigateToLogin: () -> Unit,
+    onNavigateToPrivacyPolicy: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
     val isLoading = uiState is LoginUiState.Loading
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Button(
             onClick = onLoginAnonymous,
@@ -426,16 +447,6 @@ private fun WelcomeButtons(
             }
         }
 
-        Button(
-            onClick = onNavigateToRegister,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            shape = RoundedCornerShape(16.dp),
-            enabled = !isLoading,
-            colors = ButtonDefaults.buttonColors(containerColor = colors.interactionNorm, contentColor = colors.textInverted)
-        ) {
-            Text(text = stringResource(R.string.btn_create_account), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-        }
-
         OutlinedButton(
             onClick = onNavigateToLogin,
             modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -447,6 +458,8 @@ private fun WelcomeButtons(
             Text(text = stringResource(R.string.btn_login), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
         }
 
+        AgreementText(onClick = onNavigateToPrivacyPolicy)
+
         if (uiState is LoginUiState.Error) {
             Text(
                 text = uiState.message,
@@ -457,6 +470,63 @@ private fun WelcomeButtons(
             )
         }
     }
+}
+
+@Composable
+private fun AgreementText(onClick: () -> Unit) {
+    val colors = ProtonNextTheme.colors
+    val policy = stringResource(R.string.settings_privacy_policy)
+    val disclaimer = stringResource(R.string.settings_disclaimer)
+    
+    val annotatedString = buildAnnotatedString {
+        val fullText = stringResource(R.string.welcome_agreement_text, policy, disclaimer)
+        val policyIndex = fullText.indexOf(policy)
+        val disclaimerIndex = fullText.indexOf(disclaimer)
+
+        append(fullText)
+
+        if (policyIndex != -1) {
+            addStyle(
+                style = SpanStyle(color = colors.brandNorm, fontWeight = FontWeight.Bold),
+                start = policyIndex,
+                end = policyIndex + policy.length
+            )
+            addStringAnnotation(
+                tag = "policy",
+                annotation = "policy",
+                start = policyIndex,
+                end = policyIndex + policy.length
+            )
+        }
+
+        if (disclaimerIndex != -1) {
+            addStyle(
+                style = SpanStyle(color = colors.brandNorm, fontWeight = FontWeight.Bold),
+                start = disclaimerIndex,
+                end = disclaimerIndex + disclaimer.length
+            )
+            addStringAnnotation(
+                tag = "disclaimer",
+                annotation = "disclaimer",
+                start = disclaimerIndex,
+                end = disclaimerIndex + disclaimer.length
+            )
+        }
+    }
+
+    ClickableText(
+        text = annotatedString,
+        style = MaterialTheme.typography.bodySmall.copy(
+            color = colors.textWeak,
+            textAlign = TextAlign.Center
+        ),
+        onClick = { offset ->
+            annotatedString.getStringAnnotations(tag = "policy", start = offset, end = offset)
+                .firstOrNull()?.let { onClick() }
+            annotatedString.getStringAnnotations(tag = "disclaimer", start = offset, end = offset)
+                .firstOrNull()?.let { onClick() }
+        }
+    )
 }
 
 @Composable

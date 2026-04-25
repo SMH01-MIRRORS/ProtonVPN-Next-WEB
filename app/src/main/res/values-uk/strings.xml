@@ -101,6 +101,10 @@
     <string name="settings_about">Про додаток</string>
     <string name="settings_version">Версія %1$s</string>
     <string name="settings_version_short">v%1$s</string>
+    <string name="settings_privacy_policy">Політика конфіденційності</string>
+    <string name="settings_disclaimer">Відмова від відповідальності</string>
+    <string name="settings_legal">Юридична інформація</string>
+    <string name="welcome_agreement_text">Продовжуючи, ви погоджуєтеся з нашою %1$s та %2$s.</string>
     <string name="settings_licenses">Ліцензії відкритого ПЗ</string>
     <string name="settings_licenses_desc">Стороннє ПЗ, що використовується в додатку</string>
     <string name="settings_on">Увімк</string>
@@ -131,6 +135,7 @@
     <string name="warp_permission_title">Потрібен дозвіл на VPN</string>
     <string name="warp_permission_desc">Для WARP потрібен дозвіл на створення локального тунелю для обходу блокувань API. Жодні дані не передаються за межі Cloudflare.</string>
     <string name="btn_allow">Дозволити</string>
+    <string name="btn_accept">Прийняти</string>
     <string name="api_bypass_strategy_custom">Свій проксі (SOCKS5/HTTPS)</string>
     <string name="api_bypass_strategy_custom_desc">Спрямовує запити до API через ваш власний SOCKS5 або HTTPS проксі-сервер.</string>
     <string name="api_proxy_host">Хост проксі</string>

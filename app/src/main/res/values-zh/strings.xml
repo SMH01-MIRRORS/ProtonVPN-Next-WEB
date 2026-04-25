@@ -101,6 +101,10 @@
     <string name="settings_about">关于</string>
     <string name="settings_version">版本 %1$s</string>
     <string name="settings_version_short">v%1$s</string>
+    <string name="settings_privacy_policy">隐私政策</string>
+    <string name="settings_disclaimer">免责声明</string>
+    <string name="settings_legal">法律信息</string>
+    <string name="welcome_agreement_text">继续即表示您同意我们的 %1$s 和 %2$s。</string>
     <string name="settings_licenses">开源许可</string>
     <string name="settings_licenses_desc">应用中使用的第三方软件</string>
     <string name="settings_on">开启</string>
@@ -131,6 +135,7 @@
     <string name="warp_permission_title">需要 VPN 权限</string>
     <string name="warp_permission_desc">WARP 需要权限才能创建用于绕过 API 阻止的本地隧道。没有任何数据会发送到 Cloudflare 之外。</string>
     <string name="btn_allow">允许</string>
+    <string name="btn_accept">接受</string>
     <string name="api_bypass_strategy_custom">自定义代理 (SOCKS5/HTTPS)</string>
     <string name="api_bypass_strategy_custom_desc">通过您自己的 SOCKS5 或 HTTPS 代理服务器路由 API 请求。</string>
     <string name="api_proxy_host">代理主机</string>

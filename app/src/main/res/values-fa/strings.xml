@@ -101,6 +101,10 @@
     <string name="settings_about">درباره</string>
     <string name="settings_version">نسخه %1$s</string>
     <string name="settings_version_short">v%1$s</string>
+    <string name="settings_privacy_policy">سیاست حفظ حریم خصوصی</string>
+    <string name="settings_disclaimer">سلب مسئولیت</string>
+    <string name="settings_legal">اطлаعات حقوقی</string>
+    <string name="welcome_agreement_text">با ادامه دادن، شما با %1$s و %2$s ما موافقت می‌کنید.</string>
     <string name="settings_licenses">مجوزهای متن باز</string>
     <string name="settings_licenses_desc">نرم‌افزارهای شخص ثالث استفاده شده در برنامه</string>
     <string name="settings_on">روشن</string>
@@ -131,6 +135,7 @@
     <string name="warp_permission_title">مجوز VPN لازم است</string>
     <string name="warp_permission_desc">وارپ برای ایجاد یک تونل محلی جهت دور زدن مسدودسازی API به مجوز نیاز دارد. هیچ داده‌ای به خارج از کلادفلر ارسال نمی‌شود.</string>
     <string name="btn_allow">اجازه دادن</string>
+    <string name="btn_accept">پذیرفتن</string>
     <string name="api_bypass_strategy_custom">پراکسی سفارشی (SOCKS5/HTTPS)</string>
     <string name="api_bypass_strategy_custom_desc">درخواست‌های API را از طریق پراکسی SOCKS5 یا HTTPS خودتان مسیریابی می‌کند.</string>
     <string name="api_proxy_host">هاست پراکسی</string>

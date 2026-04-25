@@ -101,6 +101,10 @@
     <string name="settings_about">Аб прыкладанні</string>
     <string name="settings_version">Версія %1$s</string>
     <string name="settings_version_short">v%1$s</string>
+    <string name="settings_privacy_policy">Палітыка прыватнасці</string>
+    <string name="settings_disclaimer">Адмова ад адказнасці</string>
+    <string name="settings_legal">Юрыдычная інфармацыя</string>
+    <string name="welcome_agreement_text">Працягваючы, вы згаджаецеся з нашай %1$s і %2$s.</string>
     <string name="settings_licenses">Ліцэнзіі адкрытага ПЗ</string>
     <string name="settings_licenses_desc">Баковыя ПЗ, якія выкарыстоўваюцца ў прыкладанні</string>
     <string name="settings_on">Укл</string>
@@ -131,6 +135,7 @@
     <string name="warp_permission_title">Патрабуецца дазвол на VPN</string>
     <string name="warp_permission_desc">Для WARP патрабуецца дазвол на стварэнне лакальнага тунэля для абыходу блакіровак API. Ніякія даныя не перадаюцца па-за межы Cloudflare.</string>
     <string name="btn_allow">Дазволіць</string>
+    <string name="btn_accept">Приняць</string>
     <string name="api_bypass_strategy_custom">Свой проксі (SOCKS5/HTTPS)</string>
     <string name="api_bypass_strategy_custom_desc">Накіроўвае запыты да API праз ваш уласны SOCKS5 або HTTPS проксі-сервер.</string>
     <string name="api_proxy_host">Хост проксі</string>
