@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159781,
-      "versionName": "12.0.0-alpha1st2-70-g34f22ee-nightly",
+      "versionCode": 605159783,
+      "versionName": "12.0.0-alpha1st2-72-g8925af5-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "feat: implement connection verification and granular VPN states\n\n* feat: introduce `VpnNetworkMonitor` to detect when the VPN network reaches the `NET_CAPABILITY_VALIDATED` state\n* refactor: update `AmneziaVpnManager` to use a new `VpnState` enum (`DISCONNECTED`, `CONNECTING`, `VERIFYING`, `CONNECTED`, `DISCONNECTING`)\n* feat: implement a verification step after the tunnel is established to ensure traffic is actually flowing before marking the connection as \"Connected\"\n* feat: update `DashboardScreen` and `DashboardViewModel` to display specific UI feedback for verifying and disconnecting states\n* feat: update `ProtonVpnService` to show a \"Verifying connection...\" notification while waiting for system network validation\n* docs: add localized strings for \"Verifying\" and \"Disconnecting\" statuses in multiple languages",
+      "changelog": "chore: update spoofed ProtonVPN app version to 5.17.72.0\n\n* chore: bump `SPOOFED_APP_VERSION` from 5.17.14.0 to 5.17.72.0 in `DeviceInfoProvider.kt` to match the latest official client version",
       "force": false
     },
     "release": {
-      "versionCode": 605159781,
-      "versionName": "12.0.0-alpha1st2-70-g34f22ee-nightly",
+      "versionCode": 605159783,
+      "versionName": "12.0.0-alpha1st2-72-g8925af5-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "feat: implement connection verification and granular VPN states\n\n* feat: introduce `VpnNetworkMonitor` to detect when the VPN network reaches the `NET_CAPABILITY_VALIDATED` state\n* refactor: update `AmneziaVpnManager` to use a new `VpnState` enum (`DISCONNECTED`, `CONNECTING`, `VERIFYING`, `CONNECTED`, `DISCONNECTING`)\n* feat: implement a verification step after the tunnel is established to ensure traffic is actually flowing before marking the connection as \"Connected\"\n* feat: update `DashboardScreen` and `DashboardViewModel` to display specific UI feedback for verifying and disconnecting states\n* feat: update `ProtonVpnService` to show a \"Verifying connection...\" notification while waiting for system network validation\n* docs: add localized strings for \"Verifying\" and \"Disconnecting\" statuses in multiple languages",
+      "changelog": "chore: update spoofed ProtonVPN app version to 5.17.72.0\n\n* chore: bump `SPOOFED_APP_VERSION` from 5.17.14.0 to 5.17.72.0 in `DeviceInfoProvider.kt` to match the latest official client version",
       "force": false
     }
   }
