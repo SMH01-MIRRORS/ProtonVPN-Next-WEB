@@ -63,6 +63,7 @@ fun AboutAppScreen(
     val githubUrl = stringResource(R.string.url_github)
     val codebergUrl = stringResource(R.string.url_codeberg)
     val telegramUrl = stringResource(R.string.url_telegram)
+    val crowdinUrl = stringResource(R.string.url_crowdin)
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -185,12 +186,33 @@ fun AboutAppScreen(
                                     .weight(1f)
                                     .fillMaxHeight()
                             )
+                        }
 
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(IntrinsicSize.Max),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
                             AboutLinkCard(
                                 title = stringResource(id = R.string.about_telegram),
                                 iconResId = R.drawable.ic_telegram,
                                 onClick = {
                                     val intent = Intent(Intent.ACTION_VIEW, telegramUrl.toUri())
+                                    context.startActivity(intent)
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                            )
+
+                            AboutLinkCard(
+                                title = stringResource(id = R.string.about_crowdin),
+                                iconResId = R.drawable.ic_crowdin,
+                                onClick = {
+                                    val intent = Intent(Intent.ACTION_VIEW, crowdinUrl.toUri())
                                     context.startActivity(intent)
                                 },
                                 modifier = Modifier

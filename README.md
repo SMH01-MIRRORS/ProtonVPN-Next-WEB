@@ -1,5 +1,7 @@
 # Proton VPN-Next 🛡️
 
+[![Crowdin](https://badges.crowdin.net/protonvpn-next/localized.svg)](https://crowdin.com/project/protonvpn-next)
+
 [English](#english) | [Русский](#русский)
 
 ---

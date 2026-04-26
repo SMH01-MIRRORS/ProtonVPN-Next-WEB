@@ -16,7 +16,7 @@
   ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
   -->
 <resources>
-    <string name="app_name">Proton VPN-Next</string>
+    <string name="app_name" translatable="false">Proton VPN-Next</string>
 
     <!-- Welcome Screen -->
     <string name="welcome_title">Welcome to Proton VPN-Next</string>
@@ -53,8 +53,8 @@
     <string name="desc_toggle_connection">Toggle Connection</string>
     <string name="desc_country">Country</string>
     <string name="status_vpn">VPN</string>
-    <string name="location_format">%1$s • %2$s</string>
-    <string name="location_city_format">%1$s, %2$s</string>
+    <string name="location_format" translatable="false">%1$s • %2$s</string>
+    <string name="location_city_format" translatable="false">%1$s, %2$s</string>
     <string name="label_fastest_server">Fastest Server</string>
     <string name="label_select_location">Select location</string>
     <string name="label_server_unavailable">Server unavailable</string>
@@ -262,12 +262,12 @@
     <string name="about_crowdin">Help with Translation</string>
 
     <string name="about_sentry">Powered by Sentry</string>
-    <string name="url_sentry">https://sentry.io/</string>
+    <string name="url_sentry" translatable="false">https://sentry.io/</string>
 
-    <string name="url_github">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
-    <string name="url_codeberg">https://codeberg.org/SMH01/ProtonVPN-Next</string>
-    <string name="url_telegram">https://t.me/ProtonVPN_MOD</string>
-    <string name="url_crowdin">https://crowdin.com/project/protonvpn-next</string>
+    <string name="url_github" translatable="false">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
+    <string name="url_codeberg" translatable="false">https://codeberg.org/SMH01/ProtonVPN-Next</string>
+    <string name="url_telegram" translatable="false">https://t.me/ProtonVPN_MOD</string>
+    <string name="url_crowdin" translatable="false">https://crowdin.com/project/protonvpn-next</string>
 
     <string name="url_ota_mirror_1" translatable="false">https://kvn.protonnext.qzz.io/update.json</string>
     <string name="url_ota_mirror_2" translatable="false">https://home.protonnext.qzz.io/update.json</string>
@@ -344,7 +344,7 @@
     <string name="unit_mb_s">MiB/s</string>
     <string name="unit_gb_s">GiB/s</string>
     <string name="unit_b_s">B/s</string>
-    <string name="vpn_speed_format">↑ %1$s ↓ %2$s</string>
+    <string name="vpn_speed_format" translatable="false">↑ %1$s ↓ %2$s</string>
 
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">Active session not found. Please log in again.</string>
@@ -394,7 +394,7 @@
     <string name="title_select_server">Select Server</string>
     <string name="location_fastest_in_country">Fastest in %1$s</string>
     <string name="location_fastest_in_city">Fastest in %1$s</string>
-    <string name="location_load">%1$d%%</string>
+    <string name="location_load" translatable="false">%1$d%%</string>
     <string name="title_select_obfuscation_config">Select Obfuscation Config</string>
     <string name="btn_create_new_config">Create New Config</string>
     <string name="connect_go_title">Connect &amp; Go</string>
