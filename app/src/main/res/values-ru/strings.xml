@@ -128,6 +128,12 @@
     <string name="api_proxy_type_socks">SOCKS5</string>
     <string name="api_proxy_username">Имя пользователя (необязательно)</string>
     <string name="api_proxy_password">Пароль (необязательно)</string>
+    <string name="api_bypass_strategy_byedpi">ByeDPI</string>
+    <string name="api_bypass_strategy_byedpi_desc">Обход блокировок DPI с помощью продвинутой фрагментации пакетов и обмана цензора.</string>
+    <string name="byedpi_flags_title">ФЛАГИ ЛУЧШЕЙ СТРАТЕГИИ</string>
+    <string name="byedpi_flags_none">Еще не протестировано</string>
+    <string name="btn_start_test">Найти рабочучую стратегию</string>
+    <string name="btn_stop_test">Остановить тест</string>
     <!-- Country Spoofing -->
     <string name="settings_country_spoofing_title">Подмена страны</string>
     <string name="settings_country_spoofing_description">Подмена кода страны, отправляемого в API, для имитации другого физического местоположения.</string>

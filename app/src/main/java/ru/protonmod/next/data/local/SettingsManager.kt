@@ -48,6 +48,7 @@ class SettingsManager @Inject constructor(
         const val STRATEGY_CLOUDFLARE = "cloudflare"
         const val STRATEGY_PROTON_MIRRORS = "proton_mirrors"
         const val STRATEGY_WARP = "warp"
+        const val STRATEGY_BYEDPI = "byedpi"
         const val STRATEGY_CUSTOM_PROXY = "custom_proxy"
 
         const val PROXY_TYPE_HTTP = "http"
@@ -78,6 +79,8 @@ class SettingsManager @Inject constructor(
         // API Bypass Settings
         private val API_BYPASS_ENABLED = booleanPreferencesKey("api_bypass_enabled")
         private val API_BYPASS_STRATEGY = stringPreferencesKey("api_bypass_strategy")
+
+        private val BYEDPI_FLAGS = stringPreferencesKey("byedpi_flags")
 
         private val API_PROXY_HOST = stringPreferencesKey("api_proxy_host")
         private val API_PROXY_PORT = intPreferencesKey("api_proxy_port")
@@ -169,6 +172,8 @@ class SettingsManager @Inject constructor(
     val apiBypassEnabled: Flow<Boolean> = context.dataStore.data.map { it[API_BYPASS_ENABLED] ?: false }
     val apiBypassStrategy: Flow<String> = context.dataStore.data.map { it[API_BYPASS_STRATEGY] ?: "netlify" }
 
+    val byeDpiFlags: Flow<String> = context.dataStore.data.map { it[BYEDPI_FLAGS] ?: "-s1 -d1" }
+
     val apiProxyHost: Flow<String> = context.dataStore.data.map { it[API_PROXY_HOST] ?: "" }
     val apiProxyPort: Flow<Int> = context.dataStore.data.map { it[API_PROXY_PORT] ?: 1080 }
     val apiProxyType: Flow<String> = context.dataStore.data.map { it[API_PROXY_TYPE] ?: PROXY_TYPE_SOCKS }
@@ -211,6 +216,8 @@ class SettingsManager @Inject constructor(
         ProtonLogger.d("SettingsManager", "Sync get strategy: $strategy")
         return strategy
     }
+
+    fun getByeDpiFlagsSync(): String = prefs.getString("byedpi_flags", "-s1 -d1") ?: "-s1 -d1"
 
     fun getApiProxyHostSync(): String = prefs.getString("api_proxy_host", "") ?: ""
     fun getApiProxyPortSync(): Int = prefs.getInt("api_proxy_port", 1080)
@@ -352,6 +359,11 @@ class SettingsManager @Inject constructor(
         ProtonLogger.d("SettingsManager", "Setting strategy to: $strategy")
         prefs.edit { putString("api_bypass_strategy", strategy) }
         context.dataStore.edit { it[API_BYPASS_STRATEGY] = strategy }
+    }
+
+    suspend fun setByeDpiFlags(flags: String) {
+        prefs.edit { putString("byedpi_flags", flags) }
+        context.dataStore.edit { it[BYEDPI_FLAGS] = flags }
     }
 
     suspend fun setApiProxyHost(host: String) {

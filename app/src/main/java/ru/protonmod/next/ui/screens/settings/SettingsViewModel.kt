@@ -43,6 +43,8 @@ import ru.protonmod.next.utils.crypto.QuicI1Generator
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import ru.protonmod.next.vpn.WarpManager
 import ru.protonmod.next.data.local.SessionDao
+import ru.protonmod.next.data.network.byedpi.ByeDpiManager
+import ru.protonmod.next.data.network.byedpi.ByeDpiStrategyTester
 import ru.protonmod.next.data.repository.UpdateRepository
 import ru.protonmod.next.data.repository.VpnRepository
 import javax.inject.Inject
@@ -73,6 +75,12 @@ data class SettingsUiState(
     // WARP state
     val isWarpFetching: Boolean = false,
     val warpConfigLoaded: Boolean = false,
+
+    // ByeDPI state
+    val isByeDpiTesting: Boolean = false,
+    val byeDpiTestProgress: Float = 0f,
+    val byeDpiCurrentStrategy: String = "",
+    val byeDpiFlags: String = "",
 
     // API Mirroring / Spoofing
     val spoofCountryEnabled: Boolean = false,
@@ -141,7 +149,9 @@ class SettingsViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val updateRepository: UpdateRepository,
     private val warpManager: WarpManager,
-    private val otaUpdateManager: OTAUpdateManager
+    private val otaUpdateManager: OTAUpdateManager,
+    private val byeDpiManager: ByeDpiManager,
+    private val byeDpiStrategyTester: ByeDpiStrategyTester
 ) : ViewModel() {
 
     // Internal state tracking if any VPN is operating at the OS level
@@ -240,7 +250,11 @@ class SettingsViewModel @Inject constructor(
         settingsManager.spoofCountryCode,
         settingsManager.otaUpdateFrequency,
         settingsManager.otaUpdateChannel,
+        settingsManager.byeDpiFlags,
         warpManager.isFetching,
+        byeDpiStrategyTester.isTesting,
+        byeDpiStrategyTester.progress,
+        byeDpiStrategyTester.currentStrategy,
         _availableChannels,
         _isAnyVpnActive,
         _isCheckingForUpdates,
@@ -301,12 +315,16 @@ class SettingsViewModel @Inject constructor(
             spoofCountryCode = args[51] as String,
             otaUpdateFrequency = args[52] as String,
             otaUpdateChannel = args[53] as String,
-            isWarpFetching = args[54] as Boolean,
+            byeDpiFlags = args[54] as String,
+            isWarpFetching = args[55] as Boolean,
             warpConfigLoaded = warpManager.isConfigLoaded(),
-            availableChannels = args[55] as Map<String, Boolean>,
-            isAnyVpnActive = args[56] as Boolean,
-            isCheckingForUpdates = args[57] as Boolean,
-            isUpdateAvailable = args[58] as Boolean
+            isByeDpiTesting = args[56] as Boolean,
+            byeDpiTestProgress = args[57] as Float,
+            byeDpiCurrentStrategy = args[58] as String,
+            availableChannels = args[59] as Map<String, Boolean>,
+            isAnyVpnActive = args[60] as Boolean,
+            isCheckingForUpdates = args[61] as Boolean,
+            isUpdateAvailable = args[62] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -410,8 +428,29 @@ class SettingsViewModel @Inject constructor(
             } else if (strategy != SettingsManager.STRATEGY_WARP) {
                 amneziaVpnManager.ensureWarpBypass(false)
             }
+            
+            if (strategy == SettingsManager.STRATEGY_BYEDPI) {
+                val flags = settingsManager.getByeDpiFlagsSync()
+                val port = settingsManager.getApiProxyPortSync()
+                byeDpiManager.start(arrayOf("ciadpi", "--ip", "127.0.0.1", "--port", port.toString()) + flags.split(" ").filter { it.isNotEmpty() })
+            } else {
+                byeDpiManager.stop()
+            }
+            
             settingsManager.setApiBypassStrategy(strategy)
         }
+    }
+
+    fun startByeDpiTesting() {
+        viewModelScope.launch {
+            val sites = context.assets.open("proxytest_proton.sites").bufferedReader().readLines().filter { it.isNotBlank() }
+            val strategies = context.assets.open("proxytest_strategies.list").bufferedReader().readLines().filter { it.isNotBlank() }
+            byeDpiStrategyTester.startTesting(sites, strategies)
+        }
+    }
+
+    fun stopByeDpiTesting() {
+        byeDpiStrategyTester.stopTesting()
     }
 
     fun fetchWarpConfig() {

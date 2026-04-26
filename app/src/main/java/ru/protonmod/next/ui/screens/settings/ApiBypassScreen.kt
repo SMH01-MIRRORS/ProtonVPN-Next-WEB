@@ -326,6 +326,80 @@ fun ApiBypassScreen(
                                     onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_CUSTOM_PROXY) }
                                 )
 
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(horizontal = 24.dp),
+                                    color = colors.separatorNorm.copy(alpha = 0.2f)
+                                )
+
+                                // Strategy 6: ByeDPI (Deep Packet Inspection bypass)
+                                StrategySelectionRow(
+                                    title = stringResource(R.string.api_bypass_strategy_byedpi),
+                                    description = stringResource(R.string.api_bypass_strategy_byedpi_desc),
+                                    icon = Icons.Rounded.Security,
+                                    isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_BYEDPI,
+                                    onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_BYEDPI) }
+                                )
+
+                                // Configuration for ByeDPI
+                                AnimatedVisibility(
+                                    visible = uiState.apiBypassStrategy == SettingsManager.STRATEGY_BYEDPI,
+                                    enter = fadeIn() + expandVertically(),
+                                    exit = fadeOut() + shrinkVertically()
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                                            .background(colors.backgroundSecondary.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                                            .padding(12.dp)
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.byedpi_flags_title),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = colors.textWeak
+                                        )
+                                        Text(
+                                            text = uiState.byeDpiFlags.ifEmpty { stringResource(R.string.byedpi_flags_none) },
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = colors.textNorm,
+                                            modifier = Modifier.padding(vertical = 4.dp)
+                                        )
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+
+                                        if (uiState.isByeDpiTesting) {
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                LinearProgressIndicator(
+                                                    progress = { uiState.byeDpiTestProgress },
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    color = colors.brandNorm,
+                                                    trackColor = colors.separatorNorm
+                                                )
+                                                Text(
+                                                    text = uiState.byeDpiCurrentStrategy,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = colors.textWeak,
+                                                    modifier = Modifier.padding(top = 4.dp)
+                                                )
+                                                Button(
+                                                    onClick = { viewModel.stopByeDpiTesting() },
+                                                    modifier = Modifier.padding(top = 8.dp),
+                                                    colors = ButtonDefaults.buttonColors(containerColor = colors.notificationError)
+                                                ) {
+                                                    Text(stringResource(R.string.btn_stop_test))
+                                                }
+                                            }
+                                        } else {
+                                            Button(
+                                                onClick = { viewModel.startByeDpiTesting() },
+                                                modifier = Modifier.fillMaxWidth(),
+                                                colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
+                                            ) {
+                                                Text(stringResource(R.string.btn_start_test))
+                                            }
+                                        }
+                                    }
+                                }
+
                                 // Configuration for Custom Proxy
                                 AnimatedVisibility(
                                     visible = uiState.apiBypassStrategy == SettingsManager.STRATEGY_CUSTOM_PROXY,
