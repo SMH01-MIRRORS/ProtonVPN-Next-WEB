@@ -28,6 +28,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -242,105 +243,126 @@ fun ProtonNextAppNavHost(
 
     if (startDestination.isEmpty()) return
 
-    key(startDestination) {
-        val navController = rememberNavController()
-        val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
-        val currentTarget = when (currentRoute) {
+    var lastKnownTarget by remember { mutableStateOf<MainTarget?>(null) }
+    val currentTarget = remember(currentRoute) {
+        val target = when (currentRoute) {
             Screen.Home.route -> MainTarget.Home
             Screen.Countries.route -> MainTarget.Countries
             Screen.Profiles.route -> MainTarget.Profiles
             Screen.Settings.route -> MainTarget.Settings
             else -> null
         }
+        if (target != null) {
+            lastKnownTarget = target
+        }
+        // If current route is null (transitioning), use last known target to avoid jump
+        target ?: if (currentRoute == null) lastKnownTarget else null
+    }
 
-        // Track previous session state to detect real logouts
-        var previousSessionWasNotNull by remember { mutableStateOf(session != null) }
+    // Track previous session state to detect real logouts
+    var previousSessionWasNotNull by remember { mutableStateOf(session != null) }
 
-        LaunchedEffect(session) {
-            val isLoggingOut = previousSessionWasNotNull && session == null
-            previousSessionWasNotNull = session != null
+    LaunchedEffect(session) {
+        val isLoggingOut = previousSessionWasNotNull && session == null
+        previousSessionWasNotNull = session != null
 
-            if (isLoggingOut && startDestination.isNotEmpty() && startDestination != Screen.PolicyAcceptance.route) {
-                ru.protonmod.next.utils.ProtonLogger.d("MainActivity", "User logged out, navigating to welcome. Current route: $currentRoute")
-                // Only navigate if we're not already on a public screen
-                if (currentRoute != "welcome" && currentRoute != "login" && currentRoute != Screen.ApiBypass.route) {
-                    navController.navigate("welcome") {
-                        popUpTo(0) { inclusive = true }
-                    }
+        if (isLoggingOut && startDestination.isNotEmpty() && startDestination != Screen.PolicyAcceptance.route) {
+            ru.protonmod.next.utils.ProtonLogger.d("MainActivity", "User logged out, navigating to welcome. Current route: $currentRoute")
+            // Only navigate if we're not already on a public screen
+            if (currentRoute != "welcome" && currentRoute != "login" && currentRoute != Screen.ApiBypass.route) {
+                navController.navigate("welcome") {
+                    popUpTo(0) { inclusive = true }
                 }
             }
         }
+    }
 
-        Box(modifier = modifier.fillMaxSize()) {
-            NavHost(navController = navController, startDestination = startDestination) {
-                composable(Screen.PolicyAcceptance.route) {
-                    PolicyAcceptanceScreen(
-                        onAccept = { viewModel.acceptPolicy() }
-                    )
-                }
+    LaunchedEffect(startDestination) {
+        if (startDestination.isNotEmpty() && currentRoute != startDestination) {
+            navController.navigate(startDestination) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 
-                composable("welcome") {
-                    WelcomeScreen(
-                        onNavigateToLogin = { navController.navigate("login") },
-                        onNavigateToRegister = { /* TODO: Registration flow */ },
-                        onNavigateToHome = {
-                            // Clear the entire backstack and navigate to home (dashboard)
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo(0)
-                            }
-                        },
-                        onNavigateToApiBypassSettings = {
-                            navController.navigate(Screen.ApiBypass.route)
-                        },
-                        onNavigateToPrivacyPolicy = {
-                            navController.navigate(Screen.PrivacyPolicy.route)
-                        }
-                    )
-                }
-
-                composable("login") {
-                    LoginScreen(
-                        onBackClick = { navController.popBackStack() },
-                        onLoginSuccess = {
-                            // Clear the entire backstack and navigate to home (dashboard)
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo(0)
-                            }
-                        }
-                    )
-                }
-
-                appNavGraph(navController = navController)
+    Box(modifier = modifier.fillMaxSize()) {
+        NavHost(
+            navController = navController,
+            startDestination = startDestination,
+            enterTransition = { fadeIn(animationSpec = tween(220)) },
+            exitTransition = { fadeOut(animationSpec = tween(180)) },
+            popEnterTransition = { fadeIn(animationSpec = tween(220)) },
+            popExitTransition = { fadeOut(animationSpec = tween(180)) }
+        ) {
+            composable(Screen.PolicyAcceptance.route) {
+                PolicyAcceptanceScreen(
+                    onAccept = { viewModel.acceptPolicy() }
+                )
             }
 
-            AnimatedVisibility(
-                visible = currentTarget != null,
-                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
-                modifier = Modifier.align(Alignment.BottomCenter)
-            ) {
-                LiquidGlassBottomBar(
-                    selectedTarget = currentTarget,
-                    navigateTo = { target ->
-                        val route = when (target) {
-                            MainTarget.Home -> Screen.Home.route
-                            MainTarget.Countries -> Screen.Countries.route
-                            MainTarget.Profiles -> Screen.Profiles.route
-                            MainTarget.Settings -> Screen.Settings.route
-                        }
-                        if (currentRoute != route) {
-                            navController.navigate(route) {
-                                popUpTo(Screen.Home.route) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
+            composable("welcome") {
+                WelcomeScreen(
+                    onNavigateToLogin = { navController.navigate("login") },
+                    onNavigateToRegister = { /* TODO: Registration flow */ },
+                    onNavigateToHome = {
+                        // Clear the entire backstack and navigate to home (dashboard)
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(0)
                         }
                     },
-                    modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)
+                    onNavigateToApiBypassSettings = {
+                        navController.navigate(Screen.ApiBypass.route)
+                    },
+                    onNavigateToPrivacyPolicy = {
+                        navController.navigate(Screen.PrivacyPolicy.route)
+                    }
+                )
+            }
+
+            composable("login") {
+                LoginScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onLoginSuccess = {
+                        // Clear the entire backstack and navigate to home (dashboard)
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(0)
+                        }
+                    }
+                )
+            }
+
+            appNavGraph(navController = navController)
+        }
+
+        AnimatedVisibility(
+            visible = currentTarget != null,
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) {
+            LiquidGlassBottomBar(
+                selectedTarget = currentTarget,
+                navigateTo = { target ->
+                    val route = when (target) {
+                        MainTarget.Home -> Screen.Home.route
+                        MainTarget.Countries -> Screen.Countries.route
+                        MainTarget.Profiles -> Screen.Profiles.route
+                        MainTarget.Settings -> Screen.Settings.route
+                    }
+                    if (currentRoute != route) {
+                        navController.navigate(route) {
+                            popUpTo(Screen.Home.route) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                },
+                modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)
             )
         }
     }
-}
 }

@@ -18,7 +18,6 @@
 package ru.protonmod.next.ui.theme
 
 import android.app.Activity
-import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -660,16 +659,15 @@ fun ProtonNextTheme(
         }
     }
 
-    Box(modifier = modifier) {
+    Surface(
+        modifier = modifier,
+        color = protonColors.backgroundNorm
+    ) {
         CompositionLocalProvider(LocalColors provides protonColors) {
             MaterialTheme(
                 colorScheme = protonColors.toMaterial3ThemeColors(),
-            ) {
-                Surface(
-                    color = protonColors.backgroundNorm,
-                    content = content
-                )
-            }
+                content = content
+            )
         }
     }
 }
