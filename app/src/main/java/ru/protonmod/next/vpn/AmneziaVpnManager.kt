@@ -23,6 +23,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import io.sentry.SentryLevel
 import ru.protonmod.next.utils.ProtonLogger
 import androidx.core.content.ContextCompat
@@ -774,7 +775,7 @@ class AmneziaVpnManager @Inject constructor(
                 delay(3000)
 
                 if (_tunnelState.value == Tunnel.State.UP) {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl)).apply {
+                    val intent = Intent(Intent.ACTION_VIEW, targetUrl.toUri()).apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
                     context.startActivity(intent)

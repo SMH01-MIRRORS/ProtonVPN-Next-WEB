@@ -4,10 +4,15 @@
         <trust-anchors>
             <!-- Trust system-installed CA certificates -->
             <certificates src="system" />
-            <!-- Trust user-installed CA certificates (useful for proxy/VLESS bypassing) -->
-            <certificates src="user" />
         </trust-anchors>
     </base-config>
+
+    <debug-overrides>
+        <trust-anchors>
+            <!-- Trust user-installed CA certificates ONLY in debug builds -->
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
 
     <!-- Explicitly allow traffic to Proton and GitHub domains -->
     <domain-config>
@@ -22,7 +27,6 @@
 
         <trust-anchors>
             <certificates src="system" />
-            <certificates src="user" />
         </trust-anchors>
     </domain-config>
 </network-security-config>

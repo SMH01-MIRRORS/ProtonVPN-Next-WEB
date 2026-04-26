@@ -40,6 +40,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.createBitmap
 import androidx.core.graphics.record
 import androidx.core.graphics.withSave
 import androidx.core.graphics.withScale
@@ -131,7 +132,7 @@ private class FlagDrawScope(
         val bitmapWidth = srcWidth.coerceAtLeast(1)
         val bitmapHeight = srcHeight.coerceAtLeast(1)
         val flagBitmap = try {
-            Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888).also { bmp ->
+            createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888).also { bmp ->
                 Canvas(bmp).drawPicture(picture)
             }
         } catch (e: Exception) {

@@ -341,28 +341,26 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     }
 
     /**
-     * Creates notification channels required for Android O and above.
+     * Creates notification channels.
      */
     private fun createNotificationChannels() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationManager: NotificationManager =
-                getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager: NotificationManager =
+            getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
-            val name = getString(R.string.notification_channel_name)
+        val name = getString(R.string.notification_channel_name)
 
-            // Standard channel for visible VPN status
-            val channel = NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_LOW).apply {
-                description = getString(R.string.notification_channel_desc)
-                setShowBadge(false)
-            }
-            notificationManager.createNotificationChannel(channel)
-
-            // Silent channel for background operation without disturbing the user
-            val silentChannel = NotificationChannel(CHANNEL_SILENT_ID, "$name (Silent)", NotificationManager.IMPORTANCE_MIN).apply {
-                setShowBadge(false)
-            }
-            notificationManager.createNotificationChannel(silentChannel)
+        // Standard channel for visible VPN status
+        val channel = NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_LOW).apply {
+            description = getString(R.string.notification_channel_desc)
+            setShowBadge(false)
         }
+        notificationManager.createNotificationChannel(channel)
+
+        // Silent channel for background operation without disturbing the user
+        val silentChannel = NotificationChannel(CHANNEL_SILENT_ID, "$name (Silent)", NotificationManager.IMPORTANCE_MIN).apply {
+            setShowBadge(false)
+        }
+        notificationManager.createNotificationChannel(silentChannel)
     }
 
     /**
@@ -701,15 +699,10 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     }
 
     /**
-     * Helper to correctly stop the foreground service across different Android versions.
+     * Helper to correctly stop the foreground service.
      */
     private fun stopForegroundOrService(stopSelf: Boolean = true) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            stopForeground(STOP_FOREGROUND_REMOVE)
-        } else {
-            @Suppress("DEPRECATION")
-            stopForeground(true)
-        }
+        stopForeground(STOP_FOREGROUND_REMOVE)
 
         isForegroundServiceStarted = false
 

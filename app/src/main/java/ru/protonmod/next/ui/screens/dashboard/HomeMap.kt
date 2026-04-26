@@ -305,6 +305,7 @@ class MapView constructor(
 
     // Pre-allocated structs to avoid allocations in onDraw
     private var viewRect = RectF(0f, 0f, 1f, 1f)
+    private val drawRect = Rect()
     private val pinInterpolator = DecelerateInterpolator(1.5f)
 
     private val outerPinBitmapDisconnected by lazy { BitmapFactory.decodeResource(resources, R.drawable.map_pin_outer_disconnected) }
@@ -375,7 +376,8 @@ class MapView constructor(
             val dstHeight = width.toFloat() * src.height() / src.width()
             val dstTop = (height - dstHeight) / 2
             viewRect.set(0f, dstTop, width.toFloat(), dstTop + dstHeight)
-            canvas.drawBitmap(renderedMap.bitmap, Rect().apply { src.round(this) }, viewRect, null)
+            src.round(drawRect)
+            canvas.drawBitmap(renderedMap.bitmap, drawRect, viewRect, null)
 
             canvas.drawPins(regionRect, renderData.pins)
         }

@@ -19,7 +19,6 @@ package ru.protonmod.next.vpn
 
 import android.content.Intent
 import android.net.VpnService
-import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import androidx.core.service.quicksettings.PendingIntentActivityWrapper
@@ -246,9 +245,7 @@ class VpnTileService : TileService() {
             }
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            tile.subtitle = subtitle
-        }
+        tile.subtitle = subtitle
 
         tile.updateTile()
     }

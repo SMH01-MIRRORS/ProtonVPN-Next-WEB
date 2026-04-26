@@ -21,7 +21,6 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
-import android.os.Build
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -47,12 +46,7 @@ class VpnNetworkMonitor @Inject constructor(
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
-            val validated = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-            } else {
-                // On older versions, we can't easily check for validation this way
-                true 
-            }
+            val validated = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
             
             val isVpn = networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
             

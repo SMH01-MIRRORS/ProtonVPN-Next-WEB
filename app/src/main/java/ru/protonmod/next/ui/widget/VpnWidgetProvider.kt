@@ -24,6 +24,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
+import androidx.core.graphics.toColorInt
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -106,7 +107,7 @@ class VpnWidgetProvider : AppWidgetProvider() {
             
             if (isConnected && connectedServer != null) {
                 views.setTextViewText(R.id.widget_status_text, context.getString(R.string.status_connected))
-                views.setTextColor(R.id.widget_status_text, android.graphics.Color.parseColor("#4CAF50"))
+                views.setTextColor(R.id.widget_status_text, "#4CAF50".toColorInt())
                 
                 val countryName = ru.protonmod.next.ui.utils.CountryUtils.getCountryName(context, connectedServer.exitCountry)
                 views.setTextViewText(R.id.widget_location_pill_text, "$countryName")
@@ -123,7 +124,7 @@ class VpnWidgetProvider : AppWidgetProvider() {
                 views.setInt(R.id.widget_button, "setBackgroundResource", R.drawable.widget_button_background_connected)
             } else {
                 views.setTextViewText(R.id.widget_status_text, context.getString(R.string.status_disconnected))
-                views.setTextColor(R.id.widget_status_text, android.graphics.Color.parseColor("#E53935"))
+                views.setTextColor(R.id.widget_status_text, "#E53935".toColorInt())
                 
                 views.setTextViewText(R.id.widget_location_pill_text, context.getString(R.string.status_not_connected))
                 

@@ -17,6 +17,7 @@
 
 package ru.protonmod.next.data.network
 
+import android.annotation.SuppressLint
 import ru.protonmod.next.utils.ProtonLogger
 import java.security.cert.X509Certificate
 import javax.net.ssl.X509TrustManager
@@ -28,6 +29,7 @@ import java.security.KeyStore
  * connections to proceed even if the trust anchor is missing.
  * Security is maintained by the [okhttp3.CertificatePinner] which runs after the handshake.
  */
+@SuppressLint("CustomX509TrustManager")
 class MirrorTrustManager : X509TrustManager {
 
     private val systemTrustManager: X509TrustManager by lazy {

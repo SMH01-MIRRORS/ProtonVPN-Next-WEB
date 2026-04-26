@@ -19,8 +19,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
-    android:paddingLeft="12dp"
-    android:paddingRight="12dp"
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
     android:paddingTop="12dp"
     android:paddingBottom="12dp">
 
@@ -48,8 +48,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/widget_location_pill_bg"
-            android:paddingLeft="8dp"
-            android:paddingRight="8dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
             android:paddingTop="2dp"
             android:paddingBottom="2dp"
             android:gravity="center">
@@ -57,7 +57,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="United States"
+                android:text="@string/preview_country_name"
                 android:textColor="#B3FFFFFF"
                 android:textSize="11sp"
                 android:maxLines="1"
@@ -78,19 +78,20 @@
             android:layout_width="32dp"
             android:layout_height="22dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/flag_us" />
+            android:src="@drawable/flag_us"
+            android:contentDescription="@null" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:layout_marginLeft="12dp">
+            android:layout_marginStart="12dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="United States"
+                android:text="@string/preview_country_name"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold"
@@ -100,7 +101,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="US-FREE#1"
+                android:text="@string/preview_server_name"
                 android:textColor="#80FFFFFF"
                 android:textSize="11sp"
                 android:maxLines="1"
@@ -110,10 +111,10 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="›"
+            android:text="@string/desc_chevron_right"
             android:textColor="#4DFFFFFF"
             android:textSize="20sp"
-            android:layout_marginRight="4dp" />
+            android:layout_marginEnd="4dp" />
     </LinearLayout>
 
     <TextView

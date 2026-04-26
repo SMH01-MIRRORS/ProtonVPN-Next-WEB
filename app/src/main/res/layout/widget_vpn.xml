@@ -43,10 +43,10 @@
             android:id="@+id/widget_pill_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="8dp"
+            android:layout_marginStart="8dp"
             android:background="@drawable/widget_location_pill_bg"
-            android:paddingLeft="8dp"
-            android:paddingRight="8dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
             android:paddingTop="2dp"
             android:paddingBottom="2dp"
             android:gravity="center">
@@ -77,7 +77,8 @@
             android:id="@+id/widget_flag"
             android:layout_width="32dp"
             android:layout_height="22dp"
-            android:src="@drawable/flag_fastest" />
+            android:src="@drawable/flag_fastest"
+            android:contentDescription="@null" />
 
         <LinearLayout
             android:id="@+id/widget_text_container"
@@ -85,7 +86,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:layout_marginLeft="12dp">
+            android:layout_marginStart="12dp">
 
             <TextView
                 android:id="@+id/widget_server_country"
@@ -113,10 +114,10 @@
             android:id="@+id/widget_arrow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="›"
+            android:text="@string/desc_chevron_right"
             android:textColor="#4DFFFFFF"
             android:textSize="20sp"
-            android:layout_marginLeft="4dp" />
+            android:layout_marginStart="4dp" />
     </LinearLayout>
 
     <!-- Bottom: Connection Button -->

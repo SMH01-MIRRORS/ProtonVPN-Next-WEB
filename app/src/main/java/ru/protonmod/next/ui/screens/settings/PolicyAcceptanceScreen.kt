@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -43,9 +44,10 @@ fun PolicyAcceptanceScreen(
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
+    val resources = LocalResources.current
     val policyText = remember {
         try {
-            context.resources.openRawResource(R.raw.privacy_policy)
+            resources.openRawResource(R.raw.privacy_policy)
                 .bufferedReader().use { it.readText() }
         } catch (e: Exception) {
             "Error loading privacy policy"

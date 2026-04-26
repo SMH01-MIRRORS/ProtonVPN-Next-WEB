@@ -48,6 +48,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpSize
@@ -242,8 +244,10 @@ fun CountriesListContent(
 
     Box(modifier = modifier) {
         if (isTablet) {
-            val configuration = LocalConfiguration.current
-            val columns = (configuration.screenWidthDp / 300).coerceAtLeast(2)
+            val windowInfo = LocalWindowInfo.current
+            val density = LocalDensity.current
+            val screenWidthDp = with(density) { windowInfo.containerSize.width.toDp() }.value
+            val columns = (screenWidthDp / 300).toInt().coerceAtLeast(2)
             
             LazyVerticalGrid(
                 columns = GridCells.Fixed(columns),
@@ -414,8 +418,10 @@ fun CitiesListContent(
 
     Box(modifier = modifier) {
         if (isTablet) {
-            val configuration = LocalConfiguration.current
-            val columns = (configuration.screenWidthDp / 300).coerceAtLeast(2)
+            val windowInfo = LocalWindowInfo.current
+            val density = LocalDensity.current
+            val screenWidthDp = with(density) { windowInfo.containerSize.width.toDp() }.value
+            val columns = (screenWidthDp / 300).toInt().coerceAtLeast(2)
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(columns),
@@ -577,8 +583,10 @@ fun ServersListContent(
 
     Box(modifier = modifier) {
         if (isTablet) {
-            val configuration = LocalConfiguration.current
-            val columns = (configuration.screenWidthDp / 300).coerceAtLeast(2)
+            val windowInfo = LocalWindowInfo.current
+            val density = LocalDensity.current
+            val screenWidthDp = with(density) { windowInfo.containerSize.width.toDp() }.value
+            val columns = (screenWidthDp / 300).toInt().coerceAtLeast(2)
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(columns),

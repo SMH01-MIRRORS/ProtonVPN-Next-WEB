@@ -17,6 +17,7 @@
 
 package ru.protonmod.next.utils.crypto
 
+import android.annotation.SuppressLint
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.security.SecureRandom
@@ -143,6 +144,7 @@ object QuicI1Generator {
         }
     }
 
+    @SuppressLint("GetInstance")
     private fun quicInitial(
         dcid: ByteArray,
         scid: ByteArray,

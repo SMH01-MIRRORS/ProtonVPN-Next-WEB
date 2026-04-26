@@ -23,6 +23,7 @@ import android.graphics.Canvas
 import android.graphics.PointF
 import android.graphics.RectF
 import androidx.annotation.ColorInt
+import androidx.core.graphics.createBitmap
 import com.caverock.androidsvg.PreserveAspectRatio
 import com.caverock.androidsvg.RenderOptions
 import com.caverock.androidsvg.SVG
@@ -60,9 +61,9 @@ class TvMapRenderer(
     private val bitmapCallback: (RenderedMap, Long) -> Unit
 ) {
     class RenderTarget(w: Int, h: Int) {
-        val map: Bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val map: Bitmap = createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val canvas: Canvas = Canvas(map)
-        val outMap: Bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val outMap: Bitmap = createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val outCanvas: Canvas = Canvas(outMap)
 
         fun isSize(w: Int, h: Int) = map.width == w && map.height == h
