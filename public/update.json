@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159785,
-      "versionName": "12.0.0-alpha1st2-74-ge334aa8-nightly",
+      "versionCode": 605159786,
+      "versionName": "12.0.0-alpha1st2-75-g6e2e6c0-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "feat: implement privacy policy and mandatory acceptance flow\n\n* feat: add `PolicyAcceptanceScreen` and `PrivacyPolicyScreen` to display Markdown-formatted legal information\n* feat: enforce policy acceptance in `MainActivity` for existing users and integrate agreement terms into the `WelcomeScreen`\n* feat: implement policy version tracking in `SettingsManager` to manage mandatory updates to terms\n* feat: add a \"Legal Information\" section to the \"About\" screen with links to the Privacy Policy and Disclaimer\n* docs: add `PRIVACY_POLICY.md` (English and Russian) detailing data handling, Sentry usage, and non-affiliation\n* i18n: provide localized strings for legal and agreement text across all supported languages\n* feat: add a registration button stub to the `LoginScreen`\n* chore: update Compose BOM, Navigation, and Material3 dependencies to latest versions",
+      "changelog": "docs: add Fastlane metadata for `ru.protonmod.next` in English and Russian\n\n* docs: add English (en-US) app title, short description, and full description highlighting AmneziaWG support, API bypass strategies, and Material You design\n* docs: add Russian (ru-RU) localization for all store listing metadata fields\n* docs: include project disclaimer regarding lack of affiliation with Proton AG in descriptions",
       "force": false
     },
     "release": {
-      "versionCode": 605159785,
-      "versionName": "12.0.0-alpha1st2-74-ge334aa8-nightly",
+      "versionCode": 605159786,
+      "versionName": "12.0.0-alpha1st2-75-g6e2e6c0-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "feat: implement privacy policy and mandatory acceptance flow\n\n* feat: add `PolicyAcceptanceScreen` and `PrivacyPolicyScreen` to display Markdown-formatted legal information\n* feat: enforce policy acceptance in `MainActivity` for existing users and integrate agreement terms into the `WelcomeScreen`\n* feat: implement policy version tracking in `SettingsManager` to manage mandatory updates to terms\n* feat: add a \"Legal Information\" section to the \"About\" screen with links to the Privacy Policy and Disclaimer\n* docs: add `PRIVACY_POLICY.md` (English and Russian) detailing data handling, Sentry usage, and non-affiliation\n* i18n: provide localized strings for legal and agreement text across all supported languages\n* feat: add a registration button stub to the `LoginScreen`\n* chore: update Compose BOM, Navigation, and Material3 dependencies to latest versions",
+      "changelog": "docs: add Fastlane metadata for `ru.protonmod.next` in English and Russian\n\n* docs: add English (en-US) app title, short description, and full description highlighting AmneziaWG support, API bypass strategies, and Material You design\n* docs: add Russian (ru-RU) localization for all store listing metadata fields\n* docs: include project disclaimer regarding lack of affiliation with Proton AG in descriptions",
       "force": false
     }
   }
