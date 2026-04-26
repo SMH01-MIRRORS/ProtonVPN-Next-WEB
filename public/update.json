@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159787,
-      "versionName": "12.0.0-alpha1st2-76-g97cc565-nightly",
+      "versionCode": 605159788,
+      "versionName": "12.0.0-alpha1st2-77-ga445c4c-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "chore: update Kotlin version to 2.3.21",
+      "changelog": "fix: Allow VPN disconnect from background on Android 12+",
       "force": false
     },
     "release": {
-      "versionCode": 605159787,
-      "versionName": "12.0.0-alpha1st2-76-g97cc565-nightly",
+      "versionCode": 605159788,
+      "versionName": "12.0.0-alpha1st2-77-ga445c4c-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "chore: update Kotlin version to 2.3.21",
+      "changelog": "fix: Allow VPN disconnect from background on Android 12+",
       "force": false
     }
   }
