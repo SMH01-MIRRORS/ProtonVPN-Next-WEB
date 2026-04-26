@@ -259,6 +259,7 @@
     <string name="about_github">GitHub</string>
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
+    <string name="about_crowdin">Help with Translation</string>
 
     <string name="about_sentry">Powered by Sentry</string>
     <string name="url_sentry">https://sentry.io/</string>
@@ -266,6 +267,7 @@
     <string name="url_github">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
     <string name="url_codeberg">https://codeberg.org/SMH01/ProtonVPN-Next</string>
     <string name="url_telegram">https://t.me/ProtonVPN_MOD</string>
+    <string name="url_crowdin">https://crowdin.com/project/protonvpn-next</string>
 
     <string name="url_ota_mirror_1" translatable="false">https://kvn.protonnext.qzz.io/update.json</string>
     <string name="url_ota_mirror_2" translatable="false">https://home.protonnext.qzz.io/update.json</string>

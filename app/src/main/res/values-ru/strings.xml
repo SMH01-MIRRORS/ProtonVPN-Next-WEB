@@ -240,6 +240,7 @@
     <string name="about_github">GitHub</string>
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
+    <string name="about_crowdin">Помочь с переводом</string>
     <string name="about_sentry">На базе Sentry</string>
     <string name="url_sentry">https://sentry.io/</string>
     <string name="url_github">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
