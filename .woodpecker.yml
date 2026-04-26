@@ -30,10 +30,10 @@ steps:
       SENTRY_PROJECT:
         from_secret: SENTRY_PROJECT
     commands:
-      # 1. Force update sdkmanager and install Android 37.0
+      # 1. Force update sdkmanager and install Android 37.0, NDK and CMake
       - yes | sdkmanager --licenses > /dev/null
       - sdkmanager --update
-      - sdkmanager "platforms;android-37.0" "build-tools;37.0.0" "platform-tools"
+      - sdkmanager "platforms;android-37.0" "build-tools;37.0.0" "platform-tools" "ndk;29.0.14206865" "cmake;3.22.1"
 
       # 2. Prepare Git metadata
       - git fetch --unshallow || true
@@ -45,12 +45,12 @@ steps:
       - chmod +x gradlew
       - export SIGNING_KEY_FILE=release.keystore
 
-      # 4. Build APKs based on flavor
+      # 4. Build APKs and Run Tests based on flavor
       - |
         if [ -n "$CI_COMMIT_TAG" ]; then
-          ./gradlew assembleStableRelease
+          ./gradlew testStableReleaseUnitTest assembleStableRelease
         else
-          ./gradlew assembleNightlyDebug assembleNightlyRelease
+          ./gradlew testNightlyDebugUnitTest assembleNightlyDebug assembleNightlyRelease
         fi
 
   generate-changelog:

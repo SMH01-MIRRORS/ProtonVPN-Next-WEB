@@ -111,7 +111,7 @@ class SettingsManager @Inject constructor(
         private val QUICK_CONNECT_TARGET_ID = stringPreferencesKey("quick_connect_target_id")
 
         private val POLICY_ACCEPTED_VERSION = intPreferencesKey("policy_accepted_version")
-        const val CURRENT_POLICY_VERSION = 20260425
+        const val CURRENT_POLICY_VERSION = 20260426
 
         private val AWG_JC = intPreferencesKey("awg_jc")
         private val AWG_JMIN = intPreferencesKey("awg_jmin")

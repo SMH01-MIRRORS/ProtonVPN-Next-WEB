@@ -156,6 +156,13 @@ object DatabaseModule {
         }
     }
 
+    val MIGRATION_15_16 = object : Migration(15, 16) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // No schema changes, but incrementing version forces a migration check 
+            // which can be used as a trigger for app updates.
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -175,6 +182,7 @@ object DatabaseModule {
         .addMigrations(MIGRATION_12_13)
         .addMigrations(MIGRATION_13_14)
         .addMigrations(MIGRATION_14_15)
+        .addMigrations(MIGRATION_15_16)
         .build()
     }
 

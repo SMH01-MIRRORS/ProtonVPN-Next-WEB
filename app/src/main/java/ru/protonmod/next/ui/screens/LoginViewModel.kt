@@ -149,6 +149,9 @@ class LoginViewModel @Inject constructor(
                             )
                         } else {
                             isSuccessful = true
+                            viewModelScope.launch {
+                                settingsManager.setPolicyAcceptedVersion(SettingsManager.CURRENT_POLICY_VERSION)
+                            }
                             _uiState.value = LoginUiState.Success(
                                 accessToken = response.accessToken ?: "",
                                 userId = response.userId ?: ""
@@ -201,6 +204,9 @@ class LoginViewModel @Inject constructor(
                 val session = Json.decodeFromString<SessionEntity>(json)
                 authRepository.loginBySession(session)
                     .onSuccess {
+                        viewModelScope.launch {
+                            settingsManager.setPolicyAcceptedVersion(SettingsManager.CURRENT_POLICY_VERSION)
+                        }
                         _uiState.value = LoginUiState.Success(session.accessToken, session.userId)
                     }
                     .onFailure { exception ->
@@ -236,6 +242,9 @@ class LoginViewModel @Inject constructor(
                 authRepository.verify2FA(sessionId, tempAccessToken, refreshToken, totpCode)
                     .onSuccess { response ->
                         isSuccessful = true
+                        viewModelScope.launch {
+                            settingsManager.setPolicyAcceptedVersion(SettingsManager.CURRENT_POLICY_VERSION)
+                        }
                         _uiState.value = LoginUiState.Success(
                             accessToken = response.accessToken ?: "",
                             userId = response.userId ?: ""
@@ -277,6 +286,9 @@ class LoginViewModel @Inject constructor(
                     .onSuccess { response ->
                         ProtonLogger.i("Login", "Anonymous login successful")
                         isSuccessful = true
+                        viewModelScope.launch {
+                            settingsManager.setPolicyAcceptedVersion(SettingsManager.CURRENT_POLICY_VERSION)
+                        }
                         _uiState.value = LoginUiState.Success(
                             accessToken = response.accessToken ?: "",
                             userId = response.userId ?: ""
