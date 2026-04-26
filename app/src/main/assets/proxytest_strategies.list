@@ -1,0 +1,35 @@
+-s1 -d1
+-s1 -o1
+-s1 -f1
+-s1 -q1
+-s1 -e1
+-s1 -a1
+-s1 -Mh,d,r
+-s1 -Ku
+-s1 -Ku -a1
+-s1 -An
+-s1 -At,r,s
+-s1 -d1 -Ku
+-s1 -d1 -Mh,d,r
+-s1 -d1 -An
+-s1 -d1 -At,r,s
+-s1 -o1 -Ku
+-s1 -o1 -Mh,d,r
+-s1 -o1 -An
+-s1 -o1 -At,r,s
+-s1 -f1 -Ku
+-s1 -f1 -Mh,d,r
+-s1 -f1 -An
+-s1 -f1 -At,r,s
+-s1 -q1 -Ku
+-s1 -q1 -Mh,d,r
+-s1 -q1 -An
+-s1 -q1 -At,r,s
+-s1 -e1 -Ku
+-s1 -e1 -Mh,d,r
+-s1 -e1 -An
+-s1 -e1 -At,r,s
+-s1 -a1 -Ku
+-s1 -a1 -Mh,d,r
+-s1 -a1 -An
+-s1 -a1 -At,r,s

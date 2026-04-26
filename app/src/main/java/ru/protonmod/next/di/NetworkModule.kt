@@ -202,6 +202,7 @@ object NetworkModule {
             
             if (useProxy && (strategy == SettingsManager.STRATEGY_PROTON_MIRRORS || 
                             strategy == SettingsManager.STRATEGY_WARP || 
+                            strategy == SettingsManager.STRATEGY_BYEDPI ||
                             strategy == SettingsManager.STRATEGY_CUSTOM_PROXY)) {
                 // For Proton Mirrors strategy, we rely on DohFallbackInterceptor and dynamicDns
                 // For WARP strategy, we rely on the VPN tunnel being up for specific actions.
@@ -349,10 +350,11 @@ object NetworkModule {
                 val settings = settingsManagerProvider.get()
                 val strategy = settings.getApiBypassStrategySync()
 
-                if (useProxy && strategy == SettingsManager.STRATEGY_CUSTOM_PROXY) {
-                    val host = settings.getApiProxyHostSync()
-                    val port = settings.getApiProxyPortSync()
-                    val type = settings.getApiProxyTypeSync()
+                if (useProxy && (strategy == SettingsManager.STRATEGY_CUSTOM_PROXY || 
+                                strategy == SettingsManager.STRATEGY_BYEDPI)) {
+                    val host = if (strategy == SettingsManager.STRATEGY_BYEDPI) "127.0.0.1" else settings.getApiProxyHostSync()
+                    val port = if (strategy == SettingsManager.STRATEGY_BYEDPI) settings.getApiProxyPortSync() else settings.getApiProxyPortSync()
+                    val type = if (strategy == SettingsManager.STRATEGY_BYEDPI) SettingsManager.PROXY_TYPE_SOCKS else settings.getApiProxyTypeSync()
 
                     if (host.isNotEmpty()) {
                         val proxyType = if (type == SettingsManager.PROXY_TYPE_HTTP) Proxy.Type.HTTP else Proxy.Type.SOCKS

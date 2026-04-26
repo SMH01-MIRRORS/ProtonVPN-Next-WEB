@@ -128,6 +128,12 @@
     <string name="api_proxy_type_socks">SOCKS5</string>
     <string name="api_proxy_username">نام کاربری (اختیاری)</string>
     <string name="api_proxy_password">رمز عبور (اختیاری)</string>
+    <string name="api_bypass_strategy_byedpi">ByeDPI</string>
+    <string name="api_bypass_strategy_byedpi_desc">دور زدن مسدودسازی‌های DPI با استفاده از تکه‌تکه کردن پیشرفته بسته‌ها و فریب سانسورچی.</string>
+    <string name="byedpi_flags_title">فلگ‌های بهترین استراتژی</string>
+    <string name="byedpi_flags_none">هنوز تست نشده است</string>
+    <string name="btn_start_test">یافتن استراتژی کارآمد</string>
+    <string name="btn_stop_test">توقف تست</string>
     <!-- Country Spoofing -->
     <string name="settings_country_spoofing_title">جعل کشور</string>
     <string name="settings_country_spoofing_description">جایگزینی کد کشور ارسال شده به API برای شبیه‌سازی یک مکان فیزیکی متفاوت.</string>
