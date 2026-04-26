@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159786,
-      "versionName": "12.0.0-alpha1st2-75-g6e2e6c0-nightly",
+      "versionCode": 605159787,
+      "versionName": "12.0.0-alpha1st2-76-g97cc565-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "docs: add Fastlane metadata for `ru.protonmod.next` in English and Russian\n\n* docs: add English (en-US) app title, short description, and full description highlighting AmneziaWG support, API bypass strategies, and Material You design\n* docs: add Russian (ru-RU) localization for all store listing metadata fields\n* docs: include project disclaimer regarding lack of affiliation with Proton AG in descriptions",
+      "changelog": "chore: update Kotlin version to 2.3.21",
       "force": false
     },
     "release": {
-      "versionCode": 605159786,
-      "versionName": "12.0.0-alpha1st2-75-g6e2e6c0-nightly",
+      "versionCode": 605159787,
+      "versionName": "12.0.0-alpha1st2-76-g97cc565-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "docs: add Fastlane metadata for `ru.protonmod.next` in English and Russian\n\n* docs: add English (en-US) app title, short description, and full description highlighting AmneziaWG support, API bypass strategies, and Material You design\n* docs: add Russian (ru-RU) localization for all store listing metadata fields\n* docs: include project disclaimer regarding lack of affiliation with Proton AG in descriptions",
+      "changelog": "chore: update Kotlin version to 2.3.21",
       "force": false
     }
   }
