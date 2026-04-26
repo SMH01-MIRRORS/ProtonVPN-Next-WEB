@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159788,
-      "versionName": "12.0.0-alpha1st2-77-ga445c4c-nightly",
+      "versionCode": 605159789,
+      "versionName": "12.0.0-alpha1st2-78-g20a3fd4-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "fix: Allow VPN disconnect from background on Android 12+",
+      "changelog": "refactor: optimize navigation transitions and theme hierarchy\n\n* refactor: improve navigation target tracking in `MainActivity` by implementing `lastKnownTarget` to prevent bottom bar flickering during route transitions\n* feat: add custom `fadeIn` and `fadeOut` animations to `NavHost` using `tween` specs for smoother screen transitions\n* refactor: remove redundant `key` wrapper around navigation logic and handle `startDestination` changes via `LaunchedEffect`\n* refactor: simplify `ProtonNextTheme` by using `Surface` as the root container and flattening the composition hierarchy",
       "force": false
     },
     "release": {
-      "versionCode": 605159788,
-      "versionName": "12.0.0-alpha1st2-77-ga445c4c-nightly",
+      "versionCode": 605159789,
+      "versionName": "12.0.0-alpha1st2-78-g20a3fd4-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "fix: Allow VPN disconnect from background on Android 12+",
+      "changelog": "refactor: optimize navigation transitions and theme hierarchy\n\n* refactor: improve navigation target tracking in `MainActivity` by implementing `lastKnownTarget` to prevent bottom bar flickering during route transitions\n* feat: add custom `fadeIn` and `fadeOut` animations to `NavHost` using `tween` specs for smoother screen transitions\n* refactor: remove redundant `key` wrapper around navigation logic and handle `startDestination` changes via `LaunchedEffect`\n* refactor: simplify `ProtonNextTheme` by using `Surface` as the root container and flattening the composition hierarchy",
       "force": false
     }
   }
