@@ -514,6 +514,7 @@ private fun AgreementText(onClick: () -> Unit) {
         }
     }
 
+    @Suppress("DEPRECATION")
     ClickableText(
         text = annotatedString,
         style = MaterialTheme.typography.bodySmall.copy(

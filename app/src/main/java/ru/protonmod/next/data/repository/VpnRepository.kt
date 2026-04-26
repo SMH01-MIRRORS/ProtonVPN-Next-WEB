@@ -554,7 +554,7 @@ class VpnRepository @Inject constructor(
                     registerWireGuardKey(accessToken, sessionId, publicKeyPem)
                 }
             }
-            return@withContext Result.success(session.wgCertificate ?: "")
+            return@withContext Result.success(session.wgCertificate)
         }
 
         ProtonLogger.i(TAG, "No valid certificate found. Registering new WireGuard key.")

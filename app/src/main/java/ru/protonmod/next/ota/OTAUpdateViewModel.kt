@@ -98,7 +98,7 @@ class OTAUpdateViewModel @Inject constructor(
 
                 if (!response.isSuccessful) throw Exception("Failed to download file")
 
-                val body = response.body ?: throw Exception("Response body is empty")
+                val body = response.body
                 val totalBytes = body.contentLength()
                 val apkFile = getUpdateFile(updateInfo.versionCode)
                 

@@ -25,13 +25,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.Input
 import androidx.compose.material.icons.rounded.BugReport
 import androidx.compose.material.icons.rounded.CleaningServices
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.FileDownload
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Input
 import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.*
@@ -192,7 +192,7 @@ fun DebugSettingsScreen(
                                     onClick = { showExportConfirm = true }
                                 )
                                 DebugActionRow(
-                                    icon = Icons.Rounded.Input,
+                                    icon = Icons.AutoMirrored.Rounded.Input,
                                     title = stringResource(R.string.debug_btn_import_session),
                                     onClick = { showImportDialog = true }
                                 )

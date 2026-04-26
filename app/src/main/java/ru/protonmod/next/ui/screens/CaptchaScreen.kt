@@ -233,7 +233,6 @@ fun CaptchaScreen(
 
                             settings.javaScriptEnabled = true
                             settings.domStorageEnabled = true
-                            settings.databaseEnabled = true
                             settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
                             val customUserAgent = DeviceInfoProvider.getSpoofedUserAgent()

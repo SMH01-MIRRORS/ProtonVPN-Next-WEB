@@ -77,7 +77,7 @@ class DohClient @Inject constructor(
                 okHttpClient.newCall(request).execute().use { response ->
                     if (response.isSuccessful) {
                         val responseBody = response.body
-                        val body = responseBody?.string() ?: return@use
+                        val body = responseBody.string()
                         val dohResponse = json.decodeFromString<DohResponse>(body)
                         if (dohResponse.status == 0 && dohResponse.answer != null) {
                             return dohResponse.answer
