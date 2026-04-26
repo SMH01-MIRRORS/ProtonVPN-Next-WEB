@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159803,
-      "versionName": "12.0.0-alpha1st2-92-g5b4e0b3-nightly",
+      "versionCode": 605159804,
+      "versionName": "12.0.0-alpha1st2-93-ge74dfc9-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "chore: perform code cleanup and address deprecation warnings\n\n* refactor: update `Input` icon to `AutoMirrored` variant in `DebugSettingsScreen` for proper RTL support\n* refactor: remove redundant null checks and fallbacks for OkHttp response bodies in `DohClient` and `OTAUpdateViewModel`\n* chore: suppress deprecation warnings for `ClickableText` and `ConnectivityManager.allNetworks` usage\n* refactor: remove deprecated `databaseEnabled` setting from `CaptchaScreen` WebView configuration\n* refactor: simplify certificate handling in `VpnRepository` by removing unnecessary null safety fallback",
+      "changelog": "feat: add Crowdin link for community translations\n\n* feat: add `about_crowdin` string resource to English, Russian, Ukrainian, Chinese, and Belarusian locales\n* feat: define Crowdin project URL in the base `strings.xml` file",
       "force": false
     },
     "release": {
-      "versionCode": 605159803,
-      "versionName": "12.0.0-alpha1st2-92-g5b4e0b3-nightly",
+      "versionCode": 605159804,
+      "versionName": "12.0.0-alpha1st2-93-ge74dfc9-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "chore: perform code cleanup and address deprecation warnings\n\n* refactor: update `Input` icon to `AutoMirrored` variant in `DebugSettingsScreen` for proper RTL support\n* refactor: remove redundant null checks and fallbacks for OkHttp response bodies in `DohClient` and `OTAUpdateViewModel`\n* chore: suppress deprecation warnings for `ClickableText` and `ConnectivityManager.allNetworks` usage\n* refactor: remove deprecated `databaseEnabled` setting from `CaptchaScreen` WebView configuration\n* refactor: simplify certificate handling in `VpnRepository` by removing unnecessary null safety fallback",
+      "changelog": "feat: add Crowdin link for community translations\n\n* feat: add `about_crowdin` string resource to English, Russian, Ukrainian, Chinese, and Belarusian locales\n* feat: define Crowdin project URL in the base `strings.xml` file",
       "force": false
     }
   }
