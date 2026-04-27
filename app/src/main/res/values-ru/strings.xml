@@ -249,7 +249,7 @@
     <string name="about_github">GitHub</string>
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
-    <string name="about_crowdin">Help with Translation</string>
+    <string name="about_crowdin">Помочь с переводом</string>
     <string name="about_sentry">На базе Sentry</string>
     <!-- Licenses Screen -->
     <string name="licenses_title">Лицензии</string>
