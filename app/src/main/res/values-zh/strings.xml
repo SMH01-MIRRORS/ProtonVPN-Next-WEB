@@ -132,6 +132,9 @@
     <string name="byedpi_sni_title">SNI 主机</string>
     <string name="byedpi_sni_hint">google.com</string>
     <string name="byedpi_flags_none">尚未测试</string>
+    <string name="byedpi_test_results_title">测试结果</string>
+    <string name="btn_apply">应用</string>
+    <string name="btn_copy">复制</string>
     <string name="btn_start_test">寻找可用策略</string>
     <string name="btn_stop_test">停止测试</string>
     <!-- Country Spoofing -->

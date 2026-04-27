@@ -18,6 +18,7 @@
 package ru.protonmod.next.ui.screens.settings
 
 import android.app.Activity
+import android.content.Context
 import android.net.VpnService
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -401,6 +402,60 @@ fun ApiBypassScreen(
                                                 colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
                                             ) {
                                                 Text(stringResource(R.string.btn_start_test))
+                                            }
+                                        }
+
+                                        // Test Results List
+                                        if (uiState.byeDpiResults.isNotEmpty()) {
+                                            Spacer(modifier = Modifier.height(16.dp))
+                                            Text(
+                                                text = stringResource(R.string.byedpi_test_results_title),
+                                                style = MaterialTheme.typography.labelMedium,
+                                                color = colors.textWeak
+                                            )
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            
+                                            uiState.byeDpiResults.reversed().forEach { result ->
+                                                Column(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(vertical = 4.dp)
+                                                        .background(colors.backgroundSecondary.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                                                        .padding(8.dp)
+                                                ) {
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Text(
+                                                            text = "${result.successCount}/${result.totalSites}",
+                                                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                                            color = if (result.successCount == result.totalSites) colors.notificationSuccess else colors.textNorm
+                                                        )
+                                                        Row {
+                                                            TextButton(
+                                                                onClick = {
+                                                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                                                    val clip = android.content.ClipData.newPlainText("ByeDPI Strategy", result.strategy)
+                                                                    clipboard.setPrimaryClip(clip)
+                                                                }
+                                                            ) {
+                                                                Text(stringResource(R.string.btn_copy), style = MaterialTheme.typography.labelSmall)
+                                                            }
+                                                            TextButton(
+                                                                onClick = { viewModel.setByeDpiFlags(result.strategy) }
+                                                            ) {
+                                                                Text(stringResource(R.string.btn_apply), style = MaterialTheme.typography.labelSmall)
+                                                            }
+                                                        }
+                                                    }
+                                                    Text(
+                                                        text = result.strategy,
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = colors.textWeak
+                                                    )
+                                                }
                                             }
                                         }
                                     }

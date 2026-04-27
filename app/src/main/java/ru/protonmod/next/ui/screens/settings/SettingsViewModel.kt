@@ -82,6 +82,7 @@ data class SettingsUiState(
     val byeDpiCurrentStrategy: String = "",
     val byeDpiFlags: String = "",
     val byeDpiSni: String = "google.com",
+    val byeDpiResults: List<ByeDpiStrategyTester.TestResult> = emptyList(),
 
     // API Mirroring / Spoofing
     val spoofCountryEnabled: Boolean = false,
@@ -257,6 +258,7 @@ class SettingsViewModel @Inject constructor(
         byeDpiStrategyTester.isTesting,
         byeDpiStrategyTester.progress,
         byeDpiStrategyTester.currentStrategy,
+        byeDpiStrategyTester.testResults,
         _availableChannels,
         _isAnyVpnActive,
         _isCheckingForUpdates,
@@ -324,10 +326,11 @@ class SettingsViewModel @Inject constructor(
             isByeDpiTesting = args[57] as Boolean,
             byeDpiTestProgress = args[58] as Float,
             byeDpiCurrentStrategy = args[59] as String,
-            availableChannels = args[60] as Map<String, Boolean>,
-            isAnyVpnActive = args[61] as Boolean,
-            isCheckingForUpdates = args[62] as Boolean,
-            isUpdateAvailable = args[63] as Boolean
+            byeDpiResults = args[60] as List<ByeDpiStrategyTester.TestResult>,
+            availableChannels = args[61] as Map<String, Boolean>,
+            isAnyVpnActive = args[62] as Boolean,
+            isCheckingForUpdates = args[63] as Boolean,
+            isUpdateAvailable = args[64] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,

@@ -44,6 +44,11 @@ class ByeDpiStrategyTester @Inject constructor(
     private val _currentStrategy = MutableStateFlow("")
     val currentStrategy = _currentStrategy.asStateFlow()
 
+    data class TestResult(val strategy: String, val successCount: Int, val totalSites: Int)
+    
+    private val _testResults = MutableStateFlow<List<TestResult>>(emptyList())
+    val testResults = _testResults.asStateFlow()
+
     private var testJob: Job? = null
 
     fun startTesting(sites: List<String>, strategies: List<String>) {
@@ -53,6 +58,7 @@ class ByeDpiStrategyTester @Inject constructor(
             try {
                 _isTesting.value = true
                 _progress.value = 0f
+                _testResults.value = emptyList()
                 
                 // Disable auto-management during testing
                 byeDpiManager.isAutoManagementEnabled = false
@@ -87,6 +93,8 @@ class ByeDpiStrategyTester @Inject constructor(
                         
                         val totalSuccess = results.sumOf { it.second }
                         ProtonLogger.i("ByeDpiStrategyTester", "Strategy: $strategy, Success: $totalSuccess/${sites.size}")
+
+                        _testResults.value = _testResults.value + TestResult(strategy, totalSuccess, sites.size)
 
                         if (totalSuccess > maxSuccess) {
                             maxSuccess = totalSuccess

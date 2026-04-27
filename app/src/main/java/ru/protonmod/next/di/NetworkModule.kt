@@ -155,6 +155,8 @@ object NetworkModule {
                     "*.proton.me",
                     "*.protonmail.ch",
                     "*.protonvpn.ch",
+                    "*.protonvpn.com",
+                    "*.protonmail.com",
                     "*.qzz.io",
                     "*.netlify.app"
                 ).forEach { host ->
@@ -172,13 +174,20 @@ object NetworkModule {
             val userAgent = DeviceInfoProvider.getSpoofedUserAgent()
             
             // Only rewrite if it's a Proton API request (direct or through one of the proxies)
-            val isProtonApi = (originalUrl.host == protonDirectHost || 
-                              originalUrl.host == "api.protonmail.ch" ||
-                              originalUrl.host == "api.protonvpn.ch" ||
-                              originalUrl.host == "api.protonmail.com" ||
-                              originalUrl.host == "mail.proton.me" ||
-                              originalUrl.host == protonNetlifyHost ||
-                              originalUrl.host == protonCloudflareHost)
+            val host = originalUrl.host
+            val isProtonApi = (host == protonDirectHost || 
+                              host.endsWith(".proton.me") ||
+                              host.endsWith(".protonmail.ch") ||
+                              host.endsWith(".protonvpn.ch") ||
+                              host.endsWith(".protonvpn.com") ||
+                              host.endsWith(".protonmail.com") ||
+                              host == "proton.me" ||
+                              host == "protonmail.ch" ||
+                              host == "protonvpn.ch" ||
+                              host == "protonvpn.com" ||
+                              host == "protonmail.com" ||
+                              host == protonNetlifyHost ||
+                              host == protonCloudflareHost)
             
             if (!isProtonApi) {
                 // For non-Proton requests (like OTA mirrors), ensure we still provide a standard User-Agent.
@@ -297,7 +306,9 @@ object NetworkModule {
             val isIp = hostname.matches(Regex("""\d+\.\d+\.\d+\.\d+"""))
             
             if (isIp || hostname.endsWith(".qzz.io") || hostname.endsWith(".netlify.app") || 
-                hostname == "vpn-api.proton.me" || hostname == "api.protonmail.ch") {
+                hostname.endsWith(".proton.me") || hostname.endsWith(".protonmail.ch") ||
+                hostname.endsWith(".protonvpn.ch") || hostname.endsWith(".protonvpn.com") ||
+                hostname.endsWith(".protonmail.com")) {
                  return@HostnameVerifier PinVerifier.check(session, allPins)
             }
 

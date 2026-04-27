@@ -146,6 +146,9 @@
     <string name="byedpi_sni_title">SNI Host</string>
     <string name="byedpi_sni_hint">google.com</string>
     <string name="byedpi_flags_none">Not tested yet</string>
+    <string name="byedpi_test_results_title">Test Results</string>
+    <string name="btn_apply">Apply</string>
+    <string name="btn_copy">Copy</string>
     <string name="btn_start_test">Find Working Strategy</string>
     <string name="btn_stop_test">Stop Testing</string>
 

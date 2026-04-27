@@ -132,6 +132,9 @@
     <string name="byedpi_flags_label">فلگ‌های ByeDPI</string>
     <string name="byedpi_sni_title">SNI Host</string>
     <string name="byedpi_sni_hint">google.com</string>
+    <string name="byedpi_test_results_title">نتایج تست</string>
+    <string name="btn_apply">اعمال</string>
+    <string name="btn_copy">کپی</string>
     <string name="btn_start_test">یافتن استراتژی کارآمد</string>
     <string name="btn_stop_test">توقف تست</string>
     <!-- Country Spoofing -->
