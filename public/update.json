@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159819,
-      "versionName": "12.0.0-alpha1st2-108-gb7b38e3-nightly",
+      "versionCode": 605159825,
+      "versionName": "12.0.0-alpha1st2-114-g49a4b89-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "feat: enhance ByeDPI strategy testing and expand Proton domain matching\n\n* feat: implement a test results list in `ApiBypassScreen` allowing users to copy or apply specific ByeDPI strategies\n* refactor: improve `isProtonApi` detection and hostname verification in `NetworkModule` to include additional subdomains and `.com` variants for Proton services\n* feat: update `ByeDpiStrategyTester` and `SettingsViewModel` to track and expose a history of strategy test results via `StateFlow`\n* feat: add more Proton-specific endpoints to `proxytest_proton.sites` for improved testing coverage\n* chore: add localized strings for \"Apply,\" \"Copy,\" and \"Test Results\" across multiple languages and fix a typo in Belarusian translations",
+      "changelog": "Crowdin updates\n\nNew Crowdin updates",
       "force": false
     },
     "release": {
-      "versionCode": 605159819,
-      "versionName": "12.0.0-alpha1st2-108-gb7b38e3-nightly",
+      "versionCode": 605159825,
+      "versionName": "12.0.0-alpha1st2-114-g49a4b89-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "feat: enhance ByeDPI strategy testing and expand Proton domain matching\n\n* feat: implement a test results list in `ApiBypassScreen` allowing users to copy or apply specific ByeDPI strategies\n* refactor: improve `isProtonApi` detection and hostname verification in `NetworkModule` to include additional subdomains and `.com` variants for Proton services\n* feat: update `ByeDpiStrategyTester` and `SettingsViewModel` to track and expose a history of strategy test results via `StateFlow`\n* feat: add more Proton-specific endpoints to `proxytest_proton.sites` for improved testing coverage\n* chore: add localized strings for \"Apply,\" \"Copy,\" and \"Test Results\" across multiple languages and fix a typo in Belarusian translations",
+      "changelog": "Crowdin updates\n\nNew Crowdin updates",
       "force": false
     }
   }
