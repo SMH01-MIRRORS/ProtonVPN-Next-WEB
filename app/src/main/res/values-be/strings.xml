@@ -17,8 +17,8 @@
   -->
 <resources>
     <!-- Welcome Screen -->
-    <string name="welcome_title">Сардэчна запрашаем у Proton VPN-Next</string>
-    <string name="welcome_subtitle">Кіруйце сваім лічбавым жыццём з дапамогай бяспечнага, прыватнага і хуткага VPN. Без логаў і сачэння.</string>
+    <string name="welcome_title">Вітаем у Proton VPN-Next</string>
+    <string name="welcome_subtitle">Кіруйце сваім лічбавым жыццём з дапамогай бяспечнага, прыватнага і хуткага VPN. Без журналаў і сачэння.</string>
     <string name="btn_create_account">Стварыць уліковы запіс</string>
     <string name="btn_login">Увайсці</string>
     <string name="btn_continue_guest">Працягнуць як госць</string>
@@ -34,15 +34,15 @@
     <string name="title_2fa">Двухфактарная аўтэнтыфікацыя</string>
     <string name="msg_2fa_instruction">Увядзіце 6-значны код TOTP з вашай праграмы аўтэнтыфікацыі.</string>
     <string name="hint_2fa_code">6-значны код</string>
-    <string name="btn_verify">Праверыць</string>
+    <string name="btn_verify">Спраўдзіць</string>
     <!-- Dashboard Screen -->
     <string name="dashboard_title">Proton VPN-Next</string>
     <string name="btn_retry">Паўтарыць</string>
-    <string name="error_system_appops">Сістэмная памылка: калі ласка, пераўсталюйце прыкладанне.</string>
+    <string name="error_system_appops">Сістэмная памылка: пераўсталюйце праграму.</string>
     <string name="title_recent_connections">Нядаўнія падключэнні</string>
     <string name="status_connected">Падключана</string>
     <string name="status_connecting">Падключэнне…</string>
-    <string name="status_verifying">Праверка…</string>
+    <string name="status_verifying">Спраўджанне…</string>
     <string name="status_disconnecting">Адключэнне…</string>
     <string name="status_disconnected">Адключана</string>
     <string name="status_not_connected">Не падключана</string>
@@ -57,7 +57,7 @@
     <string name="btn_quick_connect">Хуткае падключэнне</string>
     <!-- VPN Certificate Messages -->
     <string name="cert_msg_expiring_soon">Тэрмін дзеяння сертыфіката завяршаецца праз %1$d гадз. Хуткае абнаўленне…</string>
-    <string name="cert_msg_expired">Тэрмін дзеяння вашага VPN-сертыфіката скончыўся і яго неабходна абнавіць.</string>
+    <string name="cert_msg_expired">Тэрмін дзеяння вашага сертыфіката VPN завяршыўся і яго неабходна падоўжыць.</string>
     <string name="cert_msg_refreshing">Абнаўленне сертыфіката VPN…</string>
     <string name="cert_msg_refresh_failed">Не ўдалося абнавіць сертыфікат: %1$s. Паўторная спроба праз 15 хвілін.</string>
     <string name="cert_msg_auto_refresh_failed">Збой аўтаматычнага абнаўлення. Паспрабуйце зрабіць гэта ўручную.</string>
@@ -72,10 +72,10 @@
     <string name="settings_kill_switch_desc">Kill Switch</string>
     <string name="settings_auto_connect">Аўтападключэнне</string>
     <string name="settings_auto_connect_desc">Падключацца да VPN пры запуску</string>
-    <string name="settings_split_tunneling">Раздзельнае тунэляванне</string>
+    <string name="settings_split_tunneling">Split Tunneling</string>
     <string name="settings_split_tunneling_desc">Выключыць праграмы або IP з VPN</string>
     <string name="settings_excluded_apps">Выключаныя праграмы</string>
-    <string name="settings_included_apps">Прыкладанні праз VPN</string>
+    <string name="settings_included_apps">Праграмы праз VPN</string>
     <string name="settings_excluded_ips">Выключаныя IP-адрасы</string>
     <string name="settings_included_ips">IP-адрасы праз VPN</string>
     <string name="settings_excluded_domains">Выключаныя дамены</string>
@@ -91,7 +91,7 @@
     <string name="settings_disclaimer">Адмова ад адказнасці</string>
     <string name="settings_legal">Юрыдычная інфармацыя</string>
     <string name="welcome_agreement_text">Працягваючы, вы згаджаецеся з нашымі %1$s і %2$s.</string>
-    <string name="settings_licenses_desc">Баковыя ПЗ, якія выкарыстоўваюцца ў прыкладанні</string>
+    <string name="settings_licenses_desc">Старонняе ПЗ, якое выкарыстоўваецца ў праграме</string>
     <string name="settings_on">Укл</string>
     <string name="settings_off">Выкл</string>
     <string name="settings_port">Порт</string>
@@ -110,10 +110,10 @@
     <string name="api_bypass_strategy_mirrors">Люстэрка Proton (DoH)</string>
     <string name="api_bypass_strategy_mirrors_desc">Знаходзіць і выкарыстоўвае дынамічныя люстэркі Proton API праз DNS-over-HTTPS fallback.</string>
     <string name="api_bypass_strategy_warp">WARP (Cloudflare)</string>
-    <string name="api_bypass_strategy_warp_desc">Выкарыстанне часовага тунэля WARP для запытаў да API. Высокая надзейнасць.</string>
+    <string name="api_bypass_strategy_warp_desc">Выкарыстанне часовага тунэлю WARP для запытаў да API. Высокая надзейнасць.</string>
     <string name="warp_fetching_config">Атрыманне канфігурацыі WARP…</string>
     <string name="warp_permission_title">Патрабуецца дазвол на VPN</string>
-    <string name="warp_permission_desc">Для WARP патрабуецца дазвол на стварэнне лакальнага тунэля для абыходу блакіровак API. Ніякія даныя не перадаюцца па-за межы Cloudflare.</string>
+    <string name="warp_permission_desc">Для WARP патрабуецца дазвол на стварэнне лакальнага тунэлю, каб абысці блакіроўку API. Ніякія даныя не перадаюцца па-за межы Cloudflare.</string>
     <string name="btn_allow">Дазволіць</string>
     <string name="btn_accept">Ужыць</string>
     <string name="api_bypass_strategy_custom">Карыстальніцкі проксі (SOCKS5/HTTPS)</string>
@@ -144,7 +144,7 @@
     <string name="settings_country_spoofing_null_desc">Не адпраўляць загаловак з кодам краіны ў API.</string>
     <string name="settings_country_spoofing_code_label">Код краіны (ISO 3166-1 alpha-2)</string>
     <string name="settings_country_spoofing_code_hint">напрыклад, US, DE, RU</string>
-    <string name="settings_country_spoofing_update_toast">Абнаўленне спісу сервераў…</string>
+    <string name="settings_country_spoofing_update_toast">Абнаўленне спіса сервераў…</string>
     <!-- Custom DNS -->
     <string name="settings_custom_dns">Карыстальніцкі DNS</string>
     <string name="settings_custom_dns_default">Прадвызначана (Proton DNS)</string>
@@ -155,7 +155,7 @@
     <!-- Customization -->
     <string name="settings_customization">Дапасаванне</string>
     <string name="settings_app_theme">Тэма праграмы</string>
-    <string name="settings_load_display_mode">Адлюстраванне нагрузкі</string>
+    <string name="settings_load_display_mode">Адлюстраванне нагрузкі сервера</string>
     <string name="load_mode_all">Лінія і працэнты</string>
     <string name="load_mode_line">Толькі лінія</string>
     <string name="load_mode_percent">Толькі працэнты</string>
@@ -186,15 +186,15 @@
     <string name="settings_sentry_anr">Выяўленне ANR</string>
     <string name="settings_sentry_anr_desc">Выяўленне сітуацый, калі праграма не адказвае на працягу больш чым 5 секунд</string>
     <string name="settings_sentry_metrics">Метрыкі праграмы</string>
-    <string name="settings_sentry_metrics_desc">Адсочванне стану прыкладання з дапамогай лікавых даных (лічыльнікі, шкалы)</string>
+    <string name="settings_sentry_metrics_desc">Адсочванне стану праграмы з дапамогай лікавых даных (лічыльнікі, шкалы)</string>
     <string name="settings_sentry_logs">Адпраўка журналаў</string>
     <string name="settings_sentry_logs_desc">Уключаць ананімныя сістэмныя журналы, каб дапамагчы ў адладцы складаных праблем</string>
-    <string name="settings_sentry_session_replay">Паўторы сесій</string>
+    <string name="settings_sentry_session_replay">Паўторы сеансаў</string>
     <string name="settings_sentry_session_replay_desc">Ананімнае прайграванне ўзаемадзеянняў для адладкі праблем інтэрфейсу</string>
     <!-- Kill Switch Screen -->
     <string name="kill_switch_title">Kill Switch</string>
     <string name="kill_switch_subtitle">Kill Switch</string>
-    <string name="kill_switch_desc">Каб ваш трафік заўсёды быў абаронены, выкарыстоўвайце Kill Switch, які прадастаўляецца Android. Гэта прадухіляе ўцечку даных пры разрыве VPN-злучэння.</string>
+    <string name="kill_switch_desc">Выкарыстоўвайце Kill Switch, які ўжо прысутнічае ў вашай аперацыйнай сістэме. Дадзеная функцыя дазволіць абараніць ваш трафік і прадухіліць уцечку даных пры разрыве падключэння па VPN.</string>
     <string name="kill_switch_step_1">1. Націсніце кнопку ніжэй, каб адкрыць налады VPN.</string>
     <string name="kill_switch_step_2">2. Націсніце значок налад побач з Proton VPN-Next.</string>
     <string name="kill_switch_step_3">3. Уключыце «Пастаянны VPN» і «Блакіраваць падключэнні без VPN».</string>
@@ -206,16 +206,16 @@
     <string name="obfuscation_s1">Init Packet Junk Size (S1)</string>
     <string name="obfuscation_s2">Response Packet Junk Size (S2)</string>
     <string name="obfuscation_s3">Памер смецця ў Cookie Reply (S3)</string>
-    <string name="obfuscation_s4">Памер смецця ў Transport (S4)</string>
+    <string name="obfuscation_s4">Transport Packet Junk Size (S4)</string>
     <string name="obfuscation_h1">Init Packet Magic (H1)</string>
     <string name="obfuscation_h2">Response Packet Magic (H2)</string>
     <string name="obfuscation_h3">Underload Packet Magic (H3)</string>
     <string name="obfuscation_h4">Transport Packet Magic (H4)</string>
-    <string name="obfuscation_i1">Спецыяльнае смецце (I1)</string>
-    <string name="obfuscation_i2">Спецыяльнае смецце (I2)</string>
-    <string name="obfuscation_i3">Спецыяльнае смецце (I3)</string>
-    <string name="obfuscation_i4">Спецыяльнае смецце (I4)</string>
-    <string name="obfuscation_i5">Спецыяльнае смецце (I5)</string>
+    <string name="obfuscation_i1">Special Junk (I1)</string>
+    <string name="obfuscation_i2">Special Junk (I2)</string>
+    <string name="obfuscation_i3">Special Junk (I3)</string>
+    <string name="obfuscation_i4">Special Junk (I4)</string>
+    <string name="obfuscation_i5">Special Junk (I5)</string>
     <!-- Obfuscation Modes -->
     <string name="obfuscation_mode_easy">Просты</string>
     <string name="obfuscation_mode_advanced">Дадаткова</string>
@@ -269,12 +269,12 @@
     <string name="license_android_svg_title">Android SVG</string>
     <string name="license_bsl">Business Source License 1.1</string>
     <!-- Split Tunneling -->
-    <string name="settings_st_mode">Рэжым раздзельнага тунэлявання</string>
+    <string name="settings_st_mode">Рэжым Split Tunneling</string>
     <string name="st_mode_exclude">Рэжым выключэння</string>
     <string name="st_mode_exclude_desc">Выбраныя праграмы і IP будуць абыходзіць VPN</string>
     <string name="st_mode_include">Рэжым уключэння</string>
     <string name="st_mode_include_desc">Толькі выбраныя праграмы і IP будуць выкарыстоўваць VPN</string>
-    <string name="st_enabled_subtitle">VPN-падключэнне будзе прытрымлівацца правілаў раздзельнага тунэлявання</string>
+    <string name="st_enabled_subtitle">Падключэнне па VPN будзе прытрымлівацца правіл Split Tunneling</string>
     <string name="st_disabled_subtitle">Увесь трафік ідзе праз VPN</string>
     <plurals name="st_apps_selected">
         <item quantity="one">Выбрана %1$d праграма</item>
@@ -315,7 +315,7 @@
     <string name="notification_channel_name">Статус VPN</string>
     <string name="notification_channel_desc">Паказвае бягучы статус падключэння VPN</string>
     <string name="notification_title_connected">Падключана да %1$s</string>
-    <string name="notification_title_verifying">Праверка падключэння…</string>
+    <string name="notification_title_verifying">Спраўджанне падключэння…</string>
     <string name="notification_title_disconnected">Адключана</string>
     <string name="notification_title_connecting">Падключэнне…</string>
     <string name="notification_action_disconnect">Адключыць</string>
@@ -381,13 +381,13 @@
     <!-- Debug Tools -->
     <string name="settings_debug">Інструменты адладкі</string>
     <string name="debug_title">Панэль адладкі</string>
-    <string name="debug_session_header">VPN Сесія і Сертыфікат</string>
+    <string name="debug_session_header">Сеанс VPN і сертыфікат</string>
     <string name="debug_cert_id">Ідэнт. серт.: %1$s</string>
     <string name="debug_cert_issued">Выдадзены: %1$s</string>
     <string name="debug_cert_expires">Міне: %1$s</string>
     <string name="debug_btn_refresh_cert">Абнавіць сертыфікат прымусова</string>
     <string name="debug_btn_refresh_session">Абнавіць сеанс прымусова</string>
-    <string name="debug_session_refreshed">Сесія паспяхова абноўлена!</string>
+    <string name="debug_session_refreshed">Сеанс паспяхова абноўлены!</string>
     <string name="debug_exports_header">Экспарт і дыягностыка</string>
     <string name="debug_btn_export_logs">Экспарт Logcat у Downloads</string>
     <string name="debug_btn_export_config">Экспарт канфігурацыі WG (.conf)</string>
@@ -397,7 +397,7 @@
     <string name="debug_device_header">Звесткі аб прыладзе</string>
     <string name="debug_select_server">Выберыце сервер для экспарту канфігурацыі</string>
     <!-- Sentry Debug -->
-    <string name="debug_sentry_header">Тэставанне Sentry SDK</string>
+    <string name="debug_sentry_header">Тэсціраванне Sentry SDK</string>
     <string name="debug_btn_crash_java">Выклікаць Java Crash</string>
     <string name="debug_btn_crash_native">Выклікаць Native Crash</string>
     <string name="debug_btn_anr">Выклікаць ANR (5 сек)</string>
@@ -426,20 +426,20 @@
     <string name="settings_widget_add_to_home">Дадаць на галоўны экран</string>
     <string name="settings_widget_add_to_home_desc">Размясціць віджэт VPN на працоўным стале</string>
     <string name="captcha_title">Антыспамавая праверка</string>
-    <string name="captcha_message">Для забеспячэння бяспекі акаўнта, калі ласка, прайдзіце праверку ніжэй.</string>
+    <string name="captcha_message">Прайдзіце спраўджанне ніжэй, каб забяспечыць бяспеку вашага ўліковага запісу.</string>
     <string name="captcha_proxy_active">Антыблакіровачны проксі актыўны</string>
     <string name="desc_close">Закрыць</string>
     <!-- Token Login & Session Management -->
     <string name="btn_login_tokens">Уваход праз токен</string>
     <string name="title_login_tokens">Уваход па токенах</string>
     <string name="msg_login_tokens_desc">Устаўце JSON вашага сеанса ніжэй для прамога ўваходу. Трымайце гэтыя даныя ў сакрэце!</string>
-    <string name="hint_session_json">JSON сесіі</string>
+    <string name="hint_session_json">Сеанс JSON</string>
     <string name="debug_btn_export_session">Экспарт сеанса (у буфер)</string>
     <string name="debug_btn_import_session">Імпарт сеанса</string>
     <string name="debug_btn_fetch_domains">Атрымаць даступныя дамены (з буфера)</string>
     <string name="debug_export_session_title">Экспарт канфідэнцыяльных даных</string>
-    <string name="debug_export_session_msg">Гэта скапіюе вашу поўную сесію (уключаючы токены і прыватныя ключы) у буфер абмену. НЕ дзяліцеся гэтым ні з кім!</string>
-    <string name="debug_import_session_warning">УВАГА: Імпарт сесіі перазапіша бягучую. Выкарыстоўвайце з асцярожнасцю.</string>
+    <string name="debug_export_session_msg">Гэта скапіюе ваш поўны сеанс (уключаючы токены і закрытыя ключы) у буфер абмену. НЕ абагульвайце гэтыя звесткі з іншымі карыстальнікамі!</string>
+    <string name="debug_import_session_warning">ПАПЯРЭДЖАННЕ: імпартаванне новага сеанса перазапіша ваш бягучы сеанс. Выкарыстоўвайце з асцярожнасцю.</string>
     <string name="debug_btn_copy">Скапіяваць</string>
     <string name="btn_import">Імпартаваць</string>
     <string name="btn_logout">Выйсці</string>
@@ -448,7 +448,7 @@
     <string name="ota_title">Абнаўленне ПЗ</string>
     <string name="ota_new_version">Даступна новая версія: %1$s</string>
     <string name="ota_changelog">Што новага:</string>
-    <string name="ota_btn_update">Абнавіць зараз</string>
+    <string name="ota_btn_update">Абнавіць</string>
     <string name="ota_btn_install">Усталяваць</string>
     <string name="ota_btn_later">Пазней</string>
     <string name="ota_force_title">Патрабуецца абнаўленне</string>
