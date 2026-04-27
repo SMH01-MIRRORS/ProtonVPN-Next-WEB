@@ -38,6 +38,9 @@ class NetworkMonitor @Inject constructor(
     private val _isNetworkAvailable = MutableStateFlow(false)
     val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable
 
+    private val _isVpnActive = MutableStateFlow(false)
+    val isVpnActive: StateFlow<Boolean> = _isVpnActive
+
     private val _networkChanged = MutableStateFlow(0L)
     /**
      * Emits the current timestamp whenever the network changes.
@@ -57,6 +60,7 @@ class NetworkMonitor @Inject constructor(
         override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
             val hasInternet = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
             _isNetworkAvailable.value = hasInternet
+            _isVpnActive.value = capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
             if (hasInternet) {
                 _networkChanged.value = System.currentTimeMillis()
             }
@@ -69,11 +73,18 @@ class NetworkMonitor @Inject constructor(
             .build()
         connectivityManager.registerNetworkCallback(request, networkCallback)
         _isNetworkAvailable.value = checkNetworkAvailability()
+        _isVpnActive.value = checkVpnAvailability()
     }
 
     private fun checkNetworkAvailability(): Boolean {
         val activeNetwork = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
+    private fun checkVpnAvailability(): Boolean {
+        val activeNetwork = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
+        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
     }
 }

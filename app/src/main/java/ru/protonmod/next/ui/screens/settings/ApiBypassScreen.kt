@@ -352,19 +352,25 @@ fun ApiBypassScreen(
                                             .background(colors.backgroundSecondary.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
                                             .padding(12.dp)
                                     ) {
-                                        Text(
-                                            text = stringResource(R.string.byedpi_flags_title),
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = colors.textWeak
-                                        )
-                                        Text(
-                                            text = uiState.byeDpiFlags.ifEmpty { stringResource(R.string.byedpi_flags_none) },
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = colors.textNorm,
-                                            modifier = Modifier.padding(vertical = 4.dp)
+                                        // SNI Host input
+                                        SettingInputRow(
+                                            label = stringResource(R.string.byedpi_sni_title),
+                                            value = uiState.byeDpiSni,
+                                            onValueChange = { viewModel.setByeDpiSni(it) },
+                                            placeholder = "google.com"
                                         )
 
-                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Spacer(modifier = Modifier.height(12.dp))
+
+                                        // Flags input
+                                        SettingInputRow(
+                                            label = stringResource(R.string.byedpi_flags_label),
+                                            value = uiState.byeDpiFlags,
+                                            onValueChange = { viewModel.setByeDpiFlags(it) },
+                                            placeholder = stringResource(R.string.byedpi_flags_none)
+                                        )
+
+                                        Spacer(modifier = Modifier.height(12.dp))
 
                                         if (uiState.isByeDpiTesting) {
                                             Column(horizontalAlignment = Alignment.CenterHorizontally) {

@@ -50,82 +50,87 @@ class ByeDpiStrategyTester @Inject constructor(
         if (_isTesting.value) return
 
         testJob = CoroutineScope(Dispatchers.IO).launch {
-            _isTesting.value = true
-            _progress.value = 0f
-            
-            var bestStrategy = ""
-            var maxSuccess = -1
-
-            val proxyIp = "127.0.0.1"
-            val proxyPort = 1080
-            val siteChecker = SiteCheckUtils(proxyIp, proxyPort)
-
-            for ((index, strategy) in strategies.withIndex()) {
-                if (!isActive) break
+            try {
+                _isTesting.value = true
+                _progress.value = 0f
                 
-                _currentStrategy.value = strategy
-                _progress.value = index.toFloat() / strategies.size
-
-                val args = prepareArgs(strategy, proxyIp, proxyPort)
-                byeDpiManager.start(args)
+                // Disable auto-management during testing
+                byeDpiManager.isAutoManagementEnabled = false
                 
-                // Wait for proxy to stabilize
-                delay(1000)
+                var bestStrategy = ""
+                var maxSuccess = -1
 
-                if (byeDpiManager.isRunning.value) {
-                    val results = siteChecker.checkSitesAsync(
-                        sites = sites,
-                        requestsCount = 1,
-                        requestTimeoutSeconds = 5,
-                        concurrentRequests = 3
-                    )
-                    
-                    val totalSuccess = results.sumOf { it.second }
-                    ProtonLogger.i("ByeDpiStrategyTester", "Strategy: $strategy, Success: $totalSuccess/${sites.size}")
+                val proxyIp = "127.0.0.1"
+                val proxyPort = 1080
+                val siteChecker = SiteCheckUtils(proxyIp, proxyPort)
+                val sni = settingsManager.getByeDpiSniSync()
 
-                    if (totalSuccess > maxSuccess) {
-                        maxSuccess = totalSuccess
-                        bestStrategy = strategy
-                    }
+                for ((index, strategy) in strategies.withIndex()) {
+                    if (!isActive) break
                     
-                    // Optimization: if all sites are reachable, we can stop
-                    if (totalSuccess == sites.size) {
-                        ProtonLogger.i("ByeDpiStrategyTester", "Found perfect strategy: $bestStrategy")
-                        break
+                    _currentStrategy.value = strategy
+                    _progress.value = index.toFloat() / strategies.size
+
+                    val args = prepareArgs(strategy, sni, proxyIp, proxyPort)
+                    byeDpiManager.start(args)
+                    
+                    // Wait for proxy to stabilize
+                    delay(1000)
+
+                    if (byeDpiManager.isRunning.value) {
+                        val results = siteChecker.checkSitesAsync(
+                            sites = sites,
+                            requestsCount = 1,
+                            requestTimeoutSeconds = 5,
+                            concurrentRequests = 3
+                        )
+                        
+                        val totalSuccess = results.sumOf { it.second }
+                        ProtonLogger.i("ByeDpiStrategyTester", "Strategy: $strategy, Success: $totalSuccess/${sites.size}")
+
+                        if (totalSuccess > maxSuccess) {
+                            maxSuccess = totalSuccess
+                            bestStrategy = strategy
+                        }
+                        
+                        // Optimization: if all sites are reachable, we can stop
+                        if (totalSuccess == sites.size) {
+                            ProtonLogger.i("ByeDpiStrategyTester", "Found perfect strategy: $bestStrategy")
+                            break
+                        }
+                    } else {
+                        ProtonLogger.w("ByeDpiStrategyTester", "Proxy failed to start for strategy: $strategy")
                     }
-                } else {
-                    ProtonLogger.w("ByeDpiStrategyTester", "Proxy failed to start for strategy: $strategy")
+
+                    byeDpiManager.stop()
+                    delay(500)
                 }
 
-                byeDpiManager.stop()
-                delay(500)
+                if (bestStrategy.isNotEmpty()) {
+                    ProtonLogger.i("ByeDpiStrategyTester", "Best strategy found: $bestStrategy with $maxSuccess successes")
+                    settingsManager.setApiProxyHost("127.0.0.1")
+                    settingsManager.setApiProxyPort(proxyPort)
+                    settingsManager.setByeDpiFlags(bestStrategy)
+                }
+            } finally {
+                _isTesting.value = false
+                _progress.value = 1f
+                _currentStrategy.value = "Finished"
+                // Re-enable auto-management. This will restart ByeDPI with the best (or current) strategy.
+                byeDpiManager.isAutoManagementEnabled = true
             }
-
-            if (bestStrategy.isNotEmpty()) {
-                ProtonLogger.i("ByeDpiStrategyTester", "Best strategy found: $bestStrategy with $maxSuccess successes")
-                settingsManager.setApiProxyHost("127.0.0.1")
-                settingsManager.setApiProxyPort(proxyPort)
-                settingsManager.setByeDpiFlags(bestStrategy)
-            }
-
-            _isTesting.value = false
-            _progress.value = 1f
-            _currentStrategy.value = "Finished"
         }
     }
 
     fun stopTesting() {
         testJob?.cancel()
         testJob = null
-        CoroutineScope(Dispatchers.IO).launch {
-            byeDpiManager.stop()
-        }
-        _isTesting.value = false
+        // Re-enabling auto-management will happen in the finally block of the testJob
     }
 
-    private fun prepareArgs(strategy: String, ip: String, port: Int): Array<String> {
+    private fun prepareArgs(strategy: String, sni: String, ip: String, port: Int): Array<String> {
         val baseArgs = listOf("ciadpi", "--ip", ip, "--port", port.toString())
-        val flags = strategy.split(" ").filter { it.isNotEmpty() }
+        val flags = strategy.replace("{sni}", sni).split(" ").filter { it.isNotEmpty() }
         return (baseArgs + flags).toTypedArray()
     }
 }

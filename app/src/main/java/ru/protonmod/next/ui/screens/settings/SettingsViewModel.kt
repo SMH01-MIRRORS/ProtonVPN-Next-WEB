@@ -81,6 +81,7 @@ data class SettingsUiState(
     val byeDpiTestProgress: Float = 0f,
     val byeDpiCurrentStrategy: String = "",
     val byeDpiFlags: String = "",
+    val byeDpiSni: String = "google.com",
 
     // API Mirroring / Spoofing
     val spoofCountryEnabled: Boolean = false,
@@ -251,6 +252,7 @@ class SettingsViewModel @Inject constructor(
         settingsManager.otaUpdateFrequency,
         settingsManager.otaUpdateChannel,
         settingsManager.byeDpiFlags,
+        settingsManager.byeDpiSni,
         warpManager.isFetching,
         byeDpiStrategyTester.isTesting,
         byeDpiStrategyTester.progress,
@@ -316,15 +318,16 @@ class SettingsViewModel @Inject constructor(
             otaUpdateFrequency = args[52] as String,
             otaUpdateChannel = args[53] as String,
             byeDpiFlags = args[54] as String,
-            isWarpFetching = args[55] as Boolean,
+            byeDpiSni = args[55] as String,
+            isWarpFetching = args[56] as Boolean,
             warpConfigLoaded = warpManager.isConfigLoaded(),
-            isByeDpiTesting = args[56] as Boolean,
-            byeDpiTestProgress = args[57] as Float,
-            byeDpiCurrentStrategy = args[58] as String,
-            availableChannels = args[59] as Map<String, Boolean>,
-            isAnyVpnActive = args[60] as Boolean,
-            isCheckingForUpdates = args[61] as Boolean,
-            isUpdateAvailable = args[62] as Boolean
+            isByeDpiTesting = args[57] as Boolean,
+            byeDpiTestProgress = args[58] as Float,
+            byeDpiCurrentStrategy = args[59] as String,
+            availableChannels = args[60] as Map<String, Boolean>,
+            isAnyVpnActive = args[61] as Boolean,
+            isCheckingForUpdates = args[62] as Boolean,
+            isUpdateAvailable = args[63] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -429,13 +432,8 @@ class SettingsViewModel @Inject constructor(
                 amneziaVpnManager.ensureWarpBypass(false)
             }
             
-            if (strategy == SettingsManager.STRATEGY_BYEDPI) {
-                val flags = settingsManager.getByeDpiFlagsSync()
-                val port = settingsManager.getApiProxyPortSync()
-                byeDpiManager.start(arrayOf("ciadpi", "--ip", "127.0.0.1", "--port", port.toString()) + flags.split(" ").filter { it.isNotEmpty() })
-            } else {
-                byeDpiManager.stop()
-            }
+            // Note: ByeDPI management is now handled automatically by ByeDpiManager
+            // based on the selected strategy in settingsManager.
             
             settingsManager.setApiBypassStrategy(strategy)
         }
@@ -451,6 +449,18 @@ class SettingsViewModel @Inject constructor(
 
     fun stopByeDpiTesting() {
         byeDpiStrategyTester.stopTesting()
+    }
+
+    fun setByeDpiSni(sni: String) {
+        viewModelScope.launch {
+            settingsManager.setByeDpiSni(sni)
+        }
+    }
+
+    fun setByeDpiFlags(flags: String) {
+        viewModelScope.launch {
+            settingsManager.setByeDpiFlags(flags)
+        }
     }
 
     fun fetchWarpConfig() {

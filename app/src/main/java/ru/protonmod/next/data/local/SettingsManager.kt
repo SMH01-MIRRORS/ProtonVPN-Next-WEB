@@ -81,6 +81,7 @@ class SettingsManager @Inject constructor(
         private val API_BYPASS_STRATEGY = stringPreferencesKey("api_bypass_strategy")
 
         private val BYEDPI_FLAGS = stringPreferencesKey("byedpi_flags")
+        private val BYEDPI_SNI = stringPreferencesKey("byedpi_sni")
 
         private val API_PROXY_HOST = stringPreferencesKey("api_proxy_host")
         private val API_PROXY_PORT = intPreferencesKey("api_proxy_port")
@@ -173,6 +174,7 @@ class SettingsManager @Inject constructor(
     val apiBypassStrategy: Flow<String> = context.dataStore.data.map { it[API_BYPASS_STRATEGY] ?: "netlify" }
 
     val byeDpiFlags: Flow<String> = context.dataStore.data.map { it[BYEDPI_FLAGS] ?: "-s1 -d1" }
+    val byeDpiSni: Flow<String> = context.dataStore.data.map { it[BYEDPI_SNI] ?: "google.com" }
 
     val apiProxyHost: Flow<String> = context.dataStore.data.map { it[API_PROXY_HOST] ?: "" }
     val apiProxyPort: Flow<Int> = context.dataStore.data.map { it[API_PROXY_PORT] ?: 1080 }
@@ -218,6 +220,7 @@ class SettingsManager @Inject constructor(
     }
 
     fun getByeDpiFlagsSync(): String = prefs.getString("byedpi_flags", "-s1 -d1") ?: "-s1 -d1"
+    fun getByeDpiSniSync(): String = prefs.getString("byedpi_sni", "google.com") ?: "google.com"
 
     fun getApiProxyHostSync(): String = prefs.getString("api_proxy_host", "") ?: ""
     fun getApiProxyPortSync(): Int = prefs.getInt("api_proxy_port", 1080)
@@ -364,6 +367,11 @@ class SettingsManager @Inject constructor(
     suspend fun setByeDpiFlags(flags: String) {
         prefs.edit { putString("byedpi_flags", flags) }
         context.dataStore.edit { it[BYEDPI_FLAGS] = flags }
+    }
+
+    suspend fun setByeDpiSni(sni: String) {
+        prefs.edit { putString("byedpi_sni", sni) }
+        context.dataStore.edit { it[BYEDPI_SNI] = sni }
     }
 
     suspend fun setApiProxyHost(host: String) {

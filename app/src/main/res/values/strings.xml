@@ -142,6 +142,9 @@
     <string name="api_bypass_strategy_byedpi">ByeDPI</string>
     <string name="api_bypass_strategy_byedpi_desc">Bypass DPI blocks using advanced packet fragmentation and deception.</string>
     <string name="byedpi_flags_title">BEST STRATEGY FLAGS</string>
+    <string name="byedpi_flags_label">ByeDPI Flags</string>
+    <string name="byedpi_sni_title">SNI Host</string>
+    <string name="byedpi_sni_hint">google.com</string>
     <string name="byedpi_flags_none">Not tested yet</string>
     <string name="btn_start_test">Find Working Strategy</string>
     <string name="btn_stop_test">Stop Testing</string>

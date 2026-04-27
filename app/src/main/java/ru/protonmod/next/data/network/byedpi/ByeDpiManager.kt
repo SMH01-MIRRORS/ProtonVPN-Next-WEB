@@ -18,16 +18,24 @@
 package ru.protonmod.next.data.network.byedpi
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.amnezia.awg.backend.Tunnel
+import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.utils.NetworkMonitor
 import ru.protonmod.next.utils.ProtonLogger
+import ru.protonmod.next.vpn.AmneziaVpnManager
 import javax.inject.Inject
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Singleton
-class ByeDpiManager @Inject constructor() {
+class ByeDpiManager @Inject constructor(
+    private val settingsManager: SettingsManager,
+    private val networkMonitor: NetworkMonitor,
+    private val vpnManagerProvider: Provider<AmneziaVpnManager>
+) {
 
     private val proxy = ByeDpiProxy()
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -37,10 +45,64 @@ class ByeDpiManager @Inject constructor() {
     private val _isRunning = MutableStateFlow(false)
     val isRunning = _isRunning.asStateFlow()
 
+    private val _isAutoManagementEnabled = MutableStateFlow(true)
+    var isAutoManagementEnabled: Boolean
+        get() = _isAutoManagementEnabled.value
+        set(value) { _isAutoManagementEnabled.value = value }
+
+    init {
+        scope.launch {
+            combine(
+                settingsManager.apiBypassEnabled,
+                settingsManager.apiBypassStrategy,
+                settingsManager.byeDpiFlags,
+                settingsManager.byeDpiSni,
+                networkMonitor.isVpnActive,
+                vpnManagerProvider.get().tunnelState,
+                _isAutoManagementEnabled
+            ) { args: Array<Any?> ->
+                val enabled = args[0] as Boolean
+                val strategy = args[1] as String
+                val flags = args[2] as String
+                val sni = args[3] as String
+                val systemVpn = args[4] as Boolean
+                val ourVpn = args[5] as Tunnel.State
+                val autoManage = args[6] as Boolean
+
+                if (!autoManage) return@combine
+
+                val shouldBeRunning = enabled && 
+                        strategy == SettingsManager.STRATEGY_BYEDPI && 
+                        !systemVpn && 
+                        ourVpn != Tunnel.State.UP
+                
+                if (shouldBeRunning) {
+                    val port = settingsManager.getApiProxyPortSync()
+                    val argsList = prepareArgs(flags, sni, port)
+                    start(argsList)
+                } else {
+                    stop()
+                }
+            }.collect()
+        }
+    }
+
+    private fun prepareArgs(flags: String, sni: String, port: Int): Array<String> {
+        val baseArgs = listOf("ciadpi", "--ip", "127.0.0.1", "--port", port.toString())
+        val processedFlags = flags.replace("{sni}", sni)
+            .split(" ")
+            .filter { it.isNotEmpty() }
+        return (baseArgs + processedFlags).toTypedArray()
+    }
+
     suspend fun start(args: Array<String>) {
         mutex.withLock {
             if (_isRunning.value) {
-                ProtonLogger.w("ByeDpiManager", "Proxy is already running. Stopping it first.")
+                // If already running with same args, do nothing
+                // But comparing args is complex, let's just restart if requested via start()
+                // Auto-management will call start() if it decides it should be running.
+                // We should probably check if it's already running with DIFFERENT args.
+                // For simplicity, stopInternal always stops it.
                 stopInternal()
             }
 
