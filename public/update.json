@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159832,
-      "versionName": "12.0.0-alpha1st2-121-g18d3375-nightly",
+      "versionCode": 605159833,
+      "versionName": "12.0.0-alpha1st2-122-gc9d08af-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "fix: Prevent NoClassDefFoundError for AmneziaWG DnsSettings in release builds",
+      "changelog": "feat: improve ByeDPI lifecycle management and argument parsing\n\n* feat: add `ShellUtils` to handle shell-style argument splitting, supporting quotes and escapes\n* refactor: enhance JNI bridge with atomic operations and thread-safe proxy state management\n* fix: improve proxy shutdown reliability in `ByeDpiManager` with explicit timeouts and state resets\n* chore: update `SiteCheckUtils` to verify response integrity by reading stream content length\n* perf: optimize `ByeDpiStrategyTester` with increased concurrency and better proxy lifecycle handling between tests\n* test: add unit tests for shell-style argument parsing logic",
       "force": false
     },
     "release": {
-      "versionCode": 605159832,
-      "versionName": "12.0.0-alpha1st2-121-g18d3375-nightly",
+      "versionCode": 605159833,
+      "versionName": "12.0.0-alpha1st2-122-gc9d08af-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "fix: Prevent NoClassDefFoundError for AmneziaWG DnsSettings in release builds",
+      "changelog": "feat: improve ByeDPI lifecycle management and argument parsing\n\n* feat: add `ShellUtils` to handle shell-style argument splitting, supporting quotes and escapes\n* refactor: enhance JNI bridge with atomic operations and thread-safe proxy state management\n* fix: improve proxy shutdown reliability in `ByeDpiManager` with explicit timeouts and state resets\n* chore: update `SiteCheckUtils` to verify response integrity by reading stream content length\n* perf: optimize `ByeDpiStrategyTester` with increased concurrency and better proxy lifecycle handling between tests\n* test: add unit tests for shell-style argument parsing logic",
       "force": false
     }
   }
