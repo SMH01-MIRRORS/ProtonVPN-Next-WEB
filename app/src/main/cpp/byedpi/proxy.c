@@ -42,7 +42,7 @@
 #endif
 
 
-int server_fd;
+int server_fd = -1;
 
 static void on_cancel(int sig) {
     shutdown(server_fd, SHUT_RDWR);
@@ -1021,11 +1021,13 @@ int start_event_loop(int srvfd)
         close(srvfd);
         return -1;
     }
-    if (!add_event(pool, &on_accept, srvfd, POLLIN)) {
+    struct eval *srv_ev = add_event(pool, &on_accept, srvfd, POLLIN);
+    if (!srv_ev) {
         destroy_pool(pool);
         close(srvfd);
         return -1;
     }
+    srv_ev->flag = FLAG_SERVER;
     loop_event(pool);
     
     LOG(LOG_S, "exit\n");

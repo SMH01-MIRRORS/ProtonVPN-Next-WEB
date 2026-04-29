@@ -25,6 +25,7 @@ import org.amnezia.awg.backend.Tunnel
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.utils.NetworkMonitor
 import ru.protonmod.next.utils.ProtonLogger
+import ru.protonmod.next.utils.ShellUtils
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import javax.inject.Inject
 import javax.inject.Provider
@@ -69,7 +70,9 @@ class ByeDpiManager @Inject constructor(
                 val ourVpn = args[5] as Tunnel.State
                 val autoManage = args[6] as Boolean
 
-                if (!autoManage) return@combine
+                if (!autoManage) {
+                    return@combine
+                }
 
                 val shouldBeRunning = enabled && 
                         strategy == SettingsManager.STRATEGY_BYEDPI && 
@@ -89,9 +92,7 @@ class ByeDpiManager @Inject constructor(
 
     private fun prepareArgs(flags: String, sni: String, port: Int): Array<String> {
         val baseArgs = listOf("ciadpi", "--ip", "127.0.0.1", "--port", port.toString())
-        val processedFlags = flags.replace("{sni}", sni)
-            .split(" ")
-            .filter { it.isNotEmpty() }
+        val processedFlags = ShellUtils.shellSplit(flags.replace("{sni}", sni))
         return (baseArgs + processedFlags).toTypedArray()
     }
 
@@ -112,8 +113,10 @@ class ByeDpiManager @Inject constructor(
                 ProtonLogger.i("ByeDpiManager", "Starting ByeDPI with args: ${currentArgs.joinToString(" ")}")
                 try {
                     val result = proxy.startProxy(currentArgs)
+                    _isRunning.value = false
                     ProtonLogger.i("ByeDpiManager", "ByeDPI stopped with result: $result")
                 } catch (e: Exception) {
+                    _isRunning.value = false
                     ProtonLogger.e("ByeDpiManager", "ByeDPI crashed", e)
                 } finally {
                     _isRunning.value = false
@@ -139,16 +142,26 @@ class ByeDpiManager @Inject constructor(
         
         // Force close if it takes too long to respond to shutdown
         val forceCloseJob = scope.launch {
-            delay(2000)
+            delay(1000)
             if (_isRunning.value) {
-                ProtonLogger.w("ByeDpiManager", "ByeDPI didn't stop in 2s, forcing close")
+                ProtonLogger.w("ByeDpiManager", "ByeDPI didn't stop in 1s, forcing close")
                 proxy.forceClose()
             }
         }
         
-        proxyJob?.join()
-        forceCloseJob.cancel()
-        proxyJob = null
-        _isRunning.value = false
+        try {
+            withTimeout(3000) {
+                proxyJob?.join()
+            }
+        } catch (_: Exception) {
+            ProtonLogger.w("ByeDpiManager", "ByeDPI job join timed out, forcing state update")
+        } finally {
+            forceCloseJob.cancel()
+            // Small delay to ensure native thread has finished releasing g_proxy_running
+            delay(100)
+            proxyJob = null
+            _isRunning.value = false
+            ProtonLogger.i("ByeDpiManager", "ByeDPI stopped")
+        }
     }
 }

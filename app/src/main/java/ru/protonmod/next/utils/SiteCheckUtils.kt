@@ -89,7 +89,31 @@ class SiteCheckUtils(
                 connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
 
                 val responseCode = connection.responseCode
-                if (responseCode in 200..399) {
+                val declaredLength = connection.contentLengthLong
+
+                var actualLength = 0L
+                try {
+                    val inputStream = if (responseCode in 200..299) connection.inputStream else connection.errorStream
+                    if (inputStream != null) {
+                        val buffer = ByteArray(8192)
+                        var bytesRead: Int
+
+                        // Limit reading to 1MB if length is not declared
+                        val limit = if (declaredLength > 0) declaredLength else 1024L * 1024
+
+                        while (actualLength < limit) {
+                            val remaining = limit - actualLength
+                            val toRead = if (remaining > buffer.size) buffer.size else remaining.toInt()
+                            bytesRead = inputStream.read(buffer, 0, toRead)
+                            if (bytesRead == -1) break
+                            actualLength += bytesRead
+                        }
+                    }
+                } catch (_: IOException) {
+                    // Stream reading failed
+                }
+
+                if (responseCode in 200..399 && (declaredLength <= 0L || actualLength >= declaredLength)) {
                     responseCount++
                 }
             } catch (e: Exception) {

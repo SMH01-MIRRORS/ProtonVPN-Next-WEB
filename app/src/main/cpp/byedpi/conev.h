@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 #include "params.h"
 
@@ -53,6 +54,7 @@ typedef int (*evcb_t)(struct poolhd *, struct eval *, int);
 #define FLAG_S5 2
 #define FLAG_CONN 4
 #define FLAG_HTTP 8
+#define FLAG_SERVER 16
 
 struct buffer {
     size_t size;
@@ -122,6 +124,9 @@ struct poolhd {
     struct buffer *root_buff;
     int buff_count;
 };
+
+extern struct poolhd *g_pool;
+extern pthread_mutex_t g_pool_mutex;
 
 struct poolhd *init_pool(int count);
 

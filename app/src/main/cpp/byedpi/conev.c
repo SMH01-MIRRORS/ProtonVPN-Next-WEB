@@ -4,7 +4,12 @@
 #include <string.h>
 #include <limits.h>
 #include <assert.h>
+#include <errno.h>
 #include "error.h"
+
+extern int server_fd;
+struct poolhd *g_pool = NULL;
+pthread_mutex_t g_pool_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 struct poolhd *init_pool(int count)
@@ -14,6 +19,9 @@ struct poolhd *init_pool(int count)
         uniperror("init pool");
         return 0;
     }
+    pthread_mutex_lock(&g_pool_mutex);
+    g_pool = pool;
+    pthread_mutex_unlock(&g_pool_mutex);
     pool->max = count;
     pool->count = 0;
     pool->iters = 0;
@@ -110,7 +118,20 @@ void del_event(struct poolhd *pool, struct eval *val)
         free(val->host);
         val->host = 0;
     }
-    close(val->fd);
+    int fd = val->fd;
+    if (fd != -1) {
+        if (val->flag & FLAG_SERVER) {
+            if (__sync_bool_compare_and_swap(&server_fd, fd, -1)) {
+                close(fd);
+            }
+        } else if (fd == server_fd) {
+            if (__sync_bool_compare_and_swap(&server_fd, fd, -1)) {
+                close(fd);
+            }
+        } else {
+            close(fd);
+        }
+    }
     val->fd = -1;
     val->mod_iter = pool->iters;
     remove_timer(pool, val);
@@ -141,6 +162,10 @@ void del_event(struct poolhd *pool, struct eval *val)
 
 void destroy_pool(struct poolhd *pool)
 {
+    pthread_mutex_lock(&g_pool_mutex);
+    if (g_pool == pool) g_pool = NULL;
+    pthread_mutex_unlock(&g_pool_mutex);
+
     while (pool->count) {
         struct eval *val = pool->links[0];
         del_event(pool, val);
@@ -324,7 +349,7 @@ void loop_event(struct poolhd *pool)
     while (!pool->brk) {
         struct eval *val = next_event_tv(pool, &i, &etype);
         if (!val) {
-            if (get_e() == EINTR) 
+            if (get_e() == EINTR || etype == POLLTIMEOUT)
                 continue;
             uniperror("(e)poll");
             break;
