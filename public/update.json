@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159831,
-      "versionName": "12.0.0-alpha1st2-120-g20087cc-nightly",
+      "versionCode": 605159832,
+      "versionName": "12.0.0-alpha1st2-121-g18d3375-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "fix: Prevent SQLiteException on MIGRATION_14_15 by guarding ALTER TABLE",
+      "changelog": "fix: Prevent NoClassDefFoundError for AmneziaWG DnsSettings in release builds",
       "force": false
     },
     "release": {
-      "versionCode": 605159831,
-      "versionName": "12.0.0-alpha1st2-120-g20087cc-nightly",
+      "versionCode": 605159832,
+      "versionName": "12.0.0-alpha1st2-121-g18d3375-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "fix: Prevent SQLiteException on MIGRATION_14_15 by guarding ALTER TABLE",
+      "changelog": "fix: Prevent NoClassDefFoundError for AmneziaWG DnsSettings in release builds",
       "force": false
     }
   }
