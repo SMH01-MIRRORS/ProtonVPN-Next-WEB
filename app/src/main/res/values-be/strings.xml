@@ -72,7 +72,7 @@
     <string name="settings_kill_switch_desc">Kill Switch</string>
     <string name="settings_auto_connect">Аўтападключэнне</string>
     <string name="settings_auto_connect_desc">Падключацца да VPN пры запуску</string>
-    <string name="settings_split_tunneling">Split Tunneling</string>
+    <string name="settings_split_tunneling">Раздзельнае тунэляванне</string>
     <string name="settings_split_tunneling_desc">Выключыць праграмы або IP з VPN</string>
     <string name="settings_excluded_apps">Выключаныя праграмы</string>
     <string name="settings_included_apps">Праграмы праз VPN</string>
@@ -107,7 +107,7 @@
     <string name="api_bypass_strategy_netlify_desc">Накіроўвае запыты API праз абаронены проксі Netlify.</string>
     <string name="api_bypass_strategy_cloudflare">Проксі Cloudflare</string>
     <string name="api_bypass_strategy_cloudflare_desc">Накіроўвае запыты API праз высокапрадукцыйны Cloudflare Workers.</string>
-    <string name="api_bypass_strategy_mirrors">Люстэрка Proton (DoH)</string>
+    <string name="api_bypass_strategy_mirrors">Люстэркі Proton (DoH)</string>
     <string name="api_bypass_strategy_mirrors_desc">Знаходзіць і выкарыстоўвае дынамічныя люстэркі Proton API праз DNS-over-HTTPS fallback.</string>
     <string name="api_bypass_strategy_warp">WARP (Cloudflare)</string>
     <string name="api_bypass_strategy_warp_desc">Выкарыстанне часовага тунэлю WARP для запытаў да API. Высокая надзейнасць.</string>
@@ -313,7 +313,7 @@
     <string name="st_remove_domain_desc">Выдаліць дамен</string>
     <!-- Notification -->
     <string name="notification_channel_name">Статус VPN</string>
-    <string name="notification_channel_desc">Паказвае бягучы статус падключэння VPN</string>
+    <string name="notification_channel_desc">Паказвае бягучы статус падключэння па VPN</string>
     <string name="notification_title_connected">Падключана да %1$s</string>
     <string name="notification_title_verifying">Спраўджанне падключэння…</string>
     <string name="notification_title_disconnected">Адключана</string>
@@ -403,7 +403,7 @@
     <string name="debug_btn_anr">Выклікаць ANR (5 сек)</string>
     <string name="debug_btn_oom">Выклікаць OutOfMemory</string>
     <string name="debug_btn_background_crash">Аварыя ў фонавым патоку</string>
-    <string name="debug_btn_capture_exception">Адправіць памылку (Non-fatal)</string>
+    <string name="debug_btn_capture_exception">Адправіць нефатальную памылку</string>
     <string name="debug_btn_arithmetic_error">Арыфметычная памылка (1/0)</string>
     <string name="debug_btn_null_pointer">NullPointer Exception</string>
     <string name="debug_btn_fake_crash">Падманная аварыя праграмы</string>
@@ -434,10 +434,10 @@
     <string name="title_login_tokens">Уваход па токенах</string>
     <string name="msg_login_tokens_desc">Устаўце JSON вашага сеанса ніжэй для прамога ўваходу. Трымайце гэтыя даныя ў сакрэце!</string>
     <string name="hint_session_json">Сеанс JSON</string>
-    <string name="debug_btn_export_session">Экспарт сеанса (у буфер)</string>
-    <string name="debug_btn_import_session">Імпарт сеанса</string>
-    <string name="debug_btn_fetch_domains">Атрымаць даступныя дамены (з буфера)</string>
-    <string name="debug_export_session_title">Экспарт канфідэнцыяльных даных</string>
+    <string name="debug_btn_export_session">Экспартаваць сеанс (буфер)</string>
+    <string name="debug_btn_import_session">Імпартаваць сеанс</string>
+    <string name="debug_btn_fetch_domains">Атрымаць даступныя дамены (буфер)</string>
+    <string name="debug_export_session_title">Экспартаваць канфідэнцыяльныя даныя</string>
     <string name="debug_export_session_msg">Гэта скапіюе ваш поўны сеанс (уключаючы токены і закрытыя ключы) у буфер абмену. НЕ абагульвайце гэтыя звесткі з іншымі карыстальнікамі!</string>
     <string name="debug_import_session_warning">ПАПЯРЭДЖАННЕ: імпартаванне новага сеанса перазапіша ваш бягучы сеанс. Выкарыстоўвайце з асцярожнасцю.</string>
     <string name="debug_btn_copy">Скапіяваць у буфер абмену</string>
