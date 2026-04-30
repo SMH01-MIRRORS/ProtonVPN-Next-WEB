@@ -9,27 +9,13 @@
         android:pathData="M0,0h1000v1000h-1000z">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:startX="117.8"
-                android:startY="760.5"
+                android:startX="0"
+                android:startY="0"
                 android:endX="1000"
-                android:endY="500"
+                android:endY="1000"
                 android:type="linear">
-                <item android:offset="0" android:color="#FF44CCFF"/>
-                <item android:offset="0.7" android:color="#FF5533EE"/>
-                <item android:offset="1" android:color="#FF9933DD"/>
-            </gradient>
-        </aapt:attr>
-    </path>
-    <path
-        android:pathData="M0,0h1000v1000h-1000z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:centerX="-23.8"
-                android:centerY="-439.2"
-                android:gradientRadius="1213.5"
-                android:type="radial">
-                <item android:offset="0" android:color="#FF0000FF"/>
-                <item android:offset="1" android:color="#00000000"/>
+                <item android:offset="0" android:color="#FF004E92"/>
+                <item android:offset="1" android:color="#FF000B18"/>
             </gradient>
         </aapt:attr>
     </path>
