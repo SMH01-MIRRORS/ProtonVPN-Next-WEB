@@ -96,7 +96,7 @@
     <string name="settings_off">Выкл</string>
     <string name="settings_port">Порт</string>
     <string name="settings_port_desc">Выбар парта падключэння</string>
-    <string name="settings_port_auto">Аўта</string>
+    <string name="settings_port_auto">Аўтаматычна</string>
     <string name="settings_reset_obfuscation">Скінуць праграму да прадвызначаных налад</string>
     <string name="settings_api_bypass">Абыход блакіроўкі API</string>
     <string name="settings_api_bypass_desc">Забяспечвае паспяховы ўваход і атрыманне даных сервера шляхам маршрутызацыі запытаў API праз альтэрнатыўныя каналы пры блакіроўцы.</string>
@@ -115,7 +115,7 @@
     <string name="warp_permission_title">Патрабуецца дазвол на VPN</string>
     <string name="warp_permission_desc">Для WARP патрабуецца дазвол на стварэнне лакальнага тунэлю, каб абысці блакіроўку API. Ніякія даныя не перадаюцца па-за межы Cloudflare.</string>
     <string name="btn_allow">Дазволіць</string>
-    <string name="btn_accept">Ужыць</string>
+    <string name="btn_accept">Прыняць</string>
     <string name="api_bypass_strategy_custom">Карыстальніцкі проксі (SOCKS5/HTTPS)</string>
     <string name="api_bypass_strategy_custom_desc">Накіроўвае запыты API праз ваш уласны SOCKS5 або проксі-сервер HTTPS.</string>
     <string name="api_proxy_host">Вузел проксі</string>
@@ -134,7 +134,7 @@
     <string name="byedpi_flags_none">Пакуль не пратэсціравана</string>
     <string name="byedpi_test_results_title">Вынікі тэсту</string>
     <string name="btn_apply">Прымяніць</string>
-    <string name="btn_copy">Капіяваць</string>
+    <string name="btn_copy">Скапіяваць</string>
     <string name="btn_start_test">Пошук працоўнай стратэгіі</string>
     <string name="btn_stop_test">Спыніць тэсціраванне</string>
     <!-- Country Spoofing -->
@@ -190,7 +190,7 @@
     <string name="settings_sentry_logs">Адпраўка журналаў</string>
     <string name="settings_sentry_logs_desc">Уключаць ананімныя сістэмныя журналы, каб дапамагчы ў адладцы складаных праблем</string>
     <string name="settings_sentry_session_replay">Паўторы сеансаў</string>
-    <string name="settings_sentry_session_replay_desc">Ананімнае прайграванне ўзаемадзеянняў для адладкі праблем інтэрфейсу</string>
+    <string name="settings_sentry_session_replay_desc">Ананімнае прайграванне ўзаемадзеянняў для адладкі праблем карыстальніцкага інтэрфейсу</string>
     <!-- Kill Switch Screen -->
     <string name="kill_switch_title">Kill Switch</string>
     <string name="kill_switch_subtitle">Kill Switch</string>
@@ -205,7 +205,7 @@
     <string name="obfuscation_jmax">Junk Packet Max Size (Jmax)</string>
     <string name="obfuscation_s1">Init Packet Junk Size (S1)</string>
     <string name="obfuscation_s2">Response Packet Junk Size (S2)</string>
-    <string name="obfuscation_s3">Памер смецця ў Cookie Reply (S3)</string>
+    <string name="obfuscation_s3">Cookie Reply Junk Size (S3)</string>
     <string name="obfuscation_s4">Transport Packet Junk Size (S4)</string>
     <string name="obfuscation_h1">Init Packet Magic (H1)</string>
     <string name="obfuscation_h2">Response Packet Magic (H2)</string>
@@ -333,7 +333,7 @@
     <string name="desc_create_profile">Стварыць профіль</string>
     <string name="desc_edit_profile">Рэдагаваць профіль</string>
     <string name="profiles_empty_title">Профіляў пакуль няма</string>
-    <string name="profiles_empty_desc">Стварыце профіль для хуткага падключэння з пэўнымі наладамі.</string>
+    <string name="profiles_empty_desc">Стварыце профіль для хуткага падключэння з указанымі наладамі.</string>
     <string name="profile_feature_obfuscation">Абфускацыя</string>
     <string name="profile_feature_connect_go">Connect &amp; Go</string>
     <string name="profile_server_info">Сервер: %1$s</string>
@@ -361,7 +361,7 @@
     <string name="obfuscation_desc">Абыход глыбокага аналізу пакетаў (DPI)</string>
     <string name="label_obfuscation_config">Канфігурацыя абфускацыі</string>
     <string name="category_automation">Аўтаматызацыя</string>
-    <string name="label_connect_go_website">Connect &amp; Go (Веб-сайт)</string>
+    <string name="label_connect_go_website">Connect &amp; Go (вэб-сайт)</string>
     <string name="label_enter_url">Увядзіце URL-адрас</string>
     <string name="label_not_configured">Не сканфігурыравана</string>
     <string name="automation_desc">Аўтаматычна адкрываць гэты вэб-сайт у браўзеры пасля таго, як праграма падключыцца да сервера VPN.</string>
@@ -411,7 +411,7 @@
     <string name="qc_strategy_fastest">Найхутчэйшы сервер</string>
     <string name="qc_strategy_fastest_desc">Заўсёды падключацца да самага хуткага сервера.</string>
     <string name="qc_strategy_recent">Апошні падключаны</string>
-    <string name="qc_strategy_recent_desc">Падключыцца да сервера з мінулай сесіі.</string>
+    <string name="qc_strategy_recent_desc">Падключыцца да сервера з апошняга сеанса.</string>
     <string name="qc_header_profiles">ВЫКАРЫСТОЎВАЦЬ ПРОФІЛЬ</string>
     <string name="qc_header_recent">НЯДАЎНІЯ СЕРВЕРЫ</string>
     <string name="qc_strategy_profile_desc">Падключыцца з наладамі профілю.</string>
@@ -440,7 +440,7 @@
     <string name="debug_export_session_title">Экспарт канфідэнцыяльных даных</string>
     <string name="debug_export_session_msg">Гэта скапіюе ваш поўны сеанс (уключаючы токены і закрытыя ключы) у буфер абмену. НЕ абагульвайце гэтыя звесткі з іншымі карыстальнікамі!</string>
     <string name="debug_import_session_warning">ПАПЯРЭДЖАННЕ: імпартаванне новага сеанса перазапіша ваш бягучы сеанс. Выкарыстоўвайце з асцярожнасцю.</string>
-    <string name="debug_btn_copy">Скапіяваць</string>
+    <string name="debug_btn_copy">Скапіяваць у буфер абмену</string>
     <string name="btn_import">Імпартаваць</string>
     <string name="btn_logout">Выйсці</string>
     <string name="logout_confirmation">Вы сапраўды хочаце выйсці?</string>
