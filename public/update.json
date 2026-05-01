@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159840,
-      "versionName": "12.0.0-alpha1st3-1-gda698f6-nightly",
+      "versionCode": 605159845,
+      "versionName": "12.0.0-alpha1st3-6-gabfa31e-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "fix: Prevent NetworkOnMainThreadException in CaptchaScreen cleanup",
+      "changelog": "docs: normalize casing for technical terms in Russian translations\n\n* docs: update `values-ru/strings.xml` to standardize the use of lowercase for technical abbreviations (vpn, doh, dns, dpi) and parenthetical descriptions\n* docs: apply consistent lowercase formatting to obfuscation parameters, protocol identifiers, and system settings labels for better linguistic consistency across the UI",
       "force": false
     },
     "release": {
-      "versionCode": 605159840,
-      "versionName": "12.0.0-alpha1st3-1-gda698f6-nightly",
+      "versionCode": 605159845,
+      "versionName": "12.0.0-alpha1st3-6-gabfa31e-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "fix: Prevent NetworkOnMainThreadException in CaptchaScreen cleanup",
+      "changelog": "docs: normalize casing for technical terms in Russian translations\n\n* docs: update `values-ru/strings.xml` to standardize the use of lowercase for technical abbreviations (vpn, doh, dns, dpi) and parenthetical descriptions\n* docs: apply consistent lowercase formatting to obfuscation parameters, protocol identifiers, and system settings labels for better linguistic consistency across the UI",
       "force": false
     }
   },
