@@ -14,5 +14,14 @@
       "changelog": "fix: Prevent IllegalArgumentException from invalid IPv6 routes",
       "force": false
     }
+  },
+  "stable": {
+    "release": {
+      "versionCode": 605159839,
+      "versionName": "12.0.0-alpha1st3",
+      "url": "https://r2.protonnext.qzz.io/VPN-Next/app-stable-release.apk",
+      "changelog": "ci: update Woodpecker CI configuration\n\n* Switch stable build unit tests from `testStableReleaseUnitTest` to `testStableDebugUnitTest`\n* Standardize tag matching using explicit regex patterns for release and pre-release triggers\n* Remove descriptive comments in favor of cleaner regex filtering for tag events",
+      "force": false
+    }
   }
 }
