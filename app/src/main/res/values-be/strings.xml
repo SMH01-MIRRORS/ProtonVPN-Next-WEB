@@ -454,7 +454,7 @@
     <string name="ota_force_title">Патрабуецца абнаўленне</string>
     <string name="ota_force_desc">Даступна крытычнае абнаўленне. Абнавіце праграму, каб працягнуць выкарыстанне Proton VPN-Next.</string>
     <string name="ota_check_frequency">Праверка абнаўленняў</string>
-    <string name="ota_channel">Канал абнаўленняў</string>
+    <string name="ota_channel">Канал абнаўлення</string>
     <string name="ota_channel_stable">Стабільны</string>
     <string name="ota_channel_nightly">Nightly (начныя зборкі)</string>
     <string name="ota_channel_unavailable">Недаступна</string>
