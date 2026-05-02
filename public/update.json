@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159859,
-      "versionName": "12.0.0-alpha1st3-20-gbd4374b-nightly",
+      "versionCode": 605159860,
+      "versionName": "12.0.0-alpha1st3-21-gcdd94a4-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "chore: update spoofed app version to 5.18.1.0",
+      "changelog": "refactor: remove getAppVersion from DeviceInfoProvider\n\n* refactor: remove unused `getAppVersion` method and `PackageManager` import from `DeviceInfoProvider`\n* test: remove corresponding mock setup in `AuthRepositoryTest`",
       "force": false
     },
     "release": {
-      "versionCode": 605159859,
-      "versionName": "12.0.0-alpha1st3-20-gbd4374b-nightly",
+      "versionCode": 605159860,
+      "versionName": "12.0.0-alpha1st3-21-gcdd94a4-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "chore: update spoofed app version to 5.18.1.0",
+      "changelog": "refactor: remove getAppVersion from DeviceInfoProvider\n\n* refactor: remove unused `getAppVersion` method and `PackageManager` import from `DeviceInfoProvider`\n* test: remove corresponding mock setup in `AuthRepositoryTest`",
       "force": false
     }
   },
