@@ -19,7 +19,6 @@ package ru.protonmod.next.utils
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Environment
@@ -66,15 +65,6 @@ class DeviceInfoProvider @Inject constructor(
             val safeAndroidVersion = androidVersion.replace(Regex("[^\\x20-\\x7E]"), "").trim()
 
             return "ProtonVPN/$SPOOFED_APP_VERSION (Android $safeAndroidVersion; $safeDeviceName)"
-        }
-    }
-
-    fun getAppVersion(): String {
-        return try {
-            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            packageInfo.versionName ?: "2.0.7"
-        } catch (e: PackageManager.NameNotFoundException) {
-            "2.0.7" // Fallback
         }
     }
 

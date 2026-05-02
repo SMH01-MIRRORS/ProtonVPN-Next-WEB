@@ -81,7 +81,6 @@ class AuthRepositoryTest {
             cryptoWrapper, testDispatcherProvider, { amneziaVpnManager }
         )
         
-        whenever(deviceInfoProvider.getAppVersion()).thenReturn("5.16.31.0")
         whenever(deviceInfoProvider.getAppLanguage()).thenReturn("en")
         whenever(deviceInfoProvider.getTimezone()).thenReturn("UTC")
         whenever(deviceInfoProvider.getDeviceHash()).thenReturn(12345L)
