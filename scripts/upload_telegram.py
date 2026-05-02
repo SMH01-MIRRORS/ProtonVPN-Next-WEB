@@ -1,6 +1,7 @@
 import os
 import asyncio
 import glob
+import subprocess
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 
@@ -18,15 +19,48 @@ except ValueError:
     CHAT_ID = TG_CHAT_ID
 
 # Woodpecker default environment variables
-# Get only the first line of the commit message for a cleaner description
-full_message = os.environ.get('CI_COMMIT_MESSAGE', 'No message')
-COMMIT_MESSAGE = full_message.split('\n')[0].strip()
 COMMIT_AUTHOR = os.environ.get('CI_COMMIT_AUTHOR', 'Unknown')
 COMMIT_SHA = os.environ.get('CI_COMMIT_SHA', 'none')[:8]
 REPO_NAME = os.environ.get('CI_REPO', 'ProtonVPN-Next')
 BRANCH = os.environ.get('CI_COMMIT_BRANCH', 'unknown')
 EVENT = os.environ.get('CI_PIPELINE_EVENT', 'manual')
 TAG = os.environ.get('CI_COMMIT_TAG')
+
+def get_commit_summary():
+    """
+    Returns a summary of commits. If it's a push event with multiple commits,
+    it returns a bulleted list of subjects. Otherwise, it returns the single commit message.
+    """
+    event = os.environ.get('CI_PIPELINE_EVENT')
+    prev_sha = os.environ.get('CI_COMMIT_PREVIOUS_SHA')
+    curr_sha = os.environ.get('CI_COMMIT_SHA')
+    full_message = os.environ.get('CI_COMMIT_MESSAGE', 'No message')
+    # Default to the first line of the current commit message
+    default_msg = full_message.split('\n')[0].strip()
+
+    if event == 'push' and prev_sha and prev_sha != '0000000000000000000000000000000000000000':
+        try:
+            # Get list of subjects for all commits in the push range
+            # We use git log to get the subjects of all commits from prev_sha (exclusive) to curr_sha (inclusive)
+            result = subprocess.check_output(
+                ['git', 'log', f'{prev_sha}..{curr_sha}', '--pretty=format:%s'],
+                stderr=subprocess.DEVNULL,
+                text=True
+            ).strip()
+
+            if result:
+                messages = result.split('\n')
+                if len(messages) > 1:
+                    # Reverse to chronological order: oldest to newest
+                    messages.reverse()
+                    return "\n" + "\n".join([f"  • {m}" for m in messages])
+                else:
+                    return messages[0]
+        except Exception:
+            # Fallback to default if git command fails (e.g., shallow clone issues or invalid SHAs)
+            pass
+
+    return default_msg
 
 async def main():
     if not all([API_ID, API_HASH, BOT_TOKEN, CHAT_ID]):
@@ -47,6 +81,9 @@ async def main():
     # Authenticate using the Bot Token
     await client.start(bot_token=BOT_TOKEN)
 
+    commit_summary = get_commit_summary()
+    commit_label = "Commits" if "\n" in commit_summary else "Commit"
+
     for apk_path in apk_files:
         file_name = os.path.basename(apk_path)
         is_debug = "debug" in apk_path.lower()
@@ -56,7 +93,7 @@ async def main():
 
         caption = (
             f"🚀 **New Build ({build_type}): {REPO_NAME}**\n\n"
-            f"📝 **Commit:** {COMMIT_MESSAGE}\n"
+            f"📝 **{commit_label}:** {commit_summary}\n"
             f"👤 **Author:** {COMMIT_AUTHOR}\n"
             f"🌿 **Branch:** `{BRANCH}`{tag_str}\n"
             f"🔢 **Hash:** `{COMMIT_SHA}`\n"

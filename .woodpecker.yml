@@ -124,5 +124,6 @@ steps:
       TG_CHAT_ID:
         from_secret: TG_CHAT_ID
     commands:
+      - apt-get update && apt-get install -y git
       - pip install telethon
       - python scripts/upload_telegram.py
