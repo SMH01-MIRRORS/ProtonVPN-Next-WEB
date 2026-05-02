@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159845,
-      "versionName": "12.0.0-alpha1st3-6-gabfa31e-nightly",
+      "versionCode": 605159857,
+      "versionName": "12.0.0-alpha1st3-18-gf772b54-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "docs: normalize casing for technical terms in Russian translations\n\n* docs: update `values-ru/strings.xml` to standardize the use of lowercase for technical abbreviations (vpn, doh, dns, dpi) and parenthetical descriptions\n* docs: apply consistent lowercase formatting to obfuscation parameters, protocol identifiers, and system settings labels for better linguistic consistency across the UI",
+      "changelog": "chore: enhance Telegram build notifications with multi-commit summaries\n\n* update `upload_telegram.py` to retrieve commit subjects using `git log` for push events\n* dynamically update notification labels to distinguish between single and multiple commits\n* install git in the CI environment to support commit log retrieval",
       "force": false
     },
     "release": {
-      "versionCode": 605159845,
-      "versionName": "12.0.0-alpha1st3-6-gabfa31e-nightly",
+      "versionCode": 605159857,
+      "versionName": "12.0.0-alpha1st3-18-gf772b54-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "docs: normalize casing for technical terms in Russian translations\n\n* docs: update `values-ru/strings.xml` to standardize the use of lowercase for technical abbreviations (vpn, doh, dns, dpi) and parenthetical descriptions\n* docs: apply consistent lowercase formatting to obfuscation parameters, protocol identifiers, and system settings labels for better linguistic consistency across the UI",
+      "changelog": "chore: enhance Telegram build notifications with multi-commit summaries\n\n* update `upload_telegram.py` to retrieve commit subjects using `git log` for push events\n* dynamically update notification labels to distinguish between single and multiple commits\n* install git in the CI environment to support commit log retrieval",
       "force": false
     }
   },
