@@ -122,6 +122,8 @@ class DashboardViewModelTest {
         whenever(amneziaVpnManager.isConnecting).thenReturn(MutableStateFlow(false))
         whenever(amneziaVpnManager.certState).thenReturn(MutableStateFlow(AmneziaVpnManager.CertificateState.Valid))
         whenever(amneziaVpnManager.speed).thenReturn(MutableStateFlow(null))
+        whenever(amneziaVpnManager.trafficRx).thenReturn(MutableStateFlow(null))
+        whenever(amneziaVpnManager.trafficTx).thenReturn(MutableStateFlow(null))
         whenever(connectedServerState.connectedServer).thenReturn(MutableStateFlow(null))
         whenever(recentConnectionDao.getRecentConnections()).thenReturn(flowOf(emptyList()))
         whenever(profileDao.getAllProfilesFlow()).thenReturn(flowOf(emptyList()))

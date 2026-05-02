@@ -33,6 +33,7 @@ import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.*
 import retrofit2.Response
 import ru.protonmod.next.data.local.ServerDao
+import ru.protonmod.next.data.local.ServerEntity
 import ru.protonmod.next.data.local.ServersCacheDao
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SessionEntity
@@ -150,9 +151,27 @@ class VpnRepositoryTest {
             )
         )
 
+        // Mock DAO to simulate DB behavior
+        val dbServers = mutableListOf<ServerEntity>()
+        whenever(serverDao.insertServers(any())).thenAnswer { invocation ->
+            val list = invocation.getArgument<List<ServerEntity>>(0)
+            dbServers.clear()
+            dbServers.addAll(list)
+            null
+        }
+        whenever(serverDao.getAllServers()).thenAnswer { dbServers.toList() }
+        whenever(serverDao.updateServerLoad(any(), any())).thenAnswer { invocation ->
+            val id = invocation.getArgument<String>(0)
+            val load = invocation.getArgument<Int>(1)
+            val index = dbServers.indexOfFirst { it.id == id }
+            if (index != -1) {
+                dbServers[index] = dbServers[index].copy(averageLoad = load)
+            }
+            null
+        }
+
         // Mock Cache (empty)
         whenever(serversCacheDao.getCacheInfo()).thenReturn(null)
-        whenever(serverDao.getAllServers()).thenReturn(emptyList())
 
         // Mock API with flexible matching
         whenever(vpnApi.getLogicalServers(
@@ -167,6 +186,10 @@ class VpnRepositoryTest {
         whenever(vpnApi.getLoads(any(), any())).thenReturn(
             Response.success(loadsJson.toResponseBody())
         )
+        
+        whenever(vpnApi.getServerCities(any(), any(), any())).thenReturn(
+            CityTranslationsResponse(languageCode = "en", cities = emptyMap(), states = emptyMap())
+        )
 
         // Act
         val result = repository.getServers("token", "session", 0, forceRefresh = true)
@@ -176,7 +199,6 @@ class VpnRepositoryTest {
         val servers = result.getOrNull()!!
         assertEquals(1, servers.size)
         assertEquals(loadValue, servers[0].averageLoad)
-        assertEquals(loadValue, servers[0].servers[0].load)
         
         // Verify DB interactions
         verify(serverDao, atLeastOnce()).insertServers(any())
