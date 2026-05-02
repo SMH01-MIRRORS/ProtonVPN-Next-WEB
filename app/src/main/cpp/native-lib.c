@@ -37,6 +37,10 @@ struct params default_params = {
 void reset_params(void) {
     clear_params(NULL, NULL);
     params = default_params;
+    server_fd = -1;
+    pthread_mutex_lock(&g_pool_mutex);
+    g_pool = NULL;
+    pthread_mutex_unlock(&g_pool_mutex);
 }
 
 JNIEXPORT jint JNICALL
@@ -78,13 +82,23 @@ Java_ru_protonmod_next_data_network_byedpi_ByeDpiProxy_jniStartProxy(JNIEnv *env
     }
 
     LOGI("starting proxy with %d args", argc);
+    for (int i = 0; i < argc; i++) {
+        LOGI("  argv[%d] = %s", i, argv[i]);
+    }
+
     reset_params();
     g_proxy_running = 1;
-    optind = 0;
+
+    optind = 1;
+    optreset = 1;
 
     int result = main(argc, argv);
 
-    LOGI("proxy return code %d", result);
+    if (result != 0) {
+        LOGE("proxy failed with result %d, errno: %d (%s)", result, errno, strerror(errno));
+    } else {
+        LOGI("proxy exited normally");
+    }
     __sync_lock_release(&g_proxy_running);
 
     for (int i = 0; i < argc; i++) free(argv[i]);
