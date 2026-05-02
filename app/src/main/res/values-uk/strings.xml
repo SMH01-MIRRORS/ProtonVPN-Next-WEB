@@ -295,6 +295,7 @@
         <item quantity="other">Вибрано %1$d доменів</item>
     </plurals>
     <string name="st_search_apps_hint">Пошук додатків</string>
+    <string name="st_show_system_apps">Показати системні додатки</string>
     <string name="st_selected_apps_header">Вибрані додатки (%1$d)</string>
     <string name="st_available_apps_header">Доступні додатки (%1$d)</string>
     <string name="st_ip_hint">напр. 192.168.1.0/24</string>
