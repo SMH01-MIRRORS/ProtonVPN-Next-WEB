@@ -36,7 +36,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.CloudDownload
+import androidx.compose.material.icons.rounded.CloudUpload
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material.icons.rounded.Speed
@@ -51,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
@@ -529,8 +531,7 @@ fun DashboardScreen(
                                 onDisconnect = { viewModel.disconnect() },
                                 onRefreshCert = { viewModel.refreshCertificate() },
                                 onToggleIpVisibility = { viewModel.toggleIpVisibility() },
-                                onChangeQuickConnect = { showQuickConnectConfig = true },
-                                speed = state.speed
+                                onChangeQuickConnect = { showQuickConnectConfig = true }
                             )
 
                             if (showQuickConnectConfig) {
@@ -563,8 +564,7 @@ fun DashboardContent(
     onToggleIpVisibility: () -> Unit,
     onChangeQuickConnect: () -> Unit,
     modifier: Modifier = Modifier,
-    isTablet: Boolean = false,
-    speed: String? = null
+    isTablet: Boolean = false
 ) {
     val colors = ProtonNextTheme.colors
     val windowInfo = LocalWindowInfo.current
@@ -611,9 +611,45 @@ fun DashboardContent(
                         onChangeQuickConnect = onChangeQuickConnect,
                         vpnState = state.vpnState,
                         connectedServer = state.connectedServer,
-                        allServers = state.servers.toImmutableList(),
-                        speed = speed
+                        allServers = state.servers.toImmutableList()
                     )
+
+                    if (state.isConnected) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            StatCard(
+                                label = stringResource(R.string.label_speed),
+                                value = state.speed ?: "0 B/s",
+                                icon = Icons.Rounded.Speed,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                StatCard(
+                                    label = stringResource(R.string.label_download),
+                                    value = state.trafficRx ?: "0 B",
+                                    icon = Icons.Rounded.CloudDownload,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                StatCard(
+                                    label = stringResource(R.string.label_upload),
+                                    value = state.trafficTx ?: "0 B",
+                                    icon = Icons.Rounded.CloudUpload,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
                 }
 
                 // Right Side: Recent Connections
@@ -690,9 +726,45 @@ fun DashboardContent(
                         onChangeQuickConnect = onChangeQuickConnect,
                         vpnState = state.vpnState,
                         connectedServer = state.connectedServer,
-                        allServers = state.servers.toImmutableList(),
-                        speed = speed
+                        allServers = state.servers.toImmutableList()
                     )
+
+                    if (state.isConnected) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            StatCard(
+                                label = stringResource(R.string.label_speed),
+                                value = state.speed ?: "0 B/s",
+                                icon = Icons.Rounded.Speed,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                StatCard(
+                                    label = stringResource(R.string.label_download),
+                                    value = state.trafficRx ?: "0 B",
+                                    icon = Icons.Rounded.CloudDownload,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                StatCard(
+                                    label = stringResource(R.string.label_upload),
+                                    value = state.trafficTx ?: "0 B",
+                                    icon = Icons.Rounded.CloudUpload,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
                 }
 
                 if (state.recentConnections.isNotEmpty()) {
@@ -850,6 +922,48 @@ private data class Quadruple<out A, out B, out C, out D>(
 )
 
 @Composable
+private fun StatCard(
+    label: String,
+    value: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier
+) {
+    val colors = ProtonNextTheme.colors
+    Box(
+        modifier = modifier
+            .liquidGlass(
+                shape = RoundedCornerShape(24.dp),
+                alpha = 0.4f,
+                shadowElevation = 0.dp
+            )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = colors.brandNorm,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colors.textWeak
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = colors.textNorm
+            )
+        }
+    }
+}
+
+@Composable
 fun ConnectionStatusCard(
     isConnected: Boolean,
     isConnecting: Boolean,
@@ -865,8 +979,7 @@ fun ConnectionStatusCard(
     modifier: Modifier = Modifier,
     vpnState: AmneziaVpnManager.VpnState = AmneziaVpnManager.VpnState.DISCONNECTED,
     connectedServer: LogicalServer? = null,
-    allServers: ImmutableList<LogicalServer> = kotlinx.collections.immutable.persistentListOf(),
-    speed: String? = null
+    allServers: ImmutableList<LogicalServer> = kotlinx.collections.immutable.persistentListOf()
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
@@ -926,16 +1039,6 @@ fun ConnectionStatusCard(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-
-            if (!speed.isNullOrBlank() && isConnected) {
-                Text(
-                    text = speed,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = colors.brandNorm,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-            }
 
             Row(
                 modifier = Modifier

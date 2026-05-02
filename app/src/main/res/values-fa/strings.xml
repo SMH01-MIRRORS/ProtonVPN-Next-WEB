@@ -319,6 +319,13 @@
     <string name="unit_mb_s">مگابایت بر ثانیه</string>
     <string name="unit_gb_s">گیگابایت بر ثانیه</string>
     <string name="unit_b_s">بایت بر ثانیه</string>
+    <string name="unit_kb">کیلوبایت</string>
+    <string name="unit_mb">مگابایت</string>
+    <string name="unit_gb">گیگابایت</string>
+    <string name="unit_b">بایت</string>
+    <string name="label_download">دریافت</string>
+    <string name="label_upload">ارسال</string>
+    <string name="label_speed">سرعت</string>
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">نشست فعال یافت نشد. لطفاً دوباره وارد شوید.</string>
     <string name="error_unknown">خطای ناشناخته</string>

@@ -358,6 +358,13 @@
     <string name="unit_mb_s">MiB/s</string>
     <string name="unit_gb_s">GiB/s</string>
     <string name="unit_b_s">B/s</string>
+    <string name="unit_kb">KiB</string>
+    <string name="unit_mb">MiB</string>
+    <string name="unit_gb">GiB</string>
+    <string name="unit_b">B</string>
+    <string name="label_download">Download</string>
+    <string name="label_upload">Upload</string>
+    <string name="label_speed">Speed</string>
     <string name="vpn_speed_format" translatable="false">↑ %1$s ↓ %2$s</string>
 
     <!-- Errors and ViewModels -->

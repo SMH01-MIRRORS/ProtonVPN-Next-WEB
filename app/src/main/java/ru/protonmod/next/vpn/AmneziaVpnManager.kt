@@ -133,6 +133,12 @@ class AmneziaVpnManager @Inject constructor(
     private val _speed = MutableStateFlow<String?>(null)
     val speed: StateFlow<String?> = _speed.asStateFlow()
 
+    private val _trafficRx = MutableStateFlow<String?>(null)
+    val trafficRx: StateFlow<String?> = _trafficRx.asStateFlow()
+
+    private val _trafficTx = MutableStateFlow<String?>(null)
+    val trafficTx: StateFlow<String?> = _trafficTx.asStateFlow()
+
     private val _tunnelState = MutableStateFlow(Tunnel.State.DOWN)
     val tunnelState: StateFlow<Tunnel.State> = _tunnelState
 
@@ -176,6 +182,8 @@ class AmneziaVpnManager @Inject constructor(
                     }
                     ProtonVpnService.ACTION_STATS_UPDATED -> {
                         _speed.value = intent.getStringExtra(ProtonVpnService.EXTRA_SPEED)
+                _trafficRx.value = intent.getStringExtra(ProtonVpnService.EXTRA_TRAFFIC_RX)
+                _trafficTx.value = intent.getStringExtra(ProtonVpnService.EXTRA_TRAFFIC_TX)
                     }
                 }
             }
@@ -222,6 +230,8 @@ class AmneziaVpnManager @Inject constructor(
                     currentServerId = null
                     connectedServerState.setConnectedServer(null)
                     _speed.value = null
+        _trafficRx.value = null
+        _trafficTx.value = null
                 } else {
                     _vpnState.value = VpnState.CONNECTING
                 }

@@ -83,7 +83,9 @@ sealed class DashboardUiState {
         val vpnLocationText: LocationText? = null,
         val isIpHidden: Boolean = false,
         val serverLoadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
-        val speed: String? = null
+        val speed: String? = null,
+        val trafficRx: String? = null,
+        val trafficTx: String? = null
     ) : DashboardUiState()
     data class Error(val message: String, val isSessionError: Boolean = false) : DashboardUiState()
 }
@@ -142,7 +144,9 @@ class DashboardViewModel @Inject constructor(
         _originalLocationText,
         _vpnLocationText,
         _isIpHidden,
-        amneziaVpnManager.speed
+        amneziaVpnManager.speed,
+        amneziaVpnManager.trafficRx,
+        amneziaVpnManager.trafficTx
     ) { args: Array<Any?> ->
         @Suppress("UNCHECKED_CAST")
         val servers = args[0] as List<LogicalServer>
@@ -162,6 +166,8 @@ class DashboardViewModel @Inject constructor(
         val vpnLocationText = args[12] as LocationText?
         val isIpHidden = args[13] as Boolean
         val speed = args[14] as String?
+        val trafficRx = args[15] as String?
+        val trafficTx = args[16] as String?
 
         if (isUpdating && servers.isEmpty()) {
             DashboardUiState.Loading
@@ -190,7 +196,9 @@ class DashboardViewModel @Inject constructor(
                 vpnLocationText = vpnLocationText,
                 isIpHidden = isIpHidden,
                 serverLoadDisplayMode = loadMode,
-                speed = speed
+                speed = speed,
+                trafficRx = trafficRx,
+                trafficTx = trafficTx
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.Loading)

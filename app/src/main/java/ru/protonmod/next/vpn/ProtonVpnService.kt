@@ -111,6 +111,8 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         const val EXTRA_EXCLUDED_IPS = "excluded_ips"
         const val EXTRA_STATE = "state"
         const val EXTRA_SPEED = "speed"
+        const val EXTRA_TRAFFIC_RX = "traffic_rx"
+        const val EXTRA_TRAFFIC_TX = "traffic_tx"
         const val EXTRA_NOTIFICATIONS_ENABLED = "notifications_enabled"
         const val EXTRA_KILL_SWITCH_ENABLED = "kill_switch_enabled"
         const val EXTRA_NON_FATAL_ENABLED = "non_fatal_enabled"
@@ -389,9 +391,14 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                         val downStr = formatSpeed(deltaRx)
                         lastSpeedText = getString(R.string.vpn_speed_format, upStr, downStr)
 
+                        val totalRxStr = formatBytes(totalRx, false)
+                        val totalTxStr = formatBytes(totalTx, false)
+
                         // Broadcast speed updates to UI components
                         val speedBroadcast = Intent(ACTION_STATS_UPDATED).apply {
                             putExtra(EXTRA_SPEED, lastSpeedText)
+                            putExtra(EXTRA_TRAFFIC_RX, totalRxStr)
+                            putExtra(EXTRA_TRAFFIC_TX, totalTxStr)
                             setPackage(packageName)
                         }
                         sendBroadcast(speedBroadcast)
@@ -557,18 +564,36 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
      * Formats bytes into a human-readable speed string.
      */
     private fun formatSpeed(bytesPerSec: Long): String {
-        // Handle negative values if counters reset
-        val b = maxOf(0.0, bytesPerSec.toDouble())
-        if (b <= 0.0) return "0 ${getString(R.string.unit_b_s)}"
+        return formatBytes(bytesPerSec, true)
+    }
+
+    /**
+     * Formats bytes into a human-readable size or speed string.
+     */
+    private fun formatBytes(bytes: Long, isSpeed: Boolean): String {
+        val b = maxOf(0.0, bytes.toDouble())
+        if (b <= 0.0) return "0 ${getString(if (isSpeed) R.string.unit_b_s else R.string.unit_b)}"
         val kib = 1024.0
         val mib = kib * 1024.0
         val gib = mib * 1024.0
-        return when {
-            b >= gib -> String.format(Locale.US, "%.2f %s", b / gib, getString(R.string.unit_gb_s))
-            b >= mib -> String.format(Locale.US, "%.2f %s", b / mib, getString(R.string.unit_mb_s))
-            b >= kib -> String.format(Locale.US, "%.1f %s", b / kib, getString(R.string.unit_kb_s))
-            else -> String.format(Locale.US, "%.0f %s", b, getString(R.string.unit_b_s))
+        val unitRes = when {
+            b >= gib -> if (isSpeed) R.string.unit_gb_s else R.string.unit_gb
+            b >= mib -> if (isSpeed) R.string.unit_mb_s else R.string.unit_mb
+            b >= kib -> if (isSpeed) R.string.unit_kb_s else R.string.unit_kb
+            else -> if (isSpeed) R.string.unit_b_s else R.string.unit_b
         }
+        val value = when {
+            b >= gib -> b / gib
+            b >= mib -> b / mib
+            b >= kib -> b / kib
+            else -> b
+        }
+        val format = when {
+            b >= mib -> "%.2f %s"
+            b >= kib -> "%.1f %s"
+            else -> "%.0f %s"
+        }
+        return String.format(Locale.US, format, value, getString(unitRes))
     }
 
     /**

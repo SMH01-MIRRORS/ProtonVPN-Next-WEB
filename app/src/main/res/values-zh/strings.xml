@@ -316,6 +316,13 @@
     <string name="unit_mb_s">MiB/s</string>
     <string name="unit_gb_s">GiB/s</string>
     <string name="unit_b_s">B/s</string>
+    <string name="unit_kb">KiB</string>
+    <string name="unit_mb">MiB</string>
+    <string name="unit_gb">GiB</string>
+    <string name="unit_b">B</string>
+    <string name="label_download">下载</string>
+    <string name="label_upload">上传</string>
+    <string name="label_speed">速度</string>
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">未找到活动会话。请重新登录。</string>
     <string name="error_unknown">未知错误</string>

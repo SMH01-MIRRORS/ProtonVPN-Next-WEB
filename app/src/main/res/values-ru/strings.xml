@@ -325,6 +325,13 @@
     <string name="unit_mb_s">МБ/с</string>
     <string name="unit_gb_s">ГБ/с</string>
     <string name="unit_b_s">Б/с</string>
+    <string name="unit_kb">КБ</string>
+    <string name="unit_mb">МБ</string>
+    <string name="unit_gb">ГБ</string>
+    <string name="unit_b">Б</string>
+    <string name="label_download">Загрузка</string>
+    <string name="label_upload">Отдача</string>
+    <string name="label_speed">Скорость</string>
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">Активный сеанс не найден. Пожалуйста, войдите снова.</string>
     <string name="error_unknown">Неизвестная ошибка</string>
