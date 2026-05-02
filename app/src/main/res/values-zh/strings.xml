@@ -286,6 +286,7 @@
         <item quantity="other">已选择 %1$d 个域名</item>
     </plurals>
     <string name="st_search_apps_hint">搜索应用</string>
+    <string name="st_show_system_apps">显示系统应用</string>
     <string name="st_selected_apps_header">已选择应用 (%1$d)</string>
     <string name="st_available_apps_header">可用应用 (%1$d)</string>
     <string name="st_ip_hint">例如 192.168.1.0/24</string>

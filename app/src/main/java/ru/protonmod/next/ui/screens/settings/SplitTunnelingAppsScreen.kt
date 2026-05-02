@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.rounded.Android
 import androidx.compose.material3.*
@@ -58,6 +59,7 @@ fun SplitTunnelingAppsScreen(
 ) {
     val colors = ProtonNextTheme.colors
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showMenu by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -94,7 +96,48 @@ fun SplitTunnelingAppsScreen(
                             if (uiState.splitTunnelingMode == "exclude") R.string.settings_excluded_apps
                             else R.string.settings_included_apps
                         ),
-                        onBack = onBack
+                        onBack = onBack,
+                        actions = {
+                            Box {
+                                IconButton(onClick = { showMenu = true }) {
+                                    Icon(
+                                        Icons.Default.MoreVert,
+                                        contentDescription = stringResource(R.string.desc_more_options),
+                                        tint = colors.textNorm
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = showMenu,
+                                    onDismissRequest = { showMenu = false },
+                                    modifier = Modifier.background(colors.backgroundSecondary)
+                                ) {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Checkbox(
+                                                    checked = uiState.showSystemApps,
+                                                    onCheckedChange = null,
+                                                    colors = CheckboxDefaults.colors(
+                                                        checkedColor = colors.brandNorm,
+                                                        uncheckedColor = colors.textWeak,
+                                                        checkmarkColor = colors.textInverted
+                                                    )
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(
+                                                    stringResource(R.string.st_show_system_apps),
+                                                    color = colors.textNorm
+                                                )
+                                            }
+                                        },
+                                        onClick = {
+                                            viewModel.toggleShowSystemApps(!uiState.showSystemApps)
+                                            showMenu = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     )
                 }
 

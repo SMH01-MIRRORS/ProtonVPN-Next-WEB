@@ -71,6 +71,8 @@ class SettingsManager @Inject constructor(
         private val EXCLUDED_IPS = stringSetPreferencesKey("excluded_ips")
         private val EXCLUDED_DOMAINS = stringSetPreferencesKey("excluded_domains")
 
+        private val ST_SHOW_SYSTEM_APPS = booleanPreferencesKey("st_show_system_apps")
+
         private val VPN_PORT = intPreferencesKey("vpn_port")
 
         // Custom DNS IP setting (IPv4 or IPv6)
@@ -166,6 +168,8 @@ class SettingsManager @Inject constructor(
     val excludedApps: Flow<Set<String>> = context.dataStore.data.map { it[EXCLUDED_APPS] ?: emptySet() }
     val excludedIps: Flow<Set<String>> = context.dataStore.data.map { it[EXCLUDED_IPS] ?: emptySet() }
     val excludedDomains: Flow<Set<String>> = context.dataStore.data.map { it[EXCLUDED_DOMAINS] ?: emptySet() }
+
+    val stShowSystemApps: Flow<Boolean> = context.dataStore.data.map { it[ST_SHOW_SYSTEM_APPS] ?: false }
 
     val vpnPort: Flow<Int> = context.dataStore.data.map { it[VPN_PORT] ?: 0 }
     val customDns: Flow<String> = context.dataStore.data.map { it[CUSTOM_DNS] ?: "" }
@@ -343,6 +347,10 @@ class SettingsManager @Inject constructor(
 
     suspend fun setExcludedDomains(domains: Set<String>) {
         context.dataStore.edit { it[EXCLUDED_DOMAINS] = domains }
+    }
+
+    suspend fun setStShowSystemApps(enabled: Boolean) {
+        context.dataStore.edit { it[ST_SHOW_SYSTEM_APPS] = enabled }
     }
 
     suspend fun setVpnPort(port: Int) {

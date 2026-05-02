@@ -295,6 +295,7 @@
         <item quantity="other">%1$d домена выбрано</item>
     </plurals>
     <string name="st_search_apps_hint">Поиск приложений</string>
+    <string name="st_show_system_apps">Показать системные приложения</string>
     <string name="st_selected_apps_header">Выбранные приложения (%1$d)</string>
     <string name="st_available_apps_header">Доступные приложения (%1$d)</string>
     <string name="st_ip_hint">например, 192.168.1.0/24</string>

@@ -38,7 +38,8 @@ import javax.inject.Inject
 data class AppInfo(
     val packageName: String,
     val appName: String,
-    val isSelected: Boolean = false
+    val isSelected: Boolean = false,
+    val isSystemApp: Boolean = false
 )
 
 data class SplitTunnelingAppsUiState(
@@ -46,7 +47,8 @@ data class SplitTunnelingAppsUiState(
     val availableApps: List<AppInfo> = emptyList(),
     val searchQuery: String = "",
     val splitTunnelingMode: String = "exclude",
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val showSystemApps: Boolean = false
 )
 
 @HiltViewModel
@@ -63,18 +65,24 @@ class SplitTunnelingAppsViewModel @Inject constructor(
         _allApps,
         settingsManager.excludedApps,
         settingsManager.splitTunnelingMode,
+        settingsManager.stShowSystemApps,
         _searchQuery
-    ) { allApps, excludedApps, mode, query ->
+    ) { allApps, excludedApps, mode, showSystemApps, query ->
         val isLoading = allApps.isEmpty()
 
         // Filter apps by search query
-        val filteredApps = if (query.isBlank()) {
+        var filteredApps = if (query.isBlank()) {
             allApps
         } else {
             allApps.filter {
                 it.appName.contains(query, ignoreCase = true) ||
                         it.packageName.contains(query, ignoreCase = true)
             }
+        }
+
+        // Apply system apps filter, but always keep selected apps visible
+        if (!showSystemApps) {
+            filteredApps = filteredApps.filter { !it.isSystemApp || it.packageName in excludedApps }
         }
 
         // Split into Selected and Available lists (like original Proton app)
@@ -93,7 +101,8 @@ class SplitTunnelingAppsViewModel @Inject constructor(
             availableApps = available,
             searchQuery = query,
             splitTunnelingMode = mode,
-            isLoading = isLoading
+            isLoading = isLoading,
+            showSystemApps = showSystemApps
         )
     }.stateIn(
         scope = viewModelScope,
@@ -118,10 +127,6 @@ class SplitTunnelingAppsViewModel @Inject constructor(
             }
 
             packages
-                .filter { packageInfo ->
-                    val appInfo = packageInfo.applicationInfo
-                    appInfo?.flags?.and(ApplicationInfo.FLAG_SYSTEM) == 0
-                }
                 .mapNotNull { packageInfo ->
                     val appInfo = packageInfo.applicationInfo ?: return@mapNotNull null
                     val appLabel = try {
@@ -129,9 +134,11 @@ class SplitTunnelingAppsViewModel @Inject constructor(
                     } catch (_: Exception) {
                         packageInfo.packageName
                     }
+                    val isSystem = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
                     AppInfo(
                         packageName = packageInfo.packageName,
-                        appName = appLabel
+                        appName = appLabel,
+                        isSystemApp = isSystem
                     )
                 }
         } catch (_: Exception) {
@@ -141,6 +148,12 @@ class SplitTunnelingAppsViewModel @Inject constructor(
 
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
+    }
+
+    fun toggleShowSystemApps(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setStShowSystemApps(enabled)
+        }
     }
 
     fun toggleApp(packageName: String, isSelected: Boolean) {
