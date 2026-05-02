@@ -28,36 +28,47 @@ TAG = os.environ.get('CI_COMMIT_TAG')
 
 def get_commit_summary():
     """
-    Returns a summary of commits. If it's a push event with multiple commits,
-    it returns a bulleted list of subjects. Otherwise, it returns the single commit message.
+    Returns a summary of commits. If it's a push event, it looks at the last 10 commits
+    and groups all consecutive commits by the same author to provide a batch summary.
     """
     event = os.environ.get('CI_PIPELINE_EVENT')
-    prev_sha = os.environ.get('CI_COMMIT_PREVIOUS_SHA')
-    curr_sha = os.environ.get('CI_COMMIT_SHA')
+    author = os.environ.get('CI_COMMIT_AUTHOR')
     full_message = os.environ.get('CI_COMMIT_MESSAGE', 'No message')
     # Default to the first line of the current commit message
     default_msg = full_message.split('\n')[0].strip()
 
-    if event == 'push' and prev_sha and prev_sha != '0000000000000000000000000000000000000000':
+    if event == 'push' and author:
         try:
-            # Get list of subjects for all commits in the push range
-            # We use git log to get the subjects of all commits from prev_sha (exclusive) to curr_sha (inclusive)
-            result = subprocess.check_output(
-                ['git', 'log', f'{prev_sha}..{curr_sha}', '--pretty=format:%s'],
+            # Get last 10 commits with author and subject
+            # Format: AuthorName|Subject
+            log_output = subprocess.check_output(
+                ['git', 'log', '-10', '--pretty=format:%an|%s'],
                 stderr=subprocess.DEVNULL,
                 text=True
             ).strip()
 
-            if result:
-                messages = result.split('\n')
-                if len(messages) > 1:
+            if log_output:
+                lines = log_output.split('\n')
+                relevant_messages = []
+                for line in lines:
+                    if '|' in line:
+                        commit_author, subject = line.split('|', 1)
+                        # Woodpecker author might be 'Name <email>', git %an is 'Name'
+                        # Or they might match exactly. We check if author contains commit_author or vice-versa.
+                        if commit_author in author or author in commit_author:
+                            relevant_messages.append(subject)
+                        else:
+                            # Stop if we hit a commit by a different author
+                            break
+
+                if len(relevant_messages) > 1:
                     # Reverse to chronological order: oldest to newest
-                    messages.reverse()
-                    return "\n" + "\n".join([f"  • {m}" for m in messages])
-                else:
-                    return messages[0]
+                    relevant_messages.reverse()
+                    return "\n" + "\n".join([f"  • {m}" for m in relevant_messages])
+                elif len(relevant_messages) == 1:
+                    return relevant_messages[0]
         except Exception:
-            # Fallback to default if git command fails (e.g., shallow clone issues or invalid SHAs)
+            # Fallback to default if git command fails
             pass
 
     return default_msg
