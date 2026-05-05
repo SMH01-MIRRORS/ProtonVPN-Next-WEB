@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159864,
-      "versionName": "12.0.0-alpha1st3-25-g8823962-nightly",
+      "versionCode": 605159863,
+      "versionName": "12.0.0-alpha1st3-24-gb309665-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "Update workflow",
+      "changelog": "chore: update sentry to 6.6.0",
       "force": false
     },
     "release": {
-      "versionCode": 605159864,
-      "versionName": "12.0.0-alpha1st3-25-g8823962-nightly",
+      "versionCode": 605159863,
+      "versionName": "12.0.0-alpha1st3-24-gb309665-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "Update workflow",
+      "changelog": "chore: update sentry to 6.6.0",
       "force": false
     }
   },
