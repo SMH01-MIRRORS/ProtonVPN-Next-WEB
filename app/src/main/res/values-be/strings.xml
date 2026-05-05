@@ -329,8 +329,8 @@
     <string name="unit_mb">МіБ</string>
     <string name="unit_gb">ГіБ</string>
     <string name="unit_b">Б</string>
-    <string name="label_download">Загрузка</string>
-    <string name="label_upload">Аддача</string>
+    <string name="label_download"> Спампоўка</string>
+    <string name="label_upload">Запампоўка</string>
     <string name="label_speed">Хуткасць</string>
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">Актыўны сеанс не знойдзены. Увайдзіце яшчэ раз.</string>
