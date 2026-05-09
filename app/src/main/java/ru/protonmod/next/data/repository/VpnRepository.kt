@@ -356,8 +356,32 @@ class VpnRepository @Inject constructor(
             // serversList goes out of scope as soon as the block exits.
             val serverCount = run {
                 if (response.code() == 200 && (newStatusId != cacheInfo?.statusId || forceRefresh)) {
-                    serverDao.insertServers(serversList.map { ServerMapper.toEntity(it) })
-                    ProtonLogger.d(TAG, "Saved servers to local database")
+                    val existingServers = serverDao.getAllServers().associateBy { it.id }
+                    val entities = serversList.map { server ->
+                        val entity = ServerMapper.toEntity(server)
+                        val old = existingServers[server.id]
+                        if (old != null) {
+                            // Preserve logical load if the new one is 0 (API placeholder)
+                            val preservedLoad = if (entity.averageLoad == 0) old.averageLoad else entity.averageLoad
+                            
+                            // Preserve physical loads by merging the JSON
+                            val mergedPhysicalJson = try {
+                                val oldPhysicals = json.decodeFromString<List<PhysicalServer>>(old.physicalServersJson).associateBy { it.id }
+                                val newPhysicals = json.decodeFromString<List<PhysicalServer>>(entity.physicalServersJson).map { p ->
+                                    if (p.load == 0 && oldPhysicals.containsKey(p.id)) {
+                                        p.copy(load = oldPhysicals[p.id]!!.load)
+                                    } else p
+                                }
+                                json.encodeToString(newPhysicals)
+                            } catch (e: Exception) {
+                                entity.physicalServersJson
+                            }
+                            
+                            entity.copy(averageLoad = preservedLoad, physicalServersJson = mergedPhysicalJson)
+                        } else entity
+                    }
+                    serverDao.insertServers(entities)
+                    ProtonLogger.d(TAG, "Saved ${entities.size} servers to local database (merged loads)")
                 }
 
                 // Update cache metadata
@@ -396,11 +420,41 @@ class VpnRepository @Inject constructor(
                 }
 
                 val loadsMap = loadsData?.loads?.associate { it.id to it.load } ?: emptyMap()
-                ProtonLogger.d(TAG, "Successfully updated loads for ${loadsMap.size} server IDs")
+                if (loadsMap.isNotEmpty()) {
+                    ProtonLogger.d(TAG, "Applying fresh loads for ${loadsMap.size} IDs to database...")
+                    
+                    val allEntities = serverDao.getAllServers()
+                    val updatedEntities = allEntities.mapNotNull { entity ->
+                        var modified = false
+                        var newAverageLoad = entity.averageLoad
+                        if (loadsMap.containsKey(entity.id)) {
+                            newAverageLoad = loadsMap[entity.id]!!
+                            modified = true
+                        }
+                        
+                        val (updatedPhysicalJson, physicalModified) = try {
+                            val physicals = json.decodeFromString<List<PhysicalServer>>(entity.physicalServersJson)
+                            var pMod = false
+                            val updatedP = physicals.map { p ->
+                                if (loadsMap.containsKey(p.id)) {
+                                    pMod = true
+                                    p.copy(load = loadsMap[p.id]!!)
+                                } else p
+                            }
+                            if (pMod) json.encodeToString(updatedP) to true else entity.physicalServersJson to false
+                        } catch (e: Exception) {
+                            entity.physicalServersJson to false
+                        }
+                        
+                        if (modified || physicalModified) {
+                            entity.copy(averageLoad = newAverageLoad, physicalServersJson = updatedPhysicalJson)
+                        } else null
+                    }
 
-                // Apply loads directly to the DB instead of the in-memory list.
-                loadsMap.forEach { (id, load) ->
-                    serverDao.updateServerLoad(id, load)
+                    if (updatedEntities.isNotEmpty()) {
+                        serverDao.insertServers(updatedEntities)
+                        ProtonLogger.i(TAG, "Successfully updated loads for ${updatedEntities.size} logical server entries")
+                    }
                 }
             } else {
                 ProtonLogger.w(TAG, "Failed to fetch fresh server loads (HTTP ${loadsResponse?.code()}). Keeping existing loads.")
