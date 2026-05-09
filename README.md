@@ -24,7 +24,7 @@
 ### 🛠 Build Instructions
 
 #### Using Android Studio (Recommended)
-1. **Open Android Studio** (Ladybug 2024.2.1 or newer recommended).
+1. **Open Android Studio** (Android Studio Panda 4 | 2025.3.4 Patch 1 or newer recommended).
 2. Select **Open** and navigate to the project root directory.
 3. Wait for the **Gradle Sync** to complete.
 4. Ensure you have **JDK 17** configured in `Settings > Build, Execution, Deployment > Build Tools > Gradle`.
@@ -84,7 +84,7 @@ Ensure you have the Android SDK and JDK 17 installed.
 ### 🛠 Инструкции по сборке
 
 #### Через Android Studio (Рекомендуется)
-1. **Откройте Android Studio** (рекомендуется версия Ladybug 2024.2.1 или новее).
+1. **Откройте Android Studio** (рекомендуется версия Android Studio Panda 4 | 2025.3.4 Patch 1 или новее).
 2. Выберите **Open** и укажите путь к корневой папке проекта.
 3. Дождитесь завершения синхронизации **Gradle**.
 4. Убедитесь, что в настройках (`Settings > Build, Execution, Deployment > Build Tools > Gradle`) выбран **JDK 17**.
