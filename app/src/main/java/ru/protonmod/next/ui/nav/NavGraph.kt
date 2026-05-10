@@ -51,6 +51,7 @@ sealed class Screen(val route: String) {
     data object Protocol : Screen("protocol")
     data object ObfuscationSettings : Screen("obfuscation_settings")
     data object KillSwitch : Screen("kill_switch")
+    data object TrustedWifi : Screen("trusted_wifi")
     data object ErrorReporting : Screen("error_reporting")
 
     data object ThemeSelection : Screen("theme_selection")
@@ -124,6 +125,9 @@ fun NavGraphBuilder.appNavGraph(
             },
             onNavigateToPortSelection = { currentPort ->
                 navController.navigate(Screen.PortSelection.createRoute(currentPort, true))
+            },
+            onNavigateToTrustedWifi = {
+                navController.navigate(Screen.TrustedWifi.route)
             }
         )
     }
@@ -155,6 +159,12 @@ fun NavGraphBuilder.appNavGraph(
 
     composable(Screen.KillSwitch.route) {
         KillSwitchScreen(
+            onBack = { navController.popBackStack() }
+        )
+    }
+
+    composable(Screen.TrustedWifi.route) {
+        TrustedWifiScreen(
             onBack = { navController.popBackStack() }
         )
     }

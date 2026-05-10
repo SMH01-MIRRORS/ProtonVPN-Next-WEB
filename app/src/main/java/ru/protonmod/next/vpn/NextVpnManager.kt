@@ -17,17 +17,31 @@
 
 package ru.protonmod.next.vpn
 
-object IpSubnetCalculator {
+import javax.inject.Inject
+import javax.inject.Singleton
 
-    fun isValidIpOrCidr(input: String): Boolean {
-        return NextIpSubnetCalculator.isValidIpOrCidr(input)
+@Singleton
+class NextVpnManager @Inject constructor() {
+
+    init {
+        System.loadLibrary("next")
     }
 
-    fun normalizeIp(ip: String): String {
-        return if (ip.contains("/")) ip else "$ip/32"
+    fun setState(state: AmneziaVpnManager.VpnState) {
+        setStateNative(state.ordinal)
     }
 
-    fun complementOfExcluded(excludedCidrs: Collection<String>): List<String> {
-        return NextIpSubnetCalculator.complementOfExcluded(excludedCidrs)
+    fun getState(): AmneziaVpnManager.VpnState {
+        val ordinal = getStateNative()
+        return AmneziaVpnManager.VpnState.entries[ordinal]
     }
+
+    fun canConnect(): Boolean = canConnectNative()
+
+    fun canDisconnect(): Boolean = canDisconnectNative()
+
+    private external fun setStateNative(state: Int)
+    private external fun getStateNative(): Int
+    private external fun canConnectNative(): Boolean
+    private external fun canDisconnectNative(): Boolean
 }

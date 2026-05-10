@@ -523,4 +523,35 @@
     <string name="ota_status_up_to_date">App is up to date</string>
     <string name="ota_btn_check">Check for Updates</string>
     <string name="ota_downloading">Downloading update… %1$d%%</string>
+
+    <!-- VPN Pause -->
+    <string name="btn_pause">Pause</string>
+    <string name="btn_resume">Resume</string>
+    <string name="pause_active_title">VPN is Paused</string>
+    <string name="pause_active_desc">Connection will automatically resume in %1$s.</string>
+    <string name="pause_dialog_title">Pause VPN</string>
+    <string name="pause_dialog_desc">Select how long you want to pause the VPN connection.</string>
+    <string name="pause_option">Pause for %1$d minutes</string>
+    <string name="pause_custom">Custom duration</string>
+    <string name="pause_unit_seconds">Seconds</string>
+    <string name="pause_unit_minutes">Minutes</string>
+    <string name="pause_unit_hours">Hours</string>
+    <string name="btn_start_pause">Start Pause</string>
+
+    <!-- Battery Optimization -->
+    <string name="battery_optimization_title">Battery Optimization Active</string>
+    <string name="battery_optimization_desc">Android may disconnect the VPN to save power. Please disable optimization for this app.</string>
+    <string name="btn_fix">Fix</string>
+
+    <!-- Trusted Wi-Fi -->
+    <string name="settings_trusted_wifi">Trusted Networks</string>
+    <string name="settings_trusted_wifi_desc">Manage Wi-Fi and mobile networks where VPN is not required</string>
+    <string name="settings_auto_connect_untrusted">Auto-connect on Untrusted</string>
+    <string name="settings_auto_connect_untrusted_desc">Automatically connect VPN when joining unknown networks</string>
+    <string name="trusted_wifi_title">Trusted Wi-Fi &amp; Mobile</string>
+    <string name="trusted_wifi_desc">The VPN will automatically disconnect when you connect to these Wi-Fi or mobile networks.</string>
+    <string name="trusted_wifi_add">Add current network: %1$s</string>
+    <string name="trusted_wifi_empty">No trusted networks added yet.</string>
+    <string name="trusted_wifi_permission_title">Network Access Required</string>
+    <string name="trusted_wifi_permission_desc">Android requires location permission to identify Wi-Fi networks. Mobile networks are identified by carrier name. This is used only for automation.</string>
 </resources>

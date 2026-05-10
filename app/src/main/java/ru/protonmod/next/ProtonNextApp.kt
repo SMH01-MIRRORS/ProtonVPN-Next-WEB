@@ -31,6 +31,7 @@ import ru.protonmod.next.data.repository.VpnRepository
 import ru.protonmod.next.ota.OTAUpdateManager
 import ru.protonmod.next.utils.NetworkMonitor
 import ru.protonmod.next.utils.ProtonLogger
+import ru.protonmod.next.vpn.VpnAutomationManager
 import javax.inject.Inject
 
 /**
@@ -53,6 +54,9 @@ class ProtonNextApp : Application(), Configuration.Provider {
 
     @Inject
     lateinit var networkMonitor: NetworkMonitor
+
+    @Inject
+    lateinit var vpnAutomationManager: VpnAutomationManager
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()

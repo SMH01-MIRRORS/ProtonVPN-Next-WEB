@@ -20,7 +20,13 @@ package ru.protonmod.next.vpn
 import javax.inject.Inject
 import javax.inject.Singleton
 
-interface AmneziaConfigGenerator {
+@Singleton
+class NextConfigGenerator @Inject constructor() {
+
+    init {
+        System.loadLibrary("next")
+    }
+
     fun buildConfig(
         serverPublicKey: String,
         privateKey: String,
@@ -33,43 +39,33 @@ interface AmneziaConfigGenerator {
         port: Int = 1194,
         certificate: String? = null,
         obfuscationParams: AmneziaVpnManager.ObfuscationParams
-    ): String
-}
+    ): String {
+        return generateConfigNative(
+            serverPublicKey,
+            privateKey,
+            localIp,
+            dnsServer,
+            targetIp,
+            isIncludeMode,
+            selectedApps.toTypedArray(),
+            selectedIps.toTypedArray(),
+            port,
+            certificate ?: "",
+            obfuscationParams
+        )
+    }
 
-@Singleton
-class AmneziaConfigGeneratorImpl @Inject constructor(
-    private val nextConfigGenerator: NextConfigGenerator
-) : AmneziaConfigGenerator {
-    override fun buildConfig(
+    private external fun generateConfigNative(
         serverPublicKey: String,
         privateKey: String,
         localIp: String,
         dnsServer: String,
         targetIp: String,
         isIncludeMode: Boolean,
-        selectedApps: Set<String>,
-        selectedIps: Set<String>,
+        selectedApps: Array<String>,
+        selectedIps: Array<String>,
         port: Int,
-        certificate: String?,
+        certificate: String,
         obfuscationParams: AmneziaVpnManager.ObfuscationParams
-    ): String {
-        val allowedIpsList = when {
-            isIncludeMode -> if (selectedIps.isEmpty()) listOf("0.0.0.0/0") else selectedIps.toList()
-            else -> if (selectedIps.isEmpty()) listOf("0.0.0.0/0") else IpSubnetCalculator.complementOfExcluded(selectedIps)
-        }
-
-        return nextConfigGenerator.buildConfig(
-            serverPublicKey = serverPublicKey,
-            privateKey = privateKey,
-            localIp = localIp,
-            dnsServer = dnsServer,
-            targetIp = targetIp,
-            isIncludeMode = isIncludeMode,
-            selectedApps = selectedApps,
-            selectedIps = allowedIpsList.toSet(),
-            port = port,
-            certificate = certificate,
-            obfuscationParams = obfuscationParams
-        )
-    }
+    ): String
 }

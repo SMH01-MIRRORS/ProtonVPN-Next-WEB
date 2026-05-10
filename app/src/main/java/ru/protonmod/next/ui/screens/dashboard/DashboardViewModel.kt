@@ -54,6 +54,8 @@ import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.ui.utils.CountryUtils
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import ru.protonmod.next.vpn.WarpManager
+import ru.protonmod.next.vpn.VpnAutomationManager
+import ru.protonmod.next.utils.system.SystemUtils
 import io.sentry.Sentry
 import java.net.Proxy
 import javax.inject.Inject
@@ -85,7 +87,9 @@ sealed class DashboardUiState {
         val serverLoadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
         val speed: String? = null,
         val trafficRx: String? = null,
-        val trafficTx: String? = null
+        val trafficTx: String? = null,
+        val isBatteryOptimized: Boolean = false,
+        val pauseEndTime: Long = 0
     ) : DashboardUiState()
     data class Error(val message: String, val isSessionError: Boolean = false) : DashboardUiState()
 }
@@ -97,6 +101,7 @@ class DashboardViewModel @Inject constructor(
     private val sessionDao: SessionDao,
     private val settingsManager: SettingsManager,
     private val amneziaVpnManager: AmneziaVpnManager,
+    private val vpnAutomationManager: VpnAutomationManager,
     private val warpManager: WarpManager,
     private val connectedServerState: ConnectedServerState,
     private val profileDao: ProfileDao,
@@ -146,7 +151,8 @@ class DashboardViewModel @Inject constructor(
         _isIpHidden,
         amneziaVpnManager.speed,
         amneziaVpnManager.trafficRx,
-        amneziaVpnManager.trafficTx
+        amneziaVpnManager.trafficTx,
+        settingsManager.pauseEndTime
     ) { args: Array<Any?> ->
         @Suppress("UNCHECKED_CAST")
         val servers = args[0] as List<LogicalServer>
@@ -168,6 +174,7 @@ class DashboardViewModel @Inject constructor(
         val speed = args[14] as String?
         val trafficRx = args[15] as String?
         val trafficTx = args[16] as String?
+        val pauseEndTime = args[17] as Long
 
         if (isUpdating && servers.isEmpty()) {
             DashboardUiState.Loading
@@ -198,7 +205,9 @@ class DashboardViewModel @Inject constructor(
                 serverLoadDisplayMode = loadMode,
                 speed = speed,
                 trafficRx = trafficRx,
-                trafficTx = trafficTx
+                trafficTx = trafficTx,
+                isBatteryOptimized = !SystemUtils.isIgnoringBatteryOptimizations(context),
+                pauseEndTime = pauseEndTime
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.Loading)
@@ -214,7 +223,11 @@ class DashboardViewModel @Inject constructor(
             if (autoConnect && !hasAttemptedAutoConnect) {
                 uiState.first { it is DashboardUiState.Success && it.servers.isNotEmpty() }
                 val currentState = uiState.value as? DashboardUiState.Success
-                if (currentState != null && !currentState.isConnected && !currentState.isConnecting) {
+                
+                val pauseEndTime = settingsManager.pauseEndTime.first()
+                val isPaused = pauseEndTime > System.currentTimeMillis()
+
+                if (currentState != null && !currentState.isConnected && !currentState.isConnecting && !isPaused) {
                     hasAttemptedAutoConnect = true
                     quickConnect()
                 }
@@ -495,6 +508,16 @@ class DashboardViewModel @Inject constructor(
 
     fun refreshCertificate() {
         amneziaVpnManager.checkAndRefreshCertificateProactively()
+    }
+
+    fun pauseVpn(durationMs: Long) {
+        amneziaVpnManager.pauseVpn(durationMs)
+    }
+
+    fun resumeVpn() {
+        viewModelScope.launch {
+            vpnAutomationManager.resumeVpn()
+        }
     }
 
     fun toggleConnection(server: LogicalServer) {

@@ -18,7 +18,11 @@
 package ru.protonmod.next.ui.screens.dashboard
 
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import android.net.VpnService
+import android.os.PowerManager
+import android.provider.Settings
 import android.text.BidiFormatter
 import ru.protonmod.next.utils.ProtonLogger
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -32,12 +36,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.rounded.CloudDownload
 import androidx.compose.material.icons.rounded.CloudUpload
+import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material.icons.rounded.Speed
@@ -65,6 +73,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.LayoutDirection
@@ -78,12 +87,14 @@ import ru.protonmod.next.R
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.FlagIcon
+import ru.protonmod.next.ui.components.SmoothOutlinedTextField
 import ru.protonmod.next.ui.theme.ProtonColors
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.CountryUtils
 import ru.protonmod.next.ui.utils.isTablet
 import ru.protonmod.next.vpn.AmneziaVpnManager
+import java.util.Locale
 
 // --- Extensions for UI Effects matching Original Proton ---
 
@@ -384,6 +395,8 @@ fun DashboardScreen(
         }
     }
 
+    var showPauseDialog by remember { mutableStateOf(false) }
+
     val errorAppOpsMsg = stringResource(R.string.error_system_appops)
 
     val checkVpnAndConnect: (LogicalServer) -> Unit = { server ->
@@ -529,10 +542,22 @@ fun DashboardScreen(
                                 onServerClick = { server -> checkVpnAndConnect(server) },
                                 onQuickConnect = { checkVpnAndQuickConnect() },
                                 onDisconnect = { viewModel.disconnect() },
+                                onPause = { showPauseDialog = true },
+                                onResume = { viewModel.resumeVpn() },
                                 onRefreshCert = { viewModel.refreshCertificate() },
                                 onToggleIpVisibility = { viewModel.toggleIpVisibility() },
-                                onChangeQuickConnect = { showQuickConnectConfig = true }
+                                onChangeQuickConnect = { showQuickConnectConfig = false }
                             )
+
+                            if (showPauseDialog) {
+                                PauseDialog(
+                                    onDismiss = { showPauseDialog = false },
+                                    onPause = { durationMs ->
+                                        viewModel.pauseVpn(durationMs)
+                                        showPauseDialog = false
+                                    }
+                                )
+                            }
 
                             if (showQuickConnectConfig) {
                                 QuickConnectBottomSheet(
@@ -560,6 +585,8 @@ fun DashboardContent(
     onServerClick: (LogicalServer) -> Unit,
     onQuickConnect: () -> Unit,
     onDisconnect: () -> Unit,
+    onPause: () -> Unit,
+    onResume: () -> Unit,
     onRefreshCert: () -> Unit,
     onToggleIpVisibility: () -> Unit,
     onChangeQuickConnect: () -> Unit,
@@ -567,6 +594,7 @@ fun DashboardContent(
     isTablet: Boolean = false
 ) {
     val colors = ProtonNextTheme.colors
+    val context = LocalContext.current
     val windowInfo = LocalWindowInfo.current
     val density = LocalDensity.current
     val screenHeight = with(density) { windowInfo.containerSize.height.toDp() }
@@ -595,6 +623,18 @@ fun DashboardContent(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
+                    if (state.isBatteryOptimized) {
+                        BatteryOptimizationBanner(modifier = Modifier.padding(bottom = 16.dp))
+                    }
+
+                    if (state.pauseEndTime > System.currentTimeMillis()) {
+                        PauseBanner(
+                            endTime = state.pauseEndTime,
+                            onResume = onResume,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+                    }
+
                     ConnectionStatusCard(
                         isConnected = state.isConnected,
                         isConnecting = state.isConnecting,
@@ -608,6 +648,7 @@ fun DashboardContent(
                         onToggleConnection = {
                             if (state.isConnected) onDisconnect() else onQuickConnect()
                         },
+                        onPause = onPause,
                         onChangeQuickConnect = onChangeQuickConnect,
                         vpnState = state.vpnState,
                         connectedServer = state.connectedServer,
@@ -709,6 +750,22 @@ fun DashboardContent(
                     )
                 }
 
+                if (state.isBatteryOptimized) {
+                    item(contentType = "BatteryOptimization") {
+                        BatteryOptimizationBanner(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                    }
+                }
+
+                if (state.pauseEndTime > System.currentTimeMillis()) {
+                    item(contentType = "PauseBanner") {
+                        PauseBanner(
+                            endTime = state.pauseEndTime,
+                            onResume = onResume,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    }
+                }
+
                 item(contentType = "ConnectionStatus") {
                     ConnectionStatusCard(
                         isConnected = state.isConnected,
@@ -723,6 +780,7 @@ fun DashboardContent(
                         onToggleConnection = {
                             if (state.isConnected) onDisconnect() else onQuickConnect()
                         },
+                        onPause = onPause,
                         onChangeQuickConnect = onChangeQuickConnect,
                         vpnState = state.vpnState,
                         connectedServer = state.connectedServer,
@@ -975,6 +1033,7 @@ fun ConnectionStatusCard(
     profiles: ImmutableList<ru.protonmod.next.data.local.VpnProfileEntity>,
     onToggleIpVisibility: () -> Unit,
     onToggleConnection: () -> Unit,
+    onPause: () -> Unit,
     onChangeQuickConnect: () -> Unit,
     modifier: Modifier = Modifier,
     vpnState: AmneziaVpnManager.VpnState = AmneziaVpnManager.VpnState.DISCONNECTED,
@@ -1169,35 +1228,297 @@ fun ConnectionStatusCard(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Button(
-                onClick = onToggleConnection,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(58.dp),
-                shape = RoundedCornerShape(18.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isConnected) colors.shade20 else colors.brandNorm,
-                    contentColor = if (isConnected) colors.textNorm else colors.textInverted
-                ),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = if (isConnected) 0.dp else 4.dp,
-                    pressedElevation = 2.dp
-                ),
-                enabled = !isConnecting
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                if (isConnecting) {
-                    ExpressiveCircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = colors.textInverted
-                    )
+                if (isConnected) {
+                    OutlinedButton(
+                        onClick = onPause,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(58.dp),
+                        shape = RoundedCornerShape(18.dp),
+                        border = BorderStroke(1.dp, colors.shade20)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.btn_pause),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = colors.textNorm
+                        )
+                    }
+                }
+
+                Button(
+                    onClick = onToggleConnection,
+                    modifier = Modifier
+                        .weight(if (isConnected) 2f else 1f)
+                        .height(58.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isConnected) colors.shade20 else colors.brandNorm,
+                        contentColor = if (isConnected) colors.textNorm else colors.textInverted
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(
+                        defaultElevation = if (isConnected) 0.dp else 4.dp,
+                        pressedElevation = 2.dp
+                    ),
+                    enabled = !isConnecting
+                ) {
+                    if (isConnecting) {
+                        ExpressiveCircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = colors.textInverted
+                        )
+                    } else {
+                        Text(
+                            text = if (isConnected) stringResource(R.string.btn_disconnect) else stringResource(R.string.btn_quick_connect),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun BatteryOptimizationBanner(
+    modifier: Modifier = Modifier
+) {
+    val colors = ProtonNextTheme.colors
+    val context = LocalContext.current
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = colors.notificationWarning.copy(alpha = 0.1f)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Warning,
+                contentDescription = null,
+                tint = colors.notificationWarning,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.battery_optimization_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = colors.notificationWarning,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = stringResource(R.string.battery_optimization_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.notificationWarning
+                )
+            }
+            TextButton(
+                onClick = {
+                    val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                    context.startActivity(intent)
+                }
+            ) {
+                Text(stringResource(R.string.btn_fix), color = colors.notificationWarning)
+            }
+        }
+    }
+}
+
+@Composable
+fun PauseBanner(
+    endTime: Long,
+    onResume: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = ProtonNextTheme.colors
+    var timeLeft by remember(endTime) { 
+        mutableLongStateOf((endTime - System.currentTimeMillis()).coerceAtLeast(0) / 1000)
+    }
+
+    LaunchedEffect(endTime) {
+        while (timeLeft > 0) {
+            delay(1000)
+            timeLeft = (endTime - System.currentTimeMillis()).coerceAtLeast(0) / 1000
+        }
+    }
+
+    val minutes = timeLeft / 60
+    val seconds = timeLeft % 60
+    val timeStr = String.format("%02d:%02d", minutes, seconds)
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = colors.brandNorm.copy(alpha = 0.1f)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Speed, // Using Speed icon for Pause indicator
+                contentDescription = null,
+                tint = colors.brandNorm,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.pause_active_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = colors.brandNorm,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = stringResource(R.string.pause_active_desc, timeStr),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.brandNorm
+                )
+            }
+            TextButton(onClick = onResume) {
+                Text(stringResource(R.string.btn_resume), color = colors.brandNorm)
+            }
+        }
+    }
+}
+
+@Composable
+fun PauseDialog(
+    onDismiss: () -> Unit,
+    onPause: (Long) -> Unit
+) {
+    val colors = ProtonNextTheme.colors
+    var showCustom by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.pause_dialog_title), color = colors.textNorm) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (!showCustom) {
+                    Text(stringResource(R.string.pause_dialog_desc), color = colors.textWeak)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    listOf(5, 15, 60).forEach { minutes ->
+                        Button(
+                            onClick = { onPause(minutes * 60 * 1000L) },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = colors.backgroundSecondary),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(stringResource(R.string.pause_option, minutes), color = colors.textNorm)
+                        }
+                    }
+                    OutlinedButton(
+                        onClick = { showCustom = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, colors.shade20)
+                    ) {
+                        Icon(Icons.Rounded.History, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.pause_custom), color = colors.textNorm)
+                    }
                 } else {
-                    Text(
-                        text = if (isConnected) stringResource(R.string.btn_disconnect) else stringResource(R.string.btn_quick_connect),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                    CustomPauseContent(onPause = onPause)
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(android.R.string.cancel), color = colors.brandNorm)
+            }
+        },
+        containerColor = colors.backgroundNorm
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CustomPauseContent(
+    onPause: (Long) -> Unit
+) {
+    val colors = ProtonNextTheme.colors
+    var timeInput by remember { mutableStateOf("") }
+    var selectedUnit by remember { mutableIntStateOf(1) } // 0: Sec, 1: Min, 2: Hour
+    var expanded by remember { mutableStateOf(false) }
+
+    val units = listOf(
+        stringResource(R.string.pause_unit_seconds),
+        stringResource(R.string.pause_unit_minutes),
+        stringResource(R.string.pause_unit_hours)
+    )
+
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        SmoothOutlinedTextField(
+            value = timeInput,
+            onValueChange = { if (it.all { char -> char.isDigit() }) timeInput = it },
+            label = { Text(stringResource(R.string.label_speed)) }, // Reuse existing label or add new
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = colors.brandNorm,
+                unfocusedBorderColor = colors.shade20
+            )
+        )
+
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            OutlinedTextField(
+                value = units[selectedUnit],
+                onValueChange = {},
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = colors.brandNorm,
+                    unfocusedBorderColor = colors.shade20
+                )
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.background(colors.backgroundSecondary)
+            ) {
+                units.forEachIndexed { index, unit ->
+                    DropdownMenuItem(
+                        text = { Text(unit, color = colors.textNorm) },
+                        onClick = {
+                            selectedUnit = index
+                            expanded = false
+                        }
                     )
                 }
             }
+        }
+
+        Button(
+            onClick = {
+                val value = timeInput.toLongOrNull() ?: 0L
+                val multiplier = when (selectedUnit) {
+                    0 -> 1000L
+                    1 -> 60 * 1000L
+                    2 -> 60 * 60 * 1000L
+                    else -> 1000L
+                }
+                if (value > 0) onPause(value * multiplier)
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
+            shape = RoundedCornerShape(12.dp),
+            enabled = timeInput.isNotBlank()
+        ) {
+            Text(stringResource(R.string.btn_start_pause))
         }
     }
 }

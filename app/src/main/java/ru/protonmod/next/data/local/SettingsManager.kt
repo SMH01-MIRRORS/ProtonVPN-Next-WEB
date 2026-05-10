@@ -59,7 +59,7 @@ class SettingsManager @Inject constructor(
         private val NOTIFICATIONS = booleanPreferencesKey("notifications")
 
         private val OTA_UPDATE_FREQUENCY = stringPreferencesKey("ota_update_frequency") // "hourly", "daily", "weekly", "monthly", "disabled"
-        private val OTA_LAST_CHECK_TIME = intPreferencesKey("ota_last_check_time")
+        private val OTA_LAST_CHECK_TIME = androidx.datastore.preferences.core.longPreferencesKey("ota_last_check_time_v2")
         private val OTA_UPDATE_CHANNEL = stringPreferencesKey("ota_update_channel") // "stable" or "nightly"
 
         private val APP_THEME = stringPreferencesKey("app_theme")
@@ -113,6 +113,11 @@ class SettingsManager @Inject constructor(
         private val QUICK_CONNECT_STRATEGY = stringPreferencesKey("quick_connect_strategy") // "fastest", "recent", "profile"
         private val QUICK_CONNECT_TARGET_ID = stringPreferencesKey("quick_connect_target_id")
 
+        private val TRUSTED_WIFI_NETWORKS = stringSetPreferencesKey("trusted_wifi_networks")
+        private val AUTO_CONNECT_ON_UNTRUSTED = booleanPreferencesKey("auto_connect_on_untrusted")
+
+        private val PAUSE_END_TIME = androidx.datastore.preferences.core.longPreferencesKey("pause_end_time_v2")
+
         private val POLICY_ACCEPTED_VERSION = intPreferencesKey("policy_accepted_version")
         const val CURRENT_POLICY_VERSION = 20260426
 
@@ -142,7 +147,7 @@ class SettingsManager @Inject constructor(
     val notificationsEnabled: Flow<Boolean> = context.dataStore.data.map { it[NOTIFICATIONS] ?: true }
 
     val otaUpdateFrequency: Flow<String> = context.dataStore.data.map { it[OTA_UPDATE_FREQUENCY] ?: "daily" }
-    val otaLastCheckTime: Flow<Long> = context.dataStore.data.map { it[OTA_LAST_CHECK_TIME]?.toLong() ?: 0L }
+    val otaLastCheckTime: Flow<Long> = context.dataStore.data.map { it[OTA_LAST_CHECK_TIME] ?: 0L }
     val otaUpdateChannel: Flow<String> = context.dataStore.data.map { it[OTA_UPDATE_CHANNEL] ?: ru.protonmod.next.BuildConfig.UPDATE_CHANNEL }
 
     val appTheme: Flow<ru.protonmod.next.ui.theme.AppTheme> = context.dataStore.data.map { preferences ->
@@ -239,6 +244,10 @@ class SettingsManager @Inject constructor(
     val quickConnectStrategy: Flow<String> = context.dataStore.data.map { it[QUICK_CONNECT_STRATEGY] ?: "fastest" }
     val quickConnectTargetId: Flow<String?> = context.dataStore.data.map { it[QUICK_CONNECT_TARGET_ID] }
 
+    val trustedWifiNetworks: Flow<Set<String>> = context.dataStore.data.map { it[TRUSTED_WIFI_NETWORKS] ?: emptySet() }
+    val autoConnectOnUntrusted: Flow<Boolean> = context.dataStore.data.map { it[AUTO_CONNECT_ON_UNTRUSTED] ?: false }
+    val pauseEndTime: Flow<Long> = context.dataStore.data.map { it[PAUSE_END_TIME] ?: 0L }
+
     val policyAcceptedVersion: Flow<Int> = context.dataStore.data.map { it[POLICY_ACCEPTED_VERSION] ?: 0 }
 
     val customProfiles: Flow<List<ObfuscationProfile>> = context.dataStore.data.map { preferences ->
@@ -314,7 +323,7 @@ class SettingsManager @Inject constructor(
     }
 
     suspend fun setOtaLastCheckTime(time: Long) {
-        context.dataStore.edit { it[OTA_LAST_CHECK_TIME] = time.toInt() }
+        context.dataStore.edit { it[OTA_LAST_CHECK_TIME] = time }
     }
 
     suspend fun setOtaUpdateChannel(channel: String) {
@@ -491,6 +500,18 @@ class SettingsManager @Inject constructor(
                 it.remove(QUICK_CONNECT_TARGET_ID)
             }
         }
+    }
+
+    suspend fun setTrustedWifiNetworks(networks: Set<String>) {
+        context.dataStore.edit { it[TRUSTED_WIFI_NETWORKS] = networks }
+    }
+
+    suspend fun setAutoConnectOnUntrusted(enabled: Boolean) {
+        context.dataStore.edit { it[AUTO_CONNECT_ON_UNTRUSTED] = enabled }
+    }
+
+    suspend fun setPauseEndTime(time: Long) {
+        context.dataStore.edit { it[PAUSE_END_TIME] = time }
     }
 
     suspend fun saveCustomProfiles(profiles: List<ObfuscationProfile>) {

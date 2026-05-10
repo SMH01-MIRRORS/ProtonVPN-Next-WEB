@@ -79,6 +79,7 @@ class AmneziaVpnManager @Inject constructor(
     private val systemContextWrapper: SystemContextWrapper,
     private val cryptoWrapper: CryptoWrapper,
     private val amneziaConfigGenerator: AmneziaConfigGenerator,
+    private val nextVpnManager: NextVpnManager,
     private val vpnNetworkMonitor: VpnNetworkMonitor,
     private val warpManager: Provider<WarpManager>,
     private val dispatcherProvider: DispatcherProvider,
@@ -130,6 +131,11 @@ class AmneziaVpnManager @Inject constructor(
     private val _vpnState = MutableStateFlow(VpnState.DISCONNECTED)
     val vpnState: StateFlow<VpnState> = _vpnState.asStateFlow()
 
+    private fun updateVpnState(newState: VpnState) {
+        _vpnState.value = newState
+        nextVpnManager.setState(newState)
+    }
+
     private val _speed = MutableStateFlow<String?>(null)
     val speed: StateFlow<String?> = _speed.asStateFlow()
 
@@ -144,6 +150,8 @@ class AmneziaVpnManager @Inject constructor(
 
     private val _rawTunnelState = MutableStateFlow(Tunnel.State.DOWN)
     private var isReconnecting = false
+    private var isPaused = false
+    private var pauseJob: Job? = null
     private var currentServerId: String? = null
     private var connectionJob: Job? = null
     private var verificationJob: Job? = null
@@ -163,7 +171,7 @@ class AmneziaVpnManager @Inject constructor(
                         stateStr?.let {
                             if (it == STATE_CONNECTING) {
                                 _isConnecting.value = true
-                                _vpnState.value = VpnState.CONNECTING
+                                updateVpnState(VpnState.CONNECTING)
                             } else {
                                 try {
                                     val newState = Tunnel.State.valueOf(it)
@@ -220,20 +228,24 @@ class AmneziaVpnManager @Inject constructor(
     internal fun handleTunnelStateChange(newState: Tunnel.State) {
         when (newState) {
             Tunnel.State.UP -> {
+                isPaused = false
+                pauseJob?.cancel()
+                applicationScope.launch { settingsManager.setPauseEndTime(0) }
+                
                 checkAndRefreshCertificateProactively()
                 startTunnelVerification()
             }
             Tunnel.State.DOWN -> {
                 verificationJob?.cancel()
                 if (!isReconnecting) {
-                    _vpnState.value = VpnState.DISCONNECTED
+                    updateVpnState(VpnState.DISCONNECTED)
                     currentServerId = null
                     connectedServerState.setConnectedServer(null)
                     _speed.value = null
         _trafficRx.value = null
         _trafficTx.value = null
                 } else {
-                    _vpnState.value = VpnState.CONNECTING
+                    updateVpnState(VpnState.CONNECTING)
                 }
             }
         }
@@ -242,7 +254,7 @@ class AmneziaVpnManager @Inject constructor(
     private fun startTunnelVerification() {
         verificationJob?.cancel()
         verificationJob = applicationScope.launch {
-            _vpnState.value = VpnState.VERIFYING
+            updateVpnState(VpnState.VERIFYING)
             ProtonLogger.i(TAG, "Tunnel is UP, starting connectivity verification...")
             
             try {
@@ -253,7 +265,7 @@ class AmneziaVpnManager @Inject constructor(
                 }
                 
                 ProtonLogger.i(TAG, "Connectivity verification successful. VPN is fully connected.")
-                _vpnState.value = VpnState.CONNECTED
+                updateVpnState(VpnState.CONNECTED)
                 systemContextWrapper.setVpnVerified()
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.TimeoutCancellationException) {
@@ -263,10 +275,10 @@ class AmneziaVpnManager @Inject constructor(
                     // However, sometimes validation takes longer. Let's still move to CONNECTED
                     // but log the warning, or keep it as CONNECTED if we trust the tunnel.
                     // The original app usually waits. 
-                    _vpnState.value = VpnState.CONNECTED 
+                    updateVpnState(VpnState.CONNECTED)
                 } else {
                     ProtonLogger.e(TAG, "Error during connectivity verification", e)
-                    _vpnState.value = VpnState.CONNECTED // Fallback
+                    updateVpnState(VpnState.CONNECTED)
                 }
             }
         }
@@ -441,6 +453,12 @@ class AmneziaVpnManager @Inject constructor(
     }
 
     private suspend fun updateServiceSettings() {
+        // If VPN is paused, we shouldn't be updating or trying to reconnect
+        if (isPaused || settingsManager.pauseEndTime.first() > System.currentTimeMillis()) {
+            ProtonLogger.d(TAG, "Skipping service settings update because VPN is paused.")
+            return
+        }
+
         systemContextWrapper.updateVpnSettings(
             notificationsEnabled = settingsManager.notificationsEnabled.first(),
             killSwitchEnabled = settingsManager.killSwitchEnabled.first(),
@@ -459,28 +477,42 @@ class AmneziaVpnManager @Inject constructor(
         logicalServer: LogicalServer? = null,
         forceFallback: Boolean = false
     ) {
-        if (currentServerId == logicalServerId && _tunnelState.value == Tunnel.State.UP) {
-            ProtonLogger.d(TAG, "Already connected to $logicalServerId")
-            return
+        // Immediate UI update to avoid "VPN" placeholder
+        if (logicalServer != null) {
+            connectedServerState.setConnectedServer(logicalServer)
         }
         
-        connectionJob?.cancel()
-        verificationJob?.cancel()
-        connectionJob = applicationScope.launch(dispatcherProvider.io()) {
-            currentServerId = logicalServerId
-            
-            // Resolve logical server if not provided to ensure UI can show location info
-            if (logicalServer != null) {
-                connectedServerState.setConnectedServer(logicalServer)
-            } else if (connectedServerState.connectedServer.value?.id != logicalServerId) {
-                val resolved = vpnRepositoryProvider.get().getCachedServers().find { it.id == logicalServerId }
-                connectedServerState.setConnectedServer(resolved)
+        applicationScope.launch {
+            if (isPaused || settingsManager.pauseEndTime.first() > System.currentTimeMillis()) {
+                ProtonLogger.d(TAG, "Connection blocked: VPN is currently paused.")
+                return@launch
             }
 
-            connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams, forceFallback)
+            if (currentServerId == logicalServerId && _tunnelState.value == Tunnel.State.UP) {
+                ProtonLogger.d(TAG, "Already connected to $logicalServerId")
+                return@launch
+            }
+
+            connectionJob?.cancel()
+            verificationJob?.cancel()
             
-            // Track connection attempt via Sentry Metrics
-            Sentry.metrics().count("vpn_connection_attempt", 1.0)
+            updateVpnState(VpnState.CONNECTING)
+            _isConnecting.value = true
+            
+            connectionJob = applicationScope.launch(dispatcherProvider.io()) {
+                currentServerId = logicalServerId
+
+                // Resolve logical server if not provided earlier
+                if (connectedServerState.connectedServer.value?.id != logicalServerId) {
+                    val resolved = vpnRepositoryProvider.get().getCachedServers().find { it.id == logicalServerId }
+                    connectedServerState.setConnectedServer(resolved)
+                }
+
+                connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams, forceFallback)
+
+                // Track connection attempt via Sentry Metrics
+                Sentry.metrics().count("vpn_connection_attempt", 1.0)
+            }
         }
     }
 
@@ -695,39 +727,53 @@ class AmneziaVpnManager @Inject constructor(
         logicalServer: LogicalServer? = null,
         forceFallback: Boolean = false
     ) {
-        // Only skip if we're already connecting (to avoid multiple rapid clicks)
-        if (_isConnecting.value) {
-            ProtonLogger.d(TAG, "Reconnect skipped: Already in a connecting state.")
-            return
+        // Immediate UI update
+        if (logicalServer != null) {
+            connectedServerState.setConnectedServer(logicalServer)
         }
 
-        connectionJob?.cancel()
-        verificationJob?.cancel()
-        connectionJob = applicationScope.launch {
-            try {
-                isReconnecting = true
-                _isConnecting.value = true
-                currentServerId = logicalServerId
+        applicationScope.launch {
+            if (isPaused || settingsManager.pauseEndTime.first() > System.currentTimeMillis()) {
+                ProtonLogger.d(TAG, "Reconnect blocked: VPN is currently paused.")
+                return@launch
+            }
 
-                // Resolve logical server if not provided
-                if (logicalServer != null) {
-                    connectedServerState.setConnectedServer(logicalServer)
-                } else if (connectedServerState.connectedServer.value?.id != logicalServerId) {
-                    val resolved = vpnRepositoryProvider.get().getCachedServers().find { it.id == logicalServerId }
-                    connectedServerState.setConnectedServer(resolved)
-                }
+            // Only skip if we're already connecting (to avoid multiple rapid clicks)
+            if (_isConnecting.value) {
+                ProtonLogger.d(TAG, "Reconnect skipped: Already in a connecting state.")
+                return@launch
+            }
 
-                disconnectInternal()
+            connectionJob?.cancel()
+            verificationJob?.cancel()
+            
+            updateVpnState(VpnState.CONNECTING)
+            _isConnecting.value = true
+
+            connectionJob = applicationScope.launch {
                 try {
-                    withTimeout(5000) {
-                        _rawTunnelState.first { it == Tunnel.State.DOWN }
+                    isReconnecting = true
+                    _isConnecting.value = true
+                    currentServerId = logicalServerId
+
+                    // Resolve logical server if not provided earlier
+                    if (connectedServerState.connectedServer.value?.id != logicalServerId) {
+                        val resolved = vpnRepositoryProvider.get().getCachedServers().find { it.id == logicalServerId }
+                        connectedServerState.setConnectedServer(resolved)
                     }
-                } catch (_: Exception) {
+
+                    disconnectInternal()
+                    try {
+                        withTimeout(5000) {
+                            _rawTunnelState.first { it == Tunnel.State.DOWN }
+                        }
+                    } catch (_: Exception) {
+                    }
+                    delay(500)
+                    connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams, forceFallback)
+                } finally {
+                    isReconnecting = false
                 }
-                delay(500)
-                connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams, forceFallback)
-            } finally {
-                isReconnecting = false
             }
         }
     }
@@ -736,12 +782,43 @@ class AmneziaVpnManager @Inject constructor(
         ProtonLogger.action(TAG, "User clicked Disconnect")
         connectionJob?.cancel()
         verificationJob?.cancel()
+        pauseJob?.cancel()
+        isPaused = false
+        applicationScope.launch { settingsManager.setPauseEndTime(0) }
+
         applicationScope.launch {
             isReconnecting = false
             currentServerId = null
-            _vpnState.value = VpnState.DISCONNECTING
+            updateVpnState(VpnState.DISCONNECTING)
             disconnectInternal()
         }
+    }
+
+    fun pauseVpn(durationMs: Long) {
+        ProtonLogger.action(TAG, "Pausing VPN for $durationMs ms")
+        val endTime = System.currentTimeMillis() + durationMs
+        isPaused = true
+        
+        pauseJob?.cancel()
+        pauseJob = applicationScope.launch {
+            settingsManager.setPauseEndTime(endTime)
+            
+            // Critical: Ensure no other connection jobs are running
+            connectionJob?.cancel()
+            verificationJob?.cancel()
+
+            disconnectInternal()
+        }
+    }
+
+    suspend fun resumeVpn() {
+        val persistentPauseEnd = settingsManager.pauseEndTime.first()
+        if (!isPaused && persistentPauseEnd == 0L) return
+
+        ProtonLogger.action(TAG, "Resuming VPN (Local isPaused: $isPaused, Persistent: $persistentPauseEnd)")
+        isPaused = false
+        pauseJob?.cancel()
+        settingsManager.setPauseEndTime(0)
     }
 
     private suspend fun disconnectInternal() = withContext(dispatcherProvider.io()) {

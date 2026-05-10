@@ -15,19 +15,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.protonmod.next.vpn
+package ru.protonmod.next.utils.system
 
-object IpSubnetCalculator {
+import android.content.Context
+import android.os.PowerManager
 
-    fun isValidIpOrCidr(input: String): Boolean {
-        return NextIpSubnetCalculator.isValidIpOrCidr(input)
-    }
-
-    fun normalizeIp(ip: String): String {
-        return if (ip.contains("/")) ip else "$ip/32"
-    }
-
-    fun complementOfExcluded(excludedCidrs: Collection<String>): List<String> {
-        return NextIpSubnetCalculator.complementOfExcluded(excludedCidrs)
+object SystemUtils {
+    fun isIgnoringBatteryOptimizations(context: Context): Boolean {
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        return powerManager.isIgnoringBatteryOptimizations(context.packageName)
     }
 }

@@ -68,6 +68,7 @@ fun SettingsScreen(
     onNavigateToCustomDns: (() -> Unit)? = null,
     onNavigateToCountrySpoofing: (() -> Unit)? = null,
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
+    onNavigateToTrustedWifi: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
@@ -118,6 +119,7 @@ fun SettingsScreen(
                 onNavigateToCustomDns = onNavigateToCustomDns,
                 onNavigateToCountrySpoofing = onNavigateToCountrySpoofing,
                 onNavigateToPortSelection = onNavigateToPortSelection,
+                onNavigateToTrustedWifi = onNavigateToTrustedWifi,
                 onOtaFrequencyChange = viewModel::setOtaUpdateFrequency,
                 onOtaChannelChange = viewModel::setOtaUpdateChannel,
                 onCheckForUpdates = viewModel::checkForUpdates,
@@ -149,7 +151,8 @@ fun SettingsContent(
     onNavigateToDebug: (() -> Unit)? = null,
     onNavigateToCustomDns: (() -> Unit)? = null,
     onNavigateToCountrySpoofing: (() -> Unit)? = null,
-    onNavigateToPortSelection: ((Int) -> Unit)? = null
+    onNavigateToPortSelection: ((Int) -> Unit)? = null,
+    onNavigateToTrustedWifi: (() -> Unit)? = null
 ) {
     LazyColumn(
         modifier = modifier,
@@ -203,6 +206,7 @@ fun SettingsContent(
                             onNavigateToCustomDns = onNavigateToCustomDns,
                             onNavigateToCountrySpoofing = onNavigateToCountrySpoofing,
                             onNavigateToKillSwitch = onNavigateToKillSwitch,
+                            onNavigateToTrustedWifi = onNavigateToTrustedWifi,
                             onNavigateToErrorReporting = onNavigateToErrorReporting,
                             onNotificationsChange = onNotificationsChange
                         )
@@ -265,6 +269,7 @@ fun SettingsContent(
                     onNavigateToCustomDns = onNavigateToCustomDns,
                     onNavigateToCountrySpoofing = onNavigateToCountrySpoofing,
                     onNavigateToKillSwitch = onNavigateToKillSwitch,
+                    onNavigateToTrustedWifi = onNavigateToTrustedWifi,
                     onNavigateToErrorReporting = onNavigateToErrorReporting
                 )
             }
@@ -559,6 +564,7 @@ private fun PrivacySettingsSection(
     onNavigateToCustomDns: (() -> Unit)? = null,
     onNavigateToCountrySpoofing: (() -> Unit)? = null,
     onNavigateToKillSwitch: (() -> Unit)? = null,
+    onNavigateToTrustedWifi: (() -> Unit)? = null,
     onNavigateToErrorReporting: (() -> Unit)? = null
 ) {
     SettingsCategory(modifier = modifier, title = stringResource(R.string.settings_privacy)) {
@@ -585,6 +591,13 @@ private fun PrivacySettingsSection(
             title = stringResource(R.string.settings_kill_switch),
             subtitle = stringResource(R.string.settings_kill_switch_desc),
             onClick = onNavigateToKillSwitch
+        )
+
+        SettingRowWithIcon(
+            icon = Icons.Rounded.Wifi,
+            title = stringResource(R.string.settings_trusted_wifi),
+            subtitle = stringResource(R.string.settings_trusted_wifi_desc),
+            onClick = onNavigateToTrustedWifi
         )
 
         SettingRowWithIcon(
