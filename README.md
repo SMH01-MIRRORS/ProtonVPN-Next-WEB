@@ -19,8 +19,10 @@
 > **Warning:** Counterfeit versions of this app have been found in the wild. These fake APKs are **dangerous** — they may contain malware, steal your credentials, or silently redirect update checks to attacker-controlled servers.
 
 **The ONLY official sources for Proton VPN-Next are:**
-- ✅ This GitHub repository: [SMH01-MIRRORS/ProtonVPN-Next-MIRROR](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR)
-- ✅ Official releases published on this repo's [Releases page](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR/releases)
+- ✅ GitHub repository: [SMH01-MIRRORS/ProtonVPN-Next-MIRROR](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR)
+- ✅ Codeberg repository: [SMH01/ProtonVPN-Next](https://codeberg.org/SMH01/ProtonVPN-Next)
+- ✅ Official releases on Codeberg: [Releases page](https://codeberg.org/SMH01/ProtonVPN-Next/releases)
+- ✅ Official Telegram channel: [@ProtonVPN_MOD](https://t.me/ProtonVPN_MOD)
 
 **Known fake/counterfeit distribution channels (DO NOT use):**
 - ❌ Telegram channel `t.me/Getmodpcs` — distributes a tampered APK that modifies the update server to point to their Telegram channel. This fake has been caught sending non-JSON responses to the app and may contain malware.
@@ -97,8 +99,10 @@ Ensure you have the Android SDK and JDK 17 installed.
 > **Внимание:** В сети обнаружены поддельные версии этого приложения. Такие APK **опасны** — они могут содержать вредоносное ПО, красть ваши данные или перенаправлять проверки обновлений на серверы злоумышленников.
 
 **ЕДИНСТВЕННЫЕ официальные источники Proton VPN-Next:**
-- ✅ Этот репозиторий GitHub: [SMH01-MIRRORS/ProtonVPN-Next-MIRROR](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR)
-- ✅ Официальные релизы на [странице Releases](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR/releases) этого репозитория
+- ✅ Репозиторий GitHub: [SMH01-MIRRORS/ProtonVPN-Next-MIRROR](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR)
+- ✅ Репозиторий Codeberg: [SMH01/ProtonVPN-Next](https://codeberg.org/SMH01/ProtonVPN-Next)
+- ✅ Официальные релизы на Codeberg: [страница Releases](https://codeberg.org/SMH01/ProtonVPN-Next/releases)
+- ✅ Официальный Telegram-канал: [@ProtonVPN_MOD](https://t.me/ProtonVPN_MOD)
 
 **Известные поддельные каналы распространения (НЕ использовать):**
 - ❌ Telegram-канал `t.me/Getmodpcs` — распространяет модифицированный APK, который изменяет сервер обновлений на свой Telegram-канал. Этот фейк был замечен в отправке некорректных ответов и может содержать вредоносный код.
