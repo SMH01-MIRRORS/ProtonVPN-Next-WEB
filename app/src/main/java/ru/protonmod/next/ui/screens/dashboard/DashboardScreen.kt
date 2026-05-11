@@ -76,6 +76,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import dagger.hilt.android.EntryPointAccessors
+import ru.protonmod.next.di.AppEntryPoint
+import ru.protonmod.next.vpn.NextVpnManager
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -594,7 +600,6 @@ fun DashboardContent(
     isTablet: Boolean = false
 ) {
     val colors = ProtonNextTheme.colors
-    val context = LocalContext.current
     val windowInfo = LocalWindowInfo.current
     val density = LocalDensity.current
     val screenHeight = with(density) { windowInfo.containerSize.height.toDp() }
@@ -1392,7 +1397,8 @@ fun PauseBanner(
 @Composable
 fun PauseDialog(
     onDismiss: () -> Unit,
-    onPause: (Long) -> Unit
+    onPause: (Long) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     var showCustom by remember { mutableStateOf(false) }
@@ -1436,7 +1442,8 @@ fun PauseDialog(
                 Text(stringResource(android.R.string.cancel), color = colors.brandNorm)
             }
         },
-        containerColor = colors.backgroundNorm
+        containerColor = colors.backgroundNorm,
+        modifier = modifier
     )
 }
 

@@ -250,6 +250,7 @@
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
     <string name="about_crowdin">Помочь с переводом</string>
+    <string name="about_website">Официальный сайт</string>
     <string name="about_sentry">На базе Sentry</string>
     <!-- Licenses Screen -->
     <string name="licenses_title">Лицензии</string>
@@ -522,4 +523,11 @@
     <string name="url_ota_mirror_2" translatable="false">https://home.protonnext.qzz.io/update.json</string>
     <string name="vpn_speed_format" translatable="false">↑ %1$s ↓ %2$s</string>
     <string name="location_load" translatable="false">%1$d%%</string>
+
+    <!-- Anti-Tamper / Scary Warning -->
+    <string name="tamper_warning_title">ОБНАРУЖЕНА НЕОФИЦИАЛЬНАЯ СБОРКА!</string>
+    <string name="tamper_warning_desc">Эта версия Proton VPN-Next была модифицирована неизвестной третьей стороной. Ваша безопасность, конфиденциальность и данные находятся под ВЫСОКИМ РИСКОМ. Эта сборка может содержать вредоносное ПО, шпионские программы или трекеры, крадущие ваши учетные данные.</string>
+    <string name="tamper_warning_action">Мы настоятельно рекомендуем немедленно установить официальную версию из нашего репозитория GitHub или Telegram-канала, чтобы защитить вашу личность.</string>
+    <string name="tamper_btn_ignore">Я осознаю риск</string>
+    <string name="tamper_btn_official">Скачать оригинал</string>
 </resources>

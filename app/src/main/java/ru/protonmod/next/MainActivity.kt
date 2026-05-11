@@ -46,6 +46,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -79,7 +80,7 @@ class MainViewModel @Inject constructor(
     private val sessionDao: SessionDao,
     private val settingsManager: SettingsManager
 ) : ViewModel() {
-    private val _startDestination = MutableStateFlow<String>("")
+    private val _startDestination = MutableStateFlow("")
     val startDestination: StateFlow<String> = _startDestination.asStateFlow()
 
     val session = sessionDao.getSessionFlow()
@@ -164,6 +165,7 @@ class MainActivity : ComponentActivity() {
             val windowSizeClass = calculateWindowSizeClass(this)
             val viewModel: MainViewModel = hiltViewModel()
             val appTheme by viewModel.appTheme.collectAsStateWithLifecycle()
+            val context = LocalContext.current
 
             ProtonNextTheme(appTheme = appTheme) {
                 ProvideDeviceType(
@@ -177,8 +179,21 @@ class MainActivity : ComponentActivity() {
                         LaunchedEffect(Unit) {
                             checkAndRequestNotificationPermission()
                         }
-                        ProtonNextAppNavHost(viewModel = viewModel)
-                        OTAUpdateOverlay()
+                        
+                        val launchPrefs = remember { context.getSharedPreferences("next_launch_prefs", android.content.Context.MODE_PRIVATE) }
+                        val launchCount = remember { launchPrefs.getInt("launch_count", 0) }
+
+                        LaunchedEffect(Unit) {
+                            launchPrefs.edit().putInt("launch_count", launchCount + 1).apply()
+                        }
+
+                        ProtonNextAppNavHost(
+                            viewModel = viewModel,
+                            onNavControllerReady = {}
+                        )
+
+                        val otaViewModel: ru.protonmod.next.ota.OTAUpdateViewModel = hiltViewModel()
+                        OTAUpdateOverlay(viewModel = otaViewModel)
                     }
                 }
             }
@@ -212,8 +227,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun OTAUpdateOverlay(
-    modifier: Modifier = Modifier,
-    viewModel: ru.protonmod.next.ota.OTAUpdateViewModel = hiltViewModel()
+    viewModel: ru.protonmod.next.ota.OTAUpdateViewModel,
+    modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -236,14 +251,21 @@ fun OTAUpdateOverlay(
 @Composable
 fun ProtonNextAppNavHost(
     modifier: Modifier = Modifier,
-    viewModel: MainViewModel = hiltViewModel()
+    viewModel: MainViewModel = hiltViewModel(),
+    onNavControllerReady: (NavHostController) -> Unit = {}
 ) {
     val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
     val session by viewModel.session.collectAsStateWithLifecycle()
 
     if (startDestination.isEmpty()) return
 
+    val currentOnNavControllerReady by rememberUpdatedState(onNavControllerReady)
     val navController = rememberNavController()
+    
+    LaunchedEffect(navController) {
+        currentOnNavControllerReady(navController)
+    }
+    
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 

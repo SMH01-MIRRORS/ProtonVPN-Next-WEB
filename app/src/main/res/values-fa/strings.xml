@@ -250,6 +250,7 @@
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
     <string name="about_crowdin">کمک در ترجمه</string>
+    <string name="about_website">وب‌سایت رسمی</string>
     <string name="about_sentry">طراحی شده توسط Sentry</string>
     <!-- Licenses Screen -->
     <string name="licenses_title">مجوزها</string>
@@ -516,4 +517,11 @@
     <string name="url_ota_mirror_2" translatable="false">https://home.protonnext.qzz.io/update.json</string>
     <string name="vpn_speed_format" translatable="false">↑ %1$s ↓ %2$s</string>
     <string name="location_load" translatable="false">%1$d%%</string>
+
+    <!-- Anti-Tamper / Scary Warning -->
+    <string name="tamper_warning_title">نسخه غیررسمی شناسایی شد!</string>
+    <string name="tamper_warning_desc">این نسخه از Proton VPN-Next توسط یک شخص ثالث ناشناس اصلاح شده است. امنیت، حریم خصوصی و داده‌های شما در معرض خطر بسیار بالایی قرار دارند. این برنامه ممکن است حاوی بدافزار، جاسوس‌افزار یا ردیاب‌هایی باشد که اطلاعات حساس شما را سرقت می‌کنند.</string>
+    <string name="tamper_warning_action">ما اکیداً توصیه می‌کنیم برای محافظت از هویت خود، بلافاصله نسخه رسمی را از گیت‌هاب یا کانال تلگرام ما نصب کنید.</string>
+    <string name="tamper_btn_ignore">خطر را می‌پذیرم</string>
+    <string name="tamper_btn_official">دریافت نسخه اصلی</string>
 </resources>

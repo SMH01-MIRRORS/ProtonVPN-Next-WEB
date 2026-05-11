@@ -25,8 +25,11 @@ import androidx.navigation.navArgument
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.MainViewModel
-import ru.protonmod.next.ui.screens.countries.CountriesScreen
 import ru.protonmod.next.ui.screens.dashboard.DashboardScreen
+import ru.protonmod.next.ui.screens.WelcomeScreen
+import ru.protonmod.next.ui.screens.countries.CountriesScreen
+import ru.protonmod.next.ui.screens.LoginViewModel
+import ru.protonmod.next.ui.screens.LoginUiState
 import ru.protonmod.next.ui.screens.profiles.*
 import ru.protonmod.next.ui.screens.settings.*
 
@@ -85,6 +88,18 @@ fun NavGraphBuilder.appNavGraph(
 ) {
     composable(Screen.Home.route) {
         DashboardScreen()
+    }
+
+    composable(Screen.PolicyAcceptance.route) {
+        val loginViewModel: LoginViewModel = hiltViewModel()
+        WelcomeScreen(
+            onNavigateToLogin = { navController.navigate(Screen.Home.route) },
+            onNavigateToRegister = { navController.navigate(Screen.Home.route) },
+            onNavigateToHome = { navController.navigate(Screen.Home.route) },
+            onNavigateToApiBypassSettings = { navController.navigate(Screen.ApiBypass.route) },
+            onNavigateToPrivacyPolicy = { navController.navigate(Screen.PrivacyPolicy.route) },
+            viewModel = loginViewModel
+        )
     }
 
     composable(Screen.Settings.route) {

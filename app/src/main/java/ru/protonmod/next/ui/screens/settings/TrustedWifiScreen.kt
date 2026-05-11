@@ -124,7 +124,7 @@ fun TrustedWifiScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                item {
+                item(contentType = "Header") {
                     NavigationHeader(
                         title = stringResource(R.string.settings_trusted_wifi),
                         onBack = onBack
@@ -132,7 +132,7 @@ fun TrustedWifiScreen(
                 }
 
                 if (!hasLocationPermission) {
-                    item {
+                    item(contentType = "PermissionBanner") {
                         Card(
                             colors = CardDefaults.cardColors(containerColor = colors.notificationWarning.copy(alpha = 0.1f)),
                             shape = RoundedCornerShape(16.dp)
@@ -162,11 +162,11 @@ fun TrustedWifiScreen(
                     }
                 }
 
-                item {
+                item(contentType = "Info") {
                     InfoCard(text = stringResource(R.string.trusted_wifi_desc))
                 }
 
-                item {
+                item(contentType = "Toggle") {
                     SettingsCard {
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(8.dp),
@@ -197,12 +197,12 @@ fun TrustedWifiScreen(
                     }
                 }
 
-                item {
+                item(contentType = "SubHeader") {
                     CategoryHeader(title = stringResource(R.string.trusted_wifi_title))
                 }
 
                 if (currentNetworkName != null && !uiState.trustedWifiNetworks.contains(currentNetworkName)) {
-                    item {
+                    item(contentType = "AddCurrent") {
                         Button(
                             onClick = { viewModel.addTrustedWifi(currentNetworkName) },
                             modifier = Modifier.fillMaxWidth(),
@@ -217,7 +217,7 @@ fun TrustedWifiScreen(
                 }
 
                 if (uiState.trustedWifiNetworks.isEmpty()) {
-                    item {
+                    item(contentType = "EmptyState") {
                         Box(
                             modifier = Modifier.fillMaxWidth().padding(32.dp),
                             contentAlignment = Alignment.Center
@@ -230,7 +230,7 @@ fun TrustedWifiScreen(
                         }
                     }
                 } else {
-                    items(uiState.trustedWifiNetworks.toList()) { ssid ->
+                    items(uiState.trustedWifiNetworks.toList(), key = { it }, contentType = { "Network" }) { ssid ->
                         SettingsCard {
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(8.dp),

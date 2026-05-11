@@ -10,7 +10,27 @@ target_compile_options(byedpi PRIVATE -std=c99 -O2 -Wall -Wno-unused -Wextra -Wn
 target_compile_definitions(byedpi PRIVATE ANDROID_APP)
 target_link_libraries(byedpi PRIVATE android log)
 
-add_library(next SHARED next-vpn.cpp next-jni.cpp)
-target_include_directories(next PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+set(IMGUI_DIR imgui)
+set(IMGUI_SOURCES
+    ${IMGUI_DIR}/imgui.cpp
+    ${IMGUI_DIR}/imgui_draw.cpp
+    ${IMGUI_DIR}/imgui_widgets.cpp
+    ${IMGUI_DIR}/imgui_tables.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+)
+
+set(NEXT_SOURCES
+    connection.cpp
+    antitamper.cpp
+    utils.cpp
+    next-jni.cpp
+)
+
+add_library(next SHARED ${NEXT_SOURCES} ${IMGUI_SOURCES})
+target_include_directories(next PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/${IMGUI_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/${IMGUI_DIR}/backends
+)
 target_compile_options(next PRIVATE -O2 -Wall -Wextra)
-target_link_libraries(next PRIVATE android log)
+target_link_libraries(next PRIVATE android log GLESv3 EGL)

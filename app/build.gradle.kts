@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import java.util.Properties
 import java.util.concurrent.TimeUnit
 
 // Helper function to execute Git commands in the terminal
@@ -91,6 +92,37 @@ android {
         }
     }
 
+    // Pre-calculate version info so it's consistent between Kotlin and C++
+    val finalVersionCode = getDynamicVersionCode(rootDir)
+    val finalVersionName = getDynamicVersionName(rootDir)
+
+    defaultConfig {
+        applicationId = "ru.protonmod.next"
+        minSdk = 29
+        targetSdk = 37
+        versionCode = finalVersionCode
+        versionName = finalVersionName
+
+        ndk {
+            abiFilters.addAll(listOf("arm64-v8a", "x86_64"))
+        }
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        externalNativeBuild {
+            cmake {
+                cppFlags("-DEXPECTED_VERSION_CODE=$finalVersionCode")
+                cppFlags("-DEXPECTED_VERSION_NAME=\\\"$finalVersionName\\\"")
+                
+                val signature = project.findProperty("EXPECTED_SIGNATURE") as? String 
+                               ?: System.getenv("EXPECTED_SIGNATURE")
+                if (signature != null) {
+                    cppFlags("-DEXPECTED_SIGNATURE=\\\"$signature\\\"")
+                }
+            }
+        }
+    }
+
     flavorDimensions.add("channel")
     productFlavors {
         create("stable") {
@@ -111,6 +143,13 @@ android {
     }
 
     signingConfigs {
+        val localProperties = Properties().apply {
+            val localPropertiesFile = rootProject.file("local.properties")
+            if (localPropertiesFile.exists()) {
+                localPropertiesFile.inputStream().use { load(it) }
+            }
+        }
+
         create("release") {
             val keyFile = System.getenv("SIGNING_KEY_FILE") ?: ""
             if (keyFile.isNotEmpty()) {
@@ -126,18 +165,37 @@ android {
                 keyPassword = "android"
             }
         }
+
+        getByName("debug") {
+            val customKeystore = localProperties.getProperty("signing.debug.keystore")
+            if (customKeystore != null) {
+                storeFile = file(customKeystore)
+                storePassword = localProperties.getProperty("signing.debug.storePassword")
+                keyAlias = localProperties.getProperty("signing.debug.keyAlias")
+                keyPassword = localProperties.getProperty("signing.debug.keyPassword")
+            } else {
+                // Default Android Studio debug keystore
+                storeFile = file("debug.keystore")
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
     }
 
     buildTypes {
         getByName("debug") {
             isMinifyEnabled = false
             buildConfigField("boolean", "ALLOW_LOGCAT", "true")
-            // Use release signing config in CI environments to ensure consistent signatures
-            signingConfig = if (System.getenv("SIGNING_KEY_FILE") != null) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
+            
+            externalNativeBuild {
+                cmake {
+                    cppFlags("-DDEBUG_BUILD=1")
+                }
             }
+
+            signingConfig = signingConfigs.getByName("debug")
+
             packaging {
                 jniLibs {
                     keepDebugSymbols.addAll(listOf(
@@ -200,6 +258,62 @@ android {
     testOptions {
         unitTests.isReturnDefaultValues = true
     }
+}
+
+tasks.register("generateSecurityMetadata") {
+    val outputDir = file("src/main/cpp")
+    val outputFile = file("${outputDir}/security_metadata.h")
+    
+    inputs.property("releaseMaxSize", 70 * 1024 * 1024L)
+    inputs.property("debugMaxSize", 150 * 1024 * 1024L)
+    // List of known official libraries (including the ones we build)
+    val officialLibs = listOf(
+        "libam-go.so", "libam-quick.so", "libam.so", 
+        "libandroidx.graphics.path.so", "libdatastore_shared_counter.so",
+        "libgojni.so", "libhev-socks5-tunnel.so", "libsentry-android.so", 
+        "libsentry.so", "libbyedpi.so", "libnext.so"
+    )
+    inputs.property("officialLibs", officialLibs)
+
+    outputs.file(outputFile)
+
+    doLast {
+        if (!outputDir.exists()) outputDir.mkdirs()
+        
+        val content = """
+            #ifndef NEXT_SECURITY_METADATA_H
+            #define NEXT_SECURITY_METADATA_H
+
+            #include <vector>
+            #include <string>
+
+            #define MAX_RELEASE_APK_SIZE ${70 * 1024 * 1024L}L
+            #define MAX_DEBUG_APK_SIZE ${150 * 1024 * 1024L}L
+            #define EXPECTED_LIB_COUNT ${officialLibs.size}
+
+            namespace next {
+                static const char* OFFICIAL_LIBS[] = {
+                    ${officialLibs.joinToString(",\n                    ") { "\"$it\"" }}
+                };
+            }
+
+            #endif // NEXT_SECURITY_METADATA_H
+        """.trimIndent()
+        
+        outputFile.writeText(content)
+    }
+}
+
+// Ensure security metadata is generated before CMake or any native tasks
+tasks.configureEach {
+    if (name.contains("externalNativeBuild") || name.contains("generateJsonModel")) {
+        dependsOn("generateSecurityMetadata")
+    }
+}
+
+// Also hook into preBuild to ensure it exists for IDE indexing
+tasks.named("preBuild") {
+    dependsOn("generateSecurityMetadata")
 }
 
 room {

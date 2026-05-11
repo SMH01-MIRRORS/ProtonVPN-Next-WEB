@@ -28,7 +28,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.AltRoute
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.*
+import dagger.hilt.android.EntryPointAccessors
+import ru.protonmod.next.di.AppEntryPoint
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +54,7 @@ import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
+import androidx.compose.ui.platform.LocalLocale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -166,6 +171,21 @@ fun SettingsContent(
     ) {
         item(contentType = "Header") {
             MainHeader(title = stringResource(R.string.settings_title))
+            
+            val context = LocalContext.current
+            val nextVpnManager = remember { EntryPointAccessors.fromApplication(context, AppEntryPoint::class.java).nextVpnManager() }
+            var isOfficialBuild by remember { mutableStateOf(true) }
+            
+            LaunchedEffect(nextVpnManager) {
+                isOfficialBuild = !nextVpnManager.isTamperDetected()
+            }
+            
+            if (!isOfficialBuild) {
+                TamperSettingsBanner(onShowDownloads = { 
+                    nextVpnManager.onActivityResumedNative(context)
+                })
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
 
         if (isTablet) {
@@ -718,6 +738,53 @@ private fun FeatureCategory(
             isActive = true,
             onClick = { onNavigateToProtocol?.invoke() }
         )
+    }
+}
+
+@Composable
+fun TamperSettingsBanner(
+    onShowDownloads: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = ProtonNextTheme.colors
+    val context = LocalContext.current
+    val locale = LocalLocale.current.platformLocale.language
+    val nextVpnManager = remember { EntryPointAccessors.fromApplication(context, AppEntryPoint::class.java).nextVpnManager() }
+    val title = remember { nextVpnManager.getProtectedString(locale, "tamper_warning_title") }
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onShowDownloads() },
+        shape = RoundedCornerShape(12.dp),
+        color = colors.notificationError.copy(alpha = 0.1f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.notificationError.copy(alpha = 0.5f))
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Warning,
+                contentDescription = null,
+                tint = colors.notificationError,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelMedium,
+                color = colors.notificationError,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            Icon(
+                imageVector = Icons.Rounded.ChevronRight,
+                contentDescription = null,
+                tint = colors.notificationError,
+                modifier = Modifier.size(16.dp)
+            )
+        }
     }
 }
 

@@ -19,13 +19,21 @@ package ru.protonmod.next.di
 
 import dagger.Module
 import dagger.Provides
+import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import ru.protonmod.next.vpn.NextVpnManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import javax.inject.Qualifier
 import javax.inject.Singleton
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface AppEntryPoint {
+    fun nextVpnManager(): NextVpnManager
+}
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)

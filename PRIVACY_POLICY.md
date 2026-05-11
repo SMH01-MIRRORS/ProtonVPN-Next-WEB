@@ -1,6 +1,6 @@
 # Privacy Policy and Disclaimer | Политика конфиденциальности и отказ от ответственности
 
-*Last updated: April 25, 2026*
+*Last updated: April 26, 2026*
 
 ## English
 
@@ -13,7 +13,7 @@ This project is **NOT** affiliated with, authorized, maintained, sponsored, or e
 ### 3. Data Collection and Handling
 
 #### 3.1 Proton Services
-The application interacts directly with Proton's official APIs to provide VPN services. 
+The application interacts directly with Proton's official APIs to provide VPN services.
 - **Authentication**: Your credentials (username/password) are processed using the Secure Remote Password (SRP) protocol. The application does not store your password in plain text.
 - **VPN Traffic**: All your internet traffic is routed through Proton's servers. This application does not intercept, log, or monitor your VPN traffic. Please refer to [Proton's Privacy Policy](https://protonvpn.com/privacy-policy) for details on how they handle your data.
 
@@ -27,13 +27,14 @@ The application stores certain data locally on your device:
 - Encrypted session tokens and cryptographic keys.
 - Server list cache.
 - User settings and preferences.
-This data remains on your device and is not uploaded to any third-party servers other than Proton's APIs during normal operation.
+  This data remains on your device and is not uploaded to any third-party servers other than Proton's APIs during normal operation.
 
 #### 3.4 API Block Bypass (Optional)
 To ensure accessibility in regions where Proton's official APIs are restricted, the application offers several API Bypass strategies.
 - **Proxies (Netlify, Cloudflare, Custom)**: If enabled, your API requests (containing authentication and server list queries) may be routed through third-party infrastructure. While authentication is encrypted (SRP), these proxies will see your IP address and the fact that you are accessing Proton services.
+- **ByeDPI (DPI Deception)**: Uses advanced packet fragmentation and deception techniques locally on your device. Since this is a local SOCKS5 proxy, your traffic does not pass through any third-party proxy servers, and your IP address is not shared with any external proxy provider. All data is processed locally before reaching Proton's APIs.
 - **WARP (Cloudflare)**: Uses a local Cloudflare tunnel to route API traffic.
-These features are **OPTIONAL** and can be configured in the app settings (Settings -> API Block Bypass).
+  These features are **OPTIONAL** and can be configured in the app settings (Settings -> API Block Bypass).
 
 ### 4. Mandatory Acceptance
 By using this application, you acknowledge that you have read and accepted this Privacy Policy. Access to the application is conditional upon this acceptance.
@@ -68,13 +69,14 @@ ProtonVPN-Next — это неофициальный клиент с откры�
 - Зашифрованные токены сессий и криптографические ключи.
 - Кэш списка серверов.
 - Пользовательские настройки и предпочтения.
-Эти данные остаются на вашем устройстве и не передаются на сторонние серверы, кроме API Proton в процессе обычной работы.
+  Эти данные остаются на вашем устройстве и не передаются на сторонние серверы, кроме API Proton в процессе обычной работы.
 
 #### 3.4 Обход блокировок API (Опционально)
 Для обеспечения доступности в регионах, где официальные API Proton ограничены, приложение предлагает несколько стратегий обхода блокировок.
 - **Прокси (Netlify, Cloudflare, Пользовательские)**: Если эта функция включена, ваши запросы к API (содержащие данные аутентификации и запросы списка серверов) могут направляться через стороннюю инфраструктуру. Хотя аутентификация зашифрована (SRP), эти прокси будут видеть ваш IP-адрес и факт обращения к сервисам Proton.
+- **ByeDPI (Обман DPI)**: Использует продвинутую фрагментацию пакетов и методы обмана цензора локально на вашем устройстве. Поскольку это локальный SOCKS5 прокси, ваш трафик не проходит через сторонние прокси-серверы, и ваш IP-адрес не передается внешним провайдерам прокси. Все данные обрабатываются локально перед отправкой к API Proton.
 - **WARP (Cloudflare)**: Использует локальный туннель Cloudflare для маршрутизации трафика API.
-Эти функции являются **ОПЦИОНАЛЬНЫМИ** и могут быть настроены в настройках приложения (Настройки -> Обход блокировок API).
+  Эти функции являются **ОПЦИОНАЛЬНЫМИ** и могут быть настроены в настройках приложения (Настройки -> Обход блокировок API).
 
 ### 4. Обязательное принятие
 Используя это приложение, вы подтверждаете, что прочитали и приняли настоящую Политику конфиденциальности. Доступ к приложению возможен только при условии этого принятия.

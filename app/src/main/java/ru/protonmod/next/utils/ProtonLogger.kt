@@ -75,13 +75,15 @@ object ProtonLogger {
     var isAnalyticsEnabled: Boolean = true
     /** Controlled by SettingsManager at runtime/startup */
     var isSentryLogsEnabled: Boolean = true
+    /** Global toggle for logcat output. Can be overridden in release builds. */
+    var isLogcatEnabled: Boolean = BuildConfig.DEBUG
 
     /** Log at VERBOSE level */
     fun v(tag: String? = null, message: String, throwable: Throwable? = null) {
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
         val decoratedMsg = "[$threadName] $message"
-        if (BuildConfig.DEBUG) {
+        if (isLogcatEnabled) {
             Log.v(finalTag, decoratedMsg, throwable)
         }
         addSentryBreadcrumb(finalTag, message, SentryLevel.DEBUG)
@@ -94,7 +96,7 @@ object ProtonLogger {
         val threadName = Thread.currentThread().name
         val msg = message()
         val decoratedMsg = "[$threadName] $msg"
-        if (BuildConfig.DEBUG) {
+        if (isLogcatEnabled) {
             Log.v(finalTag, decoratedMsg, throwable)
         }
         addSentryBreadcrumb(finalTag, msg, SentryLevel.DEBUG)
@@ -106,7 +108,7 @@ object ProtonLogger {
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
         val decoratedMsg = "[$threadName] $message"
-        if (BuildConfig.DEBUG) {
+        if (isLogcatEnabled) {
             Log.d(finalTag, decoratedMsg, throwable)
         }
         addSentryBreadcrumb(finalTag, message, SentryLevel.DEBUG)
@@ -119,7 +121,7 @@ object ProtonLogger {
         val threadName = Thread.currentThread().name
         val msg = message()
         val decoratedMsg = "[$threadName] $msg"
-        if (BuildConfig.DEBUG) {
+        if (isLogcatEnabled) {
             Log.d(finalTag, decoratedMsg, throwable)
         }
         addSentryBreadcrumb(finalTag, msg, SentryLevel.DEBUG)
@@ -131,7 +133,7 @@ object ProtonLogger {
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
         val decoratedMsg = "[$threadName] $message"
-        if (BuildConfig.DEBUG) {
+        if (isLogcatEnabled) {
             Log.i(finalTag, decoratedMsg, throwable)
         }
         addSentryBreadcrumb(finalTag, message, SentryLevel.INFO)
@@ -144,7 +146,7 @@ object ProtonLogger {
         val threadName = Thread.currentThread().name
         val msg = message()
         val decoratedMsg = "[$threadName] $msg"
-        if (BuildConfig.DEBUG) {
+        if (isLogcatEnabled) {
             Log.i(finalTag, decoratedMsg, throwable)
         }
         addSentryBreadcrumb(finalTag, msg, SentryLevel.INFO)
@@ -156,7 +158,7 @@ object ProtonLogger {
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
         val decoratedMsg = "[$threadName] $message"
-        if (BuildConfig.DEBUG) {
+        if (isLogcatEnabled) {
             Log.w(finalTag, decoratedMsg, throwable)
         }
         addSentryBreadcrumb(finalTag, message, SentryLevel.WARNING)
@@ -172,7 +174,7 @@ object ProtonLogger {
         val threadName = Thread.currentThread().name
         val msg = message()
         val decoratedMsg = "[$threadName] $msg"
-        if (BuildConfig.DEBUG) {
+        if (isLogcatEnabled) {
             Log.w(finalTag, decoratedMsg, throwable)
         }
         addSentryBreadcrumb(finalTag, msg, SentryLevel.WARNING)
@@ -187,7 +189,7 @@ object ProtonLogger {
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
         val decoratedMsg = "[$threadName] $message"
-        if (BuildConfig.DEBUG) {
+        if (isLogcatEnabled) {
             Log.e(finalTag, decoratedMsg, throwable)
         }
         addSentryBreadcrumb(finalTag, message, SentryLevel.ERROR)
@@ -207,7 +209,7 @@ object ProtonLogger {
         val threadName = Thread.currentThread().name
         val msg = message()
         val decoratedMsg = "[$threadName] $msg"
-        if (BuildConfig.DEBUG) {
+        if (isLogcatEnabled) {
             Log.e(finalTag, decoratedMsg, throwable)
         }
         addSentryBreadcrumb(finalTag, msg, SentryLevel.ERROR)
@@ -226,7 +228,7 @@ object ProtonLogger {
      * Useful for tracking UI interactions and sequence of events leading to a crash.
      */
     fun action(tag: String, message: String) {
-        if (BuildConfig.DEBUG) {
+        if (isLogcatEnabled) {
             Log.d(tag, "[ACTION] $message")
         }
         addSentryBreadcrumb(tag, message, SentryLevel.INFO, category = "ui.action")

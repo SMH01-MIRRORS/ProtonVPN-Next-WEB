@@ -241,6 +241,7 @@
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
     <string name="about_crowdin">Аударуға көмектесу</string>
+    <string name="about_website">Ресми сайт</string>
     <string name="about_sentry">Sentry негізінде жасалған</string>
     <string name="licenses_title">Лицензиялар</string>
     <string name="license_app_title">Proton VPN-Next</string>
@@ -483,4 +484,11 @@
     <string name="url_ota_mirror_2" translatable="false">https://home.protonnext.qzz.io/update.json</string>
     <string name="vpn_speed_format" translatable="false">↑ %1$s ↓ %2$s</string>
     <string name="location_load" translatable="false">%1$d%%</string>
+
+    <!-- Anti-Tamper / Scary Warning -->
+    <string name="tamper_warning_title">БЕЙРЕСМИ ЖИНАҚ АНЫҚТАЛДЫ!</string>
+    <string name="tamper_warning_desc">Proton VPN-Next-тің бұл нұсқасын белгісіз үшінші тарап өзгерткен. Қауіпсіздігіңіз, құпиялылығыңыз бен деректеріңіз ЖОҒАРЫ ТӘУЕКЕЛГЕ ие. Бұл жинақта тіркелгі деректеріңізді ұрлайтын зиянды бағдарламалар, тыңшылық бағдарламалар немесе трекерлер болуы мүмкін.</string>
+    <string name="tamper_warning_action">Жеке басыңызды қорғау үшін ресми нұсқаны GitHub немесе Telegram арнамыздан дереу орнатуды ұсынамыз.</string>
+    <string name="tamper_btn_ignore">Тәуекелді түсінемін</string>
+    <string name="tamper_btn_official">Түпнұсқаны алу</string>
 </resources>

@@ -1,5 +1,5 @@
-#ifndef NEXT_VPN_H
-#define NEXT_VPN_H
+#ifndef NEXT_CONNECTION_H
+#define NEXT_CONNECTION_H
 
 #include <string>
 #include <vector>
@@ -43,19 +43,6 @@ public:
     );
 };
 
-class IpSubnetCalculator {
-public:
-    static bool isValidIpOrCidr(const std::string& input);
-    static std::string normalizeIp(const std::string& ip);
-    static std::vector<std::string> complementOfExcluded(const std::vector<std::string>& excludedCidrs);
-
-private:
-    static uint32_t ipToUint32(const std::string& ip);
-    static std::string uint32ToIp(uint32_t value);
-    static std::pair<uint32_t, uint32_t> cidrToRange(const std::string& cidr);
-    static std::vector<std::string> rangeToCidrs(uint32_t start, uint32_t end);
-};
-
 enum class VpnState {
     DISCONNECTED,
     CONNECTING,
@@ -75,10 +62,32 @@ public:
     bool canConnect() const;
     bool canDisconnect() const;
 
+    // Orchestrate connection to prevent Smali bypasses
+    std::string orchestrateConnection(
+        const std::string& publicKey,
+        const std::string& privateKey,
+        const std::string& localIp,
+        const std::string& dnsServer,
+        const std::string& targetIp,
+        int port,
+        const ObfuscationParams& params
+    );
+
+    // Security state management
+    void setTamperDetected(bool detected);
+    bool isTamperDetected() const;
+    void setWarningAcknowledged(bool acknowledged);
+    bool isWarningAcknowledged() const;
+    bool isWarningRequired() const;
+
 private:
     VpnState currentState;
+    bool tamperDetected;
+    bool warningAcknowledged;
 };
+
+extern VpnManager g_vpn_manager;
 
 } // namespace next
 
-#endif // NEXT_VPN_H
+#endif // NEXT_CONNECTION_H
