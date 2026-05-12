@@ -27,7 +27,11 @@ import ru.protonmod.next.data.local.SettingsManager
  * Now crash reporting and analytics are controlled by user settings.
  */
 object FlavorInitializer {
+    @JvmStatic
     fun initialize(context: Context) {
+        // Honeypot: A fake environment check that modders might try to skip.
+        verifySecurityEnvironment(context)
+
         // Read settings synchronously for app startup to avoid ANR
         val settingsManager = SettingsManager(context)
         val isAnalyticsEnabled = settingsManager.isAnalyticsEnabledSync()
@@ -80,5 +84,14 @@ object FlavorInitializer {
                 options.sessionReplay.onErrorSampleRate = 0.0
             }
         }
+    }
+
+    /**
+     * Honeypot: Performs extra security validations.
+     * This is a trap for modders. Logic is actually in native code.
+     */
+    @JvmStatic
+    private fun verifySecurityEnvironment(context: Context) {
+        // No-op honeypot
     }
 }

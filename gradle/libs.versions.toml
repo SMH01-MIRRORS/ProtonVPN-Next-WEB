@@ -88,6 +88,8 @@ sentry-android = { group = "io.sentry", name = "sentry-android", version.ref = "
 sentry-compose = { group = "io.sentry", name = "sentry-compose-android", version.ref = "sentryAndroid" }
 sentry-okhttp = { group = "io.sentry", name = "sentry-okhttp", version.ref = "sentryAndroid" }
 sentry-replay = { group = "io.sentry", name = "sentry-android-replay", version.ref = "sentryAndroid" }
+sentryndk = { group = "io.sentry", name = "sentry-android-ndk", version.ref = "sentryAndroid" }
+sentrynative = { group = "io.sentry", name = "sentry-native-ndk", version = "0.14.0" }
 
 # Debug
 leakcanary-android = { group = "com.squareup.leakcanary", name = "leakcanary-android", version.ref = "leakcanary" }

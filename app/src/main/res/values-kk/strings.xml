@@ -486,9 +486,9 @@
     <string name="location_load" translatable="false">%1$d%%</string>
 
     <!-- Anti-Tamper / Scary Warning -->
-    <string name="tamper_warning_title">БЕЙРЕСМИ ЖИНАҚ АНЫҚТАЛДЫ!</string>
-    <string name="tamper_warning_desc">Proton VPN-Next-тің бұл нұсқасын белгісіз үшінші тарап өзгерткен. Қауіпсіздігіңіз, құпиялылығыңыз бен деректеріңіз ЖОҒАРЫ ТӘУЕКЕЛГЕ ие. Бұл жинақта тіркелгі деректеріңізді ұрлайтын зиянды бағдарламалар, тыңшылық бағдарламалар немесе трекерлер болуы мүмкін.</string>
-    <string name="tamper_warning_action">Жеке басыңызды қорғау үшін ресми нұсқаны GitHub немесе Telegram арнамыздан дереу орнатуды ұсынамыз.</string>
-    <string name="tamper_btn_ignore">Тәуекелді түсінемін</string>
-    <string name="tamper_btn_official">Түпнұсқаны алу</string>
+    <string name="tamper_warning_title">РЕСМИ ЕМЕС ЖИНАҚ АНЫҚТАЛДЫ!</string>
+    <string name="tamper_warning_desc">Proton VPN-Next нұсқасын белгісіз үшінші тарап өзгерткен. Сіздің қауіпсіздігіңіз, құпиялылығыңыз бен деректеріңізге ЖОҒАРЫ ҚАУІП төніп тұр.</string>
+    <string name="tamper_btn_accept_risks">Мен қауіпті түсінемін және салдарын қабылдаймын</string>
+    <string name="tamper_btn_download_official">Түпнұсқаны жүктеп алу</string>
+    <string name="tamper_btn_back">Артқа</string>
 </resources>

@@ -131,6 +131,7 @@ android {
         }
         create("nightly") {
             dimension = "channel"
+            isDefault = true
             applicationIdSuffix = ".nightly"
             versionNameSuffix = "-nightly"
             buildConfigField("String", "UPDATE_CHANNEL", "\"nightly\"")
@@ -150,19 +151,29 @@ android {
             }
         }
 
+        val defaultDebugKeystore = File(System.getProperty("user.home"), ".android/debug.keystore")
+
         create("release") {
-            val keyFile = System.getenv("SIGNING_KEY_FILE") ?: ""
+            val keyFile = System.getenv("SIGNING_KEY_FILE") ?: localProperties.getProperty("signing.release.keystore") ?: ""
             if (keyFile.isNotEmpty()) {
                 storeFile = file(keyFile)
-                storePassword = System.getenv("SIGNING_STORE_PASSWORD")
-                keyAlias = System.getenv("SIGNING_KEY_ALIAS")
-                keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
+                storePassword = System.getenv("SIGNING_STORE_PASSWORD") ?: localProperties.getProperty("signing.release.storePassword")
+                keyAlias = System.getenv("SIGNING_KEY_ALIAS") ?: localProperties.getProperty("signing.release.keyAlias")
+                keyPassword = System.getenv("SIGNING_KEY_PASSWORD") ?: localProperties.getProperty("signing.release.keyPassword")
             } else {
-                // Fallback to debug for local builds without env vars
-                storeFile = file("debug.keystore")
-                storePassword = "android"
-                keyAlias = "androiddebugkey"
-                keyPassword = "android"
+                // Fallback to debug keystore if no release key provided
+                val customDebugKeystore = localProperties.getProperty("signing.debug.keystore")
+                if (customDebugKeystore != null) {
+                    storeFile = file(customDebugKeystore)
+                    storePassword = localProperties.getProperty("signing.debug.storePassword")
+                    keyAlias = localProperties.getProperty("signing.debug.keyAlias")
+                    keyPassword = localProperties.getProperty("signing.debug.keyPassword")
+                } else {
+                    storeFile = defaultDebugKeystore
+                    storePassword = "android"
+                    keyAlias = "androiddebugkey"
+                    keyPassword = "android"
+                }
             }
         }
 
@@ -174,8 +185,7 @@ android {
                 keyAlias = localProperties.getProperty("signing.debug.keyAlias")
                 keyPassword = localProperties.getProperty("signing.debug.keyPassword")
             } else {
-                // Default Android Studio debug keystore
-                storeFile = file("debug.keystore")
+                storeFile = defaultDebugKeystore
                 storePassword = "android"
                 keyAlias = "androiddebugkey"
                 keyPassword = "android"
@@ -184,6 +194,34 @@ android {
     }
 
     buildTypes {
+        // Default build type for the "Run" button
+        create("debugWithAntitamperAndLogs") {
+            isDefault = true
+            isDebuggable = true
+            isMinifyEnabled = false
+            buildConfigField("boolean", "ALLOW_LOGCAT", "true")
+            signingConfig = signingConfigs.getByName("release")
+            
+            externalNativeBuild {
+                cmake {
+                    cppFlags("-DANTITAMPER_TEST_BUILD=1", "-DALLOW_LOGCAT=1")
+                }
+            }
+        }
+
+        create("debugWithAntitamperWithoutLogs") {
+            isDebuggable = true
+            isMinifyEnabled = false
+            buildConfigField("boolean", "ALLOW_LOGCAT", "false")
+            signingConfig = signingConfigs.getByName("release")
+            
+            externalNativeBuild {
+                cmake {
+                    cppFlags("-DANTITAMPER_TEST_BUILD=1", "-DALLOW_LOGCAT=0")
+                }
+            }
+        }
+
         getByName("debug") {
             isMinifyEnabled = false
             buildConfigField("boolean", "ALLOW_LOGCAT", "true")
@@ -231,6 +269,7 @@ android {
     buildFeatures {
         buildConfig = true
         compose = true
+        prefab = true
     }
 
     compileOptions {
@@ -264,8 +303,14 @@ tasks.register("generateSecurityMetadata") {
     val outputDir = file("src/main/cpp")
     val outputFile = file("${outputDir}/security_metadata.h")
     
-    inputs.property("releaseMaxSize", 70 * 1024 * 1024L)
-    inputs.property("debugMaxSize", 150 * 1024 * 1024L)
+    val releaseMaxSize = 70 * 1024 * 1024L
+    val debugMaxSize = 150 * 1024 * 1024L
+    val expectedVersionCode = getDynamicVersionCode(rootDir)
+    
+    inputs.property("releaseMaxSize", releaseMaxSize)
+    inputs.property("debugMaxSize", debugMaxSize)
+    inputs.property("expectedVersionCode", expectedVersionCode)
+    
     // List of known official libraries (including the ones we build)
     val officialLibs = listOf(
         "libam-go.so", "libam-quick.so", "libam.so", 
@@ -286,15 +331,27 @@ tasks.register("generateSecurityMetadata") {
 
             #include <vector>
             #include <string>
+            #include "obfuscation.h"
 
-            #define MAX_RELEASE_APK_SIZE ${70 * 1024 * 1024L}L
-            #define MAX_DEBUG_APK_SIZE ${150 * 1024 * 1024L}L
+            // Obfuscated APK sizes
+            #define MAX_RELEASE_APK_SIZE_VAL (${releaseMaxSize}LL ^ 0x1337BEEF)
+            #define MAX_DEBUG_APK_SIZE_VAL   (${debugMaxSize}LL ^ 0xDEADBEEF)
             #define EXPECTED_LIB_COUNT ${officialLibs.size}
+            
+            // Obfuscated version code
+            #define EXPECTED_VERSION_CODE_VAL (${expectedVersionCode} ^ 0xCAFEBABE)
 
             namespace next {
-                static const char* OFFICIAL_LIBS[] = {
-                    ${officialLibs.joinToString(",\n                    ") { "\"$it\"" }}
-                };
+                // We will use a function to get official libs to allow runtime decryption
+                static inline std::vector<std::string> getOfficialLibs() {
+                    return {
+                        ${officialLibs.joinToString(",\n                        ") { "XOR_STR(\"$it\")" }}
+                    };
+                }
+                
+                static inline long long getReleaseApkSize() { return MAX_RELEASE_APK_SIZE_VAL ^ 0x1337BEEF; }
+                static inline long long getDebugApkSize() { return MAX_DEBUG_APK_SIZE_VAL ^ 0xDEADBEEF; }
+                static inline int getVersionCode() { return EXPECTED_VERSION_CODE_VAL ^ 0xCAFEBABE; }
             }
 
             #endif // NEXT_SECURITY_METADATA_H
@@ -323,11 +380,11 @@ room {
 
 sentry {
     includeProguardMapping.set(true)
-    autoUploadProguardMapping.set(true)
-    uploadNativeSymbols.set(true)
+    autoUploadProguardMapping.set(false) // Disable for local builds
+    uploadNativeSymbols.set(false)      // Disable for local builds
     includeNativeSources.set(true)
     includeSourceContext.set(true)
-    autoUploadSourceContext.set(true)
+    autoUploadSourceContext.set(false)  // Disable for local builds
     tracingInstrumentation {
         enabled.set(true)
         logcat {
@@ -394,6 +451,8 @@ dependencies {
     implementation(libs.sentry.compose)
     implementation(libs.sentry.okhttp)
     implementation(libs.sentry.replay)
+    implementation(libs.sentryndk)
+    implementation(libs.sentrynative)
 
     // Testing
     testImplementation(libs.junit)

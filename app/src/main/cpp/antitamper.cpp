@@ -15,8 +15,12 @@
 #include <unistd.h>
 #include <link.h>
 #include <elf.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/ptrace.h>
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
+#include <sentry.h>
 
 #define LOG_TAG "NextAntitamper"
 #define LOGD(...) if (AntiTamper::isLogcatEnabled()) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
@@ -32,11 +36,67 @@ static const bool TEST_FORCE_DETECTION = false; // Show warning overlay
 static const bool TEST_FORCE_CRASH     = false; // Simulate bypass attempt (Crash)
 // =============================================================================
 
+// ZIP parsing structures
+#pragma pack(push, 1)
+struct ZipLocalFileHeader {
+    uint32_t signature; // 0x04034b50
+    uint16_t version;
+    uint16_t flags;
+    uint16_t compression;
+    uint16_t modTime;
+    uint16_t modDate;
+    uint32_t crc32;
+    uint32_t compressedSize;
+    uint32_t uncompressedSize;
+    uint16_t fileNameLength;
+    uint16_t extraFieldLength;
+};
+
+struct ZipCentralDirectoryHeader {
+    uint32_t signature; // 0x02014b50
+    uint16_t versionMadeBy;
+    uint16_t versionNeeded;
+    uint16_t flags;
+    uint16_t compression;
+    uint16_t modTime;
+    uint16_t modDate;
+    uint32_t crc32;
+    uint32_t compressedSize;
+    uint32_t uncompressedSize;
+    uint16_t fileNameLength;
+    uint16_t extraFieldLength;
+    uint16_t fileCommentLength;
+    uint16_t diskNumberStart;
+    uint16_t internalAttributes;
+    uint32_t externalAttributes;
+    uint32_t localHeaderOffset;
+};
+
+struct ZipEndOfCentralDirectory {
+    uint32_t signature; // 0x06054b50
+    uint16_t diskNumber;
+    uint16_t diskWithStartCD;
+    uint16_t numEntriesOnDisk;
+    uint16_t numEntriesTotal;
+    uint32_t cdSize;
+    uint32_t cdOffset;
+    uint16_t commentLength;
+};
+#pragma pack(pop)
+
 namespace next {
 
 static bool g_warning_triggered = false;
 std::atomic<bool> AntiTamper::g_overlay_active(false);
-std::atomic<bool> AntiTamper::g_logcat_enabled(true);
+#ifdef ALLOW_LOGCAT
+  #if ALLOW_LOGCAT == 1
+    std::atomic<bool> AntiTamper::g_logcat_enabled(true);
+  #else
+    std::atomic<bool> AntiTamper::g_logcat_enabled(false);
+  #endif
+#else
+    std::atomic<bool> AntiTamper::g_logcat_enabled(false); // DISABLED BY DEFAULT IN RELEASE
+#endif
 std::thread AntiTamper::g_render_thread;
 ANativeWindow* AntiTamper::g_native_window = nullptr;
 std::mutex AntiTamper::g_window_mutex;
@@ -72,11 +132,7 @@ std::string AntiTamper::getExpectedPackageName() {
 }
 
 int AntiTamper::getExpectedVersionCode() {
-#ifdef EXPECTED_VERSION_CODE
-    return EXPECTED_VERSION_CODE;
-#else
-    return 605159512;
-#endif
+    return next::getVersionCode();
 }
 
 std::string AntiTamper::getExpectedVersionName() {
@@ -130,31 +186,99 @@ static int dl_callback(struct dl_phdr_info *info, size_t size, void *data) {
 
     if (name.empty()) return 0;
 
-    for (int i = 0; i < EXPECTED_LIB_COUNT; ++i) {
-        if (name.find(OFFICIAL_LIBS[i]) != std::string::npos) {
+    auto officialLibs = next::getOfficialLibs();
+    for (const auto& official : officialLibs) {
+        if (name.find(official) != std::string::npos) {
             bool alreadySeen = false;
             for (const auto& l : *(ctx->detectedLibs)) {
-                if (l == OFFICIAL_LIBS[i]) {
+                if (l == official) {
                     alreadySeen = true;
                     break;
                 }
             }
             if (!alreadySeen) {
-                LOGD("AntiTamper: Identified official library: %s", OFFICIAL_LIBS[i]);
-                ctx->detectedLibs->push_back(OFFICIAL_LIBS[i]);
+                LOGD("AntiTamper: Identified official library: %s", official.c_str());
+                ctx->detectedLibs->push_back(official);
             }
         }
     }
     return 0;
 }
 
+bool AntiTamper::checkPtrace() {
+    if (ptrace(PTRACE_TRACEME, 0, 1, 0) < 0) {
+        return false;
+    }
+    ptrace(PTRACE_DETACH, 0, 1, 0);
+    return true;
+}
+
+bool AntiTamper::checkTracerPid() {
+    std::ifstream status(XOR_STR("/proc/self/status"));
+    if (!status.is_open()) return true; // Fail safe
+    std::string line;
+    while (std::getline(status, line)) {
+        if (line.find(XOR_STR("TracerPid:")) == 0) {
+            int pid = std::stoi(line.substr(10));
+            if (pid != 0) return false;
+            break;
+        }
+    }
+    return true;
+}
+
+bool AntiTamper::checkDebuggable(JNIEnv* env, jobject context) {
+    jclass contextClass = env->GetObjectClass(context);
+    jmethodID getApplicationInfoMethod = env->GetMethodID(contextClass, XOR_STR("getApplicationInfo").c_str(), XOR_STR("()Landroid/content/pm/ApplicationInfo;").c_str());
+    jobject appInfo = env->CallObjectMethod(context, getApplicationInfoMethod);
+    jclass appInfoClass = env->GetObjectClass(appInfo);
+    jfieldID flagsField = env->GetFieldID(appInfoClass, XOR_STR("flags").c_str(), XOR_STR("I").c_str());
+    int flags = env->GetIntField(appInfo, flagsField);
+    // FLAG_DEBUGGABLE = 2
+    return (flags & 2) != 0;
+}
+
+bool AntiTamper::checkRoot() {
+    const char* rootPaths[] = {
+        "/system/app/Superuser.apk",
+        "/sbin/su",
+        "/system/bin/su",
+        "/system/xbin/su",
+        "/data/local/xbin/su",
+        "/data/local/bin/su",
+        "/system/sd/xbin/su",
+        "/system/bin/failsafe/su",
+        "/data/local/su",
+        "/su/bin/su"
+    };
+    for (const char* path : rootPaths) {
+        if (access(path, F_OK) == 0) return true;
+    }
+    return false;
+}
+
 bool AntiTamper::checkEnvironment(JNIEnv* env) {
     std::string pkgName = getExpectedPackageName();
     std::vector<std::string> detectedLibs;
 
+    bool isSecurityTest = false;
+#if defined(DEBUG_BUILD) || defined(ANTITAMPER_TEST_BUILD)
+    isSecurityTest = true;
+#endif
+
+    // Advanced checks
+    if (!checkPtrace()) {
+        reportSecurityEvent(env, XOR_STR("Debugger detected (ptrace)"));
+        if (!isSecurityTest) return false;
+    }
+    if (!checkTracerPid()) {
+        reportSecurityEvent(env, XOR_STR("Debugger detected (TracerPid)"));
+        if (!isSecurityTest) return false;
+    }
+
     // Use dl_iterate_phdr for reliable library detection (including libs inside APK)
-    DlContext ctx = { &detectedLibs, pkgName };
-    dl_iterate_phdr(dl_callback, &ctx);
+    DlContext dl_ctx = { &detectedLibs, pkgName };
+    dl_iterate_phdr(dl_callback, &dl_ctx);
 
     int libCount = (int)detectedLibs.size();
 
@@ -163,6 +287,7 @@ bool AntiTamper::checkEnvironment(JNIEnv* env) {
 
     std::string line;
     bool apkMapped = false;
+    auto officialLibs = next::getOfficialLibs();
 
     while (std::getline(maps, line)) {
         // 1. Frida/Xposed/Bypass Tools Detection
@@ -186,7 +311,7 @@ bool AntiTamper::checkEnvironment(JNIEnv* env) {
            (line.find(XOR_STR("/data/app/")) != std::string::npos || line.find(pkgName) != std::string::npos)) {
 
             bool isDebug = false;
-#ifdef DEBUG_BUILD
+#if defined(DEBUG_BUILD) || defined(ANTITAMPER_TEST_BUILD)
             isDebug = true;
 #endif
             // Whitelist Android Studio debugger agents in debug builds
@@ -195,8 +320,8 @@ bool AntiTamper::checkEnvironment(JNIEnv* env) {
             }
 
             bool foundInWhitelist = false;
-            for (int i = 0; i < EXPECTED_LIB_COUNT; ++i) {
-                if (line.find(OFFICIAL_LIBS[i]) != std::string::npos) {
+            for (const auto& official : officialLibs) {
+                if (line.find(official) != std::string::npos) {
                     foundInWhitelist = true;
                     break;
                 }
@@ -254,12 +379,213 @@ bool AntiTamper::checkHooks(JNIEnv* env, jobject context) {
     return true;
 }
 
+std::string AntiTamper::getApkPathFromMaps() {
+    std::ifstream maps(XOR_STR("/proc/self/maps"));
+    std::string line;
+    std::string pkgName = getExpectedPackageName();
+    while (std::getline(maps, line)) {
+        if (line.find(pkgName) != std::string::npos && line.find(XOR_STR(".apk")) != std::string::npos) {
+            size_t pos = line.find('/');
+            if (pos != std::string::npos) {
+                return line.substr(pos);
+            }
+        }
+    }
+    return "";
+}
+
+bool AntiTamper::verifyApkArchive(JNIEnv* env) {
+    std::string apkPath = getApkPathFromMaps();
+    if (apkPath.empty()) {
+        LOGE("AntiTamper: Could not find APK path in memory maps");
+        return false;
+    }
+
+    LOGD("AntiTamper: Verifying APK at: %s", apkPath.c_str());
+
+    int fd = open(apkPath.c_str(), O_RDONLY);
+    if (fd < 0) {
+        LOGE("AntiTamper: Failed to open APK file: %s", apkPath.c_str());
+        return false;
+    }
+
+    struct stat st;
+    fstat(fd, &st);
+    size_t size = st.st_size;
+
+    void* mapped = mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0);
+    close(fd);
+
+    if (mapped == MAP_FAILED) {
+        LOGE("AntiTamper: Failed to mmap APK");
+        return false;
+    }
+
+    const uint8_t* data = static_cast<const uint8_t*>(mapped);
+    bool success = false;
+
+    // Find EOCD by scanning from the end (max comment size is 64KB)
+    const uint32_t eocd_sig = 0x06054b50;
+    size_t scan_limit = (size > 65535 + 22) ? size - 65535 - 22 : 0;
+    const ZipEndOfCentralDirectory* eocd = nullptr;
+
+    for (size_t i = size - 22; i >= scan_limit; --i) {
+        if (*(uint32_t*)(data + i) == eocd_sig) {
+            eocd = (const ZipEndOfCentralDirectory*)(data + i);
+            break;
+        }
+    }
+
+    if (!eocd) {
+        LOGE("AntiTamper: Could not find ZIP EOCD");
+        munmap(mapped, size);
+        return false;
+    }
+
+    const uint8_t* cd_ptr = data + eocd->cdOffset;
+    std::vector<std::string> foundOfficialLibs;
+    bool unauthorizedLibFound = false;
+    auto officialLibs = next::getOfficialLibs();
+
+    for (int i = 0; i < eocd->numEntriesTotal; ++i) {
+        const ZipCentralDirectoryHeader* header = (const ZipCentralDirectoryHeader*)cd_ptr;
+        if (header->signature != 0x02014b50) break;
+
+        std::string fileName((const char*)(cd_ptr + sizeof(ZipCentralDirectoryHeader)), header->fileNameLength);
+
+        // Check for libraries in lib/ directory
+        if (fileName.find(XOR_STR("lib/")) == 0 && fileName.find(XOR_STR(".so")) != std::string::npos) {
+            LOGD("AntiTamper: Found lib in APK: %s", fileName.c_str());
+
+            bool isOfficial = false;
+            for (const auto& official : officialLibs) {
+                if (fileName.find(official) != std::string::npos) {
+                    isOfficial = true;
+                    foundOfficialLibs.push_back(official);
+                    break;
+                }
+            }
+
+            if (!isOfficial) {
+                // Potential unauthorized library
+                LOGE("AntiTamper: Unauthorized library found in APK: %s", fileName.c_str());
+                unauthorizedLibFound = true;
+                break;
+            }
+        }
+
+        cd_ptr += sizeof(ZipCentralDirectoryHeader) + header->fileNameLength + header->extraFieldLength + header->fileCommentLength;
+    }
+
+    if (unauthorizedLibFound) {
+        reportSecurityEvent(env, XOR_STR("Unauthorized library in APK archive"));
+        success = false;
+    } else {
+        // Verify all official libs are present (at least for one architecture)
+        int uniqueOfficialFound = 0;
+        for (const auto& official : officialLibs) {
+            for (const auto& found : foundOfficialLibs) {
+                if (found == official) {
+                    uniqueOfficialFound++;
+                    break;
+                }
+            }
+        }
+
+        LOGD("AntiTamper: Official libs in APK: %d/%d", uniqueOfficialFound, EXPECTED_LIB_COUNT);
+        if (uniqueOfficialFound < EXPECTED_LIB_COUNT) {
+            LOGE("AntiTamper: Missing official libraries in APK archive!");
+            reportSecurityEvent(env, XOR_STR("Missing official libraries in APK"));
+            success = false;
+        } else {
+            success = true;
+        }
+    }
+
+    munmap(mapped, size);
+    return success;
+}
+
+bool AntiTamper::checkStringIntegrity(JNIEnv* env, jobject context) {
+    struct KeyPair {
+        std::string key;
+        std::string expected;
+    };
+    // Integrity check is performed against English locale as a baseline
+    std::vector<KeyPair> checks = {
+        {XOR_STR("tamper_warning_title"), getProtectedString(XOR_STR("en"), XOR_STR("tamper_warning_title"))},
+        {XOR_STR("tamper_warning_desc"), getProtectedString(XOR_STR("en"), XOR_STR("tamper_warning_desc"))},
+        {XOR_STR("tamper_btn_accept_risks"), getProtectedString(XOR_STR("en"), XOR_STR("tamper_btn_accept_risks"))},
+        {XOR_STR("tamper_btn_download_official"), getProtectedString(XOR_STR("en"), XOR_STR("tamper_btn_download_official"))}
+    };
+
+    bool allGood = true;
+    for (const auto& pair : checks) {
+        std::string resStr = getStringFromResources(env, context, pair.key);
+        if (!resStr.empty() && resStr != pair.expected) {
+            reportStringMismatch(env, pair.key, pair.expected, resStr);
+            allGood = false;
+        }
+    }
+    return allGood;
+}
+
+std::string AntiTamper::getStringFromResources(JNIEnv* env, jobject context, const std::string& key) {
+    jclass contextClass = env->GetObjectClass(context);
+    jmethodID getResourcesMethod = env->GetMethodID(contextClass, XOR_STR("getResources").c_str(), XOR_STR("()Landroid/content/res/Resources;").c_str());
+    jobject resources = env->CallObjectMethod(context, getResourcesMethod);
+    if (!resources) return "";
+
+    jclass resourcesClass = env->GetObjectClass(resources);
+    jmethodID getIdentifierMethod = env->GetMethodID(resourcesClass, XOR_STR("getIdentifier").c_str(), XOR_STR("(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I").c_str());
+
+    jstring jkey = env->NewStringUTF(key.c_str());
+    jstring jtype = env->NewStringUTF(XOR_STR("string").c_str());
+    jstring jpkg = env->NewStringUTF(getExpectedPackageName().c_str());
+
+    int id = env->CallIntMethod(resources, getIdentifierMethod, jkey, jtype, jpkg);
+
+    env->DeleteLocalRef(jkey);
+    env->DeleteLocalRef(jtype);
+    env->DeleteLocalRef(jpkg);
+
+    if (id == 0) return "";
+
+    jmethodID getStringMethod = env->GetMethodID(resourcesClass, XOR_STR("getString").c_str(), XOR_STR("(I)Ljava/lang/String;").c_str());
+    jstring jval = (jstring)env->CallObjectMethod(resources, getStringMethod, id);
+    if (!jval) return "";
+
+    const char* valChars = env->GetStringUTFChars(jval, nullptr);
+    std::string val(valChars);
+    env->ReleaseStringUTFChars(jval, valChars);
+    env->DeleteLocalRef(jval);
+
+    return val;
+}
+
 bool AntiTamper::check(JNIEnv* env, jobject context) {
     LOGD("Check started");
+
+    // Advanced Checks
+    if (checkDebuggable(env, context)) {
+        reportSecurityEvent(env, XOR_STR("Application marked as debuggable"));
+#if !defined(DEBUG_BUILD) && !defined(ANTITAMPER_TEST_BUILD)
+        return false;
+#endif
+    }
 
     // Environment & Hook Checks
     if (!checkEnvironment(env)) return false;
     if (!checkHooks(env, context)) return false;
+
+    // APK Archive Integrity Check
+    if (!verifyApkArchive(env)) return false;
+
+    // String Integrity Check
+    if (!checkStringIntegrity(env, context)) {
+        g_current_view = OverlayView::INTEGRITY_FAILURE;
+        return false;
+    }
 
     jclass contextClass = env->GetObjectClass(context);
     jmethodID getPackageNameMethod = env->GetMethodID(contextClass, XOR_STR("getPackageName").c_str(), XOR_STR("()Ljava/lang/String;").c_str());
@@ -283,11 +609,11 @@ bool AntiTamper::check(JNIEnv* env, jobject context) {
     const char* apkPathChars = env->GetStringUTFChars(apkPath, nullptr);
     struct stat st;
     if (stat(apkPathChars, &st) == 0) {
-        bool isDebugBuild = false;
-#ifdef DEBUG_BUILD
-        isDebugBuild = true;
+        bool isDebugLike = false;
+#if defined(DEBUG_BUILD) || defined(ANTITAMPER_TEST_BUILD)
+        isDebugLike = true;
 #endif
-        long long maxSize = isDebugBuild ? MAX_DEBUG_APK_SIZE : MAX_RELEASE_APK_SIZE;
+        long long maxSize = isDebugLike ? next::getDebugApkSize() : next::getReleaseApkSize();
         LOGD("APK size: %lld bytes (Limit: %lld)", (long long)st.st_size, maxSize);
         if (st.st_size > maxSize) {
             LOGE("AntiTamper: APK size exceeded limit!");
@@ -417,7 +743,7 @@ std::string AntiTamper::getProtectedString(const std::string& locale, const std:
     }
     if (key == XOR_STR("tamper_warning_desc")) {
         if (l == XOR_STR("ru")) return XOR_STR("Эта версия Proton VPN-Next была модифицирована неизвестной третьей стороной. Ваша безопасность, конфиденциальность и данные находятся под ВЫСОКИМ РИСКОМ.");
-        if (l == XOR_STR("fa")) return XOR_STR("این نسخه از Proton VPN-Next توسط یک شخص ثالث ناشناس اصلاح شده است. امنیت، حریم خصوصی و داده‌های شما в معرض خطر بسیار بالایی قرار دارند.");
+        if (l == XOR_STR("fa")) return XOR_STR("این نسخه از Proton VPN-Next توسط یک شخص ثالث ناشناس اصلاح شده است. امنیت، حریم خصوصی و داده‌های شما در معرض خطر بسیار بالایی قرار دارند.");
         if (l == XOR_STR("be")) return XOR_STR("Гэтая версія Proton VPN-Next была мадыфікавана невядомым трэцім бокам. Ваша бяспека, прыватнасць і даныя знаходзяцца пад ВЫСОКАЙ РЫЗЫКАЙ.");
         if (l == XOR_STR("uk")) return XOR_STR("Ця версія Proton VPN-Next була модифікована невідомою третьою стороною. Ваша безпека, конфіденційність та дані знаходяться пад ВИСОКИМ РИЗИКОМ.");
         if (l == XOR_STR("kk")) return XOR_STR("Proton VPN-Next нұсқасын белгісіз үшінші тарап өзгерткен. Сіздің қауіпсіздігіңіз, құпиялылығыңыз бен деректеріңізге ЖОҒАРЫ ҚАУІП төніп тұр.");
@@ -474,18 +800,18 @@ int AntiTamper::getTamperAckCount(JNIEnv* env, jobject context) {
 
 void AntiTamper::incrementTamperAckCount(JNIEnv* env, jobject context) {
     jclass contextClass = env->GetObjectClass(context);
-    jmethodID getSharedPreferencesMethod = env->GetMethodID(contextClass, "getSharedPreferences", "(Ljava/lang/String;I)Landroid/content/SharedPreferences;");
+    jmethodID getSharedPreferencesMethod = env->GetMethodID(contextClass, XOR_STR("getSharedPreferences").c_str(), XOR_STR("(Ljava/lang/String;I)Landroid/content/SharedPreferences;").c_str());
     jstring prefName = env->NewStringUTF(XOR_STR("next_security_prefs").c_str());
     jobject sharedPrefs = env->CallObjectMethod(context, getSharedPreferencesMethod, prefName, 0);
     jclass sharedPrefsClass = env->GetObjectClass(sharedPrefs);
-    jmethodID editMethod = env->GetMethodID(sharedPrefsClass, "edit", "()Landroid/content/SharedPreferences$Editor;");
+    jmethodID editMethod = env->GetMethodID(sharedPrefsClass, XOR_STR("edit").c_str(), XOR_STR("()Landroid/content/SharedPreferences$Editor;").c_str());
     jobject editor = env->CallObjectMethod(sharedPrefs, editMethod);
     jclass editorClass = env->GetObjectClass(editor);
     int currentCount = getTamperAckCount(env, context);
-    jmethodID putIntMethod = env->GetMethodID(editorClass, "putInt", "(Ljava/lang/String;I)Landroid/content/SharedPreferences$Editor;");
+    jmethodID putIntMethod = env->GetMethodID(editorClass, XOR_STR("putInt").c_str(), XOR_STR("(Ljava/lang/String;I)Landroid/content/SharedPreferences$Editor;").c_str());
     jstring key = env->NewStringUTF(XOR_STR("tamper_ack_count").c_str());
     env->CallObjectMethod(editor, putIntMethod, key, currentCount + 1);
-    jmethodID applyMethod = env->GetMethodID(editorClass, "apply", "()V");
+    jmethodID applyMethod = env->GetMethodID(editorClass, XOR_STR("apply").c_str(), XOR_STR("()V").c_str());
     env->CallVoidMethod(editor, applyMethod);
     env->DeleteLocalRef(prefName);
     env->DeleteLocalRef(key);
@@ -509,7 +835,28 @@ void AntiTamper::reportBypassAttempt(JNIEnv* env, const std::string& reason) {
     abort();
 }
 
+void AntiTamper::reportStringMismatch(JNIEnv* env, const std::string& key, const std::string& expected, const std::string& got) {
+    std::string msg = XOR_STR("Error: Someone tried to steal your work\nKey: ") + key +
+                     XOR_STR("\nExpected (реальная строка): ") + expected +
+                     XOR_STR("\nGot (строка мододела): ") + got;
+    reportSecurityEvent(env, msg);
+}
+
 void AntiTamper::reportSecurityEvent(JNIEnv* env, const std::string& event) {
+    // 1. Log to Sentry Native SDK (Always-On)
+    sentry_value_t s_event = sentry_value_new_event();
+    sentry_value_set_by_key(s_event, "message", sentry_value_new_string(event.c_str()));
+    sentry_value_set_by_key(s_event, "level", sentry_value_new_string("fatal"));
+
+    sentry_value_t tags = sentry_value_new_object();
+    sentry_value_set_by_key(tags, "security", sentry_value_new_string("true"));
+    sentry_value_set_by_key(tags, "native", sentry_value_new_string("true"));
+    sentry_value_set_by_key(s_event, "tags", tags);
+
+    sentry_capture_event(s_event);
+
+    // 2. Log to Kotlin (Traditional way)
+    env->ExceptionClear();
     jclass helperClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/NextVpnManager").c_str());
     if (helperClass) {
         jmethodID logMethod = env->GetStaticMethodID(helperClass, XOR_STR("logSecurityEvent").c_str(), XOR_STR("(Ljava/lang/String;)V").c_str());
@@ -521,8 +868,77 @@ void AntiTamper::reportSecurityEvent(JNIEnv* env, const std::string& event) {
     }
 }
 
+void AntiTamper::verifyCriticalIntegrity(JNIEnv* env) {
+    // 1. Hook/Integrity Check for FlavorInitializer
+    jclass flavorClass = env->FindClass(XOR_STR("ru/protonmod/next/FlavorInitializer").c_str());
+    if (!flavorClass) {
+        reportSecurityEvent(env, XOR_STR("CRITICAL: FlavorInitializer class NOT FOUND! (Likely cut by smali)"));
+        env->ExceptionClear();
+    } else {
+        jmethodID initMethod = env->GetStaticMethodID(flavorClass, XOR_STR("initialize").c_str(), XOR_STR("(Landroid/content/Context;)V").c_str());
+        if (!initMethod) {
+            reportSecurityEvent(env, XOR_STR("CRITICAL: FlavorInitializer.initialize() NOT FOUND! (Likely cut by smali)"));
+            env->ExceptionClear();
+        }
+
+        // Honeypot: Check if someone called/modified our fake method
+        jmethodID fakeMethod = env->GetStaticMethodID(flavorClass, XOR_STR("verifySecurityEnvironment").c_str(), XOR_STR("(Landroid/content/Context;)V").c_str());
+        if (!fakeMethod) {
+             reportSecurityEvent(env, XOR_STR("Honeypot: FlavorInitializer.verifySecurityEnvironment() removed!"));
+        }
+    }
+
+    // 2. Token Integrity Check (Honeypot)
+    jclass managerClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/NextVpnManager").c_str());
+    if (managerClass) {
+        jfieldID tokenField = env->GetStaticFieldID(managerClass, XOR_STR("SECURITY_VERIFICATION_TOKEN").c_str(), XOR_STR("Ljava/lang/String;").c_str());
+        if (tokenField) {
+            jstring token = (jstring)env->GetStaticObjectField(managerClass, tokenField);
+            const char* tokenChars = env->GetStringUTFChars(token, nullptr);
+            std::string currentToken(tokenChars);
+            env->ReleaseStringUTFChars(token, tokenChars);
+
+            std::string expectedToken = XOR_STR("7b74cef88678ecb3e6047ac6b4abf139");
+            if (currentToken != expectedToken) {
+                reportSecurityEvent(env, XOR_STR("Honeypot: SECURITY_VERIFICATION_TOKEN tampered! Got: ") + currentToken);
+            }
+        } else {
+             reportSecurityEvent(env, XOR_STR("Honeypot: NextVpnManager.SECURITY_VERIFICATION_TOKEN removed!"));
+        }
+
+        // Honeypot: Check for performLegacyIntegrityCheck method
+        jmethodID legacyMethod = env->GetMethodID(managerClass, XOR_STR("performLegacyIntegrityCheck").c_str(), XOR_STR("()Z").c_str());
+        if (!legacyMethod) {
+             reportSecurityEvent(env, XOR_STR("Honeypot: NextVpnManager.performLegacyIntegrityCheck() removed!"));
+        }
+    }
+
+    // 3. Protected String Integrity Verification
+    struct StringVerify {
+        std::string key;
+        std::string expected;
+    };
+
+    std::vector<StringVerify> criticalStrings = {
+        {XOR_STR("url_github"), XOR_STR("https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR")},
+        {XOR_STR("url_codeberg"), XOR_STR("https://codeberg.org/SMH01/ProtonVPN-Next")},
+        {XOR_STR("url_telegram"), XOR_STR("https://t.me/ProtonVPN_MOD")},
+        {XOR_STR("url_website"), XOR_STR("https://home.protonnext.qzz.io/")}
+    };
+
+    for (const auto& sv : criticalStrings) {
+        std::string actual = getProtectedString(XOR_STR("en"), sv.key);
+        if (actual != sv.expected) {
+            reportSecurityEvent(env, XOR_STR("CRITICAL: Protected string tampered! Key: ") + sv.key + XOR_STR(", Actual: ") + actual);
+        }
+    }
+}
+
 void AntiTamper::onActivityResumed(JNIEnv* env, jobject activity) {
     LOGD("onActivityResumed triggered");
+
+    // Perform critical integrity checks on resume
+    verifyCriticalIntegrity(env);
 
     // Detect locale
     jclass localeClass = env->FindClass(XOR_STR("java/util/Locale").c_str());
@@ -715,6 +1131,13 @@ void AntiTamper::renderLoop() {
         // Perform periodic background environment check (every 5 seconds)
         static auto last_security_scan = std::chrono::steady_clock::now();
         if (std::chrono::duration_cast<std::chrono::seconds>(now - last_security_scan).count() >= 5) {
+            if (!checkPtrace() || !checkTracerPid()) {
+                LOGE("AntiTamper: Late-attached debugger detected!");
+#if !defined(DEBUG_BUILD) && !defined(ANTITAMPER_TEST_BUILD)
+                g_force_error = true;
+#endif
+            }
+
             std::ifstream maps(XOR_STR("/proc/self/maps"));
             std::string line;
             while (std::getline(maps, line)) {
@@ -744,7 +1167,7 @@ void AntiTamper::renderLoop() {
         float base_scale = io.DisplaySize.x / 1080.0f;
         if (base_scale < 1.0f) base_scale = 1.0f;
 
-        if (g_current_view == OverlayView::WARNING) {
+        if (g_current_view == OverlayView::WARNING || g_current_view == OverlayView::INTEGRITY_FAILURE) {
             // Warning Icon
             ImGui::SetCursorPosY(center_y - 400 * base_scale);
             ImGui::SetWindowFontScale(3.0f * base_scale);
@@ -755,6 +1178,9 @@ void AntiTamper::renderLoop() {
             // Title
             ImGui::SetWindowFontScale(1.3f * base_scale);
             std::string title = getProtectedString(g_current_locale, XOR_STR("tamper_warning_title"));
+            if (g_current_view == OverlayView::INTEGRITY_FAILURE) {
+                 title = XOR_STR("CRITICAL INTEGRITY FAILURE");
+            }
             tw = ImGui::CalcTextSize(title.c_str()).x;
             if (tw > io.DisplaySize.x - 40.0f * base_scale) {
                 ImGui::PushTextWrapPos(io.DisplaySize.x - 40.0f * base_scale);
@@ -773,7 +1199,11 @@ void AntiTamper::renderLoop() {
             // Description
             ImGui::PushTextWrapPos(io.DisplaySize.x - 80.0f * base_scale);
             ImGui::SetCursorPosX(40.0f * base_scale);
-            ImGui::Text("%s", getProtectedString(g_current_locale, XOR_STR("tamper_warning_desc")).c_str());
+            if (g_current_view == OverlayView::INTEGRITY_FAILURE) {
+                ImGui::Text("%s", XOR_STR("This application has been tampered with and is no longer safe to use. Mismatched resources detected.").c_str());
+            } else {
+                ImGui::Text("%s", getProtectedString(g_current_locale, XOR_STR("tamper_warning_desc")).c_str());
+            }
             ImGui::PopTextWrapPos();
 
             // Buttons at the bottom
@@ -788,18 +1218,25 @@ void AntiTamper::renderLoop() {
             ImGui::Spacing();
             ImGui::Spacing();
 
-            bool can_accept = (g_countdown == 0);
-            std::string accept_text = getProtectedString(g_current_locale, XOR_STR("tamper_btn_accept_risks"));
-            if (!can_accept) accept_text += " (" + std::to_string(g_countdown) + ")";
+            if (g_current_view != OverlayView::INTEGRITY_FAILURE) {
+                bool can_accept = (g_countdown == 0);
+                std::string accept_text = getProtectedString(g_current_locale, XOR_STR("tamper_btn_accept_risks"));
+                if (!can_accept) accept_text += " (" + std::to_string(g_countdown) + ")";
 
-            if (!can_accept) ImGui::BeginDisabled();
-            ImGui::SetCursorPosX(60 * base_scale);
-            if (ImGui::Button(accept_text.c_str(), ImVec2(btn_width, 60 * base_scale))) {
-                g_vpn_manager.setWarningAcknowledged(true);
-                g_overlay_active = false;
-                g_accept_clicked = true;
+                if (!can_accept) ImGui::BeginDisabled();
+                ImGui::SetCursorPosX(60 * base_scale);
+                if (ImGui::Button(accept_text.c_str(), ImVec2(btn_width, 60 * base_scale))) {
+                    g_vpn_manager.setWarningAcknowledged(true);
+                    g_overlay_active = false;
+                    g_accept_clicked = true;
+                }
+                if (!can_accept) ImGui::EndDisabled();
+            } else {
+                ImGui::SetCursorPosX(60 * base_scale);
+                if (ImGui::Button(XOR_STR("EXIT").c_str(), ImVec2(btn_width, 60 * base_scale))) {
+                    abort();
+                }
             }
-            if (!can_accept) ImGui::EndDisabled();
         } else {
             // Download Sources View
             ImGui::SetCursorPosY(100 * base_scale);

@@ -18,8 +18,24 @@
 package ru.protonmod.next.vpn
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.app.Application
+import android.app.Dialog
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.view.Surface
+import android.view.SurfaceHolder
+import android.view.SurfaceView
+import android.view.Window
 import dagger.hilt.android.EntryPointAccessors
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import ru.protonmod.next.di.AppEntryPoint
+import ru.protonmod.next.utils.ProtonLogger
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -35,26 +51,35 @@ class NextVpnManager @Inject constructor() {
     }
 
     fun getState(): AmneziaVpnManager.VpnState {
-        return AmneziaVpnManager.VpnState.entries.getOrNull(getStateNative())
-            ?: AmneziaVpnManager.VpnState.DISCONNECTED
+        val stateInt = getStateNative()
+        return AmneziaVpnManager.VpnState.entries[stateInt]
     }
 
-    fun canConnect(): Boolean = canConnectNative()
-    fun canDisconnect(): Boolean = canDisconnectNative()
+    fun canConnect() = canConnectNative()
+    fun canDisconnect() = canDisconnectNative()
 
-    fun isTamperDetected(): Boolean = isTamperDetectedNative()
-    fun getProtectedString(locale: String, key: String): String = getProtectedStringNative(locale, key)
+    fun performLegacyIntegrityCheck(): Boolean {
+        // Advanced dynamic integrity check using a combination of checksums and behavior analysis
+        // This is a honeypot method; actual integrity checks are also done in native code.
+        ProtonLogger.d("NextVpnManager", "Performing background integrity check...")
+        val isTampered = isTamperDetected()
+        if (isTampered) {
+            ProtonLogger.e("NextVpnManager", "INTEGRITY CHECK FAILED!")
+        }
+        return !isTampered
+    }
+
+    fun isTamperDetected() = isTamperDetectedNative()
+    fun getProtectedString(locale: String, key: String) = getProtectedStringNative(locale, key)
 
     fun setLogcatEnabled(enabled: Boolean) {
-        ru.protonmod.next.utils.ProtonLogger.isLogcatEnabled = enabled
         setLogcatEnabledNative(enabled)
+        ProtonLogger.isLogcatEnabled = enabled
     }
 
-    // ImGUI Overlay support
-    fun onSurfaceCreated(surface: android.view.Surface) = onSurfaceCreatedNative(surface)
+    fun onSurfaceCreated(surface: Surface) = onSurfaceCreatedNative(surface)
     fun onSurfaceDestroyed() = onSurfaceDestroyedNative()
-    fun onOverlayTouch(activity: android.app.Activity, x: Float, y: Float, action: Int) =
-        onOverlayTouchNative(activity, x, y, action)
+    fun onOverlayTouch(activity: Activity, x: Float, y: Float, action: Int) = onOverlayTouchNative(activity, x, y, action)
 
     private external fun setStateNative(state: Int)
     private external fun getStateNative(): Int
@@ -63,77 +88,80 @@ class NextVpnManager @Inject constructor() {
 
     private external fun isTamperDetectedNative(): Boolean
     private external fun getProtectedStringNative(locale: String, key: String): String
-    external fun onActivityResumedNative(activity: android.content.Context)
+    external fun onActivityResumedNative(activity: Context)
 
-    // ImGUI JNI
-    private external fun onSurfaceCreatedNative(surface: android.view.Surface)
+    private external fun onSurfaceCreatedNative(surface: Surface)
     private external fun onSurfaceDestroyedNative()
-    private external fun onOverlayTouchNative(activity: android.app.Activity, x: Float, y: Float, action: Int)
+    private external fun onOverlayTouchNative(activity: Activity, x: Float, y: Float, action: Int)
 
     private external fun setLogcatEnabledNative(enabled: Boolean)
 
     companion object {
-        private var isWarningShown = false
-        private var overlayDialog: android.app.Dialog? = null
+        var isWarningShown = false
+        var overlayDialog: Dialog? = null
 
         @JvmStatic
-        fun registerLifecycleCallbacks(application: android.app.Application) {
-            application.registerActivityLifecycleCallbacks(object : android.app.Application.ActivityLifecycleCallbacks {
-                override fun onActivityResumed(activity: android.app.Activity) {
-                    val nextVpnManager = EntryPointAccessors.fromApplication(activity.applicationContext, AppEntryPoint::class.java).nextVpnManager()
-                    nextVpnManager.onActivityResumedNative(activity)
+        fun registerLifecycleCallbacks(app: Application) {
+            app.registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
+                override fun onActivityResumed(activity: Activity) {
+                    val manager = EntryPointAccessors.fromApplication(app, AppEntryPoint::class.java).nextVpnManager()
+                    manager.onActivityResumedNative(activity)
                 }
-                override fun onActivityCreated(activity: android.app.Activity, savedInstanceState: android.os.Bundle?) {}
-                override fun onActivityStarted(activity: android.app.Activity) {}
-                override fun onActivityPaused(activity: android.app.Activity) {}
-                override fun onActivityStopped(activity: android.app.Activity) {}
-                override fun onActivitySaveInstanceState(activity: android.app.Activity, outState: android.os.Bundle) {}
-                override fun onActivityDestroyed(activity: android.app.Activity) {}
+                override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+                override fun onActivityStarted(activity: Activity) {}
+                override fun onActivityPaused(activity: Activity) {}
+                override fun onActivityStopped(activity: Activity) {}
+                override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+                override fun onActivityDestroyed(activity: Activity) {}
             })
         }
 
-        @SuppressLint("ClickableViewAccessibility")
+        @SuppressLint("InflateParams")
         @JvmStatic
-        fun createNativeOverlay(activity: android.app.Activity) {
-            if (isWarningShown) return
-            isWarningShown = true
+        fun createNativeOverlay(activity: Activity) {
+            if (overlayDialog != null) return
 
             activity.runOnUiThread {
-                val dialog = android.app.Dialog(activity, android.R.style.Theme_NoTitleBar_Fullscreen)
-                overlayDialog = dialog
+                val dialog = Dialog(activity, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
                 dialog.setCancelable(false)
-                dialog.setCanceledOnTouchOutside(false)
-                dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
 
-                val surfaceView = android.view.SurfaceView(activity)
-                surfaceView.holder.setFormat(android.graphics.PixelFormat.TRANSLUCENT)
-                
-                val nextVpnManager = EntryPointAccessors.fromApplication(activity.applicationContext, AppEntryPoint::class.java).nextVpnManager()
+                val surfaceView = SurfaceView(activity)
+                dialog.setContentView(surfaceView)
 
-                surfaceView.holder.addCallback(object : android.view.SurfaceHolder.Callback {
-                    override fun surfaceCreated(holder: android.view.SurfaceHolder) {
-                        nextVpnManager.onSurfaceCreated(holder.surface)
+                surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
+                    override fun surfaceCreated(holder: SurfaceHolder) {
+                        val manager = EntryPointAccessors.fromApplication(activity.application, AppEntryPoint::class.java).nextVpnManager()
+                        manager.onSurfaceCreated(holder.surface)
                     }
-                    override fun surfaceChanged(holder: android.view.SurfaceHolder, format: Int, width: Int, height: Int) {}
-                    override fun surfaceDestroyed(holder: android.view.SurfaceHolder) {
-                        nextVpnManager.onSurfaceDestroyed()
+                    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
+                    override fun surfaceDestroyed(holder: SurfaceHolder) {
+                        val manager = EntryPointAccessors.fromApplication(activity.application, AppEntryPoint::class.java).nextVpnManager()
+                        manager.onSurfaceDestroyed()
                     }
                 })
 
                 surfaceView.setOnTouchListener { _, event ->
-                    nextVpnManager.onOverlayTouch(activity, event.x, event.y, event.action)
+                    val manager = EntryPointAccessors.fromApplication(activity.application, AppEntryPoint::class.java).nextVpnManager()
+                    manager.onOverlayTouch(activity, event.x, event.y, event.action)
                     true
                 }
 
-                dialog.setContentView(surfaceView)
                 dialog.show()
+                overlayDialog = dialog
             }
         }
 
         @JvmStatic
         fun logSecurityEvent(event: String) {
-            ru.protonmod.next.utils.ProtonLogger.e("NextVpnManager", "Security event: $event")
+            ProtonLogger.e("AntiTamper", "Security Event: $event")
         }
+
+        /**
+         * Honeypot: A constant that looks like a security key.
+         * Modders often try to change such constants to "bypass" checks.
+         */
+        const val SECURITY_VERIFICATION_TOKEN = "7b74cef88678ecb3e6047ac6b4abf139"
 
         @JvmStatic
         fun dismissNativeOverlay() {
@@ -141,14 +169,39 @@ class NextVpnManager @Inject constructor() {
             overlayDialog = null
         }
 
+        data class NativeResponse(val code: Int, val body: String)
+
         @JvmStatic
-        fun openUrl(context: android.content.Context, url: String) {
+        fun performNativeRequest(
+            method: String,
+            url: String,
+            headers: Map<String, String>,
+            body: String?
+        ): NativeResponse {
+            val client = OkHttpClient()
+            val requestBuilder = Request.Builder().url(url)
+            headers.forEach { (k, v) -> requestBuilder.addHeader(k, v) }
+            
+            val requestBody = body?.toRequestBody("application/json".toMediaTypeOrNull())
+            requestBuilder.method(method, requestBody)
+            
+            return try {
+                client.newCall(requestBuilder.build()).execute().use { response ->
+                    NativeResponse(response.code, response.body?.string() ?: "")
+                }
+            } catch (e: Exception) {
+                NativeResponse(500, e.message ?: "Unknown error")
+            }
+        }
+
+        @JvmStatic
+        fun openUrl(context: Context, url: String) {
             try {
-                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
-                intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
             } catch (e: Exception) {
-                ru.protonmod.next.utils.ProtonLogger.e("NextVpnManager", "Failed to open URL: $url", e)
+                ProtonLogger.e("NextVpnManager", "Failed to open URL: $url", e)
             }
         }
     }

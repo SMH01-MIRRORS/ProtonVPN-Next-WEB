@@ -13,7 +13,8 @@ namespace next {
 
 enum class OverlayView {
     WARNING,
-    DOWNLOAD
+    DOWNLOAD,
+    INTEGRITY_FAILURE
 };
 
 class AntiTamper {
@@ -21,13 +22,23 @@ public:
     static bool check(JNIEnv* env, jobject context);
     static bool checkEnvironment(JNIEnv* env);
     static bool checkHooks(JNIEnv* env, jobject context);
+    static bool verifyApkArchive(JNIEnv* env);
+    static std::string getApkPathFromMaps();
     static std::string getExpectedSignature();
     static std::string getExpectedPackageName();
     static int getExpectedVersionCode();
     static std::string getExpectedVersionName();
 
+    // Advanced Checks
+    static bool checkPtrace();
+    static bool checkTracerPid();
+    static bool checkDebuggable(JNIEnv* env, jobject context);
+    static bool checkRoot();
+    static bool checkStringIntegrity(JNIEnv* env, jobject context);
+
     // Get protected strings by locale
     static std::string getProtectedString(const std::string& locale, const std::string& key);
+    static std::string getStringFromResources(JNIEnv* env, jobject context, const std::string& key);
 
     // Persistence for tamper acknowledgment
     static int getTamperAckCount(JNIEnv* env, jobject context);
@@ -38,6 +49,7 @@ public:
     static bool verifyResponse(const std::string& response);
     static void reportBypassAttempt(JNIEnv* env, const std::string& reason);
     static void reportSecurityEvent(JNIEnv* env, const std::string& event);
+    static void reportStringMismatch(JNIEnv* env, const std::string& key, const std::string& expected, const std::string& got);
 
     // Native GUI Logic (ImGUI Overlay)
     static void onActivityResumed(JNIEnv* env, jobject activity);
@@ -53,6 +65,8 @@ public:
     static void openUrl(JNIEnv* env, jobject context, const std::string& url);
     static void setLogcatEnabled(bool enabled);
     static bool isLogcatEnabled();
+
+    static void verifyCriticalIntegrity(JNIEnv* env);
 
     static std::atomic<bool> g_force_detection;
     static std::atomic<bool> g_force_error;

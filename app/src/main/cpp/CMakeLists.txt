@@ -17,14 +17,19 @@ set(IMGUI_SOURCES
     ${IMGUI_DIR}/imgui_widgets.cpp
     ${IMGUI_DIR}/imgui_tables.cpp
     ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_android.cpp
 )
 
 set(NEXT_SOURCES
     connection.cpp
     antitamper.cpp
+    api.cpp
+    auth.cpp
     utils.cpp
     next-jni.cpp
 )
+
+find_package(sentry-native-ndk REQUIRED CONFIG)
 
 add_library(next SHARED ${NEXT_SOURCES} ${IMGUI_SOURCES})
 target_include_directories(next PRIVATE
@@ -33,4 +38,4 @@ target_include_directories(next PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/${IMGUI_DIR}/backends
 )
 target_compile_options(next PRIVATE -O2 -Wall -Wextra)
-target_link_libraries(next PRIVATE android log GLESv3 EGL)
+target_link_libraries(next PRIVATE android log GLESv3 EGL sentry-native-ndk::sentry)
