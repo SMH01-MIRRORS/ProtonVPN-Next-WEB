@@ -86,6 +86,12 @@ struct ZipEndOfCentralDirectory {
 
 namespace next {
 
+std::string trim(const std::string& s) {
+    auto start = s.find_first_not_of(" \n\r\t");
+    auto end = s.find_last_not_of(" \n\r\t");
+    return (start == std::string::npos) ? "" : s.substr(start, end - start + 1);
+}
+
 static bool g_warning_triggered = false;
 std::atomic<bool> AntiTamper::g_overlay_active(false);
 #ifdef ALLOW_LOGCAT
@@ -507,24 +513,49 @@ bool AntiTamper::verifyApkArchive(JNIEnv* env) {
 }
 
 bool AntiTamper::checkStringIntegrity(JNIEnv* env, jobject context) {
-    struct KeyPair {
-        std::string key;
-        std::string expected;
+    // List of keys to check integrity for
+    std::vector<std::string> keys = {
+        XOR_STR("app_name"),
+        XOR_STR("tamper_warning_title"),
+        XOR_STR("tamper_warning_desc"),
+        XOR_STR("tamper_btn_accept_risks"),
+        XOR_STR("tamper_btn_download_official"),
+        XOR_STR("tamper_btn_back"),
+        XOR_STR("url_github"),
+        XOR_STR("url_codeberg"),
+        XOR_STR("url_telegram"),
+        XOR_STR("url_crowdin")
     };
-    // Integrity check is performed against English locale as a baseline
-    std::vector<KeyPair> checks = {
-        {XOR_STR("tamper_warning_title"), getProtectedString(XOR_STR("en"), XOR_STR("tamper_warning_title"))},
-        {XOR_STR("tamper_warning_desc"), getProtectedString(XOR_STR("en"), XOR_STR("tamper_warning_desc"))},
-        {XOR_STR("tamper_btn_accept_risks"), getProtectedString(XOR_STR("en"), XOR_STR("tamper_btn_accept_risks"))},
-        {XOR_STR("tamper_btn_download_official"), getProtectedString(XOR_STR("en"), XOR_STR("tamper_btn_download_official"))}
+
+    static const std::vector<std::string> supportedLocales = {
+        XOR_STR("en"), XOR_STR("ru"), XOR_STR("fa"), XOR_STR("be"),
+        XOR_STR("uk"), XOR_STR("kk"), XOR_STR("zh")
     };
 
     bool allGood = true;
-    for (const auto& pair : checks) {
-        std::string resStr = getStringFromResources(env, context, pair.key);
-        if (!resStr.empty() && resStr != pair.expected) {
-            reportStringMismatch(env, pair.key, pair.expected, resStr);
+    for (const auto& key : keys) {
+        std::string resStr = trim(getStringFromResources(env, context, key));
+        if (resStr.empty()) {
+             LOGE("AntiTamper: Integrity check failed for %s (empty or missing)", key.c_str());
+             reportSecurityEvent(env, XOR_STR("Resource missing or empty: ") + key);
+             allGood = false;
+             continue;
+        }
+
+        bool foundMatch = false;
+        for (const auto& locale : supportedLocales) {
+            if (resStr == trim(getProtectedString(locale, key))) {
+                foundMatch = true;
+                break;
+            }
+        }
+
+        if (!foundMatch) {
+            LOGE("AntiTamper: Resource mismatch detected! Key: %s, Found: '%s'", key.c_str(), resStr.c_str());
+            reportStringMismatch(env, key, getProtectedString(XOR_STR("en"), key), resStr);
             allGood = false;
+        } else {
+            LOGD("AntiTamper: Integrity check passed for %s", key.c_str());
         }
     }
     return allGood;
@@ -541,15 +572,27 @@ std::string AntiTamper::getStringFromResources(JNIEnv* env, jobject context, con
 
     jstring jkey = env->NewStringUTF(key.c_str());
     jstring jtype = env->NewStringUTF(XOR_STR("string").c_str());
-    jstring jpkg = env->NewStringUTF(getExpectedPackageName().c_str());
 
+    // Try actual package name first (e.g. ru.protonmod.next.nightly)
+    jmethodID getPackageNameMethod = env->GetMethodID(contextClass, XOR_STR("getPackageName").c_str(), XOR_STR("()Ljava/lang/String;").c_str());
+    jstring jpkg = (jstring)env->CallObjectMethod(context, getPackageNameMethod);
     int id = env->CallIntMethod(resources, getIdentifierMethod, jkey, jtype, jpkg);
+
+    // Fallback to base package name if not found
+    if (id == 0) {
+        jstring basePkg = env->NewStringUTF(XOR_STR("ru.protonmod.next").c_str());
+        id = env->CallIntMethod(resources, getIdentifierMethod, jkey, jtype, basePkg);
+        env->DeleteLocalRef(basePkg);
+    }
 
     env->DeleteLocalRef(jkey);
     env->DeleteLocalRef(jtype);
     env->DeleteLocalRef(jpkg);
 
-    if (id == 0) return "";
+    if (id == 0) {
+        LOGE("AntiTamper: CRITICAL - Resource '%s' not found in any package variant!", key.c_str());
+        return "";
+    }
 
     jmethodID getStringMethod = env->GetMethodID(resourcesClass, XOR_STR("getString").c_str(), XOR_STR("(I)Ljava/lang/String;").c_str());
     jstring jval = (jstring)env->CallObjectMethod(resources, getStringMethod, id);
@@ -729,6 +772,13 @@ bool AntiTamper::check(JNIEnv* env, jobject context) {
 }
 
 std::string AntiTamper::getProtectedString(const std::string& locale, const std::string& key) {
+    if (key == XOR_STR("url_github")) return XOR_STR("https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR");
+    if (key == XOR_STR("url_codeberg")) return XOR_STR("https://codeberg.org/SMH01/ProtonVPN-Next");
+    if (key == XOR_STR("url_telegram")) return XOR_STR("https://t.me/ProtonVPN_MOD");
+    if (key == XOR_STR("url_website")) return XOR_STR("https://home.protonnext.qzz.io/");
+    if (key == XOR_STR("url_crowdin")) return XOR_STR("https://crowdin.com/project/protonvpn-next");
+    if (key == XOR_STR("app_name")) return XOR_STR("Proton VPN-Next");
+
     auto l = locale;
     if (l != XOR_STR("ru") && l != XOR_STR("fa") && l != XOR_STR("be") && l != XOR_STR("uk") && l != XOR_STR("kk") && l != XOR_STR("zh")) l = XOR_STR("en");
 
@@ -743,7 +793,7 @@ std::string AntiTamper::getProtectedString(const std::string& locale, const std:
     }
     if (key == XOR_STR("tamper_warning_desc")) {
         if (l == XOR_STR("ru")) return XOR_STR("Эта версия Proton VPN-Next была модифицирована неизвестной третьей стороной. Ваша безопасность, конфиденциальность и данные находятся под ВЫСОКИМ РИСКОМ.");
-        if (l == XOR_STR("fa")) return XOR_STR("این نسخه از Proton VPN-Next توسط یک شخص ثالث ناشناس اصلاح شده است. امنیت، حریم خصوصی و داده‌های شما در معرض خطر بسیار بالایی قرار دارند.");
+        if (l == XOR_STR("fa")) return XOR_STR("این نسخه از Proton VPN-Next توسط یک شخص ثالث ناشناس اصلاح شده است. امنیت، حریم خصوصی и داده‌های شما در معرض خطر بسیار بالایی قرار دارند.");
         if (l == XOR_STR("be")) return XOR_STR("Гэтая версія Proton VPN-Next была мадыфікавана невядомым трэцім бокам. Ваша бяспека, прыватнасць і даныя знаходзяцца пад ВЫСОКАЙ РЫЗЫКАЙ.");
         if (l == XOR_STR("uk")) return XOR_STR("Ця версія Proton VPN-Next була модифікована невідомою третьою стороною. Ваша безпека, конфіденційність та дані знаходяться пад ВИСОКИМ РИЗИКОМ.");
         if (l == XOR_STR("kk")) return XOR_STR("Proton VPN-Next нұсқасын белгісіз үшінші тарап өзгерткен. Сіздің қауіпсіздігіңіз, құпиялылығыңыз бен деректеріңізге ЖОҒАРЫ ҚАУІП төніп тұр.");
@@ -776,10 +826,42 @@ std::string AntiTamper::getProtectedString(const std::string& locale, const std:
         if (l == XOR_STR("zh")) return XOR_STR("返回");
         return XOR_STR("Back");
     }
+
+    // Integrity failure overlay strings
+    if (key == XOR_STR("tamper_integrity_failure_title")) {
+        if (l == XOR_STR("ru")) return XOR_STR("КРИТИЧЕСКАЯ ОШИБКА ЦЕЛОСТНОСТИ");
+        if (l == XOR_STR("fa")) return XOR_STR("خطای بحрانی در یکپارچگی");
+        if (l == XOR_STR("be")) return XOR_STR("КРЫТЫЧНАЯ ПАМЫЛКА ЦЭЛАСНАСЦІ");
+        if (l == XOR_STR("uk")) return XOR_STR("КРИТИЧНА ПОМИЛКА ЦІЛІСНОСТІ");
+        if (l == XOR_STR("kk")) return XOR_STR("ҚАУІПТІ ТҰТАСТЫҚ ҚАТЕСІ");
+        if (l == XOR_STR("zh")) return XOR_STR("严重完整性校验失败");
+        return XOR_STR("CRITICAL INTEGRITY FAILURE");
+    }
+    if (key == XOR_STR("tamper_integrity_failure_desc")) {
+        if (l == XOR_STR("ru")) return XOR_STR("Это приложение было модифицировано и более не является безопасным. Обнаружено несовпадение ресурсов.");
+        if (l == XOR_STR("fa")) return XOR_STR("این برنامه دستکاری شده است и دیگر برای استفاده ایمن نیست. منابع ناهماهنگ شناسایی شدند.");
+        if (l == XOR_STR("be")) return XOR_STR("Гэта дадатак было мадыфікавана і больш не з'яўляецца бяспечным. Выяўлена неадпаведнасць рэсурсаў.");
+        if (l == XOR_STR("uk")) return XOR_STR("Цей додаток було модифікована і більше не є безпечним. Виявлено невідповідність ресурсів.");
+        if (l == XOR_STR("kk")) return XOR_STR("Бұл қолданба өзгертілген және бұдан былай қауіпсіз емес. Сәйкес келмейтін ресурстар анықталды.");
+        if (l == XOR_STR("zh")) return XOR_STR("此应用程序已被篡改，不再安全。检测到不匹配의 资源。");
+        return XOR_STR("This application has been tampered with and is no longer safe to use. Mismatched resources detected.");
+    }
+    if (key == XOR_STR("tamper_btn_exit")) {
+        if (l == XOR_STR("ru")) return XOR_STR("ВЫХОД");
+        if (l == XOR_STR("fa")) return XOR_STR("خروج");
+        if (l == XOR_STR("be")) return XOR_STR("ВЫХАД");
+        if (l == XOR_STR("uk")) return XOR_STR("ВИХІД");
+        if (l == XOR_STR("kk")) return XOR_STR("ШЫҒУ");
+        if (l == XOR_STR("zh")) return XOR_STR("退出");
+        return XOR_STR("EXIT");
+    }
+
     if (key == XOR_STR("url_github")) return XOR_STR("https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR");
     if (key == XOR_STR("url_codeberg")) return XOR_STR("https://codeberg.org/SMH01/ProtonVPN-Next");
     if (key == XOR_STR("url_telegram")) return XOR_STR("https://t.me/ProtonVPN_MOD");
     if (key == XOR_STR("url_website")) return XOR_STR("https://home.protonnext.qzz.io/");
+    if (key == XOR_STR("url_crowdin")) return XOR_STR("https://crowdin.com/project/protonvpn-next");
+    if (key == XOR_STR("app_name")) return XOR_STR("Proton VPN-Next");
 
     return "";
 }
@@ -836,13 +918,22 @@ void AntiTamper::reportBypassAttempt(JNIEnv* env, const std::string& reason) {
 }
 
 void AntiTamper::reportStringMismatch(JNIEnv* env, const std::string& key, const std::string& expected, const std::string& got) {
-    std::string msg = XOR_STR("Error: Someone tried to steal your work\nKey: ") + key +
-                     XOR_STR("\nExpected (реальная строка): ") + expected +
-                     XOR_STR("\nGot (строка мододела): ") + got;
-    reportSecurityEvent(env, msg);
+    std::stringstream ss;
+    ss << XOR_STR("Security Breach | Key: ") << key
+       << XOR_STR("\nExpected: [") << expected << "]"
+       << XOR_STR("\nGot: [") << got << "]";
+
+    if (expected.length() != got.length()) {
+        ss << XOR_STR("\nLength Mismatch: Exp=") << expected.length() << XOR_STR(" Got=") << got.length();
+    }
+
+    reportSecurityEvent(env, ss.str());
 }
 
 void AntiTamper::reportSecurityEvent(JNIEnv* env, const std::string& event) {
+    // Always log to logcat for immediate visibility during security tests
+    __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "Security Event: %s", event.c_str());
+
     // 1. Log to Sentry Native SDK (Always-On)
     sentry_value_t s_event = sentry_value_new_event();
     sentry_value_set_by_key(s_event, "message", sentry_value_new_string(event.c_str()));
@@ -856,14 +947,54 @@ void AntiTamper::reportSecurityEvent(JNIEnv* env, const std::string& event) {
     sentry_capture_event(s_event);
 
     // 2. Log to Kotlin (Traditional way)
-    env->ExceptionClear();
-    jclass helperClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/NextVpnManager").c_str());
-    if (helperClass) {
-        jmethodID logMethod = env->GetStaticMethodID(helperClass, XOR_STR("logSecurityEvent").c_str(), XOR_STR("(Ljava/lang/String;)V").c_str());
-        if (logMethod) {
-            jstring jevent = env->NewStringUTF(event.c_str());
-            env->CallStaticVoidMethod(helperClass, logMethod, jevent);
-            env->DeleteLocalRef(jevent);
+    if (env) {
+        env->ExceptionClear();
+        jclass helperClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/NextVpnManager").c_str());
+        if (helperClass) {
+            jmethodID logMethod = env->GetStaticMethodID(helperClass, XOR_STR("logSecurityEvent").c_str(), XOR_STR("(Ljava/lang/String;)V").c_str());
+            if (logMethod) {
+                jstring jevent = env->NewStringUTF(event.c_str());
+                env->CallStaticVoidMethod(helperClass, logMethod, jevent);
+                env->DeleteLocalRef(jevent);
+            }
+        }
+
+        // 3. Reliable Sentry Logging via JNI (calling Sentry Java SDK directly)
+        env->ExceptionClear();
+        jclass sentryClass = env->FindClass(XOR_STR("io/sentry/Sentry").c_str());
+        if (sentryClass) {
+            jclass levelClass = env->FindClass(XOR_STR("io/sentry/SentryLevel").c_str());
+            if (levelClass) {
+                jfieldID fatalField = env->GetStaticFieldID(levelClass, XOR_STR("FATAL").c_str(), XOR_STR("Lio/sentry/SentryLevel;").c_str());
+                if (fatalField) {
+                    jobject fatalLevel = env->GetStaticObjectField(levelClass, fatalField);
+                    jmethodID captureMethod = env->GetStaticMethodID(sentryClass, XOR_STR("captureMessage").c_str(), XOR_STR("(Ljava/lang/String;Lio/sentry/SentryLevel;)Lio/sentry/protocol/SentryId;").c_str());
+                    if (captureMethod) {
+                        jstring jmsg = env->NewStringUTF(event.c_str());
+                        jobject sentryId = env->CallStaticObjectMethod(sentryClass, captureMethod, jmsg, fatalLevel);
+                        if (sentryId) {
+                            LOGD("AntiTamper: Sentry event queued successfully");
+                            env->DeleteLocalRef(sentryId);
+                        } else {
+                            LOGE("AntiTamper: Sentry captureMessage returned null!");
+                        }
+                        env->DeleteLocalRef(jmsg);
+                    } else {
+                        LOGE("AntiTamper: Sentry.captureMessage method not found!");
+                    }
+                } else {
+                    LOGE("AntiTamper: SentryLevel.FATAL field not found!");
+                }
+            } else {
+                LOGE("AntiTamper: SentryLevel class not found!");
+            }
+        } else {
+            LOGE("AntiTamper: Sentry Java SDK class not found!");
+        }
+
+        if (env->ExceptionCheck()) {
+            env->ExceptionDescribe();
+            env->ExceptionClear();
         }
     }
 }
@@ -922,8 +1053,7 @@ void AntiTamper::verifyCriticalIntegrity(JNIEnv* env) {
     std::vector<StringVerify> criticalStrings = {
         {XOR_STR("url_github"), XOR_STR("https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR")},
         {XOR_STR("url_codeberg"), XOR_STR("https://codeberg.org/SMH01/ProtonVPN-Next")},
-        {XOR_STR("url_telegram"), XOR_STR("https://t.me/ProtonVPN_MOD")},
-        {XOR_STR("url_website"), XOR_STR("https://home.protonnext.qzz.io/")}
+        {XOR_STR("url_telegram"), XOR_STR("https://t.me/ProtonVPN_MOD")}
     };
 
     for (const auto& sv : criticalStrings) {
@@ -1177,10 +1307,13 @@ void AntiTamper::renderLoop() {
 
             // Title
             ImGui::SetWindowFontScale(1.3f * base_scale);
-            std::string title = getProtectedString(g_current_locale, XOR_STR("tamper_warning_title"));
+            std::string title;
             if (g_current_view == OverlayView::INTEGRITY_FAILURE) {
-                 title = XOR_STR("CRITICAL INTEGRITY FAILURE");
+                title = getProtectedString(g_current_locale, XOR_STR("tamper_integrity_failure_title"));
+            } else {
+                title = getProtectedString(g_current_locale, XOR_STR("tamper_warning_title"));
             }
+
             tw = ImGui::CalcTextSize(title.c_str()).x;
             if (tw > io.DisplaySize.x - 40.0f * base_scale) {
                 ImGui::PushTextWrapPos(io.DisplaySize.x - 40.0f * base_scale);
@@ -1200,7 +1333,7 @@ void AntiTamper::renderLoop() {
             ImGui::PushTextWrapPos(io.DisplaySize.x - 80.0f * base_scale);
             ImGui::SetCursorPosX(40.0f * base_scale);
             if (g_current_view == OverlayView::INTEGRITY_FAILURE) {
-                ImGui::Text("%s", XOR_STR("This application has been tampered with and is no longer safe to use. Mismatched resources detected.").c_str());
+                ImGui::Text("%s", getProtectedString(g_current_locale, XOR_STR("tamper_integrity_failure_desc")).c_str());
             } else {
                 ImGui::Text("%s", getProtectedString(g_current_locale, XOR_STR("tamper_warning_desc")).c_str());
             }
@@ -1233,7 +1366,7 @@ void AntiTamper::renderLoop() {
                 if (!can_accept) ImGui::EndDisabled();
             } else {
                 ImGui::SetCursorPosX(60 * base_scale);
-                if (ImGui::Button(XOR_STR("EXIT").c_str(), ImVec2(btn_width, 60 * base_scale))) {
+                if (ImGui::Button(getProtectedString(g_current_locale, XOR_STR("tamper_btn_exit")).c_str(), ImVec2(btn_width, 60 * base_scale))) {
                     abort();
                 }
             }
