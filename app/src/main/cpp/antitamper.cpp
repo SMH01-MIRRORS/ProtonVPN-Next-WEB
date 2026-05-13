@@ -2,6 +2,7 @@
 #include "connection.h"
 #include "security_metadata.h"
 #include "obfuscation.h"
+#include "sentry_manager.h"
 #include <android/log.h>
 #include <android/native_window_jni.h>
 #include <EGL/egl.h>
@@ -20,7 +21,6 @@
 #include <sys/ptrace.h>
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
-#include <sentry.h>
 
 #define LOG_TAG "NextAntitamper"
 #define LOGD(...) if (AntiTamper::isLogcatEnabled()) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
@@ -935,65 +935,13 @@ void AntiTamper::reportStringMismatch(JNIEnv* env, const std::string& key, const
 }
 
 void AntiTamper::reportSecurityEvent(JNIEnv* env, const std::string& event) {
+    (void)env; // No longer needed as we use Sentry Native SDK directly
+
     // Always log to logcat for immediate visibility during security tests
     __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "Security Event: %s", event.c_str());
 
-    // 1. Log to Sentry Native SDK (Always-On)
-    sentry_value_t s_event = sentry_value_new_event();
-
-    // Fix: Wrap message in an object as required by newer Sentry protocol
-    sentry_value_t s_msg = sentry_value_new_object();
-    sentry_value_set_by_key(s_msg, "formatted", sentry_value_new_string(event.c_str()));
-    sentry_value_set_by_key(s_event, "message", s_msg);
-
-    sentry_value_set_by_key(s_event, "level", sentry_value_new_string("fatal"));
-
-    sentry_value_t tags = sentry_value_new_object();
-    sentry_value_set_by_key(tags, "security", sentry_value_new_string("true"));
-    sentry_value_set_by_key(tags, "native", sentry_value_new_string("true"));
-    sentry_value_set_by_key(s_event, "tags", tags);
-
-    sentry_capture_event(s_event);
-
-    // 2. Reliable Sentry Logging via JNI (calling Sentry Java SDK directly)
-    if (env) {
-        env->ExceptionClear();
-        jclass sentryClass = env->FindClass(XOR_STR("io/sentry/Sentry").c_str());
-        if (sentryClass) {
-            jclass levelClass = env->FindClass(XOR_STR("io/sentry/SentryLevel").c_str());
-            if (levelClass) {
-                jfieldID fatalField = env->GetStaticFieldID(levelClass, XOR_STR("FATAL").c_str(), XOR_STR("Lio/sentry/SentryLevel;").c_str());
-                if (fatalField) {
-                    jobject fatalLevel = env->GetStaticObjectField(levelClass, fatalField);
-                    jmethodID captureMethod = env->GetStaticMethodID(sentryClass, XOR_STR("captureMessage").c_str(), XOR_STR("(Ljava/lang/String;Lio/sentry/SentryLevel;)Lio/sentry/protocol/SentryId;").c_str());
-                    if (captureMethod) {
-                        jstring jmsg = env->NewStringUTF(event.c_str());
-                        jobject sentryId = env->CallStaticObjectMethod(sentryClass, captureMethod, jmsg, fatalLevel);
-                        if (sentryId) {
-                            LOGD("AntiTamper: Sentry event queued successfully");
-                            env->DeleteLocalRef(sentryId);
-                        } else {
-                            LOGE("AntiTamper: Sentry captureMessage returned null!");
-                        }
-                        env->DeleteLocalRef(jmsg);
-                    } else {
-                        LOGE("AntiTamper: Sentry.captureMessage method not found!");
-                    }
-                } else {
-                    LOGE("AntiTamper: SentryLevel.FATAL field not found!");
-                }
-            } else {
-                LOGE("AntiTamper: SentryLevel class not found!");
-            }
-        } else {
-            LOGE("AntiTamper: Sentry Java SDK class not found!");
-        }
-
-        if (env->ExceptionCheck()) {
-            env->ExceptionDescribe();
-            env->ExceptionClear();
-        }
-    }
+    // Report to Sentry via unified Native Manager
+    SentryManager::reportSecurityEvent(event);
 }
 
 void AntiTamper::verifyCriticalIntegrity(JNIEnv* env) {

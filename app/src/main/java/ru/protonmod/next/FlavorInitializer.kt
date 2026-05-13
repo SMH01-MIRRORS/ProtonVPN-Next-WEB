@@ -18,8 +18,8 @@
 package ru.protonmod.next
 
 import android.content.Context
-import io.sentry.android.core.SentryAndroid
 import ru.protonmod.next.data.local.SettingsManager
+import java.io.File
 
 /**
  * Common initializer for the application.
@@ -34,57 +34,30 @@ object FlavorInitializer {
 
         // Read settings synchronously for app startup to avoid ANR
         val settingsManager = SettingsManager(context)
-        val isAnalyticsEnabled = settingsManager.isAnalyticsEnabledSync()
-        val isPerformanceEnabled = settingsManager.isPerformanceEnabledSync()
-        val isSessionReplayEnabled = settingsManager.isSessionReplayEnabledSync()
-        val isAnrEnabled = settingsManager.isAnrEnabledSync()
-        val isMetricsEnabled = settingsManager.isMetricsEnabledSync()
-        val isLogsEnabled = settingsManager.isLogsEnabledSync()
+        val isCrashReportsEnabled = settingsManager.isCrashReportsEnabledSync()
 
-        // Sentry initialization
-        SentryAndroid.init(context) { options ->
-            options.dsn = "https://7b74cef88678ecb3e6047ac6b4abf139@o4510986952310784.ingest.de.sentry.io/4510986956374096"
-            options.isDebug = BuildConfig.DEBUG // Helpful for local development
-            
-            // Allow all errors if crash reporting is enabled
-            options.setBeforeSend { event, _ ->
-                val currentCrashEnabled = settingsManager.isCrashReportsEnabledSync()
-                if (!currentCrashEnabled) null else event
-            }
+        // Sentry Native initialization (Unified reporting)
+        if (isCrashReportsEnabled) {
+            val processName = android.app.Application.getProcessName()
+            val suffix = if (processName == context.packageName) "main" else processName.substringAfterLast(':')
+            val sentryCacheDir = File(context.cacheDir, "sentry_$suffix")
+            if (!sentryCacheDir.exists()) sentryCacheDir.mkdirs()
 
-            // Utilize 100M Spans and 6K Profile Hours quota when analytics is on
-            options.tracesSampleRate = if (isPerformanceEnabled) 1.0 else 0.0
-            options.profilesSampleRate = if (isPerformanceEnabled) 1.0 else 0.0
-            
-            options.isEnableAutoSessionTracking = isAnalyticsEnabled
-            options.isAnrEnabled = isAnrEnabled
-            // App Start Profiling is disabled to prevent ANR on startup. 
-            // It triggers method tracing which can hang the main thread on some devices.
-            options.isEnableAppStartProfiling = false
-            options.isEnableUserInteractionTracing = isAnalyticsEnabled
-            
-            // Measure what matters with Metrics (v8.30.0+)
-            // Track application health with numeric data like counters and gauges
-            options.metrics.isEnabled = isMetricsEnabled
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            val versionName = packageInfo.versionName ?: "unknown"
+            val versionCode = packageInfo.longVersionCode.toInt()
 
-            // Enable structured Logs (v8.12.0+)
-            // All ProtonLogger calls will be forwarded to Sentry Logs for real-time querying
-            options.logs.isEnabled = isLogsEnabled
-            
-            // Advanced Debugging (Attachments & Screenshots, 10 GB quota)
-            options.isAttachScreenshot = isAnalyticsEnabled
-            options.isAttachViewHierarchy = isAnalyticsEnabled
-            
-            // Session Replay (100K replays quota)
-            if (isSessionReplayEnabled) {
-                options.sessionReplay.sessionSampleRate = 1.0
-                options.sessionReplay.onErrorSampleRate = 1.0
-            } else {
-                options.sessionReplay.sessionSampleRate = 0.0
-                options.sessionReplay.onErrorSampleRate = 0.0
-            }
+            nativeInitSentry(
+                sentryCacheDir.absolutePath,
+                BuildConfig.DEBUG,
+                versionName,
+                versionCode
+            )
         }
     }
+
+    @JvmStatic
+    private external fun nativeInitSentry(cacheDir: String, debug: Boolean, versionName: String, versionCode: Int)
 
     /**
      * Honeypot: Performs extra security validations.

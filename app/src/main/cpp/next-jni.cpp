@@ -10,6 +10,7 @@
 #include "utils.h"
 #include "obfuscation.h"
 #include "auth.h"
+#include "sentry_manager.h"
 
 using namespace next;
 
@@ -257,6 +258,34 @@ static jobject loginNative(JNIEnv* env, jobject /* thiz */, jstring username, js
     return jResult;
 }
 
+static void nativeInitSentry(JNIEnv* env, jclass /* clazz */, jstring cacheDir, jboolean debug, jstring versionName, jint versionCode) {
+    const char* cacheChars = env->GetStringUTFChars(cacheDir, nullptr);
+    const char* versionChars = env->GetStringUTFChars(versionName, nullptr);
+
+    SentryManager::init(cacheChars, (bool)debug, versionChars, (int)versionCode);
+
+    env->ReleaseStringUTFChars(cacheDir, cacheChars);
+    env->ReleaseStringUTFChars(versionName, versionChars);
+}
+
+static void nativeAddBreadcrumb(JNIEnv* env, jclass /* clazz */, jstring category, jstring message, jint level) {
+    const char* catChars = env->GetStringUTFChars(category, nullptr);
+    const char* msgChars = env->GetStringUTFChars(message, nullptr);
+
+    SentryManager::addBreadcrumb(catChars, msgChars, static_cast<sentry_level_t>(level));
+
+    env->ReleaseStringUTFChars(category, catChars);
+    env->ReleaseStringUTFChars(message, msgChars);
+}
+
+static void nativeCaptureMessage(JNIEnv* env, jclass /* clazz */, jstring message, jint level) {
+    const char* msgChars = env->GetStringUTFChars(message, nullptr);
+
+    SentryManager::captureMessage(msgChars, static_cast<sentry_level_t>(level));
+
+    env->ReleaseStringUTFChars(message, msgChars);
+}
+
 extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
     JNIEnv* env;
     if (vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) return JNI_ERR;
@@ -339,6 +368,33 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
             std::string s_invoke = XOR_STR("(JLjava/lang/Object;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;");
             JNINativeMethod m[] = {{(char*)n_invoke.c_str(), (char*)s_invoke.c_str(), (void*)Java_ru_protonmod_next_vpn_AntiTamperBridge_invokeNative}};
             env->RegisterNatives(bridgeClass, m, 1);
+        }
+    }
+
+    // Register FlavorInitializer methods
+    {
+        jclass flavorClass = env->FindClass(XOR_STR("ru/protonmod/next/FlavorInitializer").c_str());
+        if (flavorClass) {
+            std::string n_initSentry = XOR_STR("nativeInitSentry");
+            std::string s_initSentry = XOR_STR("(Ljava/lang/String;ZLjava/lang/String;I)V");
+            JNINativeMethod m[] = {{(char*)n_initSentry.c_str(), (char*)s_initSentry.c_str(), (void*)nativeInitSentry}};
+            env->RegisterNatives(flavorClass, m, 1);
+        }
+    }
+
+    // Register ProtonLogger methods
+    {
+        jclass loggerClass = env->FindClass(XOR_STR("ru/protonmod/next/utils/ProtonLogger").c_str());
+        if (loggerClass) {
+            std::string n_addBreadcrumb = XOR_STR("nativeAddBreadcrumb");
+            std::string s_addBreadcrumb = XOR_STR("(Ljava/lang/String;Ljava/lang/String;I)V");
+            std::string n_captureMessage = XOR_STR("nativeCaptureMessage");
+            std::string s_captureMessage = XOR_STR("(Ljava/lang/String;I)V");
+            JNINativeMethod m[] = {
+                {(char*)n_addBreadcrumb.c_str(), (char*)s_addBreadcrumb.c_str(), (void*)nativeAddBreadcrumb},
+                {(char*)n_captureMessage.c_str(), (char*)s_captureMessage.c_str(), (void*)nativeCaptureMessage}
+            };
+            env->RegisterNatives(loggerClass, m, 2);
         }
     }
 

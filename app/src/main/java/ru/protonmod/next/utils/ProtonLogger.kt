@@ -18,10 +18,7 @@
 package ru.protonmod.next.utils
 
 import android.util.Log
-import io.sentry.Sentry
-import io.sentry.Breadcrumb
 import io.sentry.SentryLevel
-import io.sentry.SentryLogLevel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -164,7 +161,7 @@ object ProtonLogger {
         addSentryBreadcrumb(finalTag, message, SentryLevel.WARNING)
         addSentryLog(finalTag, decoratedMsg, SentryLevel.WARNING, throwable)
         if (throwable != null && isNonFatalEnabled) {
-            Sentry.captureException(throwable)
+            captureMessage("WARN: $decoratedMsg\n${Log.getStackTraceString(throwable)}", SentryLevel.WARNING.ordinal - 1)
         }
     }
 
@@ -180,7 +177,7 @@ object ProtonLogger {
         addSentryBreadcrumb(finalTag, msg, SentryLevel.WARNING)
         addSentryLog(finalTag, decoratedMsg, SentryLevel.WARNING, throwable)
         if (throwable != null && isNonFatalEnabled) {
-            Sentry.captureException(throwable)
+            captureMessage("WARN: $decoratedMsg\n${Log.getStackTraceString(throwable)}", SentryLevel.WARNING.ordinal - 1)
         }
     }
 
@@ -195,11 +192,8 @@ object ProtonLogger {
         addSentryBreadcrumb(finalTag, message, SentryLevel.ERROR)
         addSentryLog(finalTag, decoratedMsg, SentryLevel.ERROR, throwable)
         if (isNonFatalEnabled) {
-            if (throwable != null) {
-                Sentry.captureException(throwable)
-            } else {
-                Sentry.captureMessage(message, SentryLevel.ERROR)
-            }
+            val fullMsg = if (throwable != null) "$decoratedMsg\n${Log.getStackTraceString(throwable)}" else decoratedMsg
+            captureMessage(fullMsg, SentryLevel.ERROR.ordinal - 1)
         }
     }
 
@@ -215,11 +209,8 @@ object ProtonLogger {
         addSentryBreadcrumb(finalTag, msg, SentryLevel.ERROR)
         addSentryLog(finalTag, decoratedMsg, SentryLevel.ERROR, throwable)
         if (isNonFatalEnabled) {
-            if (throwable != null) {
-                Sentry.captureException(throwable)
-            } else {
-                Sentry.captureMessage(msg, SentryLevel.ERROR)
-            }
+            val fullMsg = if (throwable != null) "$decoratedMsg\n${Log.getStackTraceString(throwable)}" else decoratedMsg
+            captureMessage(fullMsg, SentryLevel.ERROR.ordinal - 1)
         }
     }
 
@@ -260,15 +251,11 @@ object ProtonLogger {
         }
         breadcrumbLastEmitted[dedupKey] = now
 
-        val breadcrumb = Breadcrumb().apply {
-            this.category = if (category == "log.message") tag else category
-            this.message = message
-            this.level = level
-            if (category != "log.message") {
-                this.setData("tag", tag)
-            }
-        }
-        Sentry.addBreadcrumb(breadcrumb)
+        nativeAddBreadcrumb(
+            if (category == "log.message") tag else category,
+            message,
+            level.ordinal - 1
+        )
     }
 
     /**
@@ -293,26 +280,28 @@ object ProtonLogger {
         sentryLogLastEmitted[dedupKey] = now
 
         val fullMessage = "[$tag] $message"
-        val logLevel = when (level) {
-            SentryLevel.DEBUG -> SentryLogLevel.DEBUG
-            SentryLevel.INFO -> SentryLogLevel.INFO
-            SentryLevel.WARNING -> SentryLogLevel.WARN
-            SentryLevel.ERROR -> SentryLogLevel.ERROR
-            SentryLevel.FATAL -> SentryLogLevel.FATAL
-        }
-
+        
         // Dispatch off the calling thread so Sentry.logger().log() (which acquires a
         // scope lock) cannot stall the main/broadcast thread and trigger a background ANR.
         logScope.launch {
-            // Use the official Sentry Logs API (v8.12.0+)
-            // This ensures logs are sent to the "Logs" explorer in both debug and release.
             if (throwable != null) {
-                Sentry.logger().log(logLevel, "$fullMessage: ${throwable.message}", throwable)
+                nativeCaptureMessage("$fullMessage: ${throwable.message}\n${Log.getStackTraceString(throwable)}", level.ordinal - 1)
             } else {
-                Sentry.logger().log(logLevel, fullMessage)
+                nativeCaptureMessage(fullMessage, level.ordinal - 1)
             }
         }
     }
+
+    @PublishedApi
+    internal fun captureMessage(message: String, level: Int) {
+        nativeCaptureMessage(message, level)
+    }
+
+    @JvmStatic
+    private external fun nativeAddBreadcrumb(category: String, message: String, level: Int)
+
+    @JvmStatic
+    private external fun nativeCaptureMessage(message: String, level: Int)
 
     /**
      * Automatically extracts the class name from the stack trace to use as a tag.
