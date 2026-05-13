@@ -943,13 +943,18 @@ void AntiTamper::reportStringMismatch(JNIEnv* env, const std::string& key, const
 }
 
 void AntiTamper::reportSecurityEvent(JNIEnv* env, const std::string& event) {
-    (void)env; // No longer needed as we use Sentry Native SDK directly
+    (void)env;
 
-    // Always log to logcat for immediate visibility during security tests
-    __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "Security Event: %s", event.c_str());
+    // Always log to logcat for immediate visibility
+    __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "!!! SECURITY EVENT DETECTED !!!");
+    __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "Details: %s", event.c_str());
 
     // Report to Sentry via unified Native Manager
     SentryManager::reportSecurityEvent(event);
+
+    // Log state after attempt
+    __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Security report state: TamperDetected=%d, OverlayActive=%d",
+        (int)g_vpn_manager.isTamperDetected(), (int)g_overlay_active.load());
 }
 
 void AntiTamper::verifyCriticalIntegrity(JNIEnv* env) {

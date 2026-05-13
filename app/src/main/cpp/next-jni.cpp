@@ -389,21 +389,6 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
                 jstring cachePath = (jstring)env->CallObjectMethod(cacheFile, getPathMethod);
                 const char* cachePathChars = env->GetStringUTFChars(cachePath, nullptr);
 
-                jmethodID getSharedPreferencesMethod = env->GetMethodID(contextClass, XOR_STR("getSharedPreferences").c_str(), XOR_STR("(Ljava/lang/String;I)Landroid/content/SharedPreferences;").c_str());
-                jstring prefName = env->NewStringUTF(XOR_STR("boot_settings").c_str());
-                jobject sharedPrefs = env->CallObjectMethod(context, getSharedPreferencesMethod, prefName, 0);
-                jclass sharedPrefsClass = env->GetObjectClass(sharedPrefs);
-                jmethodID getBoolMethod = env->GetMethodID(sharedPrefsClass, XOR_STR("getBoolean").c_str(), XOR_STR("(Ljava/lang/String;Z)Z").c_str());
-
-                SentrySettings sSettings;
-                sSettings.analyticsEnabled = env->CallBooleanMethod(sharedPrefs, getBoolMethod, env->NewStringUTF(XOR_STR("analytics_enabled").c_str()), JNI_TRUE);
-                sSettings.performanceEnabled = env->CallBooleanMethod(sharedPrefs, getBoolMethod, env->NewStringUTF(XOR_STR("sentry_performance_enabled").c_str()), JNI_TRUE);
-                sSettings.sessionReplayEnabled = env->CallBooleanMethod(sharedPrefs, getBoolMethod, env->NewStringUTF(XOR_STR("sentry_session_replay_enabled").c_str()), JNI_TRUE);
-                sSettings.anrEnabled = env->CallBooleanMethod(sharedPrefs, getBoolMethod, env->NewStringUTF(XOR_STR("sentry_anr_enabled").c_str()), JNI_TRUE);
-                sSettings.metricsEnabled = env->CallBooleanMethod(sharedPrefs, getBoolMethod, env->NewStringUTF(XOR_STR("sentry_metrics_enabled").c_str()), JNI_TRUE);
-                sSettings.logsEnabled = env->CallBooleanMethod(sharedPrefs, getBoolMethod, env->NewStringUTF(XOR_STR("sentry_logs_enabled").c_str()), JNI_TRUE);
-                sSettings.crashReportsEnabled = env->CallBooleanMethod(sharedPrefs, getBoolMethod, env->NewStringUTF(XOR_STR("crash_reports_enabled").c_str()), JNI_TRUE);
-
                 // Fetch version info from PackageInfo
                 jmethodID getPackageNameMethod = env->GetMethodID(contextClass, XOR_STR("getPackageName").c_str(), XOR_STR("()Ljava/lang/String;").c_str());
                 jstring packageName = (jstring)env->CallObjectMethod(context, getPackageNameMethod);
@@ -423,8 +408,11 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
                 jfieldID versionCodeField = env->GetFieldID(packageInfoClass, XOR_STR("versionCode").c_str(), XOR_STR("I").c_str());
                 int versionCode = env->GetIntField(packageInfo, versionCodeField);
 
-                SentryManager::init(cachePathChars, false, versionNameChars, versionCode, sSettings);
+                const char* packagePathChars = env->GetStringUTFChars(packageName, nullptr);
 
+                SentryManager::init(cachePathChars, false, versionNameChars, versionCode, packagePathChars);
+
+                env->ReleaseStringUTFChars(packageName, packagePathChars);
                 env->ReleaseStringUTFChars(versionName, versionNameChars);
                 env->ReleaseStringUTFChars(cachePath, cachePathChars);
 
