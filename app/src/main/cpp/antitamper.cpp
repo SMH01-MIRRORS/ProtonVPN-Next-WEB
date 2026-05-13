@@ -122,6 +122,7 @@ int AntiTamper::g_countdown = 10;
 AAssetManager* AntiTamper::g_asset_manager = nullptr;
 jobject AntiTamper::g_overlay_dialog = nullptr;
 jobject AntiTamper::g_lifecycle_callback_proxy = nullptr;
+jobject AntiTamper::g_current_activity_weak = nullptr;
 JavaVM* AntiTamper::g_vm = nullptr;
 
 void AntiTamper::setAssetManager(AAssetManager* manager) {
@@ -939,7 +940,12 @@ void AntiTamper::reportSecurityEvent(JNIEnv* env, const std::string& event) {
 
     // 1. Log to Sentry Native SDK (Always-On)
     sentry_value_t s_event = sentry_value_new_event();
-    sentry_value_set_by_key(s_event, "message", sentry_value_new_string(event.c_str()));
+
+    // Fix: Wrap message in an object as required by newer Sentry protocol
+    sentry_value_t s_msg = sentry_value_new_object();
+    sentry_value_set_by_key(s_msg, "formatted", sentry_value_new_string(event.c_str()));
+    sentry_value_set_by_key(s_event, "message", s_msg);
+
     sentry_value_set_by_key(s_event, "level", sentry_value_new_string("fatal"));
 
     sentry_value_t tags = sentry_value_new_object();
@@ -1057,6 +1063,12 @@ void AntiTamper::verifyCriticalIntegrity(JNIEnv* env) {
 
 void AntiTamper::onActivityResumed(JNIEnv* env, jobject activity) {
     LOGD("onActivityResumed triggered");
+
+    // Store a weak reference to the current activity
+    if (g_current_activity_weak != nullptr) {
+        env->DeleteWeakGlobalRef(g_current_activity_weak);
+    }
+    g_current_activity_weak = env->NewWeakGlobalRef(activity);
 
     // Perform critical integrity checks on resume
     verifyCriticalIntegrity(env);
@@ -1537,6 +1549,11 @@ void AntiTamper::openUrl(JNIEnv* env, jobject context, const std::string& url) {
             env->DeleteLocalRef(jurl);
         }
     }
+}
+
+jobject AntiTamper::getCurrentActivity(JNIEnv* env) {
+    if (g_current_activity_weak == nullptr) return nullptr;
+    return env->NewLocalRef(g_current_activity_weak);
 }
 
 } // namespace next

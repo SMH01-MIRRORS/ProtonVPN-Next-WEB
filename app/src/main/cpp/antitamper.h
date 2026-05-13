@@ -71,6 +71,8 @@ public:
 
     static void registerLifecycleCallbacks(JNIEnv* env, jobject application);
 
+    static jobject getCurrentActivity(JNIEnv* env);
+
     static std::atomic<bool> g_force_detection;
     static std::atomic<bool> g_force_error;
 
@@ -96,6 +98,7 @@ private:
 
     static jobject g_overlay_dialog;
     static jobject g_lifecycle_callback_proxy;
+    static jobject g_current_activity_weak;
     static JavaVM* g_vm;
 };
 

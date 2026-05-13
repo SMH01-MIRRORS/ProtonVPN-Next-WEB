@@ -163,6 +163,25 @@ Java_ru_protonmod_next_vpn_AntiTamperBridge_invokeNative(JNIEnv* env, jobject /*
 
             next::AntiTamper::handleInputEvent(x, y, action);
 
+            // React to ImGui flags on the UI thread
+            if (next::AntiTamper::g_download_clicked) {
+                next::AntiTamper::g_download_clicked = false;
+                jobject activity = next::AntiTamper::getCurrentActivity(env);
+                if (activity) {
+                    next::AntiTamper::handleDownloadOfficial(env, activity);
+                    env->DeleteLocalRef(activity);
+                }
+            }
+            if (next::AntiTamper::g_accept_clicked) {
+                next::AntiTamper::g_accept_clicked = false;
+                jobject activity = next::AntiTamper::getCurrentActivity(env);
+                if (activity) {
+                    next::AntiTamper::handleAcceptRisks(env, activity, "", "");
+                    next::AntiTamper::dismissNativeOverlay(env);
+                    env->DeleteLocalRef(activity);
+                }
+            }
+
             // Return true to indicate handled
             jclass booleanClass = env->FindClass("java/lang/Boolean");
             jmethodID booleanInit = env->GetMethodID(booleanClass, "<init>", "(Z)V");
