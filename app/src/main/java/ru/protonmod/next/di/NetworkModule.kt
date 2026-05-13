@@ -447,6 +447,10 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideAuthNativeBridge(impl: AuthNativeBridgeImpl): AuthNativeBridge = impl
+
+    @Provides
+    @Singleton
     fun provideProtonVpnApi(retrofit: Retrofit): ProtonVpnApi = retrofit.create(ProtonVpnApi::class.java)
 
     @Provides

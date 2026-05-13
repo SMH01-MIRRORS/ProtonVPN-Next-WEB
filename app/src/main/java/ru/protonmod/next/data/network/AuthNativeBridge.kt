@@ -15,31 +15,24 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.protonmod.next.di
+package ru.protonmod.next.data.network
 
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import ru.protonmod.next.vpn.AmneziaConfigGenerator
-import ru.protonmod.next.vpn.AmneziaConfigGeneratorImpl
-import ru.protonmod.next.vpn.IpSubnetCalculator
-import ru.protonmod.next.vpn.IpSubnetCalculatorImpl
+import javax.inject.Inject
 import javax.inject.Singleton
 
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class VpnModule {
+interface AuthNativeBridge {
+    fun login(username: String, passwordRaw: String, captchaToken: String?): NativeLoginResult
+}
 
-    @Binds
-    @Singleton
-    abstract fun bindAmneziaConfigGenerator(
-        impl: AmneziaConfigGeneratorImpl
-    ): AmneziaConfigGenerator
+@Singleton
+class AuthNativeBridgeImpl @Inject constructor() : AuthNativeBridge {
+    init {
+        System.loadLibrary("next")
+    }
 
-    @Binds
-    @Singleton
-    abstract fun bindIpSubnetCalculator(
-        impl: IpSubnetCalculatorImpl
-    ): IpSubnetCalculator
+    override fun login(username: String, passwordRaw: String, captchaToken: String?): NativeLoginResult {
+        return loginNative(username, passwordRaw, captchaToken)
+    }
+
+    private external fun loginNative(username: String, passwordRaw: String, captchaToken: String?): NativeLoginResult
 }

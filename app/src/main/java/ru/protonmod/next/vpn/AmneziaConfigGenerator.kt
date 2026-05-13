@@ -38,7 +38,8 @@ interface AmneziaConfigGenerator {
 
 @Singleton
 class AmneziaConfigGeneratorImpl @Inject constructor(
-    private val nextConfigGenerator: NextConfigGenerator
+    private val nextConfigGenerator: NextConfigGenerator,
+    private val ipSubnetCalculator: IpSubnetCalculator
 ) : AmneziaConfigGenerator {
     override fun buildConfig(
         serverPublicKey: String,
@@ -55,7 +56,7 @@ class AmneziaConfigGeneratorImpl @Inject constructor(
     ): String {
         val allowedIpsList = when {
             isIncludeMode -> if (selectedIps.isEmpty()) listOf("0.0.0.0/0") else selectedIps.toList()
-            else -> if (selectedIps.isEmpty()) listOf("0.0.0.0/0") else IpSubnetCalculator.complementOfExcluded(selectedIps)
+            else -> if (selectedIps.isEmpty()) listOf("0.0.0.0/0") else ipSubnetCalculator.complementOfExcluded(selectedIps)
         }
 
         return nextConfigGenerator.buildConfig(

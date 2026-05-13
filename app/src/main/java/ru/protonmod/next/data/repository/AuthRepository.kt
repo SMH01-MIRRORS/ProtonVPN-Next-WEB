@@ -17,6 +17,8 @@
 
 package ru.protonmod.next.data.repository
 
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 import io.sentry.SentryLevel
 import ru.protonmod.next.utils.ProtonLogger
 import kotlinx.coroutines.CancellationException
@@ -45,13 +47,15 @@ import java.net.ConnectException
 
 @Singleton
 class AuthRepository @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val authApi: ProtonAuthApi,
     private val vpnRepository: VpnRepository,
     private val sessionDao: SessionDao,
     private val deviceInfoProvider: DeviceInfoProvider,
     private val cryptoWrapper: CryptoWrapper,
     private val dispatcherProvider: DispatcherProvider,
-    private val amneziaVpnManager: Provider<AmneziaVpnManager>
+    private val amneziaVpnManager: Provider<AmneziaVpnManager>,
+    private val authNativeBridge: AuthNativeBridge
 ) {
     companion object {
         private const val TAG = "AuthRepository"
@@ -76,22 +80,6 @@ class AuthRepository @Inject constructor(
     private var pendingChallengePayload: JsonObject? = null
 
     private val authMutex = Mutex()
-
-    private external fun loginNative(username: String, passwordRaw: String, captchaToken: String?): NativeLoginResult
-
-    data class NativeLoginResult(
-        val success: Boolean = false,
-        val code: Int = 0,
-        val accessToken: String = "",
-        val refreshToken: String = "",
-        val sessionId: String = "",
-        val userId: String = "",
-        val scopes: Array<String> = emptyArray(),
-        val error: String = "",
-        val captchaRequired: Boolean = false,
-        val captchaUrl: String = "",
-        val captchaToken: String = ""
-    )
 
     /**
      * SupervisorJob for auth operations that allows cancellation of pending login/anonymous operations.
@@ -176,15 +164,19 @@ class AuthRepository @Inject constructor(
     suspend fun login(username: String, passwordRaw: String, captchaToken: String? = null): Result<LoginResponse> = authMutex.withLock {
         withContext(dispatcherProvider.io() + authJob) {
             try {
-                ProtonLogger.i(TAG, "Starting NATIVE SRP login flow for user: $username")
+                ProtonLogger.i(TAG, "Starting NATIVE SRP login flow")
                 
-                val nativeResult = loginNative(username, passwordRaw, captchaToken)
+                val nativeResult = authNativeBridge.login(username, passwordRaw, captchaToken)
                 
                 if (!nativeResult.success) {
                     if (nativeResult.captchaRequired) {
                         return@withContext Result.failure(CaptchaRequiredException(nativeResult.captchaUrl, nativeResult.captchaToken, nativeResult.sessionId))
                     }
-                    return@withContext Result.failure(Exception(nativeResult.error.ifEmpty { "Native login failed with code ${nativeResult.code}" }))
+                    val errorMessage = nativeResult.error.ifEmpty { "Native login failed with code ${nativeResult.code}" }
+                    val finalError = if (errorMessage.contains("Captcha session expired", ignoreCase = true)) {
+                        context.getString(ru.protonmod.next.R.string.error_captcha_expired)
+                    } else errorMessage
+                    return@withContext Result.failure(Exception(finalError))
                 }
 
                 val finalAccessToken = nativeResult.accessToken

@@ -50,6 +50,7 @@ import ru.protonmod.next.data.repository.VpnRepository
 import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.ui.screens.MainDispatcherRule
 import ru.protonmod.next.vpn.AmneziaVpnManager
+import ru.protonmod.next.vpn.VpnAutomationManager
 import ru.protonmod.next.vpn.WarpManager
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -77,6 +78,9 @@ class DashboardViewModelTest {
     private lateinit var amneziaVpnManager: AmneziaVpnManager
 
     @Mock
+    private lateinit var vpnAutomationManager: VpnAutomationManager
+
+    @Mock
     private lateinit var warpManager: WarpManager
 
     @Mock
@@ -90,6 +94,9 @@ class DashboardViewModelTest {
 
     @Mock
     private lateinit var recentConnectionDao: RecentConnectionDao
+
+    @Mock
+    private lateinit var powerManager: android.os.PowerManager
 
     @Mock
     private lateinit var resources: Resources
@@ -110,12 +117,15 @@ class DashboardViewModelTest {
         whenever(sharedPreferences.getBoolean(any(), any())).thenReturn(false)
         whenever(context.getSystemService(Context.CONNECTIVITY_SERVICE)).thenReturn(connectivityManager)
         whenever(connectivityManager.allNetworks).thenReturn(emptyArray())
+        whenever(context.getSystemService(Context.POWER_SERVICE)).thenReturn(powerManager)
+        whenever(context.packageName).thenReturn("ru.protonmod.next")
+        whenever(powerManager.isIgnoringBatteryOptimizations(any())).thenReturn(true)
         whenever(context.resources).thenReturn(resources)
         whenever(resources.getString(any())).thenReturn("Error")
         
         whenever(vpnRepository.getServersFlow()).thenReturn(flowOf(listOf(testServer)))
         runBlocking {
-            whenever(vpnRepository.getCachedServers()).thenReturn(listOf(testServer))
+            whenever(vpnRepository.getCachedServers()).thenReturn(listOf(testServer) )
         }
         whenever(vpnRepository.isUpdating).thenReturn(MutableStateFlow(false))
         whenever(amneziaVpnManager.vpnState).thenReturn(MutableStateFlow(AmneziaVpnManager.VpnState.DISCONNECTED))
@@ -124,6 +134,7 @@ class DashboardViewModelTest {
         whenever(amneziaVpnManager.speed).thenReturn(MutableStateFlow(null))
         whenever(amneziaVpnManager.trafficRx).thenReturn(MutableStateFlow(null))
         whenever(amneziaVpnManager.trafficTx).thenReturn(MutableStateFlow(null))
+        whenever(amneziaVpnManager.tunnelState).thenReturn(MutableStateFlow(Tunnel.State.DOWN))
         whenever(connectedServerState.connectedServer).thenReturn(MutableStateFlow(null))
         whenever(recentConnectionDao.getRecentConnections()).thenReturn(flowOf(emptyList()))
         whenever(profileDao.getAllProfilesFlow()).thenReturn(flowOf(emptyList()))
@@ -135,6 +146,7 @@ class DashboardViewModelTest {
         whenever(settingsManager.apiBypassEnabled).thenReturn(flowOf(false))
         whenever(settingsManager.apiBypassStrategy).thenReturn(flowOf("none"))
         whenever(settingsManager.customProfiles).thenReturn(flowOf(emptyList()))
+        whenever(settingsManager.pauseEndTime).thenReturn(flowOf(0L))
         
         whenever(warpManager.isTunnelActive).thenReturn(false)
         
@@ -155,6 +167,7 @@ class DashboardViewModelTest {
             sessionDao,
             settingsManager,
             amneziaVpnManager,
+            vpnAutomationManager,
             warpManager,
             connectedServerState,
             profileDao,
@@ -168,6 +181,13 @@ class DashboardViewModelTest {
         advanceUntilIdle()
         
         val state = viewModel.uiState.value
+        if (state is DashboardUiState.Error) {
+            System.err.println("Dashboard ERROR: ${state.message}")
+            throw AssertionError("Expected Success but was Error: ${state.message}")
+        }
+        if (state is DashboardUiState.Loading) {
+             System.err.println("Dashboard is still LOADING")
+        }
         assertTrue("Expected Success but was $state", state is DashboardUiState.Success)
         
         collectJob.cancel()
@@ -181,7 +201,7 @@ class DashboardViewModelTest {
         // Re-init viewModel to use the new vpnState mock
         viewModel = DashboardViewModel(
             context, vpnRepository, sessionDao, settingsManager, amneziaVpnManager,
-            warpManager, connectedServerState, profileDao, recentConnectionDao
+            vpnAutomationManager, warpManager, connectedServerState, profileDao, recentConnectionDao
         )
 
         val collectJob = launch(UnconfinedTestDispatcher()) { viewModel.uiState.collect() }

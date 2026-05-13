@@ -42,7 +42,8 @@ data class SplitTunnelingIpsUiState(
 
 @HiltViewModel
 class SplitTunnelingIpsViewModel @Inject constructor(
-    private val settingsManager: SettingsManager
+    private val settingsManager: SettingsManager,
+    private val ipSubnetCalculator: IpSubnetCalculator
 ) : ViewModel() {
 
     val uiState: StateFlow<SplitTunnelingIpsUiState> = combine(
@@ -62,10 +63,10 @@ class SplitTunnelingIpsViewModel @Inject constructor(
 
     fun addIp(ip: String) {
         val trimmedIp = ip.trim()
-        if (isValidIp(trimmedIp) && IpSubnetCalculator.isValidIpOrCidr(trimmedIp)) {
+        if (isValidIp(trimmedIp) && ipSubnetCalculator.isValidIpOrCidr(trimmedIp)) {
             viewModelScope.launch {
                 val current = settingsManager.excludedIps.stateIn(viewModelScope).value
-                val normalizedIp = IpSubnetCalculator.normalizeIp(trimmedIp)
+                val normalizedIp = ipSubnetCalculator.normalizeIp(trimmedIp)
                 if (normalizedIp !in current) {
                     settingsManager.setExcludedIps(current + normalizedIp)
                 }

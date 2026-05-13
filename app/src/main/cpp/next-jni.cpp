@@ -216,7 +216,7 @@ static jobject loginNative(JNIEnv* env, jobject /* thiz */, jstring username, js
     env->ReleaseStringUTFChars(password, passChars);
     if (captchaToken) env->ReleaseStringUTFChars(captchaToken, captchaChars);
 
-    jclass resultClass = env->FindClass(XOR_STR("ru/protonmod/next/data/repository/AuthRepository$NativeLoginResult").c_str());
+    jclass resultClass = env->FindClass(XOR_STR("ru/protonmod/next/data/network/NativeLoginResult").c_str());
     jmethodID resultInit = env->GetMethodID(resultClass, "<init>", "()V");
     jobject jResult = env->NewObject(resultClass, resultInit);
 
@@ -277,7 +277,7 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
 
     // Register NextIpSubnetCalculator methods
     {
-        jclass calculatorClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/NextIpSubnetCalculator").c_str());
+        jclass calculatorClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/IpSubnetCalculatorImpl").c_str());
         if (calculatorClass) {
             std::string m1_name = XOR_STR("isValidIpOrCidrNative");
             std::string m1_sig = XOR_STR("(Ljava/lang/String;)Z");
@@ -334,10 +334,10 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
 
     // Register AuthRepository native methods
     {
-        jclass authClass = env->FindClass(XOR_STR("ru/protonmod/next/data/repository/AuthRepository").c_str());
+        jclass authClass = env->FindClass(XOR_STR("ru/protonmod/next/data/network/AuthNativeBridgeImpl").c_str());
         if (authClass) {
             std::string n_login = XOR_STR("loginNative");
-            std::string s_login = XOR_STR("(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lru/protonmod/next/data/repository/AuthRepository$NativeLoginResult;");
+            std::string s_login = XOR_STR("(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lru/protonmod/next/data/network/NativeLoginResult;");
             JNINativeMethod m[] = {{(char*)n_login.c_str(), (char*)s_login.c_str(), (void*)loginNative}};
             env->RegisterNatives(authClass, m, 1);
         }

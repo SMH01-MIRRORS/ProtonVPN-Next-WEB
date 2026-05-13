@@ -114,7 +114,7 @@ class LoginViewModel @Inject constructor(
     fun login(username: String, passwordRaw: String, captchaToken: String? = null) {
         if (username.isBlank() || passwordRaw.isBlank() || _uiState.value is LoginUiState.Loading) return
 
-        ProtonLogger.action("Login", "User clicked Login (Username: $username)")
+        ProtonLogger.action("Login", "User clicked Login")
         val startTime = System.currentTimeMillis()
         _uiState.value = LoginUiState.Loading
         viewModelScope.launch {
@@ -134,14 +134,14 @@ class LoginViewModel @Inject constructor(
             try {
                 authRepository.login(username, passwordRaw, captchaToken)
                     .onSuccess { response ->
-                        ProtonLogger.i("Login", "Login successful for $username")
+                        ProtonLogger.i("Login", "Login successful")
                         val duration = System.currentTimeMillis() - startTime
                         Sentry.metrics().distribution("login_latency", duration.toDouble())
                         Sentry.metrics().count("login_success", 1.0)
 
                         val scopes = response.scopes
                         if (scopes.contains("twofactor")) {
-                            ProtonLogger.i("Login", "2FA required for $username")
+                            ProtonLogger.i("Login", "2FA required")
                             _uiState.value = LoginUiState.Requires2FA(
                                 sessionId = response.sessionId ?: "",
                                 tempAccessToken = response.accessToken ?: "",
@@ -164,7 +164,7 @@ class LoginViewModel @Inject constructor(
                         Sentry.metrics().count("login_error", 1.0)
 
                         if (exception is CaptchaRequiredException) {
-                            ProtonLogger.w("Login", "Captcha required for $username")
+                            ProtonLogger.w("Login", "Captcha required")
                             _uiState.value = LoginUiState.RequiresCaptcha(
                                 webUrl = exception.webUrl,
                                 username = username,
@@ -174,12 +174,12 @@ class LoginViewModel @Inject constructor(
                                 sessionId = exception.sessionId
                             )
                         } else if (exception is SocketTimeoutException || exception is ConnectException) {
-                            ProtonLogger.w("Login", "Network error during login for $username: ${exception.message}")
+                            ProtonLogger.w("Login", "Network error during login: ${exception.message}")
                             _uiState.value = LoginUiState.Error(
                                 "Connection timeout. Please check your internet and try again."
                             )
                         } else {
-                            ProtonLogger.e("Login", "Login failed for $username: ${exception.message}", exception)
+                            ProtonLogger.e("Login", "Login failed: ${exception.message}", exception)
                             _uiState.value = LoginUiState.Error(
                                 exception.localizedMessage ?: "An unexpected authentication error occurred"
                             )

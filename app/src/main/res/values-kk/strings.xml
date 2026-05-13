@@ -304,6 +304,7 @@
     <string name="label_speed">Жылдамдық</string>
     <string name="error_session_not_found">Белсенді сеанс табылмады. Қайта кіріңіз.</string>
     <string name="error_unknown">Белгісіз қате</string>
+    <string name="error_captcha_expired">Капча сессиясының мерзімі бітті. Қайталау үшін \"Кіру\" түймесін басыңыз.</string>
     <string name="unknown">Белгісіз</string>
     <string name="profiles_title">Профильдер</string>
     <string name="desc_create_profile">Профиль жасау</string>

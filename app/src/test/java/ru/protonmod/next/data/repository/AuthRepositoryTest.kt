@@ -17,6 +17,7 @@
 
 package ru.protonmod.next.data.repository
 
+import android.content.Context
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -46,6 +47,9 @@ import ru.protonmod.next.utils.crypto.VpnKeyPair
 class AuthRepositoryTest {
 
     @Mock
+    private lateinit var context: Context
+
+    @Mock
     private lateinit var authApi: ProtonAuthApi
 
     @Mock
@@ -59,6 +63,9 @@ class AuthRepositoryTest {
 
     @Mock
     private lateinit var cryptoWrapper: CryptoWrapper
+
+    @Mock
+    private lateinit var authNativeBridge: ru.protonmod.next.data.network.AuthNativeBridge
 
     @Mock
     private lateinit var amneziaVpnManager: ru.protonmod.next.vpn.AmneziaVpnManager
@@ -77,8 +84,9 @@ class AuthRepositoryTest {
     fun setup() {
         MockitoAnnotations.openMocks(this)
         repository = AuthRepository(
-            authApi, vpnRepository, sessionDao, deviceInfoProvider, 
-            cryptoWrapper, testDispatcherProvider, { amneziaVpnManager }
+            context, authApi, vpnRepository, sessionDao, deviceInfoProvider,
+            cryptoWrapper, testDispatcherProvider, { amneziaVpnManager },
+            authNativeBridge
         )
         
         whenever(deviceInfoProvider.getAppLanguage()).thenReturn("en")
@@ -154,15 +162,18 @@ class AuthRepositoryTest {
             scopes = listOf("vpn")
         )
 
-        whenever(authApi.createAnonymousSession(any(), anyOrNull(), anyOrNull())).thenReturn(anonSession)
-        whenever(authApi.getAuthInfo(any(), any(), any(), anyOrNull(), anyOrNull())).thenReturn(authInfo)
-        
-        whenever(cryptoWrapper.generateSrpProofs(any(), any(), any(), any(), any())).thenReturn(
-            SrpProofs("eph", "proof")
+        whenever(authNativeBridge.login(eq(username), eq(password), anyOrNull())).thenReturn(
+            NativeLoginResult(
+                success = true,
+                code = 1000,
+                accessToken = "final_token",
+                refreshToken = "final_refresh",
+                sessionId = "final_session_id",
+                userId = "user_id",
+                scopes = arrayOf("vpn")
+            )
         )
 
-        whenever(authApi.performLogin(any(), any(), any(), anyOrNull(), anyOrNull())).thenReturn(loginResponse)
-        
         whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(
             VpnKeyPair("pubkey", "privkey")
         )
@@ -197,20 +208,15 @@ class AuthRepositoryTest {
             }
         """.trimIndent()
         
-        val headers = Headers.Builder().add("X-PM-Session-ID", "pending_uid").build()
-        val response = Response.error<LoginResponse>(
-            errorJson.toResponseBody("application/json".toResponseBody().contentType()),
-            okhttp3.Response.Builder()
-                .code(422)
-                .message("Unprocessable Entity")
-                .protocol(okhttp3.Protocol.HTTP_1_1)
-                .request(okhttp3.Request.Builder().url("https://api.proton.me/auth/v4").build())
-                .headers(headers)
-                .build()
+        whenever(authNativeBridge.login(any(), any(), anyOrNull())).thenReturn(
+            NativeLoginResult(
+                success = false,
+                captchaRequired = true,
+                captchaUrl = "https://captcha.url",
+                captchaToken = "captcha_token",
+                sessionId = "pending_uid"
+            )
         )
-        val exception = HttpException(response)
-
-        whenever(authApi.createAnonymousSession(any(), anyOrNull(), anyOrNull())).thenThrow(exception)
 
         // Act
         val result = repository.login("user", "pass")
@@ -225,20 +231,15 @@ class AuthRepositoryTest {
     @Test
     fun `login returns generic Exception on 12087 error`() = runTest(testDispatcher) {
         // Arrange
-        val errorJson = """
-            {
-                "Code": 12087,
-                "Error": "Captcha validation failed",
-                "Details": {
-                    "WebUrl": "https://fresh.captcha.url",
-                    "HumanVerificationToken": "fresh_token"
-                }
-            }
-        """.trimIndent()
-        val response = Response.error<LoginResponse>(422, errorJson.toResponseBody("application/json".toResponseBody().contentType()))
-        val exception = HttpException(response)
+        val expectedError = "Captcha session expired. Please click Login to try again."
+        whenever(context.getString(ru.protonmod.next.R.string.error_captcha_expired)).thenReturn(expectedError)
 
-        whenever(authApi.createAnonymousSession(any(), anyOrNull(), anyOrNull())).thenThrow(exception)
+        whenever(authNativeBridge.login(any(), any(), anyOrNull())).thenReturn(
+            NativeLoginResult(
+                success = false,
+                error = expectedError
+            )
+        )
 
         // Act
         val result = repository.login("user", "pass")
@@ -247,7 +248,7 @@ class AuthRepositoryTest {
         assertTrue(result.isFailure)
         val caught = result.exceptionOrNull()
         assertTrue("Expected generic Exception but was $caught", caught !is CaptchaRequiredException)
-        assertEquals("Captcha session expired. Please click Login to try again.", caught?.message)
+        assertEquals(expectedError, caught?.message)
     }
 
     @Test

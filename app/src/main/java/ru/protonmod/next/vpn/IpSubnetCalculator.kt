@@ -17,17 +17,8 @@
 
 package ru.protonmod.next.vpn
 
-object IpSubnetCalculator {
-
-    fun isValidIpOrCidr(input: String): Boolean {
-        return NextIpSubnetCalculator.isValidIpOrCidr(input)
-    }
-
-    fun normalizeIp(ip: String): String {
-        return if (ip.contains("/")) ip else "$ip/32"
-    }
-
-    fun complementOfExcluded(excludedCidrs: Collection<String>): List<String> {
-        return NextIpSubnetCalculator.complementOfExcluded(excludedCidrs)
-    }
+interface IpSubnetCalculator {
+    fun isValidIpOrCidr(input: String): Boolean
+    fun normalizeIp(ip: String): String
+    fun complementOfExcluded(excludedCidrs: Collection<String>): List<String>
 }

@@ -72,6 +72,9 @@ class AmneziaVpnManagerTest {
     private lateinit var amneziaConfigGenerator: AmneziaConfigGenerator
 
     @Mock
+    private lateinit var nextVpnManager: NextVpnManager
+
+    @Mock
     private lateinit var vpnNetworkMonitor: VpnNetworkMonitor
 
     @Mock
@@ -116,6 +119,7 @@ class AmneziaVpnManagerTest {
             systemContextWrapper,
             cryptoWrapper,
             amneziaConfigGenerator,
+            nextVpnManager,
             vpnNetworkMonitor,
             { warpManager },
             testDispatcherProvider,

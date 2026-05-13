@@ -17,17 +17,25 @@
 
 package ru.protonmod.next.vpn
 
-object NextIpSubnetCalculator {
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class IpSubnetCalculatorImpl @Inject constructor() : IpSubnetCalculator {
 
     init {
         System.loadLibrary("next")
     }
 
-    fun isValidIpOrCidr(input: String): Boolean {
+    override fun isValidIpOrCidr(input: String): Boolean {
         return isValidIpOrCidrNative(input)
     }
 
-    fun complementOfExcluded(excludedCidrs: Collection<String>): List<String> {
+    override fun normalizeIp(ip: String): String {
+        return if (ip.contains("/")) ip else "$ip/32"
+    }
+
+    override fun complementOfExcluded(excludedCidrs: Collection<String>): List<String> {
         return complementOfExcludedNative(excludedCidrs.toTypedArray()).toList()
     }
 

@@ -71,7 +71,7 @@ class TokenAuthenticator @Inject constructor(
             // Read the current session synchronously
             val session = runBlocking(Dispatchers.IO) { sessionDao.getSession() }
             if (session == null || session.refreshToken.isNullOrEmpty() || session.sessionId.isNullOrEmpty()) {
-                ProtonLogger.e(TAG, "Token refresh failed: No valid session found in DB (UID: ${session?.userId})")
+                ProtonLogger.e(TAG, "Token refresh failed: No valid session found in DB")
                 return null
             }
 
