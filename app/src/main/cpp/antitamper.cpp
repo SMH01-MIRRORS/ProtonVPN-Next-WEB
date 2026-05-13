@@ -215,12 +215,12 @@ static int dl_callback(struct dl_phdr_info *info, size_t size, void *data) {
     return 0;
 }
 
-bool AntiTamper::checkPtrace() {
-    if (ptrace(PTRACE_TRACEME, 0, 1, 0) < 0) {
-        return false;
-    }
-    ptrace(PTRACE_DETACH, 0, 1, 0);
-    return true;
+bool AntiTamper::isDebuggerConnected(JNIEnv* env) {
+    jclass debugClass = env->FindClass(XOR_STR("android/os/Debug").c_str());
+    if (!debugClass) return false;
+    jmethodID isDebuggerConnectedMethod = env->GetStaticMethodID(debugClass, XOR_STR("isDebuggerConnected").c_str(), XOR_STR("()Z").c_str());
+    if (!isDebuggerConnectedMethod) return false;
+    return env->CallStaticBooleanMethod(debugClass, isDebuggerConnectedMethod);
 }
 
 bool AntiTamper::checkTracerPid() {
@@ -276,14 +276,16 @@ bool AntiTamper::checkEnvironment(JNIEnv* env) {
     isSecurityTest = true;
 #endif
 
+    bool allGood = true;
+
     // Advanced checks
-    if (!checkPtrace()) {
-        reportSecurityEvent(env, XOR_STR("Debugger detected (ptrace)"));
-        if (!isSecurityTest) return false;
+    if (isDebuggerConnected(env)) {
+        reportSecurityEvent(env, XOR_STR("Debugger detected (isDebuggerConnected)"));
+        if (!isSecurityTest) allGood = false;
     }
     if (!checkTracerPid()) {
         reportSecurityEvent(env, XOR_STR("Debugger detected (TracerPid)"));
-        if (!isSecurityTest) return false;
+        if (!isSecurityTest) allGood = false;
     }
 
     // Use dl_iterate_phdr for reliable library detection (including libs inside APK)
@@ -293,7 +295,7 @@ bool AntiTamper::checkEnvironment(JNIEnv* env) {
     int libCount = (int)detectedLibs.size();
 
     std::ifstream maps(XOR_STR("/proc/self/maps"));
-    if (!maps.is_open()) return (libCount > 0);
+    if (!maps.is_open()) return allGood && (libCount > 0);
 
     std::string line;
     bool apkMapped = false;
@@ -307,7 +309,7 @@ bool AntiTamper::checkEnvironment(JNIEnv* env) {
             line.find(XOR_STR("substrate")) != std::string::npos) {
             LOGE("AntiTamper: Suspicious library detected in memory: %s", line.c_str());
             reportSecurityEvent(env, XOR_STR("Suspicious library detected: ") + line);
-            return false;
+            allGood = false;
         }
 
         // 2. Check for App APK Mapping
@@ -341,7 +343,7 @@ bool AntiTamper::checkEnvironment(JNIEnv* env) {
             if (!foundInWhitelist) {
                 LOGE("AntiTamper: Unofficial library mapping detected: %s", line.c_str());
                 reportSecurityEvent(env, XOR_STR("Unofficial library mapping: ") + line);
-                return false;
+                allGood = false;
             }
         }
     }
@@ -352,23 +354,26 @@ bool AntiTamper::checkEnvironment(JNIEnv* env) {
     if (libCount == 0 && !apkMapped) {
         LOGE("AntiTamper: Critical failure - no app libraries or APK found in memory scan.");
         reportSecurityEvent(env, XOR_STR("No app integrity found in memory scan"));
-        return false;
+        allGood = false;
     }
 
     if (libCount > EXPECTED_LIB_COUNT) {
         LOGE("AntiTamper: Library count mismatch! Found: %d, Expected: %d", libCount, EXPECTED_LIB_COUNT);
         reportSecurityEvent(env, XOR_STR("Lib count mismatch: ") + std::to_string(libCount));
-        return false;
+        allGood = false;
     }
 
-    return true;
+    return allGood;
 }
 
 bool AntiTamper::checkHooks(JNIEnv* env, jobject context) {
+    bool allGood = true;
     // 1. Check for Mocked PackageManager
     jclass contextClass = env->GetObjectClass(context);
     jmethodID getPackageManagerMethod = env->GetMethodID(contextClass, XOR_STR("getPackageManager").c_str(), XOR_STR("()Landroid/content/pm/PackageManager;").c_str());
     jobject packageManager = env->CallObjectMethod(context, getPackageManagerMethod);
+    if (!packageManager) return true; // Fail safe
+
     jclass pmClass = env->GetObjectClass(packageManager);
     jmethodID getNameMethod = env->GetMethodID(env->FindClass(XOR_STR("java/lang/Class").c_str()), XOR_STR("getName").c_str(), XOR_STR("()Ljava/lang/String;").c_str());
     jstring className = (jstring)env->CallObjectMethod(pmClass, getNameMethod);
@@ -383,10 +388,10 @@ bool AntiTamper::checkHooks(JNIEnv* env, jobject context) {
         pmClassName.find(XOR_STR("wrapper")) != std::string::npos) {
         LOGE("AntiTamper: Hooked PackageManager detected!");
         reportSecurityEvent(env, XOR_STR("Hooked PackageManager: ") + pmClassName);
-        return false;
+        allGood = false;
     }
 
-    return true;
+    return allGood;
 }
 
 std::string AntiTamper::getApkPathFromMaps() {
@@ -479,8 +484,8 @@ bool AntiTamper::verifyApkArchive(JNIEnv* env) {
             if (!isOfficial) {
                 // Potential unauthorized library
                 LOGE("AntiTamper: Unauthorized library found in APK: %s", fileName.c_str());
+                reportSecurityEvent(env, XOR_STR("Unauthorized library in APK: ") + fileName);
                 unauthorizedLibFound = true;
-                break;
             }
         }
 
@@ -613,25 +618,27 @@ std::string AntiTamper::getStringFromResources(JNIEnv* env, jobject context, con
 bool AntiTamper::check(JNIEnv* env, jobject context) {
     LOGD("Check started");
 
+    bool allGood = true;
+
     // Advanced Checks
     if (checkDebuggable(env, context)) {
         reportSecurityEvent(env, XOR_STR("Application marked as debuggable"));
 #if !defined(DEBUG_BUILD) && !defined(ANTITAMPER_TEST_BUILD)
-        return false;
+        allGood = false;
 #endif
     }
 
     // Environment & Hook Checks
-    if (!checkEnvironment(env)) return false;
-    if (!checkHooks(env, context)) return false;
+    if (!checkEnvironment(env)) allGood = false;
+    if (!checkHooks(env, context)) allGood = false;
 
     // APK Archive Integrity Check
-    if (!verifyApkArchive(env)) return false;
+    if (!verifyApkArchive(env)) allGood = false;
 
     // String Integrity Check
     if (!checkStringIntegrity(env, context)) {
         g_current_view = OverlayView::INTEGRITY_FAILURE;
-        return false;
+        allGood = false;
     }
 
     jclass contextClass = env->GetObjectClass(context);
@@ -647,7 +654,7 @@ bool AntiTamper::check(JNIEnv* env, jobject context) {
     if (currentPackageName != expectedPkg && currentPackageName != expectedPkg + XOR_STR(".nightly")) {
         LOGE("AntiTamper: Package name mismatch! Found: %s", currentPackageName.c_str());
         reportSecurityEvent(env, XOR_STR("Package name mismatch: ") + currentPackageName);
-        return false;
+        allGood = false;
     }
 
     // 3. APK Size Check
@@ -665,8 +672,7 @@ bool AntiTamper::check(JNIEnv* env, jobject context) {
         if (st.st_size > maxSize) {
             LOGE("AntiTamper: APK size exceeded limit!");
             reportSecurityEvent(env, XOR_STR("APK size limit exceeded: ") + std::to_string(st.st_size));
-            env->ReleaseStringUTFChars(apkPath, apkPathChars);
-            return false;
+            allGood = false;
         }
     }
     env->ReleaseStringUTFChars(apkPath, apkPathChars);
@@ -678,13 +684,15 @@ bool AntiTamper::check(JNIEnv* env, jobject context) {
             LOGE("AntiTamper: Illegal 'base.apk' found in assets!");
             reportSecurityEvent(env, XOR_STR("Illegal base.apk found in assets"));
             AAsset_close(bypassApk);
-            return false;
+            allGood = false;
         }
     }
 
     // Check Version Code and Name
     jmethodID getPackageManagerMethod = env->GetMethodID(contextClass, XOR_STR("getPackageManager").c_str(), XOR_STR("()Landroid/content/pm/PackageManager;").c_str());
     jobject packageManager = env->CallObjectMethod(context, getPackageManagerMethod);
+    if (!packageManager) return allGood;
+
     jclass packageManagerClass = env->GetObjectClass(packageManager);
     jmethodID getPackageInfoMethod = env->GetMethodID(packageManagerClass, XOR_STR("getPackageInfo").c_str(), XOR_STR("(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;").c_str());
 
@@ -693,7 +701,7 @@ bool AntiTamper::check(JNIEnv* env, jobject context) {
     if (!packageInfo) {
         LOGE("AntiTamper: Could not get package info");
         reportSecurityEvent(env, XOR_STR("Could not get package info"));
-        return false;
+        return allGood;
     }
     jclass packageInfoClass = env->GetObjectClass(packageInfo);
 
@@ -704,7 +712,7 @@ bool AntiTamper::check(JNIEnv* env, jobject context) {
     if (currentVersionCode != getExpectedVersionCode()) {
         LOGE("AntiTamper: Version code mismatch!");
         reportSecurityEvent(env, XOR_STR("Version code mismatch. Found: ") + std::to_string(currentVersionCode) + XOR_STR(", Expected: ") + std::to_string(getExpectedVersionCode()));
-        return false;
+        allGood = false;
     }
 
     jfieldID versionNameField = env->GetFieldID(packageInfoClass, XOR_STR("versionName").c_str(), XOR_STR("Ljava/lang/String;").c_str());
@@ -719,7 +727,7 @@ bool AntiTamper::check(JNIEnv* env, jobject context) {
     if (currentVersionName != expectedVersion && currentVersionName != expectedVersion + XOR_STR("-nightly")) {
         LOGE("AntiTamper: Version name mismatch!");
         reportSecurityEvent(env, XOR_STR("Version name mismatch. Found: ") + currentVersionName + XOR_STR(", Expected: ") + expectedVersion);
-        return false;
+        allGood = false;
     }
 
     // Check Signature
@@ -728,7 +736,7 @@ bool AntiTamper::check(JNIEnv* env, jobject context) {
     if (!signingInfo) {
         LOGE("AntiTamper: Could not get signing info");
         reportSecurityEvent(env, XOR_STR("Could not get signing info"));
-        return false;
+        return allGood;
     }
     jclass signingInfoClass = env->GetObjectClass(signingInfo);
     jmethodID getApkContentsSignersMethod = env->GetMethodID(signingInfoClass, XOR_STR("getApkContentsSigners").c_str(), XOR_STR("()[Landroid/content/pm/Signature;").c_str());
@@ -736,7 +744,7 @@ bool AntiTamper::check(JNIEnv* env, jobject context) {
     if (!signers || env->GetArrayLength(signers) == 0) {
         LOGE("AntiTamper: No signers found");
         reportSecurityEvent(env, XOR_STR("No signers found"));
-        return false;
+        return allGood;
     }
 
     jobject firstSigner = env->GetObjectArrayElement(signers, 0);
@@ -769,10 +777,10 @@ bool AntiTamper::check(JNIEnv* env, jobject context) {
     if (currentSignature != getExpectedSignature()) {
         LOGE("AntiTamper: Signature mismatch!");
         reportSecurityEvent(env, XOR_STR("Signature mismatch. Found: ") + currentSignature);
-        return false;
+        allGood = false;
     }
 
-    return true;
+    return allGood;
 }
 
 std::string AntiTamper::getProtectedString(const std::string& locale, const std::string& key) {
@@ -1291,8 +1299,17 @@ void AntiTamper::renderLoop() {
         // Perform periodic background environment check (every 5 seconds)
         static auto last_security_scan = std::chrono::steady_clock::now();
         if (std::chrono::duration_cast<std::chrono::seconds>(now - last_security_scan).count() >= 5) {
-            if (!checkPtrace() || !checkTracerPid()) {
-                LOGE("AntiTamper: Late-attached debugger detected!");
+            // Need JNIEnv for isDebuggerConnected
+            JNIEnv* env = nullptr;
+            if (g_vm->GetEnv((void**)&env, JNI_VERSION_1_6) == JNI_OK) {
+                if (isDebuggerConnected(env) || !checkTracerPid()) {
+                    LOGE("AntiTamper: Late-attached debugger detected!");
+#if !defined(DEBUG_BUILD) && !defined(ANTITAMPER_TEST_BUILD)
+                    g_force_error = true;
+#endif
+                }
+            } else if (!checkTracerPid()) {
+                LOGE("AntiTamper: Late-attached debugger detected (TracerPid fallback)!");
 #if !defined(DEBUG_BUILD) && !defined(ANTITAMPER_TEST_BUILD)
                 g_force_error = true;
 #endif

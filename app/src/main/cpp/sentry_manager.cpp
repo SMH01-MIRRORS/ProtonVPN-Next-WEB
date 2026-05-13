@@ -83,6 +83,7 @@ void SentryManager::reportSecurityEvent(const std::string& event) {
     sentry_value_set_by_key(sentry_event, "tags", tags);
 
     sentry_capture_event(sentry_event);
+    sentry_flush(5000);
 
     __android_log_print(ANDROID_LOG_WARN, TAG, "Security event reported: %s", event.c_str());
 }

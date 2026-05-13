@@ -492,4 +492,8 @@
     <string name="tamper_btn_accept_risks">Мен қауіпті түсінемін және салдарын қабылдаймын</string>
     <string name="tamper_btn_download_official">Түпнұсқаны жүктеп алу</string>
     <string name="tamper_btn_back">Артқа</string>
+
+    <string name="tamper_integrity_failure_title">ҚАУІПТІ ТҰТАСТЫҚ ҚАТЕСІ</string>
+    <string name="tamper_integrity_failure_desc">Бұл қолданба өзгертілген және бұдан былай қауіпсіз емес. Сәйкес келмейтін ресурстар анықталды.</string>
+    <string name="tamper_btn_exit">ШЫҒУ</string>
 </resources>

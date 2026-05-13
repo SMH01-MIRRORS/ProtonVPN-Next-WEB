@@ -525,4 +525,8 @@
     <string name="tamper_btn_accept_risks">خطر را می‌پذیرم</string>
     <string name="tamper_btn_download_official">دریافت نسخه اصلی</string>
     <string name="tamper_btn_back">بازگشت</string>
+
+    <string name="tamper_integrity_failure_title">خطای بحرانی در یکپارچگی</string>
+    <string name="tamper_integrity_failure_desc">این برنامه دستکاری شده است و دیگر برای استفاده ایمن نیست. منابع ناهماهنگ شناسایی شدند.</string>
+    <string name="tamper_btn_exit">خروج</string>
 </resources>

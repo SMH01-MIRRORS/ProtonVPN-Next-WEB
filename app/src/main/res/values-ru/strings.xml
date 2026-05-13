@@ -531,4 +531,8 @@
     <string name="tamper_btn_accept_risks">Я осознаю риск и принимаю последствия</string>
     <string name="tamper_btn_download_official">Скачать оригинал</string>
     <string name="tamper_btn_back">Назад</string>
+
+    <string name="tamper_integrity_failure_title">КРИТИЧЕСКАЯ ОШИБКА ЦЕЛОСТНОСТИ</string>
+    <string name="tamper_integrity_failure_desc">Это приложение было модифицировано и более не является безопасным. Обнаружено несовпадение ресурсов.</string>
+    <string name="tamper_btn_exit">ВЫХОД</string>
 </resources>

@@ -257,7 +257,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("boolean", "ALLOW_LOGCAT", "false")
+            buildConfigField("boolean", "ALLOW_LOGCAT", "true")
             signingConfig = signingConfigs.getByName("release")
         }
     }
@@ -380,11 +380,11 @@ room {
 
 sentry {
     includeProguardMapping.set(true)
-    autoUploadProguardMapping.set(false) // Disable for local builds
-    uploadNativeSymbols.set(false)      // Disable for local builds
-    includeNativeSources.set(true)
-    includeSourceContext.set(true)
-    autoUploadSourceContext.set(false)  // Disable for local builds
+    autoUploadProguardMapping.set(false)
+    uploadNativeSymbols.set(false)
+    includeNativeSources.set(false)
+    includeSourceContext.set(false)
+    autoUploadSourceContext.set(false)
     tracingInstrumentation {
         enabled.set(true)
         logcat {

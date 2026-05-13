@@ -404,9 +404,28 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
                 sSettings.logsEnabled = env->CallBooleanMethod(sharedPrefs, getBoolMethod, env->NewStringUTF(XOR_STR("sentry_logs_enabled").c_str()), JNI_TRUE);
                 sSettings.crashReportsEnabled = env->CallBooleanMethod(sharedPrefs, getBoolMethod, env->NewStringUTF(XOR_STR("crash_reports_enabled").c_str()), JNI_TRUE);
 
-                // Fetch version info (using security_metadata as source of truth for versions)
-                SentryManager::init(cachePathChars, false, XOR_STR("12.0.0").c_str(), next::getVersionCode(), sSettings);
+                // Fetch version info from PackageInfo
+                jmethodID getPackageNameMethod = env->GetMethodID(contextClass, XOR_STR("getPackageName").c_str(), XOR_STR("()Ljava/lang/String;").c_str());
+                jstring packageName = (jstring)env->CallObjectMethod(context, getPackageNameMethod);
 
+                jmethodID getPackageManagerMethod = env->GetMethodID(contextClass, XOR_STR("getPackageManager").c_str(), XOR_STR("()Landroid/content/pm/PackageManager;").c_str());
+                jobject packageManager = env->CallObjectMethod(context, getPackageManagerMethod);
+                jclass packageManagerClass = env->GetObjectClass(packageManager);
+                jmethodID getPackageInfoMethod = env->GetMethodID(packageManagerClass, XOR_STR("getPackageInfo").c_str(), XOR_STR("(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;").c_str());
+
+                jobject packageInfo = env->CallObjectMethod(packageManager, getPackageInfoMethod, packageName, 0);
+                jclass packageInfoClass = env->GetObjectClass(packageInfo);
+
+                jfieldID versionNameField = env->GetFieldID(packageInfoClass, XOR_STR("versionName").c_str(), XOR_STR("Ljava/lang/String;").c_str());
+                jstring versionName = (jstring)env->GetObjectField(packageInfo, versionNameField);
+                const char* versionNameChars = env->GetStringUTFChars(versionName, nullptr);
+
+                jfieldID versionCodeField = env->GetFieldID(packageInfoClass, XOR_STR("versionCode").c_str(), XOR_STR("I").c_str());
+                int versionCode = env->GetIntField(packageInfo, versionCodeField);
+
+                SentryManager::init(cachePathChars, false, versionNameChars, versionCode, sSettings);
+
+                env->ReleaseStringUTFChars(versionName, versionNameChars);
                 env->ReleaseStringUTFChars(cachePath, cachePathChars);
 
                 // Automatically register lifecycle callbacks in native code

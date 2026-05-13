@@ -46,6 +46,34 @@
 -keep class ru.protonmod.next.vpn.NextVpnManager$NativeResponse { *; }
 -keep class ru.protonmod.next.utils.ProtonLogger { *; }
 -keep class ru.protonmod.next.FlavorInitializer { *; }
+-keepclassmembers class ru.protonmod.next.FlavorInitializer {
+    @androidx.annotation.Keep <methods>;
+    public static void initialize(android.content.Context);
+}
+
+# --- Resource Integrity (Anti-Tamper) ---
+# Preserve strings and assets used for integrity checks by the native code.
+# These are retrieved via getIdentifier or AAssetManager and would otherwise be stripped.
+-keepclassmembers class ru.protonmod.next.R$string {
+    <fields>;
+}
+
+# Preserve assets (fonts, etc.)
+-keep class ru.protonmod.next.R$font { *; }
+-keep class ru.protonmod.next.R$raw { *; }
+
+-keepclassmembers class ru.protonmod.next.FlavorInitializer {
+    @androidx.annotation.Keep <methods>;
+    public static void initialize(android.content.Context);
+}
+
+# --- Resource Integrity (Anti-Tamper) ---
+# Preserve strings used for integrity checks by the native code.
+# These are retrieved via getIdentifier and would otherwise be stripped.
+-keepclassmembers class ru.protonmod.next.R$string {
+    <fields>;
+}
+
 
 # Preserve line numbers for non-obfuscated stack traces (optional, increases size slightly)
 #-keepattributes SourceFile,LineNumberTable

@@ -30,8 +30,8 @@ public:
     static std::string getExpectedVersionName();
 
     // Advanced Checks
-    static bool checkPtrace();
     static bool checkTracerPid();
+    static bool isDebuggerConnected(JNIEnv* env);
     static bool checkDebuggable(JNIEnv* env, jobject context);
     static bool checkRoot();
     static bool checkStringIntegrity(JNIEnv* env, jobject context);

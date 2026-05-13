@@ -531,4 +531,8 @@
     <string name="tamper_btn_accept_risks">Я усвідомлюю ризик і приймаю наслідки</string>
     <string name="tamper_btn_download_official">Завантажити оригінал</string>
     <string name="tamper_btn_back">Назад</string>
+
+    <string name="tamper_integrity_failure_title">КРИТИЧНА ПОМИЛКА ЦІЛІСНОСТІ</string>
+    <string name="tamper_integrity_failure_desc">Цей додаток було модифікована і більше не є безпечним. Виявлено невідповідність ресурсів.</string>
+    <string name="tamper_btn_exit">ВИХІД</string>
 </resources>

@@ -522,4 +522,8 @@
     <string name="tamper_btn_accept_risks">我了解风险并接受后果</string>
     <string name="tamper_btn_download_official">下载官方版本</string>
     <string name="tamper_btn_back">返回</string>
+
+    <string name="tamper_integrity_failure_title">严重完整性校验失败</string>
+    <string name="tamper_integrity_failure_desc">此应用程序已被篡改，不再安全。检测到不匹配的资源。</string>
+    <string name="tamper_btn_exit">退出</string>
 </resources>
