@@ -232,7 +232,7 @@ android {
                 }
             }
 
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
 
             packaging {
                 jniLibs {
