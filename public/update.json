@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159867,
-      "versionName": "12.0.0-alpha1st3-28-gb9d6fd3-nightly",
+      "versionCode": 605159884,
+      "versionName": "12.0.0-alpha1st3-45-gb23c3b3-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "fix: Defer server force-refresh to prevent OkHttp crash",
+      "changelog": "build: use release signing configuration for release builds",
       "force": false
     },
     "release": {
-      "versionCode": 605159867,
-      "versionName": "12.0.0-alpha1st3-28-gb9d6fd3-nightly",
+      "versionCode": 605159884,
+      "versionName": "12.0.0-alpha1st3-45-gb23c3b3-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "fix: Defer server force-refresh to prevent OkHttp crash",
+      "changelog": "build: use release signing configuration for release builds",
       "force": false
     }
   },
