@@ -77,10 +77,6 @@ class NextVpnManager @Inject constructor() {
         ProtonLogger.isLogcatEnabled = enabled
     }
 
-    fun onSurfaceCreated(surface: Surface) = onSurfaceCreatedNative(surface)
-    fun onSurfaceDestroyed() = onSurfaceDestroyedNative()
-    fun onOverlayTouch(activity: Activity, x: Float, y: Float, action: Int) = onOverlayTouchNative(activity, x, y, action)
-
     private external fun setStateNative(state: Int)
     private external fun getStateNative(): Int
     private external fun canConnectNative(): Boolean
@@ -88,86 +84,17 @@ class NextVpnManager @Inject constructor() {
 
     private external fun isTamperDetectedNative(): Boolean
     private external fun getProtectedStringNative(locale: String, key: String): String
-    external fun onActivityResumedNative(activity: Context)
-
-    private external fun onSurfaceCreatedNative(surface: Surface)
-    private external fun onSurfaceDestroyedNative()
-    private external fun onOverlayTouchNative(activity: Activity, x: Float, y: Float, action: Int)
 
     private external fun setLogcatEnabledNative(enabled: Boolean)
 
     companion object {
         var isWarningShown = false
-        var overlayDialog: Dialog? = null
-
-        @JvmStatic
-        fun registerLifecycleCallbacks(app: Application) {
-            app.registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
-                override fun onActivityResumed(activity: Activity) {
-                    val manager = EntryPointAccessors.fromApplication(app, AppEntryPoint::class.java).nextVpnManager()
-                    manager.onActivityResumedNative(activity)
-                }
-                override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
-                override fun onActivityStarted(activity: Activity) {}
-                override fun onActivityPaused(activity: Activity) {}
-                override fun onActivityStopped(activity: Activity) {}
-                override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
-                override fun onActivityDestroyed(activity: Activity) {}
-            })
-        }
-
-        @SuppressLint("InflateParams")
-        @JvmStatic
-        fun createNativeOverlay(activity: Activity) {
-            if (overlayDialog != null) return
-
-            activity.runOnUiThread {
-                val dialog = Dialog(activity, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
-                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-                dialog.setCancelable(false)
-
-                val surfaceView = SurfaceView(activity)
-                dialog.setContentView(surfaceView)
-
-                surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
-                    override fun surfaceCreated(holder: SurfaceHolder) {
-                        val manager = EntryPointAccessors.fromApplication(activity.application, AppEntryPoint::class.java).nextVpnManager()
-                        manager.onSurfaceCreated(holder.surface)
-                    }
-                    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
-                    override fun surfaceDestroyed(holder: SurfaceHolder) {
-                        val manager = EntryPointAccessors.fromApplication(activity.application, AppEntryPoint::class.java).nextVpnManager()
-                        manager.onSurfaceDestroyed()
-                    }
-                })
-
-                surfaceView.setOnTouchListener { _, event ->
-                    val manager = EntryPointAccessors.fromApplication(activity.application, AppEntryPoint::class.java).nextVpnManager()
-                    manager.onOverlayTouch(activity, event.x, event.y, event.action)
-                    true
-                }
-
-                dialog.show()
-                overlayDialog = dialog
-            }
-        }
-
-        @JvmStatic
-        fun logSecurityEvent(event: String) {
-            ProtonLogger.e("AntiTamper", "Security Event: $event")
-        }
 
         /**
          * Honeypot: A constant that looks like a security key.
          * Modders often try to change such constants to "bypass" checks.
          */
         const val SECURITY_VERIFICATION_TOKEN = "7b74cef88678ecb3e6047ac6b4abf139"
-
-        @JvmStatic
-        fun dismissNativeOverlay() {
-            overlayDialog?.dismiss()
-            overlayDialog = null
-        }
 
         data class NativeResponse(val code: Int, val body: String)
 

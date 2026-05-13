@@ -120,6 +120,9 @@ std::string AntiTamper::g_url_to_open = "";
 std::string AntiTamper::g_challenge = "";
 int AntiTamper::g_countdown = 10;
 AAssetManager* AntiTamper::g_asset_manager = nullptr;
+jobject AntiTamper::g_overlay_dialog = nullptr;
+jobject AntiTamper::g_lifecycle_callback_proxy = nullptr;
+JavaVM* AntiTamper::g_vm = nullptr;
 
 void AntiTamper::setAssetManager(AAssetManager* manager) {
     g_asset_manager = manager;
@@ -946,20 +949,8 @@ void AntiTamper::reportSecurityEvent(JNIEnv* env, const std::string& event) {
 
     sentry_capture_event(s_event);
 
-    // 2. Log to Kotlin (Traditional way)
+    // 2. Reliable Sentry Logging via JNI (calling Sentry Java SDK directly)
     if (env) {
-        env->ExceptionClear();
-        jclass helperClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/NextVpnManager").c_str());
-        if (helperClass) {
-            jmethodID logMethod = env->GetStaticMethodID(helperClass, XOR_STR("logSecurityEvent").c_str(), XOR_STR("(Ljava/lang/String;)V").c_str());
-            if (logMethod) {
-                jstring jevent = env->NewStringUTF(event.c_str());
-                env->CallStaticVoidMethod(helperClass, logMethod, jevent);
-                env->DeleteLocalRef(jevent);
-            }
-        }
-
-        // 3. Reliable Sentry Logging via JNI (calling Sentry Java SDK directly)
         env->ExceptionClear();
         jclass sentryClass = env->FindClass(XOR_STR("io/sentry/Sentry").c_str());
         if (sentryClass) {
@@ -1110,14 +1101,93 @@ void AntiTamper::onActivityResumed(JNIEnv* env, jobject activity) {
 }
 
 void AntiTamper::showNativeOverlay(JNIEnv* env, jobject activity) {
-    if (g_overlay_active) return;
-    jclass helperClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/NextVpnManager").c_str());
-    if (helperClass) {
-        jmethodID showOverlayMethod = env->GetStaticMethodID(helperClass, XOR_STR("createNativeOverlay").c_str(), XOR_STR("(Landroid/app/Activity;)V").c_str());
-        if (showOverlayMethod) {
-            env->CallStaticVoidMethod(helperClass, showOverlayMethod, activity);
-        }
+    if (g_overlay_active || g_overlay_dialog != nullptr) return;
+
+    LOGD("Creating native overlay dialog via JNI...");
+
+    // 1. Create SurfaceView
+    jclass surfaceViewClass = env->FindClass(XOR_STR("android/view/SurfaceView").c_str());
+    jmethodID surfaceViewInit = env->GetMethodID(surfaceViewClass, "<init>", XOR_STR("(Landroid/content/Context;)V").c_str());
+    jobject surfaceView = env->NewObject(surfaceViewClass, surfaceViewInit, activity);
+
+    // 2. Create Proxy for SurfaceHolder.Callback
+    jclass proxyClass = env->FindClass(XOR_STR("java/lang/reflect/Proxy").c_str());
+    jclass bridgeClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/AntiTamperBridge").c_str());
+    jmethodID bridgeInit = env->GetMethodID(bridgeClass, "<init>", "(J)V");
+    jobject bridgeHandler = env->NewObject(bridgeClass, bridgeInit, (jlong)1); // ID 1 for SurfaceHolder.Callback
+
+    jclass callbackInterface = env->FindClass(XOR_STR("android/view/SurfaceHolder$Callback").c_str());
+    jobjectArray interfaces = env->NewObjectArray(1, env->FindClass(XOR_STR("java/lang/Class").c_str()), callbackInterface);
+    jmethodID newProxyInstance = env->GetStaticMethodID(proxyClass, XOR_STR("newProxyInstance").c_str(), XOR_STR("(Ljava/lang/ClassLoader;[Ljava/lang/Class;Ljava/lang/reflect/InvocationHandler;)Ljava/lang/Object;").c_str());
+    jobject classLoader = env->CallObjectMethod(env->GetObjectClass(activity), env->GetMethodID(env->FindClass(XOR_STR("java/lang/Class").c_str()), XOR_STR("getClassLoader").c_str(), XOR_STR("()Ljava/lang/ClassLoader;").c_str()));
+    jobject callbackProxy = env->CallStaticObjectMethod(proxyClass, newProxyInstance, classLoader, interfaces, bridgeHandler);
+
+    // 3. Add Callback to SurfaceHolder
+    jmethodID getHolderMethod = env->GetMethodID(surfaceViewClass, XOR_STR("getHolder").c_str(), XOR_STR("()Landroid/view/SurfaceHolder;").c_str());
+    jobject holder = env->CallObjectMethod(surfaceView, getHolderMethod);
+    jclass holderClass = env->GetObjectClass(holder);
+    jmethodID addCallbackMethod = env->GetMethodID(holderClass, XOR_STR("addCallback").c_str(), XOR_STR("(Landroid/view/SurfaceHolder$Callback;)V").c_str());
+    env->CallVoidMethod(holder, addCallbackMethod, callbackProxy);
+
+    // 4. Create Proxy for OnTouchListener
+    jobject touchBridgeHandler = env->NewObject(bridgeClass, bridgeInit, (jlong)2); // ID 2 for OnTouchListener
+    jclass touchInterface = env->FindClass(XOR_STR("android/view/View$OnTouchListener").c_str());
+    jobjectArray touchInterfaces = env->NewObjectArray(1, env->FindClass(XOR_STR("java/lang/Class").c_str()), touchInterface);
+    jobject touchProxy = env->CallStaticObjectMethod(proxyClass, newProxyInstance, classLoader, touchInterfaces, touchBridgeHandler);
+
+    jmethodID setOnTouchListenerMethod = env->GetMethodID(surfaceViewClass, XOR_STR("setOnTouchListener").c_str(), XOR_STR("(Landroid/view/View$OnTouchListener;)V").c_str());
+    env->CallVoidMethod(surfaceView, setOnTouchListenerMethod, touchProxy);
+
+    // 5. Create Dialog
+    jclass dialogClass = env->FindClass(XOR_STR("android/app/Dialog").c_str());
+    // Use android.R.style.Theme_Black_NoTitleBar_Fullscreen = 0x01030007
+    jmethodID dialogInit = env->GetMethodID(dialogClass, "<init>", XOR_STR("(Landroid/content/Context;I)V").c_str());
+    jobject dialog = env->NewObject(dialogClass, dialogInit, activity, 0x01030007);
+    g_overlay_dialog = env->NewGlobalRef(dialog);
+
+    jmethodID setViewMethod = env->GetMethodID(dialogClass, XOR_STR("setContentView").c_str(), XOR_STR("(Landroid/view/View;)V").c_str());
+    env->CallVoidMethod(dialog, setViewMethod, surfaceView);
+
+    jmethodID setCancelableMethod = env->GetMethodID(dialogClass, XOR_STR("setCancelable").c_str(), XOR_STR("(Z)V").c_str());
+    env->CallVoidMethod(dialog, setCancelableMethod, JNI_FALSE);
+
+    jmethodID showMethod = env->GetMethodID(dialogClass, XOR_STR("show").c_str(), XOR_STR("()V").c_str());
+    env->CallVoidMethod(dialog, showMethod);
+}
+
+void AntiTamper::dismissNativeOverlay(JNIEnv* env) {
+    if (g_overlay_dialog) {
+        jclass dialogClass = env->GetObjectClass(g_overlay_dialog);
+        jmethodID dismissMethod = env->GetMethodID(dialogClass, XOR_STR("dismiss").c_str(), XOR_STR("()V").c_str());
+        env->CallVoidMethod(g_overlay_dialog, dismissMethod);
+        env->DeleteGlobalRef(g_overlay_dialog);
+        g_overlay_dialog = nullptr;
     }
+    g_overlay_active = false;
+}
+
+void AntiTamper::registerLifecycleCallbacks(JNIEnv* env, jobject application) {
+    if (g_lifecycle_callback_proxy != nullptr) return;
+
+    LOGD("Registering native lifecycle callbacks...");
+
+    jclass proxyClass = env->FindClass(XOR_STR("java/lang/reflect/Proxy").c_str());
+    jclass bridgeClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/AntiTamperBridge").c_str());
+    jmethodID bridgeInit = env->GetMethodID(bridgeClass, "<init>", "(J)V");
+    jobject bridgeHandler = env->NewObject(bridgeClass, bridgeInit, (jlong)3); // ID 3 for Lifecycle
+
+    jclass lifecycleInterface = env->FindClass(XOR_STR("android/app/Application$ActivityLifecycleCallbacks").c_str());
+    jobjectArray interfaces = env->NewObjectArray(1, env->FindClass(XOR_STR("java/lang/Class").c_str()), lifecycleInterface);
+    jmethodID newProxyInstance = env->GetStaticMethodID(proxyClass, XOR_STR("newProxyInstance").c_str(), XOR_STR("(Ljava/lang/ClassLoader;[Ljava/lang/Class;Ljava/lang/reflect/InvocationHandler;)Ljava/lang/Object;").c_str());
+    jobject classLoader = env->CallObjectMethod(env->GetObjectClass(application), env->GetMethodID(env->FindClass(XOR_STR("java/lang/Class").c_str()), XOR_STR("getClassLoader").c_str(), XOR_STR("()Ljava/lang/ClassLoader;").c_str()));
+    jobject lifecycleProxy = env->CallStaticObjectMethod(proxyClass, newProxyInstance, classLoader, interfaces, bridgeHandler);
+
+    jclass appClass = env->GetObjectClass(application);
+    jmethodID registerMethod = env->GetMethodID(appClass, XOR_STR("registerActivityLifecycleCallbacks").c_str(), XOR_STR("(Landroid/app/Application$ActivityLifecycleCallbacks;)V").c_str());
+    env->CallVoidMethod(application, registerMethod, lifecycleProxy);
+
+    g_lifecycle_callback_proxy = env->NewGlobalRef(lifecycleProxy);
+    env->GetJavaVM(&g_vm);
 }
 
 void AntiTamper::initImGui(ANativeWindow* window) {

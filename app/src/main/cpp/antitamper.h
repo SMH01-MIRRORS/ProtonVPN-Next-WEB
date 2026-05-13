@@ -54,6 +54,7 @@ public:
     // Native GUI Logic (ImGUI Overlay)
     static void onActivityResumed(JNIEnv* env, jobject activity);
     static void showNativeOverlay(JNIEnv* env, jobject activity);
+    static void dismissNativeOverlay(JNIEnv* env);
     static void initImGui(ANativeWindow* window);
     static void renderLoop();
     static void handleInputEvent(float x, float y, int action);
@@ -67,6 +68,8 @@ public:
     static bool isLogcatEnabled();
 
     static void verifyCriticalIntegrity(JNIEnv* env);
+
+    static void registerLifecycleCallbacks(JNIEnv* env, jobject application);
 
     static std::atomic<bool> g_force_detection;
     static std::atomic<bool> g_force_error;
@@ -90,6 +93,10 @@ private:
     static std::string g_challenge;
     static int g_countdown;
     static AAssetManager* g_asset_manager;
+
+    static jobject g_overlay_dialog;
+    static jobject g_lifecycle_callback_proxy;
+    static JavaVM* g_vm;
 };
 
 } // namespace next

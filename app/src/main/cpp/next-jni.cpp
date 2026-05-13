@@ -128,12 +128,55 @@ static void onOverlayTouch(JNIEnv* env, jobject /* thiz */, jobject activity, jf
     if (next::AntiTamper::g_accept_clicked) {
         next::AntiTamper::g_accept_clicked = false;
         next::AntiTamper::incrementTamperAckCount(env, activity);
-        jclass helperClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/NextVpnManager").c_str());
-        if (helperClass) {
-            jmethodID dismissMethod = env->GetStaticMethodID(helperClass, XOR_STR("dismissNativeOverlay").c_str(), XOR_STR("()V").c_str());
-            if (dismissMethod) env->CallStaticVoidMethod(helperClass, dismissMethod);
+        next::AntiTamper::dismissNativeOverlay(env);
+    }
+}
+
+extern "C" JNIEXPORT jobject JNICALL
+Java_ru_protonmod_next_vpn_AntiTamperBridge_invokeNative(JNIEnv* env, jobject /* thiz */, jlong handlerAddr, jobject proxy, jstring methodName, jobjectArray args) {
+    const char* methodChars = env->GetStringUTFChars(methodName, nullptr);
+    std::string method(methodChars);
+    env->ReleaseStringUTFChars(methodName, methodChars);
+
+    if (handlerAddr == 1) { // SurfaceHolder.Callback
+        if (method == XOR_STR("surfaceCreated")) {
+            jobject holder = env->GetObjectArrayElement(args, 0);
+            jclass holderClass = env->GetObjectClass(holder);
+            jmethodID getSurfaceMethod = env->GetMethodID(holderClass, XOR_STR("getSurface").c_str(), XOR_STR("()Landroid/view/Surface;").c_str());
+            jobject surface = env->CallObjectMethod(holder, getSurfaceMethod);
+            ANativeWindow* window = ANativeWindow_fromSurface(env, surface);
+            next::AntiTamper::initImGui(window);
+        } else if (method == XOR_STR("surfaceDestroyed")) {
+            next::AntiTamper::initImGui(nullptr);
+        }
+    } else if (handlerAddr == 2) { // OnTouchListener
+        if (method == XOR_STR("onTouch")) {
+            jobject event = env->GetObjectArrayElement(args, 1);
+            jclass eventClass = env->GetObjectClass(event);
+            jmethodID getXMethod = env->GetMethodID(eventClass, XOR_STR("getX").c_str(), XOR_STR("()F").c_str());
+            jmethodID getYMethod = env->GetMethodID(eventClass, XOR_STR("getY").c_str(), XOR_STR("()F").c_str());
+            jmethodID getActionMethod = env->GetMethodID(eventClass, XOR_STR("getAction").c_str(), XOR_STR("()I").c_str());
+
+            float x = env->CallFloatMethod(event, getXMethod);
+            float y = env->CallFloatMethod(event, getYMethod);
+            int action = env->CallIntMethod(event, getActionMethod);
+
+            next::AntiTamper::handleInputEvent(x, y, action);
+
+            // Return true to indicate handled
+            jclass booleanClass = env->FindClass("java/lang/Boolean");
+            jmethodID booleanInit = env->GetMethodID(booleanClass, "<init>", "(Z)V");
+            return env->NewObject(booleanClass, booleanInit, JNI_TRUE);
+        }
+    } else if (handlerAddr == 3) { // ActivityLifecycleCallbacks
+        if (method == XOR_STR("onActivityResumed")) {
+            jobject activity = env->GetObjectArrayElement(args, 0);
+            next::AntiTamper::onActivityResumed(env, activity);
         }
     }
+
+    if (method == "toString") return env->NewStringUTF("AntiTamperProxy");
+    return nullptr;
 }
 
 static void setLogcatEnabled(JNIEnv* /* env */, jobject /* thiz */, jboolean enabled) {
@@ -242,14 +285,6 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
             std::string s_isTamper = XOR_STR("()Z");
             std::string n_getProt = XOR_STR("getProtectedStringNative");
             std::string s_getProt = XOR_STR("(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
-            std::string n_onActRes = XOR_STR("onActivityResumedNative");
-            std::string s_onActRes = XOR_STR("(Landroid/content/Context;)V");
-            std::string n_onSurfC = XOR_STR("onSurfaceCreatedNative");
-            std::string s_onSurfC = XOR_STR("(Landroid/view/Surface;)V");
-            std::string n_onSurfD = XOR_STR("onSurfaceDestroyedNative");
-            std::string s_onSurfD = XOR_STR("()V");
-            std::string n_onOvTch = XOR_STR("onOverlayTouchNative");
-            std::string s_onOvTch = XOR_STR("(Landroid/app/Activity;FFI)V");
             std::string n_setLog = XOR_STR("setLogcatEnabledNative");
             std::string s_setLog = XOR_STR("(Z)V");
 
@@ -260,13 +295,9 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
                 {(char*)n_canDisconnect.c_str(), (char*)s_canDisconnect.c_str(), (void*)canDisconnect},
                 {(char*)n_isTamper.c_str(), (char*)s_isTamper.c_str(), (void*)isTamperDetected},
                 {(char*)n_getProt.c_str(), (char*)s_getProt.c_str(), (void*)getProtectedString},
-                {(char*)n_onActRes.c_str(), (char*)s_onActRes.c_str(), (void*)onActivityResumed},
-                {(char*)n_onSurfC.c_str(), (char*)s_onSurfC.c_str(), (void*)onSurfaceCreated},
-                {(char*)n_onSurfD.c_str(), (char*)s_onSurfD.c_str(), (void*)onSurfaceDestroyed},
-                {(char*)n_onOvTch.c_str(), (char*)s_onOvTch.c_str(), (void*)onOverlayTouch},
                 {(char*)n_setLog.c_str(), (char*)s_setLog.c_str(), (void*)setLogcatEnabled}
             };
-            env->RegisterNatives(managerClass, m, 11);
+            env->RegisterNatives(managerClass, m, 7);
         }
     }
 
@@ -278,6 +309,17 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
             std::string s_login = XOR_STR("(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lru/protonmod/next/data/repository/AuthRepository$NativeLoginResult;");
             JNINativeMethod m[] = {{(char*)n_login.c_str(), (char*)s_login.c_str(), (void*)loginNative}};
             env->RegisterNatives(authClass, m, 1);
+        }
+    }
+
+    // Register AntiTamperBridge methods
+    {
+        jclass bridgeClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/AntiTamperBridge").c_str());
+        if (bridgeClass) {
+            std::string n_invoke = XOR_STR("invokeNative");
+            std::string s_invoke = XOR_STR("(JLjava/lang/Object;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;");
+            JNINativeMethod m[] = {{(char*)n_invoke.c_str(), (char*)s_invoke.c_str(), (void*)Java_ru_protonmod_next_vpn_AntiTamperBridge_invokeNative}};
+            env->RegisterNatives(bridgeClass, m, 1);
         }
     }
 
@@ -296,11 +338,9 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
                     AntiTamper::setAssetManager(AAssetManager_fromJava(env, assets));
                 }
 
-                jclass managerClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/NextVpnManager").c_str());
-                if (managerClass) {
-                    jmethodID registerMethod = env->GetStaticMethodID(managerClass, XOR_STR("registerLifecycleCallbacks").c_str(), XOR_STR("(Landroid/app/Application;)V").c_str());
-                    if (registerMethod) env->CallStaticVoidMethod(managerClass, registerMethod, context);
-                }
+                // Automatically register lifecycle callbacks in native code
+                AntiTamper::registerLifecycleCallbacks(env, context);
+
                 env->DeleteLocalRef(context);
             }
         }

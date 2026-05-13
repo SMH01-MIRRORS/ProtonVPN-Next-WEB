@@ -182,7 +182,7 @@ fun SettingsContent(
             
             if (!isOfficialBuild) {
                 TamperSettingsBanner(onShowDownloads = { 
-                    nextVpnManager.onActivityResumedNative(context)
+                    // No longer supported via Kotlin call
                 })
                 Spacer(modifier = Modifier.height(16.dp))
             }
