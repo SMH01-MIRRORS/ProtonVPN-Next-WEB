@@ -20,8 +20,6 @@ package ru.protonmod.next
 import android.content.Context
 import io.sentry.android.core.SentryAndroid
 import ru.protonmod.next.data.local.SettingsManager
-import ru.protonmod.next.utils.DeviceInfoProvider
-import java.io.File
 
 /**
  * Common initializer for the application.
@@ -42,77 +40,55 @@ object FlavorInitializer {
         val isAnrEnabled = settingsManager.isAnrEnabledSync()
         val isMetricsEnabled = settingsManager.isMetricsEnabledSync()
         val isLogsEnabled = settingsManager.isLogsEnabledSync()
-        val isCrashReportsEnabled = settingsManager.isCrashReportsEnabledSync()
 
-        // Sync device info to native layer for SRP challenge payload
-        val deviceInfo = DeviceInfoProvider(context)
-        nativeUpdateDeviceInfo(
-            version = DeviceInfoProvider.SPOOFED_APP_VERSION,
-            lang = deviceInfo.getAppLanguage(),
-            timezone = deviceInfo.getTimezone(),
-            deviceHash = deviceInfo.getDeviceHash().toString(),
-            region = deviceInfo.getRegionCode(),
-            offset = deviceInfo.getTimezoneOffset(),
-            jailbreak = deviceInfo.isJailbreak(),
-            contentSize = deviceInfo.getPreferredContentSize(),
-            storage = deviceInfo.getStorageCapacity(),
-            darkMode = deviceInfo.isDarkModeOn(),
-            userAgent = DeviceInfoProvider.getSpoofedUserAgent()
-        )
+        // Sentry initialization
+        SentryAndroid.init(context) { options ->
+            options.dsn = "https://7b74cef88678ecb3e6047ac6b4abf139@o4510986952310784.ingest.de.sentry.io/4510986956374096"
+            options.isDebug = BuildConfig.DEBUG // Helpful for local development
 
-        // Sentry initialization with process-specific cache directory
-        if (isCrashReportsEnabled) {
-            val processName = android.app.Application.getProcessName()
-            val suffix = if (processName == context.packageName) "main" else processName.substringAfterLast(':')
-            
-            SentryAndroid.init(context) { options ->
-                options.dsn = "https://7b74cef88678ecb3e6047ac6b4abf139@o4510986952310784.ingest.de.sentry.io/4510986956374096"
-                options.isDebug = BuildConfig.DEBUG
-                options.cacheDirPath = File(context.cacheDir, "sentry_$suffix").absolutePath
-                
-                options.setBeforeSend { event, _ ->
-                    if (!settingsManager.isCrashReportsEnabledSync()) null else event
-                }
+            // STRICT SEPARATION: Disable NDK and scope sync to keep Kotlin and Native scopes independent
+            options.isEnableNdk = false
+            options.isEnableScopeSync = false
 
-                options.tracesSampleRate = if (isPerformanceEnabled) 1.0 else 0.0
-                options.profilesSampleRate = if (isPerformanceEnabled) 1.0 else 0.0
-                
-                options.isEnableAutoSessionTracking = isAnalyticsEnabled
-                options.isAnrEnabled = isAnrEnabled
-                options.isEnableAppStartProfiling = false
-                options.isEnableUserInteractionTracing = isAnalyticsEnabled
-                
-                options.metrics.isEnabled = isMetricsEnabled
-                options.logs.isEnabled = isLogsEnabled
-                
-                options.isAttachScreenshot = isAnalyticsEnabled
-                options.isAttachViewHierarchy = isAnalyticsEnabled
-                
-                if (isSessionReplayEnabled) {
-                    options.sessionReplay.sessionSampleRate = 1.0
-                    options.sessionReplay.onErrorSampleRate = 1.0
-                } else {
-                    options.sessionReplay.sessionSampleRate = 0.0
-                    options.sessionReplay.onErrorSampleRate = 0.0
-                }
+            // Allow all errors if crash reporting is enabled
+            options.setBeforeSend { event, _ ->
+                val currentCrashEnabled = settingsManager.isCrashReportsEnabledSync()
+                if (!currentCrashEnabled) null else event
+            }
+
+            // Utilize 100M Spans and 6K Profile Hours quota when analytics is on
+            options.tracesSampleRate = if (isPerformanceEnabled) 1.0 else 0.0
+            options.profilesSampleRate = if (isPerformanceEnabled) 1.0 else 0.0
+
+            options.isEnableAutoSessionTracking = isAnalyticsEnabled
+            options.isAnrEnabled = isAnrEnabled
+            // App Start Profiling is disabled to prevent ANR on startup.
+            // It triggers method tracing which can hang the main thread on some devices.
+            options.isEnableAppStartProfiling = false
+            options.isEnableUserInteractionTracing = isAnalyticsEnabled
+
+            // Measure what matters with Metrics (v8.30.0+)
+            // Track application health with numeric data like counters and gauges
+            options.metrics.isEnabled = isMetricsEnabled
+
+            // Enable structured Logs (v8.12.0+)
+            // All ProtonLogger calls will be forwarded to Sentry Logs for real-time querying
+            options.logs.isEnabled = isLogsEnabled
+
+            // Advanced Debugging (Attachments & Screenshots, 10 GB quota)
+            options.isAttachScreenshot = isAnalyticsEnabled
+            options.isAttachViewHierarchy = isAnalyticsEnabled
+
+            // Session Replay (100K replays quota)
+            if (isSessionReplayEnabled) {
+                options.sessionReplay.sessionSampleRate = 1.0
+                options.sessionReplay.onErrorSampleRate = 1.0
+            } else {
+                options.sessionReplay.sessionSampleRate = 0.0
+                options.sessionReplay.onErrorSampleRate = 0.0
             }
         }
     }
-
-    @JvmStatic
-    private external fun nativeUpdateDeviceInfo(
-        version: String,
-        lang: String,
-        timezone: String,
-        deviceHash: String,
-        region: String,
-        offset: Int,
-        jailbreak: Boolean,
-        contentSize: String,
-        storage: Double,
-        darkMode: Boolean,
-        userAgent: String
-    )
 
     /**
      * Honeypot: Performs extra security validations.

@@ -28,6 +28,7 @@
 #include "obfuscation.h"
 #include "auth.h"
 #include "sentry_manager.h"
+#include "security_metadata.h"
 
 using namespace next;
 
@@ -255,61 +256,6 @@ static jobject loginNative(JNIEnv* env, jobject /* thiz */, jstring username, js
     return jResult;
 }
 
-static void nativeAddBreadcrumb(JNIEnv* env, jclass /* clazz */, jstring category, jstring message, jint level) {
-    const char* catChars = env->GetStringUTFChars(category, nullptr);
-    const char* msgChars = env->GetStringUTFChars(message, nullptr);
-
-    SentryManager::addBreadcrumb(catChars, msgChars, static_cast<sentry_level_t>(level));
-
-    env->ReleaseStringUTFChars(category, catChars);
-    env->ReleaseStringUTFChars(message, msgChars);
-}
-
-static void nativeCaptureMessage(JNIEnv* env, jclass /* clazz */, jstring message, jint level) {
-    const char* msgChars = env->GetStringUTFChars(message, nullptr);
-
-    SentryManager::captureMessage(msgChars, static_cast<sentry_level_t>(level));
-
-    env->ReleaseStringUTFChars(message, msgChars);
-}
-
-static void nativeUpdateDeviceInfo(JNIEnv* env, jclass /* clazz */,
-                                   jstring version, jstring lang, jstring timezone,
-                                   jstring deviceHash, jstring region, jint offset,
-                                   jboolean jailbreak, jstring contentSize,
-                                   jdouble storage, jboolean darkMode, jstring userAgent) {
-    DeviceInfo info;
-    const char* vChars = env->GetStringUTFChars(version, nullptr);
-    const char* lChars = env->GetStringUTFChars(lang, nullptr);
-    const char* tChars = env->GetStringUTFChars(timezone, nullptr);
-    const char* dChars = env->GetStringUTFChars(deviceHash, nullptr);
-    const char* rChars = env->GetStringUTFChars(region, nullptr);
-    const char* cChars = env->GetStringUTFChars(contentSize, nullptr);
-    const char* uChars = env->GetStringUTFChars(userAgent, nullptr);
-
-    info.version = vChars;
-    info.lang = lChars;
-    info.timezone = tChars;
-    info.deviceHash = dChars;
-    info.region = rChars;
-    info.offset = (int)offset;
-    info.jailbreak = (bool)jailbreak;
-    info.contentSize = cChars;
-    info.storage = (double)storage;
-    info.darkMode = (bool)darkMode;
-    info.userAgent = uChars;
-
-    AuthManager::updateDeviceInfo(info);
-
-    env->ReleaseStringUTFChars(version, vChars);
-    env->ReleaseStringUTFChars(lang, lChars);
-    env->ReleaseStringUTFChars(timezone, tChars);
-    env->ReleaseStringUTFChars(deviceHash, dChars);
-    env->ReleaseStringUTFChars(region, rChars);
-    env->ReleaseStringUTFChars(contentSize, cChars);
-    env->ReleaseStringUTFChars(userAgent, uChars);
-}
-
 extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
     JNIEnv* env;
     if (vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) return JNI_ERR;
@@ -404,35 +350,6 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
         }
     }
 
-    // Register FlavorInitializer methods
-    {
-        jclass flavorClass = env->FindClass(XOR_STR("ru/protonmod/next/FlavorInitializer").c_str());
-        if (flavorClass) {
-            std::string n_updateDevice = XOR_STR("nativeUpdateDeviceInfo");
-            std::string s_updateDevice = XOR_STR("(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IZLjava/lang/String;DZLjava/lang/String;)V");
-
-            JNINativeMethod m[] = {
-                {(char*)n_updateDevice.c_str(), (char*)s_updateDevice.c_str(), (void*)nativeUpdateDeviceInfo}
-            };
-            env->RegisterNatives(flavorClass, m, 1);
-        }
-    }
-
-    // Register ProtonLogger methods
-    {
-        jclass loggerClass = env->FindClass(XOR_STR("ru/protonmod/next/utils/ProtonLogger").c_str());
-        if (loggerClass) {
-            std::string n_addBreadcrumb = XOR_STR("nativeAddBreadcrumb");
-            std::string s_addBreadcrumb = XOR_STR("(Ljava/lang/String;Ljava/lang/String;I)V");
-            std::string n_captureMessage = XOR_STR("nativeCaptureMessage");
-            std::string s_captureMessage = XOR_STR("(Ljava/lang/String;I)V");
-            JNINativeMethod m[] = {
-                {(char*)n_addBreadcrumb.c_str(), (char*)s_addBreadcrumb.c_str(), (void*)nativeAddBreadcrumb},
-                {(char*)n_captureMessage.c_str(), (char*)s_captureMessage.c_str(), (void*)nativeCaptureMessage}
-            };
-            env->RegisterNatives(loggerClass, m, 2);
-        }
-    }
 
     // Get Application Context via ActivityThread to perform automatic check
     jclass activityThreadClass = env->FindClass(XOR_STR("android/app/ActivityThread").c_str());
@@ -448,6 +365,34 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
                 if (assets) {
                     AntiTamper::setAssetManager(AAssetManager_fromJava(env, assets));
                 }
+
+                // Initialize Sentry Native independently
+                jmethodID getCacheDirMethod = env->GetMethodID(contextClass, XOR_STR("getCacheDir").c_str(), XOR_STR("()Ljava/io/File;").c_str());
+                jobject cacheFile = env->CallObjectMethod(context, getCacheDirMethod);
+                jclass fileClass = env->FindClass(XOR_STR("java/io/File").c_str());
+                jmethodID getPathMethod = env->GetMethodID(fileClass, XOR_STR("getAbsolutePath").c_str(), XOR_STR("()Ljava/lang/String;").c_str());
+                jstring cachePath = (jstring)env->CallObjectMethod(cacheFile, getPathMethod);
+                const char* cachePathChars = env->GetStringUTFChars(cachePath, nullptr);
+
+                jmethodID getSharedPreferencesMethod = env->GetMethodID(contextClass, XOR_STR("getSharedPreferences").c_str(), XOR_STR("(Ljava/lang/String;I)Landroid/content/SharedPreferences;").c_str());
+                jstring prefName = env->NewStringUTF(XOR_STR("boot_settings").c_str());
+                jobject sharedPrefs = env->CallObjectMethod(context, getSharedPreferencesMethod, prefName, 0);
+                jclass sharedPrefsClass = env->GetObjectClass(sharedPrefs);
+                jmethodID getBoolMethod = env->GetMethodID(sharedPrefsClass, XOR_STR("getBoolean").c_str(), XOR_STR("(Ljava/lang/String;Z)Z").c_str());
+
+                SentrySettings sSettings;
+                sSettings.analyticsEnabled = env->CallBooleanMethod(sharedPrefs, getBoolMethod, env->NewStringUTF(XOR_STR("analytics_enabled").c_str()), JNI_TRUE);
+                sSettings.performanceEnabled = env->CallBooleanMethod(sharedPrefs, getBoolMethod, env->NewStringUTF(XOR_STR("sentry_performance_enabled").c_str()), JNI_TRUE);
+                sSettings.sessionReplayEnabled = env->CallBooleanMethod(sharedPrefs, getBoolMethod, env->NewStringUTF(XOR_STR("sentry_session_replay_enabled").c_str()), JNI_TRUE);
+                sSettings.anrEnabled = env->CallBooleanMethod(sharedPrefs, getBoolMethod, env->NewStringUTF(XOR_STR("sentry_anr_enabled").c_str()), JNI_TRUE);
+                sSettings.metricsEnabled = env->CallBooleanMethod(sharedPrefs, getBoolMethod, env->NewStringUTF(XOR_STR("sentry_metrics_enabled").c_str()), JNI_TRUE);
+                sSettings.logsEnabled = env->CallBooleanMethod(sharedPrefs, getBoolMethod, env->NewStringUTF(XOR_STR("sentry_logs_enabled").c_str()), JNI_TRUE);
+                sSettings.crashReportsEnabled = env->CallBooleanMethod(sharedPrefs, getBoolMethod, env->NewStringUTF(XOR_STR("crash_reports_enabled").c_str()), JNI_TRUE);
+
+                // Fetch version info (using security_metadata as source of truth for versions)
+                SentryManager::init(cachePathChars, false, XOR_STR("12.0.0").c_str(), next::getVersionCode(), sSettings);
+
+                env->ReleaseStringUTFChars(cachePath, cachePathChars);
 
                 // Automatically register lifecycle callbacks in native code
                 AntiTamper::registerLifecycleCallbacks(env, context);

@@ -18,21 +18,51 @@
 #include "sentry_manager.h"
 #include "obfuscation.h"
 #include <android/log.h>
+#include <cstdio>
 
 #define TAG "SentryManager"
 
 namespace next {
 
-bool SentryManager::g_initialized = true; // Assume initialized by Java SDK via NDK integration
+bool SentryManager::g_initialized = false;
 
 void SentryManager::init(const char* cache_dir, bool debug, const char* version_name, int version_code, const SentrySettings& settings) {
-    // Manual init removed. The Java SDK handles this.
-    (void)cache_dir; (void)debug; (void)version_name; (void)version_code; (void)settings;
-    __android_log_print(ANDROID_LOG_INFO, TAG, "Sentry Native scope linked to Java SDK");
+    if (g_initialized) return;
+
+    sentry_options_t *options = sentry_options_new();
+
+    // Use the same DSN for now, but in a separate native instance
+    sentry_options_set_dsn(options, XOR_STR("https://7b74cef88678ecb3e6047ac6b4abf139@o4510986952310784.ingest.de.sentry.io/4510986956374096").c_str());
+
+    // Set a process-specific cache directory for native to avoid conflicts with Kotlin Sentry
+    char native_cache[512];
+    snprintf(native_cache, sizeof(native_cache), "%s/sentry_native", cache_dir);
+    sentry_options_set_database_path(options, native_cache);
+
+    sentry_options_set_release(options, (std::string(XOR_STR("ru.protonmod.next@")) + version_name + "+" + std::to_string(version_code)).c_str());
+    sentry_options_set_debug(options, debug ? 1 : 0);
+
+    // Filter events based on settings
+    if (!settings.crashReportsEnabled) {
+        sentry_options_set_before_send(options, [](sentry_value_t event, void *hint, void *closure) {
+            (void)hint; (void)closure;
+            return sentry_value_new_null();
+        }, nullptr);
+    }
+
+    if (sentry_init(options) == 0) {
+        g_initialized = true;
+        __android_log_print(ANDROID_LOG_INFO, TAG, "Sentry Native initialized independently in %s", native_cache);
+    } else {
+        __android_log_print(ANDROID_LOG_ERROR, TAG, "Sentry Native initialization failed!");
+    }
 }
 
 void SentryManager::shutdown() {
-    // Shutdown handled by Java SDK
+    if (g_initialized) {
+        sentry_close();
+        g_initialized = false;
+    }
 }
 
 void SentryManager::reportSecurityEvent(const std::string& event) {
@@ -51,22 +81,6 @@ void SentryManager::reportSecurityEvent(const std::string& event) {
     sentry_capture_event(sentry_event);
 
     __android_log_print(ANDROID_LOG_WARN, TAG, "Security event reported: %s", event.c_str());
-}
-
-void SentryManager::addBreadcrumb(const std::string& category, const std::string& message, sentry_level_t level) {
-    sentry_value_t breadcrumb = sentry_value_new_breadcrumb(category.c_str(), message.c_str());
-    sentry_value_set_by_key(breadcrumb, "level", sentry_value_new_string(
-        level == SENTRY_LEVEL_DEBUG ? "debug" :
-        level == SENTRY_LEVEL_INFO ? "info" :
-        level == SENTRY_LEVEL_WARNING ? "warning" :
-        level == SENTRY_LEVEL_ERROR ? "error" : "fatal"
-    ));
-    sentry_add_breadcrumb(breadcrumb);
-}
-
-void SentryManager::captureMessage(const std::string& message, sentry_level_t level) {
-    sentry_value_t event = sentry_value_new_message_event(level, nullptr, message.c_str());
-    sentry_capture_event(event);
 }
 
 } // namespace next

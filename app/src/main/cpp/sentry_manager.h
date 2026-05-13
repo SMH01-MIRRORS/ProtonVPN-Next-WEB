@@ -56,21 +56,6 @@ public:
      */
     static void reportSecurityEvent(const std::string& event);
 
-    /**
-     * Adds a breadcrumb to Sentry.
-     * @param category Category of the breadcrumb.
-     * @param message Breadcrumb message.
-     * @param level Sentry level (default: INFO).
-     */
-    static void addBreadcrumb(const std::string& category, const std::string& message, sentry_level_t level = SENTRY_LEVEL_INFO);
-
-    /**
-     * Captures an exception/error message.
-     * @param message The error message.
-     * @param level Severity level.
-     */
-    static void captureMessage(const std::string& message, sentry_level_t level = SENTRY_LEVEL_ERROR);
-
 private:
     static bool g_initialized;
 };
