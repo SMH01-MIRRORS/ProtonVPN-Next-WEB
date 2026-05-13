@@ -47,16 +47,17 @@ object FlavorInitializer {
         // Sync device info to native layer for SRP challenge payload
         val deviceInfo = DeviceInfoProvider(context)
         nativeUpdateDeviceInfo(
-            DeviceInfoProvider.SPOOFED_APP_VERSION,
-            deviceInfo.getAppLanguage(),
-            deviceInfo.getTimezone(),
-            deviceInfo.getDeviceHash().toString(),
-            deviceInfo.getRegionCode(),
-            deviceInfo.getTimezoneOffset(),
-            deviceInfo.isJailbreak(),
-            deviceInfo.getPreferredContentSize(),
-            deviceInfo.getStorageCapacity(),
-            deviceInfo.isDarkModeOn()
+            version = DeviceInfoProvider.SPOOFED_APP_VERSION,
+            lang = deviceInfo.getAppLanguage(),
+            timezone = deviceInfo.getTimezone(),
+            deviceHash = deviceInfo.getDeviceHash().toString(),
+            region = deviceInfo.getRegionCode(),
+            offset = deviceInfo.getTimezoneOffset(),
+            jailbreak = deviceInfo.isJailbreak(),
+            contentSize = deviceInfo.getPreferredContentSize(),
+            storage = deviceInfo.getStorageCapacity(),
+            darkMode = deviceInfo.isDarkModeOn(),
+            userAgent = DeviceInfoProvider.getSpoofedUserAgent()
         )
 
         // Sentry initialization with process-specific cache directory
@@ -109,7 +110,8 @@ object FlavorInitializer {
         jailbreak: Boolean,
         contentSize: String,
         storage: Double,
-        darkMode: Boolean
+        darkMode: Boolean,
+        userAgent: String
     )
 
     /**
