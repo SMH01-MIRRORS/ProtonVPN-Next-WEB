@@ -26,13 +26,17 @@ namespace next {
 
 bool SentryManager::g_initialized = false;
 
+std::string SentryManager::getSentryDsn() {
+    return XOR_STR("https://7b74cef88678ecb3e6047ac6b4abf139@o4510986952310784.ingest.de.sentry.io/4510986956374096");
+}
+
 void SentryManager::init(const char* cache_dir, bool debug, const char* version_name, int version_code, const SentrySettings& settings) {
     if (g_initialized) return;
 
     sentry_options_t *options = sentry_options_new();
 
     // Use the same DSN for now, but in a separate native instance
-    sentry_options_set_dsn(options, XOR_STR("https://7b74cef88678ecb3e6047ac6b4abf139@o4510986952310784.ingest.de.sentry.io/4510986956374096").c_str());
+    sentry_options_set_dsn(options, getSentryDsn().c_str());
 
     // Set a process-specific cache directory for native to avoid conflicts with Kotlin Sentry
     char native_cache[512];

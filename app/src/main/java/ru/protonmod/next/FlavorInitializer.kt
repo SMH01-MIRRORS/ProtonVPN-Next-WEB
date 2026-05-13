@@ -20,6 +20,7 @@ package ru.protonmod.next
 import android.content.Context
 import io.sentry.android.core.SentryAndroid
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.vpn.SentryBridge
 
 /**
  * Common initializer for the application.
@@ -43,7 +44,7 @@ object FlavorInitializer {
 
         // Sentry initialization
         SentryAndroid.init(context) { options ->
-            options.dsn = "https://7b74cef88678ecb3e6047ac6b4abf139@o4510986952310784.ingest.de.sentry.io/4510986956374096"
+            options.dsn = SentryBridge.getSentryDsn()
             options.isDebug = BuildConfig.DEBUG // Helpful for local development
 
             // STRICT SEPARATION: Disable NDK and scope sync to keep Kotlin and Native scopes independent

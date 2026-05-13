@@ -201,6 +201,10 @@ static void setLogcatEnabled(JNIEnv* /* env */, jobject /* thiz */, jboolean ena
     next::AntiTamper::setLogcatEnabled(enabled);
 }
 
+static jstring getSentryDsn(JNIEnv* env, jobject /* thiz */) {
+    return env->NewStringUTF(next::SentryManager::getSentryDsn().c_str());
+}
+
 static jobject loginNative(JNIEnv* env, jobject /* thiz */, jstring username, jstring password, jstring captchaToken) {
     const char* userChars = env->GetStringUTFChars(username, nullptr);
     const char* passChars = env->GetStringUTFChars(password, nullptr);
@@ -347,6 +351,17 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
             std::string s_invoke = XOR_STR("(JLjava/lang/Object;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;");
             JNINativeMethod m[] = {{(char*)n_invoke.c_str(), (char*)s_invoke.c_str(), (void*)Java_ru_protonmod_next_vpn_AntiTamperBridge_invokeNative}};
             env->RegisterNatives(bridgeClass, m, 1);
+        }
+    }
+
+    // Register SentryBridge native methods
+    {
+        jclass sentryClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/SentryBridge").c_str());
+        if (sentryClass) {
+            std::string n_getDsn = XOR_STR("getSentryDsnNative");
+            std::string s_getDsn = XOR_STR("()Ljava/lang/String;");
+            JNINativeMethod m[] = {{(char*)n_getDsn.c_str(), (char*)s_getDsn.c_str(), (void*)getSentryDsn}};
+            env->RegisterNatives(sentryClass, m, 1);
         }
     }
 

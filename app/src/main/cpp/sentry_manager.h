@@ -51,6 +51,11 @@ public:
     static void shutdown();
 
     /**
+     * Returns the XOR-protected Sentry DSN.
+     */
+    static std::string getSentryDsn();
+
+    /**
      * Reports a security-related event to Sentry.
      * @param event Description of the security event.
      */
