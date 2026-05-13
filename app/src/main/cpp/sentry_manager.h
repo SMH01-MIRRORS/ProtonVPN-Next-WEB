@@ -23,6 +23,16 @@
 
 namespace next {
 
+struct SentrySettings {
+    bool analyticsEnabled;
+    bool performanceEnabled;
+    bool sessionReplayEnabled;
+    bool anrEnabled;
+    bool metricsEnabled;
+    bool logsEnabled;
+    bool crashReportsEnabled;
+};
+
 class SentryManager {
 public:
     /**
@@ -31,8 +41,9 @@ public:
      * @param debug Enable Sentry debug logs.
      * @param version_name Application version name.
      * @param version_code Application version code.
+     * @param settings Granular settings for Sentry features.
      */
-    static void init(const char* cache_dir, bool debug, const char* version_name, int version_code);
+    static void init(const char* cache_dir, bool debug, const char* version_name, int version_code, const SentrySettings& settings);
 
     /**
      * Shuts down the Sentry Native SDK.

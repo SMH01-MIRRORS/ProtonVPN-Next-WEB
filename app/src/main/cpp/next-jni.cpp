@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2026 SMH01
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #include <jni.h>
 #include <string>
 #include <vector>
@@ -14,7 +31,13 @@
 
 using namespace next;
 
-// Internal, non-exported native functions
+// Global JNI cache definitions (shared across translation units via api.h)
+namespace next {
+    jclass g_vpn_manager_class = nullptr;
+    jmethodID g_perform_request_mid = nullptr;
+    jclass g_native_response_class = nullptr;
+}
+
 static jstring generateConfig(
     JNIEnv* env, jobject /* thiz */, jstring server_public_key, jstring private_key, jstring local_ip, jstring dns_server, jstring target_ip, jboolean is_include_mode, jobjectArray selected_apps, jobjectArray selected_ips, jint port, jstring certificate, jobject obfuscation_params
 ) {
@@ -94,10 +117,6 @@ static jboolean canDisconnect(JNIEnv* /* env */, jobject /* thiz */) {
     return g_vpn_manager.canDisconnect();
 }
 
-static void onActivityResumed(JNIEnv* env, jobject /* thiz */, jobject activity) {
-    next::AntiTamper::onActivityResumed(env, activity);
-}
-
 static jstring getProtectedString(JNIEnv* env, jobject /* thiz */, jstring locale, jstring key) {
     const char* localeChars = env->GetStringUTFChars(locale, nullptr);
     const char* keyChars = env->GetStringUTFChars(key, nullptr);
@@ -109,28 +128,6 @@ static jstring getProtectedString(JNIEnv* env, jobject /* thiz */, jstring local
 
 static jboolean isTamperDetected(JNIEnv* /* env */, jobject /* thiz */) {
     return g_vpn_manager.isTamperDetected();
-}
-
-static void onSurfaceCreated(JNIEnv* env, jobject /* thiz */, jobject surface) {
-    ANativeWindow* window = ANativeWindow_fromSurface(env, surface);
-    next::AntiTamper::initImGui(window);
-}
-
-static void onSurfaceDestroyed(JNIEnv* /* env */, jobject /* thiz */) {
-    next::AntiTamper::initImGui(nullptr);
-}
-
-static void onOverlayTouch(JNIEnv* env, jobject /* thiz */, jobject activity, jfloat x, jfloat y, jint action) {
-    next::AntiTamper::handleInputEvent(x, y, action);
-    if (next::AntiTamper::g_download_clicked) {
-        next::AntiTamper::g_download_clicked = false;
-        next::AntiTamper::handleDownloadOfficial(env, activity);
-    }
-    if (next::AntiTamper::g_accept_clicked) {
-        next::AntiTamper::g_accept_clicked = false;
-        next::AntiTamper::incrementTamperAckCount(env, activity);
-        next::AntiTamper::dismissNativeOverlay(env);
-    }
 }
 
 extern "C" JNIEXPORT jobject JNICALL
@@ -258,16 +255,6 @@ static jobject loginNative(JNIEnv* env, jobject /* thiz */, jstring username, js
     return jResult;
 }
 
-static void nativeInitSentry(JNIEnv* env, jclass /* clazz */, jstring cacheDir, jboolean debug, jstring versionName, jint versionCode) {
-    const char* cacheChars = env->GetStringUTFChars(cacheDir, nullptr);
-    const char* versionChars = env->GetStringUTFChars(versionName, nullptr);
-
-    SentryManager::init(cacheChars, (bool)debug, versionChars, (int)versionCode);
-
-    env->ReleaseStringUTFChars(cacheDir, cacheChars);
-    env->ReleaseStringUTFChars(versionName, versionChars);
-}
-
 static void nativeAddBreadcrumb(JNIEnv* env, jclass /* clazz */, jstring category, jstring message, jint level) {
     const char* catChars = env->GetStringUTFChars(category, nullptr);
     const char* msgChars = env->GetStringUTFChars(message, nullptr);
@@ -284,6 +271,43 @@ static void nativeCaptureMessage(JNIEnv* env, jclass /* clazz */, jstring messag
     SentryManager::captureMessage(msgChars, static_cast<sentry_level_t>(level));
 
     env->ReleaseStringUTFChars(message, msgChars);
+}
+
+static void nativeUpdateDeviceInfo(JNIEnv* env, jclass /* clazz */,
+                                   jstring version, jstring lang, jstring timezone,
+                                   jstring deviceHash, jstring region, jint offset,
+                                   jboolean jailbreak, jstring contentSize,
+                                   jdouble storage, jboolean darkMode, jstring userAgent) {
+    DeviceInfo info;
+    const char* vChars = env->GetStringUTFChars(version, nullptr);
+    const char* lChars = env->GetStringUTFChars(lang, nullptr);
+    const char* tChars = env->GetStringUTFChars(timezone, nullptr);
+    const char* dChars = env->GetStringUTFChars(deviceHash, nullptr);
+    const char* rChars = env->GetStringUTFChars(region, nullptr);
+    const char* cChars = env->GetStringUTFChars(contentSize, nullptr);
+    const char* uChars = env->GetStringUTFChars(userAgent, nullptr);
+
+    info.version = vChars;
+    info.lang = lChars;
+    info.timezone = tChars;
+    info.deviceHash = dChars;
+    info.region = rChars;
+    info.offset = (int)offset;
+    info.jailbreak = (bool)jailbreak;
+    info.contentSize = cChars;
+    info.storage = (double)storage;
+    info.darkMode = (bool)darkMode;
+    info.userAgent = uChars;
+
+    AuthManager::updateDeviceInfo(info);
+
+    env->ReleaseStringUTFChars(version, vChars);
+    env->ReleaseStringUTFChars(lang, lChars);
+    env->ReleaseStringUTFChars(timezone, tChars);
+    env->ReleaseStringUTFChars(deviceHash, dChars);
+    env->ReleaseStringUTFChars(region, rChars);
+    env->ReleaseStringUTFChars(contentSize, cChars);
+    env->ReleaseStringUTFChars(userAgent, uChars);
 }
 
 extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
@@ -321,6 +345,10 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
     {
         jclass managerClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/NextVpnManager").c_str());
         if (managerClass) {
+            next::g_vpn_manager_class = (jclass)env->NewGlobalRef(managerClass);
+            next::g_perform_request_mid = env->GetStaticMethodID(next::g_vpn_manager_class, XOR_STR("performNativeRequest").c_str(),
+                XOR_STR("(Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;)Lru/protonmod/next/vpn/NextVpnManager$NativeResponse;").c_str());
+
             std::string n_setState = XOR_STR("setStateNative");
             std::string s_setState = XOR_STR("(I)V");
             std::string n_getState = XOR_STR("getStateNative");
@@ -346,6 +374,11 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
                 {(char*)n_setLog.c_str(), (char*)s_setLog.c_str(), (void*)setLogcatEnabled}
             };
             env->RegisterNatives(managerClass, m, 7);
+        }
+
+        jclass responseClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/NextVpnManager$NativeResponse").c_str());
+        if (responseClass) {
+            next::g_native_response_class = (jclass)env->NewGlobalRef(responseClass);
         }
     }
 
@@ -375,9 +408,12 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
     {
         jclass flavorClass = env->FindClass(XOR_STR("ru/protonmod/next/FlavorInitializer").c_str());
         if (flavorClass) {
-            std::string n_initSentry = XOR_STR("nativeInitSentry");
-            std::string s_initSentry = XOR_STR("(Ljava/lang/String;ZLjava/lang/String;I)V");
-            JNINativeMethod m[] = {{(char*)n_initSentry.c_str(), (char*)s_initSentry.c_str(), (void*)nativeInitSentry}};
+            std::string n_updateDevice = XOR_STR("nativeUpdateDeviceInfo");
+            std::string s_updateDevice = XOR_STR("(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IZLjava/lang/String;DZLjava/lang/String;)V");
+
+            JNINativeMethod m[] = {
+                {(char*)n_updateDevice.c_str(), (char*)s_updateDevice.c_str(), (void*)nativeUpdateDeviceInfo}
+            };
             env->RegisterNatives(flavorClass, m, 1);
         }
     }

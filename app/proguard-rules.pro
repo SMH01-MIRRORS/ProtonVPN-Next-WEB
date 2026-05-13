@@ -39,6 +39,13 @@
 # this R8 desugaring shim at runtime. Do NOT suppress with -dontwarn.
 -keep class com.android.tools.r8.RecordTag { *; }
 
+# --- JNI Interfaces ---
+-keep class ru.protonmod.next.vpn.NextVpnManager { *; }
+-keep class ru.protonmod.next.vpn.NextVpnManager$NativeResponse { *; }
+-keep class ru.protonmod.next.utils.ProtonLogger { *; }
+-keep class ru.protonmod.next.FlavorInitializer { *; }
+-keep class ru.protonmod.next.data.repository.AuthRepository$NativeLoginResult { *; }
+
 # Preserve line numbers for non-obfuscated stack traces (optional, increases size slightly)
 #-keepattributes SourceFile,LineNumberTable
 

@@ -23,50 +23,27 @@
 
 namespace next {
 
-bool SentryManager::g_initialized = false;
+bool SentryManager::g_initialized = true; // Assume initialized by Java SDK via NDK integration
 
-void SentryManager::init(const char* cache_dir, bool debug, const char* version_name, int version_code) {
-    if (g_initialized) return;
-
-    sentry_options_t* options = sentry_options_new();
-
-    // Obfuscated DSN
-    sentry_options_set_dsn(options, XOR_STR("https://7b74cef88678ecb3e6047ac6b4abf139@o4510986952310784.ingest.de.sentry.io/4510986956374096").c_str());
-
-    // Process-specific cache directory to avoid collision
-    sentry_options_set_database_path(options, cache_dir);
-
-    sentry_options_set_debug(options, debug ? 1 : 0);
-    sentry_options_set_release(options, version_name);
-
-    // Add version code as a tag or extra info if needed
-    // sentry_options_add_attachment(options, ...) // Could attach logs here too
-
-    if (sentry_init(options) == 0) {
-        g_initialized = true;
-        __android_log_print(ANDROID_LOG_INFO, TAG, "Sentry Native SDK initialized in %s", cache_dir);
-
-        // Set basic tags
-        sentry_set_tag("version_code", std::to_string(version_code).c_str());
-    } else {
-        __android_log_print(ANDROID_LOG_ERROR, TAG, "Failed to initialize Sentry Native SDK");
-    }
+void SentryManager::init(const char* cache_dir, bool debug, const char* version_name, int version_code, const SentrySettings& settings) {
+    // Manual init removed. The Java SDK handles this.
+    (void)cache_dir; (void)debug; (void)version_name; (void)version_code; (void)settings;
+    __android_log_print(ANDROID_LOG_INFO, TAG, "Sentry Native scope linked to Java SDK");
 }
 
 void SentryManager::shutdown() {
-    if (!g_initialized) return;
-    sentry_close();
-    g_initialized = false;
+    // Shutdown handled by Java SDK
 }
 
 void SentryManager::reportSecurityEvent(const std::string& event) {
-    if (!g_initialized) return;
-
     sentry_value_t sentry_event = sentry_value_new_event();
-    sentry_value_set_by_key(sentry_event, "message", sentry_value_new_string(event.c_str()));
+
+    sentry_value_t s_msg = sentry_value_new_object();
+    sentry_value_set_by_key(s_msg, "formatted", sentry_value_new_string(event.c_str()));
+    sentry_value_set_by_key(sentry_event, "message", s_msg);
+
     sentry_value_set_by_key(sentry_event, "level", sentry_value_new_string("warning"));
 
-    // Add security category tag
     sentry_value_t tags = sentry_value_new_object();
     sentry_value_set_by_key(tags, "category", sentry_value_new_string("security"));
     sentry_value_set_by_key(sentry_event, "tags", tags);
@@ -77,8 +54,6 @@ void SentryManager::reportSecurityEvent(const std::string& event) {
 }
 
 void SentryManager::addBreadcrumb(const std::string& category, const std::string& message, sentry_level_t level) {
-    if (!g_initialized) return;
-
     sentry_value_t breadcrumb = sentry_value_new_breadcrumb(category.c_str(), message.c_str());
     sentry_value_set_by_key(breadcrumb, "level", sentry_value_new_string(
         level == SENTRY_LEVEL_DEBUG ? "debug" :
@@ -90,8 +65,6 @@ void SentryManager::addBreadcrumb(const std::string& category, const std::string
 }
 
 void SentryManager::captureMessage(const std::string& message, sentry_level_t level) {
-    if (!g_initialized) return;
-
     sentry_value_t event = sentry_value_new_message_event(level, nullptr, message.c_str());
     sentry_capture_event(event);
 }

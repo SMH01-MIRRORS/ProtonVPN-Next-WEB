@@ -40,10 +40,15 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class NextVpnManager @Inject constructor() {
+class NextVpnManager @Inject constructor(
+    private val okHttpClient: OkHttpClient
+) {
+
+    data class NativeResponse(val code: Int, val body: String)
 
     init {
         System.loadLibrary("next")
+        instance = this
     }
 
     fun setState(state: AmneziaVpnManager.VpnState) {
@@ -89,14 +94,13 @@ class NextVpnManager @Inject constructor() {
 
     companion object {
         var isWarningShown = false
+        private var instance: NextVpnManager? = null
 
         /**
          * Honeypot: A constant that looks like a security key.
          * Modders often try to change such constants to "bypass" checks.
          */
         const val SECURITY_VERIFICATION_TOKEN = "7b74cef88678ecb3e6047ac6b4abf139"
-
-        data class NativeResponse(val code: Int, val body: String)
 
         @JvmStatic
         fun performNativeRequest(
@@ -105,7 +109,8 @@ class NextVpnManager @Inject constructor() {
             headers: Map<String, String>,
             body: String?
         ): NativeResponse {
-            val client = OkHttpClient()
+            ProtonLogger.d("NextVpnManager", "Native Request: $method $url")
+            val client = instance?.okHttpClient ?: OkHttpClient()
             val requestBuilder = Request.Builder().url(url)
             headers.forEach { (k, v) -> requestBuilder.addHeader(k, v) }
             
@@ -114,9 +119,12 @@ class NextVpnManager @Inject constructor() {
             
             return try {
                 client.newCall(requestBuilder.build()).execute().use { response ->
-                    NativeResponse(response.code, response.body?.string() ?: "")
+                    val responseBody = response.body?.string() ?: ""
+                    ProtonLogger.v("NextVpnManager", "Native Response [$url]: ${response.code}")
+                    NativeResponse(response.code, responseBody)
                 }
             } catch (e: Exception) {
+                ProtonLogger.e("NextVpnManager", "Native Request Failed [$url]", e)
                 NativeResponse(500, e.message ?: "Unknown error")
             }
         }

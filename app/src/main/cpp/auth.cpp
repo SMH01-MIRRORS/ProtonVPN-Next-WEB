@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2026 SMH01
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #include "auth.h"
 #include "json.hpp"
 #include "obfuscation.h"
@@ -11,17 +28,32 @@ using json = nlohmann::json;
 
 namespace next {
 
+static DeviceInfo g_device_info;
+
+void AuthManager::updateDeviceInfo(const DeviceInfo& info) {
+    g_device_info = info;
+}
+
+const DeviceInfo& AuthManager::getDeviceInfo() {
+    return g_device_info;
+}
+
 std::string AuthManager::buildChallengePayload() {
-    // Simplified version of the Kotlin buildChallengePayload
     json payload = {
         {"Payload", {
             {"vpn-android-v4-challenge-0", {
                 {"type", "me.proton.core.challenge.data.frame.ChallengeFrame.Device"},
-                {"v", "12.0.0"}, // Should be dynamic
-                {"appLang", "en"},
-                {"timezone", "UTC"},
-                {"deviceName", "Android Device"},
-                {"isJailbreak", false}
+                {"v", g_device_info.version.empty() ? XOR_STR("5.18.1.0") : g_device_info.version},
+                {"appLang", g_device_info.lang.empty() ? XOR_STR("en") : g_device_info.lang},
+                {"timezone", g_device_info.timezone.empty() ? XOR_STR("UTC") : g_device_info.timezone},
+                {"deviceName", g_device_info.deviceHash.empty() ? XOR_STR("0") : g_device_info.deviceHash},
+                {"regionCode", g_device_info.region.empty() ? XOR_STR("US") : g_device_info.region},
+                {"timezoneOffset", g_device_info.offset},
+                {"isJailbreak", g_device_info.jailbreak},
+                {"preferredContentSize", g_device_info.contentSize.empty() ? XOR_STR("1.0") : g_device_info.contentSize},
+                {"storageCapacity", g_device_info.storage},
+                {"isDarkmodeOn", g_device_info.darkMode},
+                {"keyboards", json::array()}
             }}
         }}
     };
@@ -35,14 +67,14 @@ LoginResult AuthManager::login(JNIEnv* env, const std::string& username, const s
     std::map<std::string, std::string> headers;
     if (!captchaToken.empty()) {
         headers["x-pm-human-verification-token"] = captchaToken;
-        headers["x-pm-human-verification-token-type"] = "captcha";
+        headers["x-PM-Human-Verification-Token-Type"] = "captcha"; // Proton often uses mixed case for some reason
     }
 
     // Phase 0: Anonymous Session
     auto anonResp = ApiClient::post(env, "auth/v4/sessions", challenge, headers);
     if (anonResp.statusCode != 200) {
-        LOGE("Failed to create anonymous session: %d", anonResp.statusCode);
-        return {false, anonResp.statusCode, "", "", "", "", {}, "Anon session failed"};
+        LOGE("Failed to create anonymous session: %d. Body: %s", anonResp.statusCode, anonResp.body.c_str());
+        return {false, anonResp.statusCode, "", "", "", "", {}, "Anon session failed", false, "", ""};
     }
 
     auto anonJson = json::parse(anonResp.body);
@@ -67,7 +99,8 @@ LoginResult AuthManager::login(JNIEnv* env, const std::string& username, const s
     }
 
     if (infoResp.statusCode != 200) {
-        return {false, infoResp.statusCode, "", "", anonUid, "", {}, "Auth info failed"};
+        LOGE("Auth info failed: %d. Body: %s", infoResp.statusCode, infoResp.body.c_str());
+        return {false, infoResp.statusCode, "", "", anonUid, "", {}, "Auth info failed", false, "", ""};
     }
 
     auto infoJson = json::parse(infoResp.body);
@@ -76,15 +109,15 @@ LoginResult AuthManager::login(JNIEnv* env, const std::string& username, const s
     std::string serverEphemeral = infoJson.value("ServerEphemeral", "");
     std::string srpSession = infoJson.value("SRPSession", "");
 
-    // Phase 2: SRP Proofs (Calling back to Kotlin for now to use existing Srp implementation)
+    // Phase 2: SRP Proofs
     jclass cryptoClass = env->FindClass(XOR_STR("ru/protonmod/next/utils/crypto/CryptoWrapper").c_str());
-    jmethodID proofsMethod = env->GetMethodID(cryptoClass, XOR_STR("generateSrpProofs").c_str(),
-        XOR_STR("(Ljava/lang/String;[BLjava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lru/protonmod/next/utils/crypto/SrpProofs;").c_str());
+    if (!cryptoClass) return {false, 500, "", "", anonUid, "", {}, "CryptoWrapper class not found", false, "", ""};
 
-    // Need an instance of CryptoWrapper. In a real app we'd inject it or have a static method.
-    // For this migration, we'll assume we can find/create one.
     jmethodID cryptoInit = env->GetMethodID(cryptoClass, "<init>", "()V");
     jobject cryptoObj = env->NewObject(cryptoClass, cryptoInit);
+
+    jmethodID proofsMethod = env->GetMethodID(cryptoClass, XOR_STR("generateSrpProofs").c_str(),
+        XOR_STR("(Ljava/lang/String;[BLjava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lru/protonmod/next/utils/crypto/SrpProofs;").c_str());
 
     jstring jUser = env->NewStringUTF(username.c_str());
     jbyteArray jPass = env->NewByteArray(password.length());
@@ -95,8 +128,14 @@ LoginResult AuthManager::login(JNIEnv* env, const std::string& username, const s
 
     jobject jProofs = env->CallObjectMethod(cryptoObj, proofsMethod, jUser, jPass, jSalt, jMod, jEph);
 
+    if (env->ExceptionCheck()) {
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return {false, 500, "", "", anonUid, "", {}, "SRP proof generation threw exception", false, "", ""};
+    }
+
     if (!jProofs) {
-        return {false, 500, "", "", anonUid, "", {}, "SRP proof generation failed"};
+        return {false, 500, "", "", anonUid, "", {}, "SRP proof generation returned null", false, "", ""};
     }
 
     jclass proofsClass = env->GetObjectClass(jProofs);
@@ -111,7 +150,7 @@ LoginResult AuthManager::login(JNIEnv* env, const std::string& username, const s
         {"ClientEphemeral", clientEphChars},
         {"ClientProof", clientProofChars},
         {"SRPSession", srpSession},
-        {"Payload", anonJson["Payload"]}
+        {"Payload", json::parse(challenge)["Payload"]}
     };
 
     env->ReleaseStringUTFChars(jClientEph, clientEphChars);
@@ -132,15 +171,20 @@ LoginResult AuthManager::login(JNIEnv* env, const std::string& username, const s
         if (loginJson.contains("Scopes")) {
             for (auto& scope : loginJson["Scopes"]) res.scopes.push_back(scope);
         }
+        res.error = "";
+        res.captchaRequired = false;
+        res.captchaUrl = "";
+        res.captchaToken = "";
         return res;
     }
 
-    return {false, loginResp.statusCode, "", "", anonUid, "", {}, "Login failed"};
+    LOGE("Final login failed: %d. Body: %s", loginResp.statusCode, loginResp.body.c_str());
+    return {false, loginResp.statusCode, "", "", anonUid, "", {}, "Login failed", false, "", ""};
 }
 
 LoginResult AuthManager::loginAnonymous(JNIEnv* env, const std::string& captchaToken) {
-    // Implementation for anonymous login
-    return {false, 500, "", "", "", "", {}, "Not implemented yet"};
+    (void)env; (void)captchaToken;
+    return {false, 500, "", "", "", "", {}, "Not implemented yet", false, "", ""};
 }
 
 LoginResult AuthManager::refreshSession(JNIEnv* env, const std::string& sessionId, const std::string& refreshToken) {
@@ -149,7 +193,7 @@ LoginResult AuthManager::refreshSession(JNIEnv* env, const std::string& sessionI
         {"RefreshToken", refreshToken},
         {"ResponseType", "token"},
         {"GrantType", "refresh_token"},
-        {"RedirectURI", "http://protonmail.ch"}
+        {"RedirectURI", "https://vpn-api.proton.me/"}
     };
 
     auto resp = ApiClient::post(env, "auth/v4/refresh", req.dump());
@@ -157,11 +201,19 @@ LoginResult AuthManager::refreshSession(JNIEnv* env, const std::string& sessionI
         auto j = json::parse(resp.body);
         LoginResult res;
         res.success = true;
+        res.code = 1000;
         res.accessToken = j.value("AccessToken", "");
         res.refreshToken = j.value("RefreshToken", refreshToken);
+        res.sessionId = sessionId;
+        res.userId = "";
+        res.scopes = {};
+        res.error = "";
+        res.captchaRequired = false;
+        res.captchaUrl = "";
+        res.captchaToken = "";
         return res;
     }
-    return {false, resp.statusCode, "", "", "", "", {}, "Refresh failed"};
+    return {false, resp.statusCode, "", "", "", "", {}, "Refresh failed", false, "", ""};
 }
 
 } // namespace next

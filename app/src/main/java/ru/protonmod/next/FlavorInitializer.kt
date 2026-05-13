@@ -18,7 +18,9 @@
 package ru.protonmod.next
 
 import android.content.Context
+import io.sentry.android.core.SentryAndroid
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.utils.DeviceInfoProvider
 import java.io.File
 
 /**
@@ -34,30 +36,81 @@ object FlavorInitializer {
 
         // Read settings synchronously for app startup to avoid ANR
         val settingsManager = SettingsManager(context)
+        val isAnalyticsEnabled = settingsManager.isAnalyticsEnabledSync()
+        val isPerformanceEnabled = settingsManager.isPerformanceEnabledSync()
+        val isSessionReplayEnabled = settingsManager.isSessionReplayEnabledSync()
+        val isAnrEnabled = settingsManager.isAnrEnabledSync()
+        val isMetricsEnabled = settingsManager.isMetricsEnabledSync()
+        val isLogsEnabled = settingsManager.isLogsEnabledSync()
         val isCrashReportsEnabled = settingsManager.isCrashReportsEnabledSync()
 
-        // Sentry Native initialization (Unified reporting)
+        // Sync device info to native layer for SRP challenge payload
+        val deviceInfo = DeviceInfoProvider(context)
+        nativeUpdateDeviceInfo(
+            DeviceInfoProvider.SPOOFED_APP_VERSION,
+            deviceInfo.getAppLanguage(),
+            deviceInfo.getTimezone(),
+            deviceInfo.getDeviceHash().toString(),
+            deviceInfo.getRegionCode(),
+            deviceInfo.getTimezoneOffset(),
+            deviceInfo.isJailbreak(),
+            deviceInfo.getPreferredContentSize(),
+            deviceInfo.getStorageCapacity(),
+            deviceInfo.isDarkModeOn()
+        )
+
+        // Sentry initialization with process-specific cache directory
         if (isCrashReportsEnabled) {
             val processName = android.app.Application.getProcessName()
             val suffix = if (processName == context.packageName) "main" else processName.substringAfterLast(':')
-            val sentryCacheDir = File(context.cacheDir, "sentry_$suffix")
-            if (!sentryCacheDir.exists()) sentryCacheDir.mkdirs()
+            
+            SentryAndroid.init(context) { options ->
+                options.dsn = "https://7b74cef88678ecb3e6047ac6b4abf139@o4510986952310784.ingest.de.sentry.io/4510986956374096"
+                options.isDebug = BuildConfig.DEBUG
+                options.cacheDirPath = File(context.cacheDir, "sentry_$suffix").absolutePath
+                
+                options.setBeforeSend { event, _ ->
+                    if (!settingsManager.isCrashReportsEnabledSync()) null else event
+                }
 
-            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            val versionName = packageInfo.versionName ?: "unknown"
-            val versionCode = packageInfo.longVersionCode.toInt()
-
-            nativeInitSentry(
-                sentryCacheDir.absolutePath,
-                BuildConfig.DEBUG,
-                versionName,
-                versionCode
-            )
+                options.tracesSampleRate = if (isPerformanceEnabled) 1.0 else 0.0
+                options.profilesSampleRate = if (isPerformanceEnabled) 1.0 else 0.0
+                
+                options.isEnableAutoSessionTracking = isAnalyticsEnabled
+                options.isAnrEnabled = isAnrEnabled
+                options.isEnableAppStartProfiling = false
+                options.isEnableUserInteractionTracing = isAnalyticsEnabled
+                
+                options.metrics.isEnabled = isMetricsEnabled
+                options.logs.isEnabled = isLogsEnabled
+                
+                options.isAttachScreenshot = isAnalyticsEnabled
+                options.isAttachViewHierarchy = isAnalyticsEnabled
+                
+                if (isSessionReplayEnabled) {
+                    options.sessionReplay.sessionSampleRate = 1.0
+                    options.sessionReplay.onErrorSampleRate = 1.0
+                } else {
+                    options.sessionReplay.sessionSampleRate = 0.0
+                    options.sessionReplay.onErrorSampleRate = 0.0
+                }
+            }
         }
     }
 
     @JvmStatic
-    private external fun nativeInitSentry(cacheDir: String, debug: Boolean, versionName: String, versionCode: Int)
+    private external fun nativeUpdateDeviceInfo(
+        version: String,
+        lang: String,
+        timezone: String,
+        deviceHash: String,
+        region: String,
+        offset: Int,
+        jailbreak: Boolean,
+        contentSize: String,
+        storage: Double,
+        darkMode: Boolean
+    )
 
     /**
      * Honeypot: Performs extra security validations.

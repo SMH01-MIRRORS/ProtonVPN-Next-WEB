@@ -1,5 +1,24 @@
+/*
+ * Copyright (C) 2026 SMH01
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  See the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #include "api.h"
 #include "obfuscation.h"
+#include "auth.h"
 #include <android/log.h>
 
 #define LOG_TAG "NextApi"
@@ -9,8 +28,7 @@
 namespace next {
 
 std::string ApiClient::getBaseUrl() {
-    // In a real app, this would be obfuscated or dynamically selected
-    return XOR_STR("https://api.protonmail.ch/");
+    return XOR_STR("https://vpn-api.proton.me/");
 }
 
 ApiClient::Response ApiClient::performRequest(
@@ -20,18 +38,25 @@ ApiClient::Response ApiClient::performRequest(
     const std::map<std::string, std::string>& headers,
     const std::string& body
 ) {
-    jclass managerClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/NextVpnManager").c_str());
-    if (!managerClass) {
-        LOGE("Could not find NextVpnManager class");
+    if (!g_vpn_manager_class || !g_perform_request_mid) {
+        LOGE("JNI cache not initialized for NextVpnManager");
         return {500, "", {}};
     }
 
-    jmethodID requestMethod = env->GetStaticMethodID(managerClass, XOR_STR("performNativeRequest").c_str(),
-        XOR_STR("(Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;)Lru/protonmod/next/vpn/NextVpnManager$NativeResponse;").c_str());
+    const auto& deviceInfo = AuthManager::getDeviceInfo();
 
-    if (!requestMethod) {
-        LOGE("Could not find performNativeRequest method");
-        return {500, "", {}};
+    // Merge provided headers with mandatory dynamic Proton headers
+    std::map<std::string, std::string> finalHeaders = headers;
+    if (finalHeaders.find("x-pm-appversion") == finalHeaders.end()) {
+        std::string version = deviceInfo.version.empty() ? XOR_STR("5.18.1.0") : deviceInfo.version;
+        finalHeaders["x-pm-appversion"] = XOR_STR("android-vpn@") + version + XOR_STR("-dev+play");
+    }
+    if (finalHeaders.find("x-pm-apiversion") == finalHeaders.end()) {
+        finalHeaders["x-pm-apiversion"] = XOR_STR("3");
+    }
+    if (finalHeaders.find("User-Agent") == finalHeaders.end()) {
+        finalHeaders["User-Agent"] = deviceInfo.userAgent.empty() ?
+            XOR_STR("ProtonVPN/5.18.1.0 (Android 14; EN)") : deviceInfo.userAgent;
     }
 
     // Convert headers map to Java Map
@@ -40,7 +65,7 @@ ApiClient::Response ApiClient::performRequest(
     jobject hashMap = env->NewObject(hashMapClass, hashMapInit);
     jmethodID putMethod = env->GetMethodID(hashMapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 
-    for (const auto& [key, value] : headers) {
+    for (const auto& [key, value] : finalHeaders) {
         jstring jKey = env->NewStringUTF(key.c_str());
         jstring jValue = env->NewStringUTF(value.c_str());
         env->CallObjectMethod(hashMap, putMethod, jKey, jValue);
@@ -50,13 +75,19 @@ ApiClient::Response ApiClient::performRequest(
 
     jstring jMethod = env->NewStringUTF(method.c_str());
     jstring jUrl = env->NewStringUTF(url.c_str());
-    jstring jBody = env->NewStringUTF(body.c_str());
+    jstring jBody = body.empty() ? nullptr : env->NewStringUTF(body.c_str());
 
-    jobject nativeResponse = env->CallStaticObjectMethod(managerClass, requestMethod, jMethod, jUrl, hashMap, jBody);
+    jobject nativeResponse = env->CallStaticObjectMethod(g_vpn_manager_class, g_perform_request_mid, jMethod, jUrl, hashMap, jBody);
+
+    if (env->ExceptionCheck()) {
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        LOGE("Exception occurred during performNativeRequest");
+    }
 
     env->DeleteLocalRef(jMethod);
     env->DeleteLocalRef(jUrl);
-    env->DeleteLocalRef(jBody);
+    if (jBody) env->DeleteLocalRef(jBody);
     env->DeleteLocalRef(hashMap);
 
     if (!nativeResponse) {
@@ -64,16 +95,20 @@ ApiClient::Response ApiClient::performRequest(
         return {500, "", {}};
     }
 
-    jclass responseClass = env->GetObjectClass(nativeResponse);
-    jfieldID codeField = env->GetFieldID(responseClass, "code", "I");
-    jfieldID bodyField = env->GetFieldID(responseClass, "body", "Ljava/lang/String;");
+    jfieldID codeField = env->GetFieldID(g_native_response_class, "code", "I");
+    jfieldID bodyField = env->GetFieldID(g_native_response_class, "body", "Ljava/lang/String;");
 
     int code = env->GetIntField(nativeResponse, codeField);
     jstring jResponseBody = (jstring)env->GetObjectField(nativeResponse, bodyField);
 
-    const char* bodyChars = env->GetStringUTFChars(jResponseBody, nullptr);
-    std::string responseBody(bodyChars);
-    env->ReleaseStringUTFChars(jResponseBody, bodyChars);
+    std::string responseBody;
+    if (jResponseBody) {
+        const char* bodyChars = env->GetStringUTFChars(jResponseBody, nullptr);
+        responseBody = bodyChars;
+        env->ReleaseStringUTFChars(jResponseBody, bodyChars);
+    }
+
+    env->DeleteLocalRef(nativeResponse);
 
     return {code, responseBody, {}};
 }
@@ -81,19 +116,16 @@ ApiClient::Response ApiClient::performRequest(
 ApiClient::Response ApiClient::post(JNIEnv* env, const std::string& path, const std::string& jsonBody, const std::map<std::string, std::string>& extraHeaders) {
     std::map<std::string, std::string> headers = extraHeaders;
     headers["Content-Type"] = "application/json";
-    headers["Accept"] = "application/vnd.protonmail.v1+json";
     return performRequest(env, "POST", getBaseUrl() + path, headers, jsonBody);
 }
 
 ApiClient::Response ApiClient::get(JNIEnv* env, const std::string& path, const std::map<std::string, std::string>& extraHeaders) {
     std::map<std::string, std::string> headers = extraHeaders;
-    headers["Accept"] = "application/vnd.protonmail.v1+json";
     return performRequest(env, "GET", getBaseUrl() + path, headers);
 }
 
 ApiClient::Response ApiClient::del(JNIEnv* env, const std::string& path, const std::map<std::string, std::string>& extraHeaders) {
     std::map<std::string, std::string> headers = extraHeaders;
-    headers["Accept"] = "application/vnd.protonmail.v1+json";
     return performRequest(env, "DELETE", getBaseUrl() + path, headers);
 }
 
