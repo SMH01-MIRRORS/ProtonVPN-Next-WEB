@@ -47,7 +47,7 @@ object FlavorInitializer {
             options.dsn = SentryBridge.getSentryDsn()
             options.isDebug = BuildConfig.DEBUG // Helpful for local development
 
-            // STRICT SEPARATION: Disable NDK and scope sync to keep Kotlin and Native scopes independent
+            // NDK is removed to save APK size
             options.isEnableNdk = false
             options.isEnableScopeSync = false
 

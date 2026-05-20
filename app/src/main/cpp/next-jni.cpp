@@ -410,6 +410,7 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
 
                 const char* packagePathChars = env->GetStringUTFChars(packageName, nullptr);
 
+                // Sentry Native initialization removed (now a no-op)
                 SentryManager::init(cachePathChars, false, versionNameChars, versionCode, packagePathChars);
 
                 env->ReleaseStringUTFChars(packageName, packagePathChars);

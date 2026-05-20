@@ -949,8 +949,11 @@ void AntiTamper::reportSecurityEvent(JNIEnv* env, const std::string& event) {
     __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "!!! SECURITY EVENT DETECTED !!!");
     __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "Details: %s", event.c_str());
 
-    // Report to Sentry via unified Native Manager
-    SentryManager::reportSecurityEvent(event);
+    // Also send to Sentry Logs explorer
+    SentryManager::reportLog(env, 5, LOG_TAG, event.c_str());
+
+    // Report to Sentry via unified Native Manager (Issue/Event)
+    SentryManager::reportSecurityEvent(env, event);
 
     // Log state after attempt
     __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Security report state: TamperDetected=%d, OverlayActive=%d",

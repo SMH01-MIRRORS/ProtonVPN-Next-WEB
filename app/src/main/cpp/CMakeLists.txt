@@ -30,8 +30,6 @@ set(NEXT_SOURCES
     next-jni.cpp
 )
 
-find_package(sentry-native-ndk REQUIRED CONFIG)
-
 add_library(next SHARED ${NEXT_SOURCES} ${IMGUI_SOURCES})
 target_include_directories(next PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -39,4 +37,4 @@ target_include_directories(next PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/${IMGUI_DIR}/backends
 )
 target_compile_options(next PRIVATE -O2 -Wall -Wextra)
-target_link_libraries(next PRIVATE android log GLESv3 EGL sentry-native-ndk::sentry)
+target_link_libraries(next PRIVATE android log GLESv3 EGL)

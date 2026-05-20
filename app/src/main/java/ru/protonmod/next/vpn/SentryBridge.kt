@@ -17,8 +17,14 @@
 
 package ru.protonmod.next.vpn
 
+import io.sentry.Sentry
+import io.sentry.SentryEvent
+import io.sentry.SentryLevel
+import io.sentry.protocol.Message
+import ru.protonmod.next.utils.ProtonLogger
+
 /**
- * A bridge to retrieve Sentry configuration from native code.
+ * A bridge to retrieve Sentry configuration from native code and report events back.
  */
 object SentryBridge {
     init {
@@ -29,6 +35,49 @@ object SentryBridge {
      * Returns the XOR-protected Sentry DSN from native code.
      */
     fun getSentryDsn(): String = getSentryDsnNative()
+
+    /**
+     * Reports a security event to Sentry Android.
+     * Called from native code.
+     */
+    @JvmStatic
+    fun reportSecurityEvent(event: String) {
+        val sentryEvent = SentryEvent().apply {
+            message = Message().apply {
+                message = event
+            }
+            level = SentryLevel.FATAL
+            logger = "security"
+            setTag("category", "security")
+            setTag("tamper_detected", "true")
+        }
+        Sentry.captureEvent(sentryEvent)
+        // Also ensure it goes to the Logs explorer
+        ProtonLogger.e("Security", event)
+    }
+
+    /**
+     * Reports a log message to Sentry Android Logs explorer.
+     * Called from native code.
+     */
+    @JvmStatic
+    fun reportLog(level: Int, tag: String, message: String) {
+        val sentryLevel = when (level) {
+            2 -> SentryLevel.DEBUG
+            3 -> SentryLevel.INFO
+            4 -> SentryLevel.WARNING
+            5 -> SentryLevel.ERROR
+            6 -> SentryLevel.FATAL
+            else -> SentryLevel.INFO
+        }
+        when (sentryLevel) {
+            SentryLevel.DEBUG -> ProtonLogger.d(tag, message)
+            SentryLevel.INFO -> ProtonLogger.i(tag, message)
+            SentryLevel.WARNING -> ProtonLogger.w(tag, message)
+            SentryLevel.ERROR -> ProtonLogger.e(tag, message)
+            SentryLevel.FATAL -> ProtonLogger.e(tag, "[FATAL] $message")
+        }
+    }
 
     private external fun getSentryDsnNative(): String
 }

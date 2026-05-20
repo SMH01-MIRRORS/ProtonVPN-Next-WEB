@@ -19,24 +19,19 @@
 #define NEXT_SENTRY_MANAGER_H
 
 #include <string>
-#include <sentry.h>
+#include <jni.h>
 
 namespace next {
 
 class SentryManager {
 public:
     /**
-     * Initializes Sentry Native SDK for security events ONLY.
-     * @param cache_dir Process-specific cache directory for Sentry outbox.
-     * @param debug Enable Sentry debug logs.
-     * @param version_name Application version name.
-     * @param version_code Application version code.
-     * @param package_name Application package name.
+     * No-op since Sentry Native is removed.
      */
     static void init(const char* cache_dir, bool debug, const char* version_name, int version_code, const char* package_name);
 
     /**
-     * Shuts down the Sentry Native SDK.
+     * No-op since Sentry Native is removed.
      */
     static void shutdown();
 
@@ -46,13 +41,20 @@ public:
     static std::string getSentryDsn();
 
     /**
-     * Reports a security-related event to Sentry.
+     * Reports a security-related event to Sentry via JNI.
+     * @param env JNI environment.
      * @param event Description of the security event.
      */
-    static void reportSecurityEvent(const std::string& event);
+    static void reportSecurityEvent(JNIEnv* env, const std::string& event);
 
-private:
-    static bool g_initialized;
+    /**
+     * Reports a log message to Sentry via JNI.
+     * @param env JNI environment.
+     * @param level Log level (2=DEBUG, 3=INFO, 4=WARN, 5=ERROR, 6=FATAL).
+     * @param tag Log tag.
+     * @param message Log message.
+     */
+    static void reportLog(JNIEnv* env, int level, const char* tag, const char* message);
 };
 
 } // namespace next

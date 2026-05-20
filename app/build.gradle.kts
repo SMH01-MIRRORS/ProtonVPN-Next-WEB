@@ -243,9 +243,7 @@ android {
                         "**/libandroidx.graphics.path.so",
                         "**/libdatastore_shared_counter.so",
                         "**/libgojni.so",
-                        "**/libhev-socks5-tunnel.so",
-                        "**/libsentry-android.so",
-                        "**/libsentry.so"
+                        "**/libhev-socks5-tunnel.so"
                     ))
                 }
             }
@@ -315,7 +313,7 @@ tasks.register("generateSecurityMetadata") {
     val officialLibs = listOf(
         "libam-go.so", "libam-quick.so", "libam.so", 
         "libandroidx.graphics.path.so", "libdatastore_shared_counter.so",
-        "libgojni.so", "libhev-socks5-tunnel.so", "libsentry-android.so", 
+        "libgojni.so", "libhev-socks5-tunnel.so", "libsentry-android.so",
         "libsentry.so", "libbyedpi.so", "libnext.so"
     )
     inputs.property("officialLibs", officialLibs)
@@ -451,8 +449,6 @@ dependencies {
     implementation(libs.sentry.compose)
     implementation(libs.sentry.okhttp)
     implementation(libs.sentry.replay)
-    implementation(libs.sentryndk)
-    implementation(libs.sentrynative)
 
     // Testing
     testImplementation(libs.junit)
