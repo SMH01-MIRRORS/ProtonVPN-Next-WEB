@@ -162,6 +162,18 @@ fun DebugSettingsScreen(
                                     Spacer(Modifier.width(8.dp))
                                     Text(stringResource(R.string.debug_btn_refresh_session))
                                 }
+
+                                Button(
+                                    onClick = { viewModel.simulateExpiredCertificate() },
+                                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = colors.notificationError.copy(alpha = 0.8f)),
+                                    shape = RoundedCornerShape(12.dp),
+                                    enabled = !uiState.isLoading
+                                ) {
+                                    Icon(Icons.Rounded.BugReport, contentDescription = null)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(stringResource(R.string.debug_btn_simulate_expired_cert))
+                                }
                             } ?: Text(
                                 "No active session",
                                 color = colors.textWeak,

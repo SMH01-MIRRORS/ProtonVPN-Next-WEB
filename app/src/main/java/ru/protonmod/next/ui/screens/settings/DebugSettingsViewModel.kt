@@ -176,6 +176,22 @@ class DebugSettingsViewModel @Inject constructor(
         }
     }
 
+    fun simulateExpiredCertificate() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            // Set expiration to 5 seconds ago
+            val expiredTime = System.currentTimeMillis() / 1000 - 5
+            sessionDao.updateCertificateExpiry(expiredTime, expiredTime)
+            
+            loadCurrentData()
+            
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                message = context.getString(ru.protonmod.next.R.string.debug_cert_simulated)
+            )
+        }
+    }
+
     fun exportSession() {
         viewModelScope.launch {
             val sessionJson = authRepository.exportSession()

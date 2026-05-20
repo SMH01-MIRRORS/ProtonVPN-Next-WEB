@@ -361,8 +361,8 @@
     <string name="debug_cert_issued">Берілді: %1$s</string>
     <string name="debug_cert_expires">Мерзімі аяқталады: %1$s</string>
     <string name="debug_btn_refresh_cert">Сертификатты мәжбүрлі жаңарту</string>
-    <string name="debug_btn_refresh_session">Сеансты мәжбүрлі жаңарту</string>
-    <string name="debug_session_refreshed">Сеанс сәтті жаңартылды!</string>
+    <string name="debug_btn_simulate_expired_cert">Мерзімі өткен сертификатты симуляциялау</string>
+    <string name="debug_cert_simulated">Сертификаттың мерзімі аяқталуы симуляцияланды. Баннер бақылау тақтасында пайда болуы керек.</string>
     <string name="debug_exports_header">Экспорттау және диагностика</string>
     <string name="debug_btn_export_logs">Logcat-ты Жүктеулерге экспорттау</string>
     <string name="debug_btn_export_config">WG конфигурациясын экспорттау (.conf)</string>

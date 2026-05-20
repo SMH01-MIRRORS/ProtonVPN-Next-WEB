@@ -79,6 +79,9 @@ interface SessionDao {
     @Query("UPDATE session SET wgCertificate = :certificate, certExpiresAt = :expiresAt, certRefreshAt = :refreshAt WHERE id = 1")
     suspend fun updateCertificate(certificate: String, expiresAt: Long, refreshAt: Long)
 
+    @Query("UPDATE session SET certExpiresAt = :expiresAt, certRefreshAt = :refreshAt WHERE id = 1")
+    suspend fun updateCertificateExpiry(expiresAt: Long, refreshAt: Long)
+
     @Query("UPDATE session SET vpnIpv4 = :ipv4, vpnIpv6 = :ipv6, vpnDns = :dns WHERE id = 1")
     suspend fun updateVpnConnectionInfo(ipv4: String?, ipv6: String?, dns: String?)
 
