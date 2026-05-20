@@ -46,6 +46,7 @@
 -keep class ru.protonmod.next.data.network.NativeLoginResult { *; }
 -keep class ru.protonmod.next.vpn.NextVpnManager { *; }
 -keep class ru.protonmod.next.vpn.NextVpnManager$NativeResponse { *; }
+-keep class ru.protonmod.next.vpn.AmneziaVpnManager$ObfuscationParams { *; }
 -keep class ru.protonmod.next.utils.ProtonLogger { *; }
 -keep class ru.protonmod.next.FlavorInitializer { *; }
 -keepclassmembers class ru.protonmod.next.FlavorInitializer {
