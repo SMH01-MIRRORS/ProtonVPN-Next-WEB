@@ -43,12 +43,14 @@ void SentryManager::reportSecurityEvent(JNIEnv* env, const std::string& event) {
 
     jclass bridgeClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/SentryBridge").c_str());
     if (!bridgeClass) {
+        env->ExceptionClear();
         __android_log_print(ANDROID_LOG_ERROR, TAG, "Failed to find SentryBridge class");
         return;
     }
 
     jmethodID reportMethod = env->GetStaticMethodID(bridgeClass, XOR_STR("reportSecurityEvent").c_str(), XOR_STR("(Ljava/lang/String;)V").c_str());
     if (!reportMethod) {
+        env->ExceptionClear();
         __android_log_print(ANDROID_LOG_ERROR, TAG, "Failed to find reportSecurityEvent method");
         return;
     }
@@ -64,10 +66,16 @@ void SentryManager::reportLog(JNIEnv* env, int level, const char* tag, const cha
     if (!env) return;
 
     jclass bridgeClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/SentryBridge").c_str());
-    if (!bridgeClass) return;
+    if (!bridgeClass) {
+        env->ExceptionClear();
+        return;
+    }
 
     jmethodID reportLogMethod = env->GetStaticMethodID(bridgeClass, XOR_STR("reportLog").c_str(), XOR_STR("(ILjava/lang/String;Ljava/lang/String;)V").c_str());
-    if (!reportLogMethod) return;
+    if (!reportLogMethod) {
+        env->ExceptionClear();
+        return;
+    }
 
     jstring jTag = env->NewStringUTF(tag);
     jstring jMessage = env->NewStringUTF(message);

@@ -40,6 +40,8 @@
 -keep class ru.protonmod.next.vpn.NextConfigGenerator { *; }
 -keep class ru.protonmod.next.vpn.IpSubnetCalculatorImpl { *; }
 -keep class ru.protonmod.next.vpn.AntiTamperBridge { *; }
+-keep class ru.protonmod.next.vpn.SentryBridge { *; }
+-keep class ru.protonmod.next.utils.crypto.** { *; }
 -keep class ru.protonmod.next.data.network.AuthNativeBridgeImpl { *; }
 -keep class ru.protonmod.next.data.network.NativeLoginResult { *; }
 -keep class ru.protonmod.next.vpn.NextVpnManager { *; }
