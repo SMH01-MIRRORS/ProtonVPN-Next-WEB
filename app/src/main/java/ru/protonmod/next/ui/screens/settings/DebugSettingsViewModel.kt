@@ -179,9 +179,12 @@ class DebugSettingsViewModel @Inject constructor(
     fun simulateExpiredCertificate() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
-            // Set expiration to 5 seconds ago
+            // Set expiration to 5 seconds ago in DB
             val expiredTime = System.currentTimeMillis() / 1000 - 5
             sessionDao.updateCertificateExpiry(expiredTime, expiredTime)
+            
+            // Explicitly update AmneziaVpnManager state to trigger UI
+            vpnManager.simulateExpiredCertificate()
             
             loadCurrentData()
             

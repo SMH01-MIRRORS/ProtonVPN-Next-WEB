@@ -436,6 +436,10 @@ class AmneziaVpnManager @Inject constructor(
         return state is CertificateState.Expired || (state is CertificateState.RefreshFailed && state.isFullyExpired)
     }
 
+    fun simulateExpiredCertificate() {
+        _certState.value = CertificateState.Expired
+    }
+
     suspend fun forceRefreshCertificate(): Result<String> {
         return performCertificateRefresh(force = true)
     }
