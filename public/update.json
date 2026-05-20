@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159892,
-      "versionName": "12.0.0-alpha1st3-53-g80c0324-nightly",
+      "versionCode": 605159893,
+      "versionName": "12.0.0-alpha1st3-54-g4a6f3c8-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "fix: ensure immediate UI update when simulating expired certificates\n\n* feat: add `simulateExpiredCertificate` to `AmneziaVpnManager` to allow manual state overrides\n* fix: update `DebugSettingsViewModel` to explicitly trigger the manager's expired state alongside database updates to ensure UI consistency during testing",
+      "changelog": "chore: update ProGuard rules for Amnezia VPN\n\n* chore: add keep rule for `AmneziaVpnManager$ObfuscationParams` to prevent class members from being stripped or renamed during shrinking",
       "force": false
     },
     "release": {
-      "versionCode": 605159892,
-      "versionName": "12.0.0-alpha1st3-53-g80c0324-nightly",
+      "versionCode": 605159893,
+      "versionName": "12.0.0-alpha1st3-54-g4a6f3c8-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "fix: ensure immediate UI update when simulating expired certificates\n\n* feat: add `simulateExpiredCertificate` to `AmneziaVpnManager` to allow manual state overrides\n* fix: update `DebugSettingsViewModel` to explicitly trigger the manager's expired state alongside database updates to ensure UI consistency during testing",
+      "changelog": "chore: update ProGuard rules for Amnezia VPN\n\n* chore: add keep rule for `AmneziaVpnManager$ObfuscationParams` to prevent class members from being stripped or renamed during shrinking",
       "force": false
     }
   },
