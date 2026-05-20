@@ -30,7 +30,7 @@
 **How to verify you have the real app:**
 1. Check the package name must be `ru.protonmod.next` (NOT `ch.protonvpn.android` or any other name).
 2. Verify the APK signature matches the one published in this repository.
-3. Only install from the official GitHub Releases page linked above.
+3. Only install from the official Codeberg Releases page linked above.
 4. **Never install APKs shared via Telegram, random websites, or third-party app stores.**
 
 If you encounter a fake version, please open an issue on this repository so we can track and warn other users.
