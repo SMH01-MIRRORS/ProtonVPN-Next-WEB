@@ -507,7 +507,7 @@ class DashboardViewModel @Inject constructor(
     }
 
     fun refreshCertificate() {
-        amneziaVpnManager.checkAndRefreshCertificateProactively()
+        amneziaVpnManager.checkAndRefreshCertificateProactively(force = true)
     }
 
     fun pauseVpn(durationMs: Long) {

@@ -383,8 +383,12 @@ class AmneziaVpnManager @Inject constructor(
         }
     }
 
-    fun checkAndRefreshCertificateProactively() {
-        if (refreshJob?.isActive == true) return
+    fun checkAndRefreshCertificateProactively(force: Boolean = false) {
+        if (force) {
+            refreshJob?.cancel()
+        } else if (refreshJob?.isActive == true) {
+            return
+        }
         refreshJob = applicationScope.launch {
             var currentRetryDelay = 60000L // Start retrying after 1 minute
             while (isActive) {
