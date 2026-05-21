@@ -19,9 +19,30 @@
     <!-- Welcome Screen -->
     <string name="welcome_title">欢迎使用 Proton VPN-Next</string>
     <string name="welcome_subtitle">通过安全、私密且快速的 VPN 掌控您的数字生活。无日志，无追踪。</string>
+    <string name="welcome_get_started">开始使用</string>
     <string name="btn_create_account">创建账户</string>
     <string name="btn_login">登录</string>
     <string name="btn_continue_guest">以访客身份继续</string>
+
+    <!-- Troubleshooting -->
+    <string name="troubleshoot_title">连接出现问题？</string>
+    <string name="troubleshoot_desc">我们检测到连接 Proton 服务时遇到困难。请尝试选择另一种路由策略来绕过封锁。</string>
+    <string name="troubleshoot_strategy_none">不使用绕过（重试）</string>
+    <string name="troubleshoot_strategy_warp">WARP（推荐）</string>
+    <string name="troubleshoot_strategy_byedpi">ByeDPI (深度包检测绕过)</string>
+    <string name="troubleshoot_btn_next">下一步</string>
+    <string name="troubleshoot_btn_skip">跳过并重试</string>
+
+    <!-- ByeDPI Tester Overhaul -->
+    <string name="byedpi_tester_title">ByeDPI 策略测试器</string>
+    <string name="byedpi_tester_desc">测试多种数据包分片技术，找到适用于您网络的技术。</string>
+    <string name="byedpi_mode_fast">快速 (前 10 个)</string>
+    <string name="byedpi_mode_medium">中等 (前 30 个)</string>
+    <string name="byedpi_mode_full">完整 (全部)</string>
+    <string name="byedpi_tester_running">正在测试策略 %1$d / %2$d…</string>
+    <string name="byedpi_tester_success">找到可用策略！</string>
+    <string name="byedpi_tester_failed">未找到可用策略。</string>
+
     <!-- Login Screen -->
     <string name="login_title">欢迎回来</string>
     <string name="login_subtitle">登录您的 Proton 账户</string>

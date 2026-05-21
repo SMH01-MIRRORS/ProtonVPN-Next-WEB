@@ -36,6 +36,7 @@ class ByeDpiStrategyTester @Inject constructor(
     private val settingsManager: SettingsManager
 ) {
 
+
     private val _isTesting = MutableStateFlow(false)
     val isTesting = _isTesting.asStateFlow()
 
@@ -45,6 +46,12 @@ class ByeDpiStrategyTester @Inject constructor(
     private val _currentStrategy = MutableStateFlow("")
     val currentStrategy = _currentStrategy.asStateFlow()
 
+    private val _currentStep = MutableStateFlow(0)
+    val currentStep = _currentStep.asStateFlow()
+
+    private val _totalSteps = MutableStateFlow(0)
+    val totalSteps = _totalSteps.asStateFlow()
+
     data class TestResult(val strategy: String, val successCount: Int, val totalSites: Int)
     
     private val _testResults = MutableStateFlow<List<TestResult>>(emptyList())
@@ -52,13 +59,28 @@ class ByeDpiStrategyTester @Inject constructor(
 
     private var testJob: Job? = null
 
-    fun startTesting(sites: List<String>, strategies: List<String>) {
+    fun startTesting(mode: String, sites: List<String>) {
         if (_isTesting.value) return
+
+        val allStrategies = try {
+            context.assets.open("proxytest_strategies.list").bufferedReader().readLines()
+                .filter { it.isNotBlank() && !it.startsWith("#") }
+        } catch (e: Exception) {
+            emptyList<String>()
+        }
+
+        val strategies = when (mode) {
+            "fast" -> allStrategies.take(10)
+            "medium" -> allStrategies.take(30)
+            else -> allStrategies
+        }
 
         testJob = CoroutineScope(Dispatchers.IO).launch {
             try {
                 _isTesting.value = true
                 _progress.value = 0f
+                _currentStep.value = 0
+                _totalSteps.value = strategies.size
                 _testResults.value = emptyList()
                 
                 // Disable auto-management during testing
@@ -80,6 +102,7 @@ class ByeDpiStrategyTester @Inject constructor(
                         break
                     }
                     
+                    _currentStep.value = index + 1
                     val processedStrategy = strategy.replace("{sni}", sni)
                     _currentStrategy.value = processedStrategy
                     _progress.value = index.toFloat() / strategies.size

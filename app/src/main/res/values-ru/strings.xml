@@ -19,9 +19,30 @@
     <!-- Welcome Screen -->
     <string name="welcome_title">Добро пожаловать в Proton VPN-Next</string>
     <string name="welcome_subtitle">Возьмите управление своей цифровой жизнью с безопасным, приватным и быстрым VPN. Без журналов, без отслеживания.</string>
+    <string name="welcome_get_started">Начать</string>
     <string name="btn_create_account">Создать аккаунт</string>
     <string name="btn_login">Войти</string>
     <string name="btn_continue_guest">Продолжить как гость</string>
+
+    <!-- Troubleshooting -->
+    <string name="troubleshoot_title">Проблемы с подключением?</string>
+    <string name="troubleshoot_desc">Мы обнаружили трудности с подключением к сервисам Proton. Попробуйте выбрать альтернативную стратегию маршрутизации для обхода блокировок.</string>
+    <string name="troubleshoot_strategy_none">Без обхода (попробовать снова)</string>
+    <string name="troubleshoot_strategy_warp">WARP (рекомендуется)</string>
+    <string name="troubleshoot_strategy_byedpi">ByeDPI (Deep Packet Inspection)</string>
+    <string name="troubleshoot_btn_next">Далее</string>
+    <string name="troubleshoot_btn_skip">Пропустить и повторить</string>
+
+    <!-- ByeDPI Tester Overhaul -->
+    <string name="byedpi_tester_title">Тестер стратегий ByeDPI</string>
+    <string name="byedpi_tester_desc">Протестируйте несколько техник фрагментации пакетов, чтобы найти подходящую для вашей сети.</string>
+    <string name="byedpi_mode_fast">Быстрый (Топ 10)</string>
+    <string name="byedpi_mode_medium">Средний (Топ 30)</string>
+    <string name="byedpi_mode_full">Полный (Все)</string>
+    <string name="byedpi_tester_running">Тестирование стратегии %1$d из %2$d…</string>
+    <string name="byedpi_tester_success">Рабочая стратегия найдена!</string>
+    <string name="byedpi_tester_failed">Рабочая стратегия не найдена.</string>
+
     <!-- Login Screen -->
     <string name="login_title">С возвращением</string>
     <string name="login_subtitle">Войдите в свой аккаунт Proton</string>

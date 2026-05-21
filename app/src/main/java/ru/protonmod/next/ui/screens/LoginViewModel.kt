@@ -37,6 +37,7 @@ import java.net.ConnectException
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.repository.AuthRepository
+import ru.protonmod.next.data.network.byedpi.ByeDpiStrategyTester
 import ru.protonmod.next.vpn.WarpManager
 import javax.inject.Inject
 
@@ -90,7 +91,8 @@ sealed class LoginUiState {
 class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val settingsManager: SettingsManager,
-    private val warpManager: WarpManager
+    private val warpManager: WarpManager,
+    val byeDpiStrategyTester: ByeDpiStrategyTester
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
@@ -342,6 +344,19 @@ class LoginViewModel @Inject constructor(
         }
         if (_uiState.value is LoginUiState.Error || _uiState.value is LoginUiState.RequiresCaptcha) {
             _uiState.value = LoginUiState.Idle
+        }
+    }
+
+    fun enableWarpBypass() {
+        viewModelScope.launch {
+            settingsManager.setApiBypassEnabled(true)
+            settingsManager.setApiBypassStrategy(SettingsManager.STRATEGY_WARP)
+        }
+    }
+
+    fun disableBypass() {
+        viewModelScope.launch {
+            settingsManager.setApiBypassEnabled(false)
         }
     }
 }

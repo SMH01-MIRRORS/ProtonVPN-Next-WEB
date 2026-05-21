@@ -19,9 +19,31 @@
     <string name="app_name" translatable="false">Proton VPN-Next</string>
     <string name="welcome_title">Proton VPN-Next-ке қош келдіңіз</string>
     <string name="welcome_subtitle">Қауіпсіз, жеке және жылдам VPN көмегімен цифрлық өміріңізді бақылаңыз. Журналдарсыз, бақылаусыз.</string>
+    <string name="welcome_get_started">Бастау</string>
     <string name="btn_create_account">Тіркелгі жасау</string>
     <string name="btn_login">Кіру</string>
     <string name="btn_continue_guest">Қонақ ретінде жалғастыру</string>
+
+    <!-- Troubleshooting -->
+    <string name="troubleshoot_title">Қосылымда ақаулар бар ма?</string>
+    <string name="troubleshoot_desc">Біз Proton қызметтеріне қосылуда қиындықтарды анықтадық. Блоктауды айналып өту үшін баламалы маршруттау стратегиясын таңдап көріңіз.</string>
+    <string name="troubleshoot_strategy_none">Айналып өтпеу (қайталау)</string>
+    <string name="troubleshoot_strategy_warp">WARP (ұсынылады)</string>
+    <string name="troubleshoot_strategy_byedpi">ByeDPI (Deep Packet Inspection)</string>
+    <string name="troubleshoot_btn_next">Келесі</string>
+    <string name="troubleshoot_btn_skip">Өткізіп жіберу және қайталау</string>
+
+    <!-- ByeDPI Tester Overhaul -->
+    <string name="byedpi_tester_title">ByeDPI стратегияларын тексеруші</string>
+    <string name="byedpi_tester_desc">Желіңізге сәйкес келетінін табу үшін пакеттерді фрагментациялаудың бірнеше әдісін тексеріңіз.</string>
+    <string name="byedpi_mode_fast">Жылдам (Топ 10)</string>
+    <string name="byedpi_mode_medium">Орташа (Топ 30)</string>
+    <string name="byedpi_mode_full">Толық (Барлығы)</string>
+    <string name="byedpi_tester_running">%2$d стратегияның %1$d-і тексерілуде…</string>
+    <string name="byedpi_tester_success">Жұмыс стратегиясы табылды!</string>
+    <string name="byedpi_tester_failed">Жұмыс стратегиясы табылмады.</string>
+
+    <!-- Login Screen -->
     <string name="login_title">Қайта қош келдіңіз</string>
     <string name="login_subtitle">Proton тіркелгіңізге кіріңіз</string>
     <string name="hint_username">Электрондық пошта немесе пайдаланушы аты</string>

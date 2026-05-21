@@ -21,9 +21,29 @@
     <!-- Welcome Screen -->
     <string name="welcome_title">Welcome to Proton VPN-Next</string>
     <string name="welcome_subtitle">Take control of your digital life with secure, private, and fast VPN. No logs, no tracking.</string>
+    <string name="welcome_get_started">Get Started</string>
     <string name="btn_create_account">Create Account</string>
     <string name="btn_login">Log In</string>
     <string name="btn_continue_guest">Continue as Guest</string>
+
+    <!-- Troubleshooting -->
+    <string name="troubleshoot_title">Connection Issues?</string>
+    <string name="troubleshoot_desc">We detected difficulty connecting to Proton services. Try selecting an alternative routing strategy to bypass blocks.</string>
+    <string name="troubleshoot_strategy_none">No Bypass (Try Again)</string>
+    <string name="troubleshoot_strategy_warp">WARP (Recommended)</string>
+    <string name="troubleshoot_strategy_byedpi">ByeDPI (Deep Packet Inspection)</string>
+    <string name="troubleshoot_btn_next">Next</string>
+    <string name="troubleshoot_btn_skip">Skip &amp; Retry</string>
+
+    <!-- ByeDPI Tester Overhaul -->
+    <string name="byedpi_tester_title">ByeDPI Strategy Tester</string>
+    <string name="byedpi_tester_desc">Test multiple packet fragmentation techniques to find what works in your network.</string>
+    <string name="byedpi_mode_fast">Fast (Top 10)</string>
+    <string name="byedpi_mode_medium">Medium (Top 30)</string>
+    <string name="byedpi_mode_full">Full (All)</string>
+    <string name="byedpi_tester_running">Testing strategy %1$d of %2$d…</string>
+    <string name="byedpi_tester_success">Found working strategy!</string>
+    <string name="byedpi_tester_failed">No working strategy found.</string>
 
     <!-- Login Screen -->
     <string name="login_title">Welcome Back</string>

@@ -473,8 +473,7 @@ class SettingsViewModel @Inject constructor(
     fun startByeDpiTesting() {
         viewModelScope.launch {
             val sites = context.assets.open("proxytest_proton.sites").bufferedReader().readLines().filter { it.isNotBlank() }
-            val strategies = context.assets.open("proxytest_strategies.list").bufferedReader().readLines().filter { it.isNotBlank() }
-            byeDpiStrategyTester.startTesting(sites, strategies)
+            byeDpiStrategyTester.startTesting("full", sites)
         }
     }
 
