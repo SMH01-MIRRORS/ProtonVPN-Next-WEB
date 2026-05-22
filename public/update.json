@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159899,
-      "versionName": "12.0.0-alpha1st3-60-g535049a-nightly",
+      "versionCode": 605159902,
+      "versionName": "12.0.0-alpha1st3-63-g401c764-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "test: update LoginViewModelTest to include ByeDpiStrategyTester dependency\n\n* test: add mock for `ByeDpiStrategyTester` and update `LoginViewModel` instantiation to reflect constructor changes",
+      "changelog": "feat: implement dynamic background animations and layout refinements for the setup wizard\n\n* feat: update `ExpressiveBackground` to support dynamic blob positions and scaling synchronized with the current `SetupStep`\n* feat: implement spring-based animations (`animateOffsetAsState`, `animateFloatAsState`) for fluid background transitions between onboarding phases\n* refactor: update `WelcomeScreen` and `SetupLoadingScreen` to propagate setup state to the background component\n* ui: refine setup step layouts by adding `statusBarsPadding` and adjusting vertical spacing for improved edge-to-edge consistency\n* refactor: tighten visibility logic for the API bypass action to specifically target initial login steps",
       "force": false
     },
     "release": {
-      "versionCode": 605159899,
-      "versionName": "12.0.0-alpha1st3-60-g535049a-nightly",
+      "versionCode": 605159902,
+      "versionName": "12.0.0-alpha1st3-63-g401c764-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "test: update LoginViewModelTest to include ByeDpiStrategyTester dependency\n\n* test: add mock for `ByeDpiStrategyTester` and update `LoginViewModel` instantiation to reflect constructor changes",
+      "changelog": "feat: implement dynamic background animations and layout refinements for the setup wizard\n\n* feat: update `ExpressiveBackground` to support dynamic blob positions and scaling synchronized with the current `SetupStep`\n* feat: implement spring-based animations (`animateOffsetAsState`, `animateFloatAsState`) for fluid background transitions between onboarding phases\n* refactor: update `WelcomeScreen` and `SetupLoadingScreen` to propagate setup state to the background component\n* ui: refine setup step layouts by adding `statusBarsPadding` and adjusting vertical spacing for improved edge-to-edge consistency\n* refactor: tighten visibility logic for the API bypass action to specifically target initial login steps",
       "force": false
     }
   },
