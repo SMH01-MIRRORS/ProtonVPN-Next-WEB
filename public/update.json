@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159893,
-      "versionName": "12.0.0-alpha1st3-54-g4a6f3c8-nightly",
+      "versionCode": 605159899,
+      "versionName": "12.0.0-alpha1st3-60-g535049a-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "chore: update ProGuard rules for Amnezia VPN\n\n* chore: add keep rule for `AmneziaVpnManager$ObfuscationParams` to prevent class members from being stripped or renamed during shrinking",
+      "changelog": "test: update LoginViewModelTest to include ByeDpiStrategyTester dependency\n\n* test: add mock for `ByeDpiStrategyTester` and update `LoginViewModel` instantiation to reflect constructor changes",
       "force": false
     },
     "release": {
-      "versionCode": 605159893,
-      "versionName": "12.0.0-alpha1st3-54-g4a6f3c8-nightly",
+      "versionCode": 605159899,
+      "versionName": "12.0.0-alpha1st3-60-g535049a-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "chore: update ProGuard rules for Amnezia VPN\n\n* chore: add keep rule for `AmneziaVpnManager$ObfuscationParams` to prevent class members from being stripped or renamed during shrinking",
+      "changelog": "test: update LoginViewModelTest to include ByeDpiStrategyTester dependency\n\n* test: add mock for `ByeDpiStrategyTester` and update `LoginViewModel` instantiation to reflect constructor changes",
       "force": false
     }
   },
