@@ -198,7 +198,7 @@ object ProtonLogger {
             if (throwable != null) {
                 Sentry.captureException(throwable)
             } else {
-                Sentry.captureMessage(message, SentryLevel.ERROR)
+                Sentry.captureMessage(PiiScrubber.scrub(message), SentryLevel.ERROR)
             }
         }
     }
@@ -218,7 +218,7 @@ object ProtonLogger {
             if (throwable != null) {
                 Sentry.captureException(throwable)
             } else {
-                Sentry.captureMessage(msg, SentryLevel.ERROR)
+                Sentry.captureMessage(PiiScrubber.scrub(msg), SentryLevel.ERROR)
             }
         }
     }
@@ -250,9 +250,11 @@ object ProtonLogger {
     ) {
         if (!isAnalyticsEnabled) return
 
+        val scrubbedMessage = PiiScrubber.scrub(message)
+
         // Rate-limit repetitive breadcrumbs (e.g. high-frequency tunnel handshake/keepalive
         // log lines) to prevent saturating Dispatcher.IO threads and causing background ANRs.
-        val dedupKey = "$category:${message.take(60)}"
+        val dedupKey = "$category:${scrubbedMessage.take(60)}"
         val now = System.currentTimeMillis()
         val last = breadcrumbLastEmitted[dedupKey]
         if (last != null && now - last < BREADCRUMB_RATE_LIMIT_MS) {
@@ -262,7 +264,7 @@ object ProtonLogger {
 
         val breadcrumb = Breadcrumb().apply {
             this.category = if (category == "log.message") tag else category
-            this.message = message
+            this.message = scrubbedMessage
             this.level = level
             if (category != "log.message") {
                 this.setData("tag", tag)
@@ -283,8 +285,10 @@ object ProtonLogger {
     internal fun addSentryLog(tag: String, message: String, level: SentryLevel, throwable: Throwable? = null) {
         if (!isAnalyticsEnabled || !isSentryLogsEnabled) return
 
+        val scrubbedMessage = PiiScrubber.scrub(message)
+
         // Rate-limit: drop near-duplicate log lines emitted faster than BREADCRUMB_RATE_LIMIT_MS.
-        val dedupKey = "$tag:${message.take(60)}"
+        val dedupKey = "$tag:${scrubbedMessage.take(60)}"
         val now = System.currentTimeMillis()
         val last = sentryLogLastEmitted[dedupKey]
         if (last != null && now - last < BREADCRUMB_RATE_LIMIT_MS) {
@@ -292,7 +296,7 @@ object ProtonLogger {
         }
         sentryLogLastEmitted[dedupKey] = now
 
-        val fullMessage = "[$tag] $message"
+        val fullMessage = "[$tag] $scrubbedMessage"
         val logLevel = when (level) {
             SentryLevel.DEBUG -> SentryLogLevel.DEBUG
             SentryLevel.INFO -> SentryLogLevel.INFO
@@ -307,7 +311,8 @@ object ProtonLogger {
             // Use the official Sentry Logs API (v8.12.0+)
             // This ensures logs are sent to the "Logs" explorer in both debug and release.
             if (throwable != null) {
-                Sentry.logger().log(logLevel, "$fullMessage: ${throwable.message}", throwable)
+                val scrubbedThrowableMsg = PiiScrubber.scrub(throwable.message)
+                Sentry.logger().log(logLevel, "$fullMessage: $scrubbedThrowableMsg", throwable)
             } else {
                 Sentry.logger().log(logLevel, fullMessage)
             }

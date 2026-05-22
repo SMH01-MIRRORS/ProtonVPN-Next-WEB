@@ -20,6 +20,7 @@ package ru.protonmod.next
 import android.content.Context
 import io.sentry.android.core.SentryAndroid
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.utils.PiiScrubber
 import ru.protonmod.next.vpn.SentryBridge
 
 /**
@@ -50,11 +51,67 @@ object FlavorInitializer {
             // NDK is removed to save APK size
             options.isEnableNdk = false
             options.isEnableScopeSync = false
+            options.isSendDefaultPii = false
 
-            // Allow all errors if crash reporting is enabled
+            // Global PII filtering for all Sentry events
             options.setBeforeSend { event, _ ->
                 val currentCrashEnabled = settingsManager.isCrashReportsEnabledSync()
-                if (!currentCrashEnabled) null else event
+                if (!currentCrashEnabled) return@setBeforeSend null
+
+                // Scrub event message
+                event.message?.let { it.message = PiiScrubber.scrub(it.message) }
+
+                // Scrub exceptions (messages)
+                event.exceptions?.forEach { ex ->
+                    ex.value = PiiScrubber.scrub(ex.value)
+                }
+
+                // Scrub User PII (IP)
+                event.user?.let { user ->
+                    user.ipAddress = null
+                }
+
+                // Scrub extras
+                val extras = event.extras
+                if (extras != null) {
+                    for (key in extras.keys) {
+                        val value = extras[key]
+                        if (value is String) {
+                            event.setExtra(key, PiiScrubber.scrub(value))
+                        }
+                    }
+                }
+
+                // Scrub breadcrumbs within the event (some might have been auto-captured)
+                event.breadcrumbs?.forEach { breadcrumb ->
+                    breadcrumb.message = PiiScrubber.scrub(breadcrumb.message)
+                    val data = breadcrumb.data
+                    if (data != null) {
+                        for (key in data.keys) {
+                            val value = data[key]
+                            if (value is String) {
+                                breadcrumb.setData(key, PiiScrubber.scrub(value))
+                            }
+                        }
+                    }
+                }
+
+                event
+            }
+
+            // Scrub breadcrumbs as they are added (including auto-captured ones like HTTP)
+            options.setBeforeBreadcrumb { breadcrumb, _ ->
+                breadcrumb.message = PiiScrubber.scrub(breadcrumb.message)
+                val data = breadcrumb.data
+                if (data != null) {
+                    for (key in data.keys) {
+                        val value = data[key]
+                        if (value is String) {
+                            breadcrumb.setData(key, PiiScrubber.scrub(value))
+                        }
+                    }
+                }
+                breadcrumb
             }
 
             // Utilize 100M Spans and 6K Profile Hours quota when analytics is on
