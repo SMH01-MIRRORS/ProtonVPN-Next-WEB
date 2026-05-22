@@ -17,21 +17,88 @@
 
 package ru.protonmod.next.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.utils.ProtonLogger
+
+/**
+ * A full-screen loading overlay used during setup/login transitions.
+ */
+@Composable
+fun SetupLoadingScreen(
+    message: String,
+    modifier: Modifier = Modifier
+) {
+    LaunchedEffect(Unit) {
+        ProtonLogger.i("SetupLoadingScreen", "Composing Loading Screen: $message")
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.Transparent) // Explicitly transparent
+    ) {
+        ProtonLogger.v("SetupLoadingScreen", "Drawing Background")
+        ExpressiveBackground()
+        
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Transparent), // Explicitly transparent
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            ProtonLogger.v("SetupLoadingScreen", "Drawing Gears and Text")
+            
+            Box(contentAlignment = Alignment.Center) {
+                // Fallback standard indicator in case gears fail to render
+                ExpressiveCircularProgressIndicator(
+                    modifier = Modifier.size(100.dp),
+                    color = ProtonNextTheme.colors.brandNorm.copy(alpha = 0.3f)
+                )
+                
+                MorphedGears(
+                    modifier = Modifier.size(200.dp),
+                    color = ProtonNextTheme.colors.brandNorm
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(48.dp))
+            
+            Text(
+                text = message,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = ProtonNextTheme.colors.textNorm,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
 
 /**
  * A "Google Pixel Style" shape-shifting circular loading indicator.

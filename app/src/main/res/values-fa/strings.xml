@@ -43,6 +43,24 @@
     <string name="byedpi_tester_success">استراتژی فعال پیدا شد!</string>
     <string name="byedpi_tester_failed">استراتژی فعالی پیدا نشد.</string>
 
+    <!-- Setup Wizard -->
+    <string name="setup_initial_config">پیکربندی اولیه</string>
+    <string name="setup_choose_connection">نحوه اتصال خود را انتخاب کنید</string>
+    <string name="setup_hide_traffic">مخفی کردن ترافیک VPN از ارائه‌دهنده اینترنت (ISP)</string>
+    <string name="setup_complete_title">نصب کامل شد</string>
+    <string name="setup_complete_desc">شما آماده‌اید تا به صورت ایمن و خصوصی مرور کنید.</string>
+    <string name="setup_btn_finish">پایان</string>
+    <string name="setup_please_wait">لطفاً صبر کنید…</string>
+
+    <string name="setup_showcase_speed_title">سرعت برق‌آسا</string>
+    <string name="setup_showcase_speed_desc">سرورهای پرسرعت بهینه‌سازی شده برای استریم و وب‌گردی را تجربه کنید.</string>
+    <string name="setup_showcase_privacy_title">اولویت با حریم خصوصی</string>
+    <string name="setup_showcase_privacy_desc">سیاست سختگیرانه عدم ثبت گزارش تحت حمایت قوانین حریم خصوصی سوئیس.</string>
+    <string name="setup_showcase_security_title">امنیت در سطح نظامی</string>
+    <string name="setup_showcase_security_desc">رمزگذاری قوی و پروتکل‌های پیشرفته مانند AmneziaWG.</string>
+    <string name="setup_showcase_bypass_title">دور زدن مسدودسازی‌ها</string>
+    <string name="setup_showcase_bypass_desc">با تکنیک‌های مسیریابی هوشمند به راحتی سانسور را دور بزنید.</string>
+
     <!-- Login Screen -->
     <string name="login_title">خوش آمدید</string>
     <string name="login_subtitle">وارد حساب پروتون خود شوید</string>

@@ -67,7 +67,6 @@ import ru.protonmod.next.ui.components.LiquidGlassBottomBar
 import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.nav.Screen
 import ru.protonmod.next.ui.nav.appNavGraph
-import ru.protonmod.next.ui.screens.LoginScreen
 import ru.protonmod.next.ui.screens.WelcomeScreen
 import ru.protonmod.next.ui.screens.settings.PolicyAcceptanceScreen
 import ru.protonmod.next.ui.theme.AppTheme
@@ -328,31 +327,15 @@ fun ProtonNextAppNavHost(
 
             composable("welcome") {
                 WelcomeScreen(
-                    onNavigateToLogin = { navController.navigate("login") },
-                    onNavigateToRegister = { /* TODO: Registration flow */ },
                     onNavigateToHome = {
                         // Clear the entire backstack and navigate to home (dashboard)
                         navController.navigate(Screen.Home.route) {
                             popUpTo(0)
                         }
                     },
-                    onNavigateToApiBypassSettings = {
-                        navController.navigate(Screen.ApiBypass.route)
-                    },
+                    onNavigateToRegister = { /* TODO: Registration flow */ },
                     onNavigateToPrivacyPolicy = {
                         navController.navigate(Screen.PrivacyPolicy.route)
-                    }
-                )
-            }
-
-            composable("login") {
-                LoginScreen(
-                    onBackClick = { navController.popBackStack() },
-                    onLoginSuccess = {
-                        // Clear the entire backstack and navigate to home (dashboard)
-                        navController.navigate(Screen.Home.route) {
-                            popUpTo(0)
-                        }
                     }
                 )
             }

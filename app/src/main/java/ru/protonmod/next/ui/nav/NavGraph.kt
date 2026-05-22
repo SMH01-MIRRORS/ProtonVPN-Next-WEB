@@ -90,18 +90,6 @@ fun NavGraphBuilder.appNavGraph(
         DashboardScreen()
     }
 
-    composable(Screen.PolicyAcceptance.route) {
-        val loginViewModel: LoginViewModel = hiltViewModel()
-        WelcomeScreen(
-            onNavigateToLogin = { navController.navigate(Screen.Home.route) },
-            onNavigateToRegister = { navController.navigate(Screen.Home.route) },
-            onNavigateToHome = { navController.navigate(Screen.Home.route) },
-            onNavigateToApiBypassSettings = { navController.navigate(Screen.ApiBypass.route) },
-            onNavigateToPrivacyPolicy = { navController.navigate(Screen.PrivacyPolicy.route) },
-            viewModel = loginViewModel
-        )
-    }
-
     composable(Screen.Settings.route) {
         SettingsScreen(
             onBack = { navController.popBackStack() },

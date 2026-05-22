@@ -43,6 +43,24 @@
     <string name="byedpi_tester_success">Жұмыс стратегиясы табылды!</string>
     <string name="byedpi_tester_failed">Жұмыс стратегиясы табылмады.</string>
 
+    <!-- Setup Wizard -->
+    <string name="setup_initial_config">Бастапқы конфигурация</string>
+    <string name="setup_choose_connection">Қосылу әдісін таңдаңыз</string>
+    <string name="setup_hide_traffic">VPN трафигін провайдерден жасыру</string>
+    <string name="setup_complete_title">Орнату аяқталды</string>
+    <string name="setup_complete_desc">Сіз қауіпсіз және құпия шолуға дайынсыз.</string>
+    <string name="setup_btn_finish">Аяқтау</string>
+    <string name="setup_please_wait">Күте тұрыңыз…</string>
+
+    <string name="setup_showcase_speed_title">Найзағайдай жылдам</string>
+    <string name="setup_showcase_speed_desc">Стримдеу және шолу үшін оңтайландырылған жоғары жылдамдықты серверлерді пайдаланыңыз.</string>
+    <string name="setup_showcase_privacy_title">Құпиялылық бірінші орында</string>
+    <string name="setup_showcase_privacy_desc">Швейцарияның құпиялылық заңдарымен қорғалған логтарды сақтамаудың қатаң саясаты.</string>
+    <string name="setup_showcase_security_title">Әскери деңгейдегі қауіпсіздік</string>
+    <string name="setup_showcase_security_desc">Күшті шифрлау және AmneziaWG сияқты озық хаттамалар.</string>
+    <string name="setup_showcase_bypass_title">Бұғаттауларды айналып өту</string>
+    <string name="setup_showcase_bypass_desc">Ақылды маршруттау әдістері арқылы цензураны оңай айналып өтіңіз.</string>
+
     <!-- Login Screen -->
     <string name="login_title">Қайта қош келдіңіз</string>
     <string name="login_subtitle">Proton тіркелгіңізге кіріңіз</string>

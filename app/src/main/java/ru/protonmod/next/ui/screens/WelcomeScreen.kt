@@ -1,6 +1,18 @@
 /*
- * Copyright (c) 2024 Proton Technologies AG
- * This file is part of Proton AG and ProtonCore.
+ * Copyright (C) 2026 SMH01
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package ru.protonmod.next.ui.screens
@@ -8,20 +20,18 @@ package ru.protonmod.next.ui.screens
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ShowChart
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.rounded.*
@@ -29,15 +39,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -48,60 +54,86 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.delay
 import ru.protonmod.next.R
-import ru.protonmod.next.data.network.byedpi.ByeDpiStrategyTester
-import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
-import ru.protonmod.next.ui.components.ExpressiveLinearProgressIndicator
-import ru.protonmod.next.ui.components.SmoothOutlinedTextField
+import ru.protonmod.next.data.local.ServerLoadDisplayMode
+import ru.protonmod.next.ui.components.*
+import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
+import ru.protonmod.next.utils.ProtonLogger
 
 enum class SetupStep {
     WELCOME,
-    LOGIN,
-    TROUBLESHOOT,
-    BYEDPI_TESTER
+    LOGIN_EMAIL,
+    LOGIN_PASSWORD,
+    LOGIN_2FA,
+    LOADING, // "Please Wait" screen
+    CONFIG_PORT,
+    CONFIG_OBFUSCATION,
+    CONFIG_SERVER_LOAD,
+    CONFIG_THEME,
+    COMPLETE
 }
 
 @Composable
 fun WelcomeScreen(
-    onNavigateToLogin: () -> Unit,
-    onNavigateToRegister: () -> Unit,
     onNavigateToHome: () -> Unit,
-    onNavigateToApiBypassSettings: () -> Unit,
+    onNavigateToRegister: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
-    val tester = viewModel.byeDpiStrategyTester
     var currentStep by remember { mutableStateOf(SetupStep.WELCOME) }
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isWarpLoading by viewModel.isWarpLoading.collectAsStateWithLifecycle()
     val colors = ProtonNextTheme.colors
 
-    // Handle successful login
+    val savedUsername by viewModel.username.collectAsStateWithLifecycle()
+
+    LaunchedEffect(currentStep) {
+        ProtonLogger.d("WelcomeScreen", "Current Step changed to: $currentStep")
+    }
+
     LaunchedEffect(uiState) {
-        if (uiState is LoginUiState.Success) {
-            onNavigateToHome()
+        ProtonLogger.d("WelcomeScreen", "UiState changed to: $uiState")
+        when (uiState) {
+            is LoginUiState.Loading -> {
+                ProtonLogger.i("WelcomeScreen", "Transitioning to LOADING step")
+                currentStep = SetupStep.LOADING
+            }
+            is LoginUiState.Success -> {
+                currentStep = SetupStep.CONFIG_PORT
+            }
+            is LoginUiState.Requires2FA -> {
+                currentStep = SetupStep.LOGIN_2FA
+            }
+            is LoginUiState.Error -> {
+                // If we were loading, go back to appropriate login step on error
+                if (currentStep == SetupStep.LOADING) {
+                    currentStep = if (savedUsername.isBlank()) SetupStep.WELCOME else SetupStep.LOGIN_PASSWORD
+                }
+            }
+            else -> {}
         }
     }
 
-    // Handle back navigation within wizard
-    BackHandler(currentStep != SetupStep.WELCOME) {
+    BackHandler(currentStep != SetupStep.WELCOME && currentStep != SetupStep.LOADING) {
         currentStep = when (currentStep) {
-            SetupStep.LOGIN -> SetupStep.WELCOME
-            SetupStep.TROUBLESHOOT -> SetupStep.LOGIN
-            SetupStep.BYEDPI_TESTER -> SetupStep.TROUBLESHOOT
+            SetupStep.LOGIN_EMAIL -> SetupStep.WELCOME
+            SetupStep.LOGIN_PASSWORD -> SetupStep.LOGIN_EMAIL
+            SetupStep.LOGIN_2FA -> SetupStep.LOGIN_PASSWORD
+            SetupStep.CONFIG_PORT -> SetupStep.WELCOME
+            SetupStep.CONFIG_OBFUSCATION -> SetupStep.CONFIG_PORT
+            SetupStep.CONFIG_SERVER_LOAD -> SetupStep.CONFIG_OBFUSCATION
+            SetupStep.CONFIG_THEME -> SetupStep.CONFIG_SERVER_LOAD
+            SetupStep.COMPLETE -> SetupStep.CONFIG_THEME
             else -> SetupStep.WELCOME
         }
         viewModel.resetError()
     }
 
     Box(modifier = modifier.fillMaxSize().background(colors.backgroundNorm)) {
-        // Animated background
-        FluidBackground()
+        ExpressiveBackground()
 
         AnimatedContent(
             targetState = currentStep,
@@ -112,41 +144,71 @@ fun WelcomeScreen(
                     (slideInHorizontally { -it } + fadeIn()).togetherWith(slideOutHorizontally { it } + fadeOut())
                 }
             },
-            label = "setup_wizard_steps"
+            label = "setup_wizard",
+            modifier = Modifier.fillMaxSize()
         ) { step ->
             when (step) {
                 SetupStep.WELCOME -> StepWelcome(
-                    onGetStarted = { currentStep = SetupStep.LOGIN },
-                    onGuest = { viewModel.loginAnonymous() },
-                    isLoading = uiState is LoginUiState.Loading
+                    onLogin = { currentStep = SetupStep.LOGIN_EMAIL },
+                    onGuest = { viewModel.loginAnonymous() }
                 )
-                SetupStep.LOGIN -> StepLogin(
-                    viewModel = viewModel,
-                    onBack = { currentStep = SetupStep.WELCOME },
-                    onError = { currentStep = SetupStep.TROUBLESHOOT }
+                SetupStep.LOGIN_EMAIL -> StepLoginEmail(
+                    initialEmail = savedUsername,
+                    onNext = { email ->
+                        viewModel.setUsername(email)
+                        currentStep = SetupStep.LOGIN_PASSWORD
+                    },
+                    onBack = { currentStep = SetupStep.WELCOME }
                 )
-                SetupStep.TROUBLESHOOT -> StepTroubleshoot(
-                    onNext = { strategy ->
-                        when (strategy) {
-                            "byedpi" -> currentStep = SetupStep.BYEDPI_TESTER
-                            "warp" -> {
-                                viewModel.enableWarpBypass()
-                                currentStep = SetupStep.LOGIN
-                            }
-                            else -> {
-                                viewModel.disableBypass()
-                                currentStep = SetupStep.LOGIN
-                            }
+                SetupStep.LOGIN_PASSWORD -> StepLoginPassword(
+                    email = savedUsername,
+                    uiState = uiState,
+                    onLogin = { pass -> viewModel.login(savedUsername, pass) },
+                    onBack = { currentStep = SetupStep.LOGIN_EMAIL }
+                )
+                SetupStep.LOGIN_2FA -> StepLogin2FA(
+                    uiState = uiState,
+                    onVerify = { code ->
+                        val state = uiState as? LoginUiState.Requires2FA
+                        if (state != null) {
+                            viewModel.submit2FA(state.sessionId, state.tempAccessToken, state.refreshToken, code)
                         }
                     },
-                    onSkip = { 
-                        viewModel.disableBypass()
-                        currentStep = SetupStep.LOGIN 
-                    }
+                    onBack = { currentStep = SetupStep.LOGIN_PASSWORD }
                 )
-                SetupStep.BYEDPI_TESTER -> StepByeDpiTester(
-                    tester = tester,
-                    onFinished = { currentStep = SetupStep.LOGIN }
+                SetupStep.LOADING -> SetupLoadingScreen(
+                    message = stringResource(R.string.setup_please_wait)
+                )
+                SetupStep.CONFIG_PORT -> StepConfigPort(
+                    onNext = { port ->
+                        viewModel.setVpnPort(port)
+                        currentStep = SetupStep.CONFIG_OBFUSCATION
+                    },
+                    onBack = { currentStep = SetupStep.WELCOME }
+                )
+                SetupStep.CONFIG_OBFUSCATION -> StepConfigObfuscation(
+                    onNext = { enabled ->
+                        viewModel.setObfuscationEnabled(enabled)
+                        currentStep = SetupStep.CONFIG_SERVER_LOAD
+                    },
+                    onBack = { currentStep = SetupStep.CONFIG_PORT }
+                )
+                SetupStep.CONFIG_SERVER_LOAD -> StepConfigServerLoad(
+                    onNext = { mode ->
+                        viewModel.setServerLoadDisplayMode(mode)
+                        currentStep = SetupStep.CONFIG_THEME
+                    },
+                    onBack = { currentStep = SetupStep.CONFIG_OBFUSCATION }
+                )
+                SetupStep.CONFIG_THEME -> StepConfigTheme(
+                    onNext = { theme ->
+                        viewModel.setAppTheme(theme)
+                        currentStep = SetupStep.COMPLETE
+                    },
+                    onBack = { currentStep = SetupStep.CONFIG_SERVER_LOAD }
+                )
+                SetupStep.COMPLETE -> StepComplete(
+                    onFinish = onNavigateToHome
                 )
             }
         }
@@ -158,62 +220,20 @@ fun WelcomeScreen(
 }
 
 @Composable
-private fun FluidBackground() {
-    val colors = ProtonNextTheme.colors
-    val infiniteTransition = rememberInfiniteTransition(label = "fluid_bg")
-    val phase by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(10000, easing = LinearEasing), RepeatMode.Restart),
-        label = "phase"
-    )
-
-    Canvas(modifier = Modifier.fillMaxSize().alpha(0.3f)) {
-        val centerX = size.width / 2
-        val centerY = size.height / 2
-        
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(colors.brandNorm, Color.Transparent),
-                center = Offset(
-                    centerX + (size.width * 0.3f * kotlin.math.sin(phase * 2 * Math.PI.toFloat())),
-                    centerY + (size.height * 0.2f * kotlin.math.cos(phase * 2 * Math.PI.toFloat()))
-                ),
-                radius = size.minDimension * 0.8f
-            )
-        )
-
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(colors.brandLighten20, Color.Transparent),
-                center = Offset(
-                    centerX - (size.width * 0.4f * kotlin.math.cos(phase * 2 * Math.PI.toFloat())),
-                    centerY - (size.height * 0.3f * kotlin.math.sin(phase * 2 * Math.PI.toFloat()))
-                ),
-                radius = size.minDimension * 0.7f
-            )
-        )
-    }
-}
-
-@Composable
 private fun StepWelcome(
-    onGetStarted: () -> Unit,
-    onGuest: () -> Unit,
-    isLoading: Boolean
+    onLogin: () -> Unit,
+    onGuest: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
     Column(
-        modifier = Modifier.fillMaxSize().padding(32.dp),
+        modifier = Modifier.fillMaxSize().padding(32.dp).background(Color.Transparent),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Image(
             painter = painterResource(id = R.drawable.vpn_welcome_globe),
             contentDescription = null,
-            modifier = Modifier.size(200.dp).graphicsLayer {
-                rotationY = 15f
-            }
+            modifier = Modifier.size(180.dp)
         )
         Spacer(modifier = Modifier.height(48.dp))
         Text(
@@ -233,108 +253,116 @@ private fun StepWelcome(
         Spacer(modifier = Modifier.height(64.dp))
         
         Button(
-            onClick = onGetStarted,
+            onClick = onLogin,
             modifier = Modifier.fillMaxWidth().height(56.dp),
-            shape = RoundedCornerShape(28.dp),
+            shape = CircleShape,
             colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
         ) {
-            Text(stringResource(R.string.welcome_get_started), style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.btn_login), style = MaterialTheme.typography.labelLarge)
         }
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        TextButton(onClick = onGuest, enabled = !isLoading) {
-            if (isLoading) {
-                ExpressiveCircularProgressIndicator(modifier = Modifier.size(24.dp), color = colors.brandNorm)
-            } else {
-                Text(stringResource(R.string.btn_continue_guest), color = colors.textNorm)
-            }
+        OutlinedButton(
+            onClick = onGuest,
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = CircleShape
+        ) {
+            Text(stringResource(R.string.btn_continue_guest), color = colors.textNorm)
         }
     }
 }
 
 @Composable
-private fun StepLogin(
-    viewModel: LoginViewModel,
-    onBack: () -> Unit,
-    onError: () -> Unit
+private fun StepLoginEmail(
+    initialEmail: String,
+    onNext: (String) -> Unit,
+    onBack: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var email by remember { mutableStateOf(initialEmail) }
     val colors = ProtonNextTheme.colors
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
 
-    LaunchedEffect(uiState, onError) {
-        if (uiState is LoginUiState.Error) {
-            val error = (uiState as LoginUiState.Error).message
-            if (error.contains("timeout", ignoreCase = true) || error.contains("connect", ignoreCase = true)) {
-                onError()
-            }
-        }
-    }
-
-    Column(
-        modifier = Modifier.fillMaxSize().padding(32.dp).verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null, tint = colors.textNorm)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
+    Column(modifier = Modifier.fillMaxSize().padding(24.dp).background(Color.Transparent)) {
+        Spacer(modifier = Modifier.height(48.dp))
+        
         Box(
-            modifier = Modifier.size(80.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
+            modifier = Modifier.size(64.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Rounded.Person,
-                contentDescription = null,
-                modifier = Modifier.size(48.dp),
-                tint = colors.brandNorm
-            )
-            if (uiState is LoginUiState.Loading) {
-                ExpressiveCircularProgressIndicator(
-                    modifier = Modifier.fillMaxSize(),
-                    color = colors.brandNorm
-                )
-            }
+            Icon(Icons.Rounded.Person, null, modifier = Modifier.size(32.dp), tint = colors.brandNorm)
         }
-
+        
         Spacer(modifier = Modifier.height(32.dp))
-
+        
         Text(
             text = stringResource(R.string.login_title),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = colors.textNorm
         )
-
+        Text(
+            text = stringResource(R.string.login_subtitle),
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.textWeak
+        )
+        
         Spacer(modifier = Modifier.height(48.dp))
-
+        
         SmoothOutlinedTextField(
-            value = username,
-            onValueChange = { username = it },
+            value = email,
+            onValueChange = { email = it },
             label = { Text(stringResource(R.string.hint_username)) },
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            leadingIcon = { Icon(Icons.Rounded.Mail, null) }
+            shape = CircleShape,
+            leadingIcon = { Icon(Icons.Rounded.Mail, null) },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { if (email.isNotBlank()) onNext(email) })
         )
+        
+        Spacer(modifier = Modifier.weight(1f))
+        
+        WizardNavigation(
+            onBack = onBack,
+            onNext = { onNext(email) },
+            nextEnabled = email.isNotBlank(),
+            nextText = stringResource(R.string.troubleshoot_btn_next)
+        )
+    }
+}
 
-        Spacer(modifier = Modifier.height(16.dp))
+@Composable
+private fun StepLoginPassword(
+    email: String,
+    uiState: LoginUiState,
+    onLogin: (String) -> Unit,
+    onBack: () -> Unit
+) {
+    var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    val colors = ProtonNextTheme.colors
 
+    Column(modifier = Modifier.fillMaxSize().padding(24.dp).background(Color.Transparent)) {
+        Spacer(modifier = Modifier.height(48.dp))
+        
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier.size(48.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Rounded.Person, null, tint = colors.brandNorm)
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(text = email, style = MaterialTheme.typography.titleMedium, color = colors.textNorm)
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
         SmoothOutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = { Text(stringResource(R.string.hint_password)) },
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = CircleShape,
             leadingIcon = { Icon(Icons.Rounded.Lock, null) },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
@@ -343,228 +371,474 @@ private fun StepLogin(
                 }
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { viewModel.login(username, password) })
+            keyboardActions = KeyboardActions(onDone = { if (password.isNotBlank()) onLogin(password) })
         )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(
-            onClick = { viewModel.login(username, password) },
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            shape = RoundedCornerShape(28.dp),
-            enabled = uiState !is LoginUiState.Loading && username.isNotBlank() && password.isNotBlank(),
-            colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
-        ) {
-            Text(stringResource(R.string.btn_login), style = MaterialTheme.typography.labelLarge)
-        }
-
+        
         if (uiState is LoginUiState.Error) {
             Text(
-                text = (uiState as LoginUiState.Error).message,
+                text = uiState.message,
                 color = colors.notificationError,
-                modifier = Modifier.padding(top = 16.dp),
-                textAlign = TextAlign.Center
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 16.dp)
             )
         }
+        
+        Spacer(modifier = Modifier.weight(1f))
+        
+        WizardNavigation(
+            onBack = onBack,
+            onNext = { onLogin(password) },
+            nextEnabled = password.isNotBlank(),
+            nextText = stringResource(R.string.btn_login)
+        )
     }
 }
 
 @Composable
-private fun StepTroubleshoot(
-    onNext: (String) -> Unit,
-    onSkip: () -> Unit
+private fun StepLogin2FA(
+    uiState: LoginUiState,
+    onVerify: (String) -> Unit,
+    onBack: () -> Unit
 ) {
+    var code by remember { mutableStateOf("") }
     val colors = ProtonNextTheme.colors
-    var selectedStrategy by remember { mutableStateOf("warp") }
 
-    Column(
-        modifier = Modifier.fillMaxSize().padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            Icons.Rounded.Warning,
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-            tint = colors.notificationError
-        )
-        Spacer(modifier = Modifier.height(24.dp))
+    Column(modifier = Modifier.fillMaxSize().padding(24.dp).background(Color.Transparent)) {
+        Spacer(modifier = Modifier.height(48.dp))
         Text(
-            text = stringResource(R.string.troubleshoot_title),
+            text = stringResource(R.string.title_2fa),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = colors.textNorm
         )
-        Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = stringResource(R.string.troubleshoot_desc),
+            text = stringResource(R.string.msg_2fa_instruction),
             style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
             color = colors.textWeak
         )
-
+        
         Spacer(modifier = Modifier.height(32.dp))
-
-        Column(modifier = Modifier.selectableGroup()) {
-            TroubleshootOption(
-                title = stringResource(R.string.troubleshoot_strategy_warp),
-                selected = selectedStrategy == "warp",
-                onClick = { selectedStrategy = "warp" }
-            )
-            TroubleshootOption(
-                title = stringResource(R.string.troubleshoot_strategy_byedpi),
-                selected = selectedStrategy == "byedpi",
-                onClick = { selectedStrategy = "byedpi" }
-            )
-            TroubleshootOption(
-                title = stringResource(R.string.troubleshoot_strategy_none),
-                selected = selectedStrategy == "none",
-                onClick = { selectedStrategy = "none" }
+        
+        SmoothOutlinedTextField(
+            value = code,
+            onValueChange = { if (it.length <= 6) code = it },
+            label = { Text(stringResource(R.string.hint_2fa_code)) },
+            modifier = Modifier.fillMaxWidth(),
+            shape = CircleShape,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { if (code.length == 6) onVerify(code) })
+        )
+        
+        if (uiState is LoginUiState.Error) {
+            Text(
+                text = uiState.message,
+                color = colors.notificationError,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 16.dp)
             )
         }
-
+        
         Spacer(modifier = Modifier.weight(1f))
+        
+        WizardNavigation(
+            onBack = onBack,
+            onNext = { onVerify(code) },
+            nextEnabled = code.length == 6,
+            nextText = stringResource(R.string.btn_verify)
+        )
+    }
+}
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            OutlinedButton(
-                onClick = onSkip,
-                modifier = Modifier.weight(1f).height(56.dp),
-                shape = RoundedCornerShape(28.dp)
-            ) {
-                Text(stringResource(R.string.troubleshoot_btn_skip))
+
+@Composable
+private fun StepConfigPort(onNext: (Int) -> Unit, onBack: () -> Unit) {
+    var selectedPort by remember { mutableIntStateOf(0) }
+    val colors = ProtonNextTheme.colors
+
+    Column(modifier = Modifier.fillMaxSize().padding(24.dp).background(Color.Transparent)) {
+        Spacer(modifier = Modifier.height(48.dp))
+        
+        Box(
+            modifier = Modifier.size(64.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Rounded.Lan, null, modifier = Modifier.size(32.dp), tint = colors.brandNorm)
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        Text(
+            text = stringResource(R.string.setup_initial_config),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = colors.textNorm
+        )
+        Text(
+            text = stringResource(R.string.setup_choose_connection),
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.textWeak
+        )
+        
+        Spacer(modifier = Modifier.height(48.dp))
+        
+        OptionCard(
+            title = stringResource(R.string.settings_port_auto),
+            subtitle = "Optimal performance",
+            selected = selectedPort == 0,
+            onClick = { selectedPort = 0 },
+            icon = Icons.Rounded.AutoAwesome
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        OptionCard(
+            title = "Manual Port",
+            subtitle = "Custom configuration",
+            selected = selectedPort != 0,
+            onClick = { selectedPort = 443 },
+            icon = Icons.Rounded.SettingsInputComponent
+        )
+        
+        Spacer(modifier = Modifier.weight(1f))
+        
+        WizardNavigation(
+            onBack = onBack,
+            onNext = { onNext(selectedPort) },
+            nextText = stringResource(R.string.troubleshoot_btn_next)
+        )
+    }
+}
+
+@Composable
+private fun StepConfigObfuscation(onNext: (Boolean) -> Unit, onBack: () -> Unit) {
+    var enabled by remember { mutableStateOf(true) }
+    val colors = ProtonNextTheme.colors
+
+    Column(modifier = Modifier.fillMaxSize().padding(24.dp).background(Color.Transparent)) {
+        Spacer(modifier = Modifier.height(48.dp))
+        
+        Box(
+            modifier = Modifier.size(64.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Rounded.Security, null, modifier = Modifier.size(32.dp), tint = colors.brandNorm)
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        Text(
+            text = stringResource(R.string.obfuscation_title),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = colors.textNorm
+        )
+        Text(
+            text = stringResource(R.string.setup_hide_traffic),
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.textWeak
+        )
+        
+        Spacer(modifier = Modifier.height(48.dp))
+        
+        OptionCard(
+            title = stringResource(R.string.settings_on),
+            subtitle = stringResource(R.string.obfuscation_enable_desc),
+            selected = enabled,
+            onClick = { enabled = true },
+            icon = Icons.Rounded.VisibilityOff
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        OptionCard(
+            title = stringResource(R.string.settings_off),
+            subtitle = "Standard connection",
+            selected = !enabled,
+            onClick = { enabled = false },
+            icon = Icons.Rounded.Visibility
+        )
+        
+        Spacer(modifier = Modifier.weight(1f))
+        
+        WizardNavigation(
+            onBack = onBack,
+            onNext = { onNext(enabled) },
+            nextText = stringResource(R.string.troubleshoot_btn_next)
+        )
+    }
+}
+
+@Composable
+private fun StepConfigServerLoad(onNext: (ServerLoadDisplayMode) -> Unit, onBack: () -> Unit) {
+    var selectedMode by remember { mutableStateOf(ServerLoadDisplayMode.ALL) }
+    val colors = ProtonNextTheme.colors
+
+    Column(modifier = Modifier.fillMaxSize().padding(24.dp).background(Color.Transparent)) {
+        Spacer(modifier = Modifier.height(48.dp))
+        
+        Box(
+            modifier = Modifier.size(64.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.AutoMirrored.Rounded.ShowChart, null, modifier = Modifier.size(32.dp), tint = colors.brandNorm)
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        Text(
+            text = stringResource(R.string.settings_load_display_mode),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = colors.textNorm
+        )
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            ServerLoadDisplayMode.entries.forEach { mode ->
+                OptionCard(
+                    title = when(mode) {
+                        ServerLoadDisplayMode.ALL -> stringResource(R.string.load_mode_all)
+                        ServerLoadDisplayMode.LINE -> stringResource(R.string.load_mode_line)
+                        ServerLoadDisplayMode.PERCENT -> stringResource(R.string.load_mode_percent)
+                        ServerLoadDisplayMode.HIDDEN -> stringResource(R.string.load_mode_hidden)
+                    },
+                    subtitle = "",
+                    selected = selectedMode == mode,
+                    onClick = { selectedMode = mode },
+                    icon = when(mode) {
+                        ServerLoadDisplayMode.ALL -> Icons.Rounded.BarChart
+                        ServerLoadDisplayMode.LINE -> Icons.Rounded.HorizontalRule
+                        ServerLoadDisplayMode.PERCENT -> Icons.Rounded.Percent
+                        ServerLoadDisplayMode.HIDDEN -> Icons.Rounded.Block
+                    }
+                )
             }
-            Button(
-                onClick = { onNext(selectedStrategy) },
-                modifier = Modifier.weight(1f).height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
-            ) {
-                Text(stringResource(R.string.troubleshoot_btn_next))
+        }
+        
+        Spacer(modifier = Modifier.weight(1f))
+        
+        WizardNavigation(
+            onBack = onBack,
+            onNext = { onNext(selectedMode) },
+            nextText = stringResource(R.string.troubleshoot_btn_next)
+        )
+    }
+}
+
+@Composable
+private fun StepConfigTheme(onNext: (AppTheme) -> Unit, onBack: () -> Unit) {
+    var selectedTheme by remember { mutableStateOf(AppTheme.DARK) }
+    val colors = ProtonNextTheme.colors
+
+    Column(modifier = Modifier.fillMaxSize().padding(24.dp).background(Color.Transparent)) {
+        Spacer(modifier = Modifier.height(48.dp))
+        
+        Box(
+            modifier = Modifier.size(64.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Rounded.Palette, null, modifier = Modifier.size(32.dp), tint = colors.brandNorm)
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Text(
+            text = stringResource(R.string.settings_app_theme),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = colors.textNorm
+        )
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.weight(1f)
+        ) {
+            items(AppTheme.entries) { theme ->
+                ThemeOptionCard(
+                    theme = theme,
+                    selected = selectedTheme == theme,
+                    onClick = { selectedTheme = theme }
+                )
             }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        WizardNavigation(
+            onBack = onBack,
+            onNext = { onNext(selectedTheme) },
+            nextText = stringResource(R.string.troubleshoot_btn_next)
+        )
+    }
+}
+
+@Composable
+private fun StepComplete(onFinish: () -> Unit) {
+    val colors = ProtonNextTheme.colors
+
+    Column(
+        modifier = Modifier.fillMaxSize().padding(32.dp).verticalScroll(rememberScrollState()).background(Color.Transparent),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.height(48.dp))
+        Icon(Icons.Rounded.CheckCircle, null, modifier = Modifier.size(80.dp), tint = colors.brandNorm)
+        Spacer(modifier = Modifier.height(24.dp))
+        Text(
+            text = stringResource(R.string.setup_complete_title),
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = colors.textNorm
+        )
+        Text(
+            text = stringResource(R.string.setup_complete_desc),
+            style = MaterialTheme.typography.bodyLarge,
+            color = colors.textWeak,
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(modifier = Modifier.height(48.dp))
+        ShowcaseCard(stringResource(R.string.setup_showcase_speed_title), stringResource(R.string.setup_showcase_speed_desc), Icons.Rounded.Speed)
+        ShowcaseCard(stringResource(R.string.setup_showcase_privacy_title), stringResource(R.string.setup_showcase_privacy_desc), Icons.Rounded.Fingerprint)
+        ShowcaseCard(stringResource(R.string.setup_showcase_security_title), stringResource(R.string.setup_showcase_security_desc), Icons.Rounded.Security)
+        ShowcaseCard(stringResource(R.string.setup_showcase_bypass_title), stringResource(R.string.setup_showcase_bypass_desc), Icons.Rounded.Public)
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        Button(
+            onClick = onFinish,
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = CircleShape,
+            colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
+        ) {
+            Text(stringResource(R.string.setup_btn_finish))
         }
     }
 }
 
 @Composable
-private fun TroubleshootOption(
+private fun WizardNavigation(
+    onBack: () -> Unit,
+    onNext: () -> Unit,
+    nextEnabled: Boolean = true,
+    nextText: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        TextButton(onClick = onBack) {
+            Text(stringResource(R.string.desc_back), color = ProtonNextTheme.colors.textWeak)
+        }
+        
+        Button(
+            onClick = onNext,
+            enabled = nextEnabled,
+            shape = CircleShape,
+            modifier = Modifier.height(56.dp).widthIn(min = 120.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = ProtonNextTheme.colors.brandNorm)
+        ) {
+            Text(nextText)
+        }
+    }
+}
+
+@Composable
+private fun OptionCard(
     title: String,
+    subtitle: String,
     selected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    icon: ImageVector
 ) {
     val colors = ProtonNextTheme.colors
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
-            .selectable(
-                selected = selected,
-                onClick = onClick,
-                role = Role.RadioButton
-            )
+            .heightIn(min = 72.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .clickable(onClick = onClick)
             .liquidGlass(
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(24.dp),
                 alpha = if (selected) 0.15f else 0.05f,
                 shadowElevation = 0.dp
             )
-            .padding(horizontal = 16.dp),
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        RadioButton(selected = selected, onClick = null)
+        Icon(icon, null, tint = if (selected) colors.brandNorm else colors.iconWeak)
         Spacer(modifier = Modifier.width(16.dp))
-        Text(text = title, color = colors.textNorm)
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = MaterialTheme.typography.titleMedium, color = colors.textNorm)
+            if (subtitle.isNotEmpty()) {
+                Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = colors.textWeak)
+            }
+        }
+        RadioButton(selected = selected, onClick = null)
     }
-    Spacer(modifier = Modifier.height(12.dp))
 }
 
 @Composable
-private fun StepByeDpiTester(
-    tester: ByeDpiStrategyTester,
-    onFinished: () -> Unit
+private fun ThemeOptionCard(
+    theme: AppTheme,
+    selected: Boolean,
+    onClick: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
-    val isTesting by tester.isTesting.collectAsStateWithLifecycle()
-    val progress by tester.progress.collectAsStateWithLifecycle()
-    val currentStep by tester.currentStep.collectAsStateWithLifecycle()
-    val totalSteps by tester.totalSteps.collectAsStateWithLifecycle()
-    
-    var selectedMode by remember { mutableStateOf("fast") }
-
-    Column(
-        modifier = Modifier.fillMaxSize().padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(80.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick)
+            .liquidGlass(
+                shape = RoundedCornerShape(20.dp),
+                alpha = if (selected) 0.2f else 0.05f,
+                shadowElevation = 0.dp
+            )
+            .border(
+                width = if (selected) 2.dp else 0.dp,
+                color = if (selected) colors.brandNorm else Color.Transparent,
+                shape = RoundedCornerShape(20.dp)
+            ),
+        contentAlignment = Alignment.Center
     ) {
         Text(
-            text = stringResource(R.string.byedpi_tester_title),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
+            text = theme.name.lowercase().replaceFirstChar { it.uppercase() },
+            style = MaterialTheme.typography.labelMedium,
             color = colors.textNorm
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = stringResource(R.string.byedpi_tester_desc),
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-            color = colors.textWeak
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        if (!isTesting) {
-            Column(modifier = Modifier.selectableGroup()) {
-                TroubleshootOption(
-                    title = stringResource(R.string.byedpi_mode_fast),
-                    selected = selectedMode == "fast",
-                    onClick = { selectedMode = "fast" }
-                )
-                TroubleshootOption(
-                    title = stringResource(R.string.byedpi_mode_medium),
-                    selected = selectedMode == "medium",
-                    onClick = { selectedMode = "medium" }
-                )
-                TroubleshootOption(
-                    title = stringResource(R.string.byedpi_mode_full),
-                    selected = selectedMode == "full",
-                    onClick = { selectedMode = "full" }
-                )
-            }
-            Spacer(modifier = Modifier.weight(1f))
-            Button(
-                onClick = {
-                    tester.startTesting(selectedMode, listOf("google.com"))
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
-            ) {
-                Text(stringResource(R.string.btn_start_test))
-            }
-        } else {
-            Spacer(modifier = Modifier.height(64.dp))
-            ExpressiveCircularProgressIndicator(modifier = Modifier.size(80.dp), color = colors.brandNorm)
-            Spacer(modifier = Modifier.height(32.dp))
-            Text(
-                text = stringResource(R.string.byedpi_tester_running, currentStep, totalSteps),
-                color = colors.textNorm
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            ExpressiveLinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.fillMaxWidth().height(8.dp)
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            OutlinedButton(
-                onClick = { tester.stopTesting() },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(28.dp)
-            ) {
-                Text(stringResource(R.string.btn_stop_test))
-            }
-        }
     }
+}
 
-    LaunchedEffect(isTesting, onFinished) {
-        if (!isTesting && currentStep > 0) {
-            delay(1000)
-            onFinished()
+@Composable
+private fun ShowcaseCard(
+    title: String,
+    desc: String,
+    icon: ImageVector
+) {
+    val colors = ProtonNextTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .liquidGlass(
+                shape = RoundedCornerShape(24.dp),
+                alpha = 0.05f,
+                shadowElevation = 0.dp
+            )
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, null, modifier = Modifier.size(32.dp), tint = colors.brandNorm)
+        Spacer(modifier = Modifier.width(16.dp))
+        Column {
+            Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = colors.textNorm)
+            Text(text = desc, style = MaterialTheme.typography.bodySmall, color = colors.textWeak)
         }
     }
 }

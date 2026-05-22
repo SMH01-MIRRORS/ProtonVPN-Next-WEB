@@ -107,6 +107,38 @@ class LoginViewModel @Inject constructor(
     val apiBypassStrategy = settingsManager.apiBypassStrategy
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsManager.STRATEGY_NETLIFY)
 
+    // Onboarding temporary states
+    private val _username = MutableStateFlow("")
+    val username: StateFlow<String> = _username.asStateFlow()
+
+    fun setUsername(name: String) {
+        _username.value = name
+    }
+
+    fun setVpnPort(port: Int) {
+        viewModelScope.launch {
+            settingsManager.setVpnPort(port)
+        }
+    }
+
+    fun setObfuscationEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setObfuscationEnabled(enabled)
+        }
+    }
+
+    fun setServerLoadDisplayMode(mode: ru.protonmod.next.data.local.ServerLoadDisplayMode) {
+        viewModelScope.launch {
+            settingsManager.setServerLoadDisplayMode(mode)
+        }
+    }
+
+    fun setAppTheme(theme: ru.protonmod.next.ui.theme.AppTheme) {
+        viewModelScope.launch {
+            settingsManager.setAppTheme(theme)
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         ProtonLogger.d("LoginViewModel", "ViewModel cleared, cancelling pending auth operations")

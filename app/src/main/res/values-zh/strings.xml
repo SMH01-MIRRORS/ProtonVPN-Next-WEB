@@ -43,6 +43,24 @@
     <string name="byedpi_tester_success">找到可用策略！</string>
     <string name="byedpi_tester_failed">未找到可用策略。</string>
 
+    <!-- Setup Wizard -->
+    <string name="setup_initial_config">初始配置</string>
+    <string name="setup_choose_connection">选择连接方式</string>
+    <string name="setup_hide_traffic">对运营商 (ISP) 隐藏 VPN 流量</string>
+    <string name="setup_complete_title">设置完成</string>
+    <string name="setup_complete_desc">您已准备好安全且私密地浏览。</string>
+    <string name="setup_btn_finish">完成</string>
+    <string name="setup_please_wait">请稍候…</string>
+
+    <string name="setup_showcase_speed_title">极速</string>
+    <string name="setup_showcase_speed_desc">体验专为流媒体和浏览优化的高速服务器。</string>
+    <string name="setup_showcase_privacy_title">隐私优先</string>
+    <string name="setup_showcase_privacy_desc">受瑞士隐私法保护的严格无日志政策。</string>
+    <string name="setup_showcase_security_title">军工级安全</string>
+    <string name="setup_showcase_security_desc">强加密和 AmneziaWG 等先进协议。</string>
+    <string name="setup_showcase_bypass_title">绕过封锁</string>
+    <string name="setup_showcase_bypass_desc">使用智能路由技术轻松绕过审查。</string>
+
     <!-- Login Screen -->
     <string name="login_title">欢迎回来</string>
     <string name="login_subtitle">登录您的 Proton 账户</string>

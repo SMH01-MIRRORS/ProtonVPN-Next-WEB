@@ -45,6 +45,24 @@
     <string name="byedpi_tester_success">Found working strategy!</string>
     <string name="byedpi_tester_failed">No working strategy found.</string>
 
+    <!-- Setup Wizard -->
+    <string name="setup_initial_config">Initial Configuration</string>
+    <string name="setup_choose_connection">Choose how you want to connect</string>
+    <string name="setup_hide_traffic">Hide VPN traffic from your ISP</string>
+    <string name="setup_complete_title">Setup Complete</string>
+    <string name="setup_complete_desc">You are ready to browse securely and privately.</string>
+    <string name="setup_btn_finish">Finish</string>
+    <string name="setup_please_wait">Please wait…</string>
+
+    <string name="setup_showcase_speed_title">Lightning Fast</string>
+    <string name="setup_showcase_speed_desc">Experience high-speed servers optimized for streaming and browsing.</string>
+    <string name="setup_showcase_privacy_title">Privacy First</string>
+    <string name="setup_showcase_privacy_desc">Strict no-logs policy backed by Swiss privacy laws.</string>
+    <string name="setup_showcase_security_title">Military-Grade Security</string>
+    <string name="setup_showcase_security_desc">Strong encryption and advanced protocols like AmneziaWG.</string>
+    <string name="setup_showcase_bypass_title">Bypass Blocks</string>
+    <string name="setup_showcase_bypass_desc">Effortlessly circumvent censorship with smart routing techniques.</string>
+
     <!-- Login Screen -->
     <string name="login_title">Welcome Back</string>
     <string name="login_subtitle">Log in to your Proton account</string>

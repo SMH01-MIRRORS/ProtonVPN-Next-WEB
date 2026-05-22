@@ -43,6 +43,24 @@
     <string name="byedpi_tester_success">Працоўная стратэгія знойдзена!</string>
     <string name="byedpi_tester_failed">Працоўная стратэгія не знойдзена.</string>
 
+    <!-- Setup Wizard -->
+    <string name="setup_initial_config">Пачатковая канфігурацыя</string>
+    <string name="setup_choose_connection">Выберыце спосаб падключэння</string>
+    <string name="setup_hide_traffic">Схаваць VPN-трафік ад вашага правайдэра</string>
+    <string name="setup_complete_title">Налада завершана</string>
+    <string name="setup_complete_desc">Вы гатовыя да бяспечнага і прыватнага прагляду.</string>
+    <string name="setup_btn_finish">Завяршыць</string>
+    <string name="setup_please_wait">Пачакайце, калі ласка…</string>
+
+    <string name="setup_showcase_speed_title">Маланкава хутка</string>
+    <string name="setup_showcase_speed_desc">Выкарыстоўвайце высакахуткасныя серверы, аптымізаваныя для стрымінгу і прагляду.</string>
+    <string name="setup_showcase_privacy_title">Прыватнасць вышэй за ўсё</string>
+    <string name="setup_showcase_privacy_desc">Строгая палітыка адсутнасці логаў, абароненая швейцарскімі законамі аб прыватнасці.</string>
+    <string name="setup_showcase_security_title">Бяспека ваеннага ўзроўню</string>
+    <string name="setup_showcase_security_desc">Моцнае шыфраванне і прасунутыя пратаколы, такія як AmneziaWG.</string>
+    <string name="setup_showcase_bypass_title">Абыход блакіровак</string>
+    <string name="setup_showcase_bypass_desc">Лёгка абыходзьце цэнзуру з дапамогай разумных тэхнік маршрутызацыі.</string>
+
     <!-- Login Screen -->
     <string name="login_title">З вяртаннем</string>
     <string name="login_subtitle">Увайдзіце ў свой уліковы запіс Proton</string>
