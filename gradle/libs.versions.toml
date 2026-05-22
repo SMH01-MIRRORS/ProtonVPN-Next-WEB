@@ -5,7 +5,7 @@ ksp = "2.3.2"
 hilt = "2.59.2"
 room = "2.8.4"
 roomKsp = "2.8.4"
-sentry = "6.6.0"
+sentry = "6.7.1"
 sentryAndroid = "8.41.0"
 coreKtx = "1.18.0"
 lifecycle = "2.10.0"
@@ -14,7 +14,7 @@ activityCompose = "1.13.0"
 datastore = "1.2.1"
 work = "2.11.2"
 androidSvg = "1.4"
-composeBom = "2026.05.00"
+composeBom = "2026.05.01"
 navigationCompose = "2.9.8"
 hiltNavigationCompose = "1.3.0"
 hiltLifecycleCompose = "1.3.0"
@@ -32,9 +32,11 @@ coroutinesTest = "1.11.0"
 mockwebserver = "5.3.2"
 androidxJunit = "1.3.0"
 espressoCore = "3.7.0"
-material = "1.13.0"
+material = "1.14.0"
 goVpnLib = "0.1.87"
-composeMaterial3 = "1.5.0-alpha19"
+composeMaterial3 = "1.5.0-alpha20"
+graphicsShapes = "1.1.0"
+graphicsPath = "1.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -101,6 +103,8 @@ mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", versio
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxJunit" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+androidx-graphics-shapes = { group = "androidx.graphics", name = "graphics-shapes", version.ref = "graphicsShapes" }
+androidx-graphics-path = { group = "androidx.graphics", name = "graphics-path", version.ref = "graphicsPath" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
