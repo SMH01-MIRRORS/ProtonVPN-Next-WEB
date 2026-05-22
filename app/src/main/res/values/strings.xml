@@ -53,6 +53,7 @@
     <string name="setup_complete_desc">You are ready to browse securely and privately.</string>
     <string name="setup_btn_finish">Finish</string>
     <string name="setup_please_wait">Please wait…</string>
+    <string name="setup_please_wait_subtitle">Optimizing your experience</string>
 
     <string name="setup_showcase_speed_title">Lightning Fast</string>
     <string name="setup_showcase_speed_desc">Experience high-speed servers optimized for streaming and browsing.</string>

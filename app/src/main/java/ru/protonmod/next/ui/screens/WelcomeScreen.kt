@@ -22,9 +22,11 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -57,6 +59,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.ui.components.*
+import ru.protonmod.next.ui.screens.settings.LoadModePreviewCard
+import ru.protonmod.next.ui.screens.settings.ThemePreviewCard
 import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
@@ -454,6 +458,7 @@ private fun StepLogin2FA(
 private fun StepConfigPort(onNext: (Int) -> Unit, onBack: () -> Unit) {
     var selectedPort by remember { mutableIntStateOf(0) }
     val colors = ProtonNextTheme.colors
+    val portOptions = remember { listOf(0, 443, 123, 1194, 51820) }
 
     Column(modifier = Modifier.fillMaxSize().padding(24.dp).background(Color.Transparent)) {
         Spacer(modifier = Modifier.height(48.dp))
@@ -468,38 +473,57 @@ private fun StepConfigPort(onNext: (Int) -> Unit, onBack: () -> Unit) {
         Spacer(modifier = Modifier.height(32.dp))
         
         Text(
-            text = stringResource(R.string.setup_initial_config),
+            text = stringResource(R.string.settings_port),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = colors.textNorm
         )
         Text(
-            text = stringResource(R.string.setup_choose_connection),
+            text = stringResource(R.string.settings_port_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = colors.textWeak
         )
         
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(32.dp))
         
-        OptionCard(
-            title = stringResource(R.string.settings_port_auto),
-            subtitle = "Optimal performance",
-            selected = selectedPort == 0,
-            onClick = { selectedPort = 0 },
-            icon = Icons.Rounded.AutoAwesome
-        )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        OptionCard(
-            title = "Manual Port",
-            subtitle = "Custom configuration",
-            selected = selectedPort != 0,
-            onClick = { selectedPort = 443 },
-            icon = Icons.Rounded.SettingsInputComponent
-        )
-        
-        Spacer(modifier = Modifier.weight(1f))
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.weight(1f)
+        ) {
+            items(portOptions) { port ->
+                val isSelected = port == selectedPort
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .clickable { selectedPort = port }
+                        .liquidGlass(
+                            shape = RoundedCornerShape(20.dp),
+                            alpha = if (isSelected) 0.3f else 0.1f,
+                            shadowElevation = 0.dp
+                        )
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (port == 0) stringResource(R.string.settings_port_auto) else port.toString(),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) colors.brandNorm else colors.textNorm
+                            )
+                        }
+                        if (isSelected) {
+                            Icon(Icons.Rounded.CheckCircle, null, tint = colors.brandNorm)
+                        } else {
+                            RadioButton(selected = false, onClick = null)
+                        }
+                    }
+                }
+            }
+        }
         
         WizardNavigation(
             onBack = onBack,
@@ -533,31 +557,50 @@ private fun StepConfigObfuscation(onNext: (Boolean) -> Unit, onBack: () -> Unit)
             color = colors.textNorm
         )
         Text(
-            text = stringResource(R.string.setup_hide_traffic),
+            text = stringResource(R.string.obfuscation_info_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = colors.textWeak
         )
         
-        Spacer(modifier = Modifier.height(48.dp))
-        
-        OptionCard(
-            title = stringResource(R.string.settings_on),
-            subtitle = stringResource(R.string.obfuscation_enable_desc),
-            selected = enabled,
-            onClick = { enabled = true },
-            icon = Icons.Rounded.VisibilityOff
-        )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        OptionCard(
-            title = stringResource(R.string.settings_off),
-            subtitle = "Standard connection",
-            selected = !enabled,
-            onClick = { enabled = false },
-            icon = Icons.Rounded.Visibility
-        )
-        
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .liquidGlass(
+                    shape = RoundedCornerShape(24.dp),
+                    alpha = if (enabled) 0.3f else 0.1f,
+                    shadowElevation = 0.dp
+                )
+                .clickable { enabled = !enabled }
+                .padding(20.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.obfuscation_enable),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.textNorm
+                    )
+                    Text(
+                        text = stringResource(R.string.obfuscation_enable_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.textWeak
+                    )
+                }
+                Switch(
+                    checked = enabled,
+                    onCheckedChange = { enabled = it },
+                    colors = SwitchDefaults.colors(
+                        checkedTrackColor = colors.brandNorm,
+                        checkedThumbColor = Color.White
+                    )
+                )
+            }
+        }
+
         Spacer(modifier = Modifier.weight(1f))
         
         WizardNavigation(
@@ -594,29 +637,18 @@ private fun StepConfigServerLoad(onNext: (ServerLoadDisplayMode) -> Unit, onBack
         
         Spacer(modifier = Modifier.height(32.dp))
         
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            ServerLoadDisplayMode.entries.forEach { mode ->
-                OptionCard(
-                    title = when(mode) {
-                        ServerLoadDisplayMode.ALL -> stringResource(R.string.load_mode_all)
-                        ServerLoadDisplayMode.LINE -> stringResource(R.string.load_mode_line)
-                        ServerLoadDisplayMode.PERCENT -> stringResource(R.string.load_mode_percent)
-                        ServerLoadDisplayMode.HIDDEN -> stringResource(R.string.load_mode_hidden)
-                    },
-                    subtitle = "",
-                    selected = selectedMode == mode,
-                    onClick = { selectedMode = mode },
-                    icon = when(mode) {
-                        ServerLoadDisplayMode.ALL -> Icons.Rounded.BarChart
-                        ServerLoadDisplayMode.LINE -> Icons.Rounded.HorizontalRule
-                        ServerLoadDisplayMode.PERCENT -> Icons.Rounded.Percent
-                        ServerLoadDisplayMode.HIDDEN -> Icons.Rounded.Block
-                    }
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.weight(1f)
+        ) {
+            items(ServerLoadDisplayMode.entries) { mode ->
+                LoadModePreviewCard(
+                    mode = mode,
+                    isSelected = selectedMode == mode,
+                    onClick = { selectedMode = mode }
                 )
             }
         }
-        
-        Spacer(modifier = Modifier.weight(1f))
         
         WizardNavigation(
             onBack = onBack,
@@ -654,20 +686,18 @@ private fun StepConfigTheme(onNext: (AppTheme) -> Unit, onBack: () -> Unit) {
         
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.weight(1f)
         ) {
             items(AppTheme.entries) { theme ->
-                ThemeOptionCard(
+                ThemePreviewCard(
                     theme = theme,
-                    selected = selectedTheme == theme,
+                    isSelected = selectedTheme == theme,
                     onClick = { selectedTheme = theme }
                 )
             }
         }
-        
-        Spacer(modifier = Modifier.height(16.dp))
         
         WizardNavigation(
             onBack = onBack,
@@ -683,7 +713,8 @@ private fun StepComplete(onFinish: () -> Unit) {
 
     Column(
         modifier = Modifier.fillMaxSize().padding(32.dp).verticalScroll(rememberScrollState()).background(Color.Transparent),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Spacer(modifier = Modifier.height(48.dp))
         Icon(Icons.Rounded.CheckCircle, null, modifier = Modifier.size(80.dp), tint = colors.brandNorm)
@@ -744,74 +775,6 @@ private fun WizardNavigation(
         ) {
             Text(nextText)
         }
-    }
-}
-
-@Composable
-private fun OptionCard(
-    title: String,
-    subtitle: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    icon: ImageVector
-) {
-    val colors = ProtonNextTheme.colors
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 72.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .clickable(onClick = onClick)
-            .liquidGlass(
-                shape = RoundedCornerShape(24.dp),
-                alpha = if (selected) 0.15f else 0.05f,
-                shadowElevation = 0.dp
-            )
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(icon, null, tint = if (selected) colors.brandNorm else colors.iconWeak)
-        Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = MaterialTheme.typography.titleMedium, color = colors.textNorm)
-            if (subtitle.isNotEmpty()) {
-                Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = colors.textWeak)
-            }
-        }
-        RadioButton(selected = selected, onClick = null)
-    }
-}
-
-@Composable
-private fun ThemeOptionCard(
-    theme: AppTheme,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    val colors = ProtonNextTheme.colors
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(80.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .clickable(onClick = onClick)
-            .liquidGlass(
-                shape = RoundedCornerShape(20.dp),
-                alpha = if (selected) 0.2f else 0.05f,
-                shadowElevation = 0.dp
-            )
-            .border(
-                width = if (selected) 2.dp else 0.dp,
-                color = if (selected) colors.brandNorm else Color.Transparent,
-                shape = RoundedCornerShape(20.dp)
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = theme.name.lowercase().replaceFirstChar { it.uppercase() },
-            style = MaterialTheme.typography.labelMedium,
-            color = colors.textNorm
-        )
     }
 }
 

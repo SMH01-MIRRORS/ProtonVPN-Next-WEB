@@ -51,6 +51,7 @@
     <string name="setup_complete_desc">Ви готові до безпечного та приватного перегляду.</string>
     <string name="setup_btn_finish">Завершити</string>
     <string name="setup_please_wait">Будь ласка, зачекайте…</string>
+    <string name="setup_please_wait_subtitle">Оптимізуємо роботу додатка</string>
 
     <string name="setup_showcase_speed_title">Блискавично швидко</string>
     <string name="setup_showcase_speed_desc">Відчуйте високошвидкісні сервери, оптимізовані для стрімінгу та серфінгу.</string>

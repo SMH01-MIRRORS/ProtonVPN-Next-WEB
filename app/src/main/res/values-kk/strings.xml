@@ -51,6 +51,7 @@
     <string name="setup_complete_desc">Сіз қауіпсіз және құпия шолуға дайынсыз.</string>
     <string name="setup_btn_finish">Аяқтау</string>
     <string name="setup_please_wait">Күте тұрыңыз…</string>
+    <string name="setup_please_wait_subtitle">Тәжірибеңізді оңтайландырудамыз</string>
 
     <string name="setup_showcase_speed_title">Найзағайдай жылдам</string>
     <string name="setup_showcase_speed_desc">Стримдеу және шолу үшін оңтайландырылған жоғары жылдамдықты серверлерді пайдаланыңыз.</string>

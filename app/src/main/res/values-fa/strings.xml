@@ -51,6 +51,7 @@
     <string name="setup_complete_desc">شما آماده‌اید تا به صورت ایمن و خصوصی مرور کنید.</string>
     <string name="setup_btn_finish">پایان</string>
     <string name="setup_please_wait">لطفاً صبر کنید…</string>
+    <string name="setup_please_wait_subtitle">بهینه‌سازی تجربه شما</string>
 
     <string name="setup_showcase_speed_title">سرعت برق‌آسا</string>
     <string name="setup_showcase_speed_desc">سرورهای پرسرعت بهینه‌سازی شده برای استریم و وب‌گردی را تجربه کنید.</string>

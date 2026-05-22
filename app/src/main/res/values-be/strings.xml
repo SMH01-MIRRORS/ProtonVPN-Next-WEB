@@ -51,6 +51,7 @@
     <string name="setup_complete_desc">Вы гатовыя да бяспечнага і прыватнага прагляду.</string>
     <string name="setup_btn_finish">Завяршыць</string>
     <string name="setup_please_wait">Пачакайце, калі ласка…</string>
+    <string name="setup_please_wait_subtitle">Аптымізуем працу праграмы</string>
 
     <string name="setup_showcase_speed_title">Маланкава хутка</string>
     <string name="setup_showcase_speed_desc">Выкарыстоўвайце высакахуткасныя серверы, аптымізаваныя для стрымінгу і прагляду.</string>
