@@ -280,12 +280,10 @@ bool AntiTamper::checkEnvironment(JNIEnv* env) {
 
     // Advanced checks
     if (isDebuggerConnected(env)) {
-        reportSecurityEvent(env, XOR_STR("Debugger detected (isDebuggerConnected)"));
-        if (!isSecurityTest) allGood = false;
+        LOGD("AntiTamper: Debugger detected (isDebuggerConnected)");
     }
     if (!checkTracerPid()) {
-        reportSecurityEvent(env, XOR_STR("Debugger detected (TracerPid)"));
-        if (!isSecurityTest) allGood = false;
+        LOGD("AntiTamper: Debugger detected (TracerPid)");
     }
 
     // Use dl_iterate_phdr for reliable library detection (including libs inside APK)
@@ -622,10 +620,7 @@ bool AntiTamper::check(JNIEnv* env, jobject context) {
 
     // Advanced Checks
     if (checkDebuggable(env, context)) {
-        reportSecurityEvent(env, XOR_STR("Application marked as debuggable"));
-#if !defined(DEBUG_BUILD) && !defined(ANTITAMPER_TEST_BUILD)
-        allGood = false;
-#endif
+        LOGD("AntiTamper: Application marked as debuggable");
     }
 
     // Environment & Hook Checks
@@ -805,11 +800,11 @@ std::string AntiTamper::getProtectedString(const std::string& locale, const std:
     }
     if (key == XOR_STR("tamper_warning_desc")) {
         if (l == XOR_STR("ru")) return XOR_STR("Эта версия Proton VPN-Next была модифицирована неизвестной третьей стороной. Ваша безопасность, конфиденциальность и данные находятся под ВЫСОКИМ РИСКОМ.");
-        if (l == XOR_STR("fa")) return XOR_STR("این نسخه از Proton VPN-Next توسط یک شخص ثالث ناشناس اصلاح شده است. امنیت، حریم خصوصی и داده‌های شما در معرض خطر بسیار بالایی قرار دارند.");
+        if (l == XOR_STR("fa")) return XOR_STR("این نسخه از Proton VPN-Next توسط یک شخص ثالث ناشناس اصلاح شده است. امنیت، حریم خصوصی و داده‌های شما در معرض خطر بسیار بالایی قرار دارند.");
         if (l == XOR_STR("be")) return XOR_STR("Гэтая версія Proton VPN-Next была мадыфікавана невядомым трэцім бокам. Ваша бяспека, прыватнасць і даныя знаходзяцца пад ВЫСОКАЙ РЫЗЫКАЙ.");
-        if (l == XOR_STR("uk")) return XOR_STR("Ця версія Proton VPN-Next була модифікована невідомою третьою стороною. Ваша безпека, конфіденційність та дані знаходяться пад ВИСОКИМ РИЗИКОМ.");
+        if (l == XOR_STR("uk")) return XOR_STR("Ця версія Proton VPN-Next була модифікована невідомою третьою стороною. Ваша безпека, конфіденційність та дані знаходяться під ВИСОКИМ РИЗИКОМ.");
         if (l == XOR_STR("kk")) return XOR_STR("Proton VPN-Next нұсқасын белгісіз үшінші тарап өзгерткен. Сіздің қауіпсіздігіңіз, құпиялылығыңыз бен деректеріңізге ЖОҒАРЫ ҚАУІП төніп тұр.");
-        if (l == XOR_STR("zh")) return XOR_STR("此版本的 Proton VPN-Next 已被未知的第三方修改。您的安全、隐私 and 数据正面临高度风险。");
+        if (l == XOR_STR("zh")) return XOR_STR("此版本的 Proton VPN-Next 已被未知的第三方修改。您的安全、隐私和数据正面临高度风险。");
         return XOR_STR("This version of Proton VPN-Next has been modified by an unknown third party. Your security, privacy, and data are at HIGH RISK.");
     }
     if (key == XOR_STR("tamper_btn_accept_risks")) {
@@ -842,7 +837,7 @@ std::string AntiTamper::getProtectedString(const std::string& locale, const std:
     // Integrity failure overlay strings
     if (key == XOR_STR("tamper_integrity_failure_title")) {
         if (l == XOR_STR("ru")) return XOR_STR("КРИТИЧЕСКАЯ ОШИБКА ЦЕЛОСТНОСТИ");
-        if (l == XOR_STR("fa")) return XOR_STR("خطای بحрانی در یکپارچگی");
+        if (l == XOR_STR("fa")) return XOR_STR("خطای بحرانی در یکپارچگی");
         if (l == XOR_STR("be")) return XOR_STR("КРЫТЫЧНАЯ ПАМЫЛКА ЦЭЛАСНАСЦІ");
         if (l == XOR_STR("uk")) return XOR_STR("КРИТИЧНА ПОМИЛКА ЦІЛІСНОСТІ");
         if (l == XOR_STR("kk")) return XOR_STR("ҚАУІПТІ ТҰТАСТЫҚ ҚАТЕСІ");
@@ -851,11 +846,11 @@ std::string AntiTamper::getProtectedString(const std::string& locale, const std:
     }
     if (key == XOR_STR("tamper_integrity_failure_desc")) {
         if (l == XOR_STR("ru")) return XOR_STR("Это приложение было модифицировано и более не является безопасным. Обнаружено несовпадение ресурсов.");
-        if (l == XOR_STR("fa")) return XOR_STR("این برنامه دستکاری شده است и دیگر برای استفاده ایمن نیست. منابع ناهماهنگ شناسایی شدند.");
+        if (l == XOR_STR("fa")) return XOR_STR("این برنامه دستکاری شده است و دیگر برای استفاده ایمن نیست. منابع ناهماهنگ شناسایی شدند.");
         if (l == XOR_STR("be")) return XOR_STR("Гэта дадатак было мадыфікавана і больш не з'яўляецца бяспечным. Выяўлена неадпаведнасць рэсурсаў.");
-        if (l == XOR_STR("uk")) return XOR_STR("Цей додаток було модифікована і більше не є безпечним. Виявлено невідповідність ресурсів.");
+        if (l == XOR_STR("uk")) return XOR_STR("Цей додаток було модифіковано і більше не є безпечним. Виявлено невідповідність ресурсів.");
         if (l == XOR_STR("kk")) return XOR_STR("Бұл қолданба өзгертілген және бұдан былай қауіпсіз емес. Сәйкес келмейтін ресурстар анықталды.");
-        if (l == XOR_STR("zh")) return XOR_STR("此应用程序已被篡改，不再安全。检测到不匹配의 资源。");
+        if (l == XOR_STR("zh")) return XOR_STR("此应用程序已被篡改，不再安全。检测到不匹配的资源。");
         return XOR_STR("This application has been tampered with and is no longer safe to use. Mismatched resources detected.");
     }
     if (key == XOR_STR("tamper_btn_exit")) {
@@ -1311,16 +1306,10 @@ void AntiTamper::renderLoop() {
             JNIEnv* env = nullptr;
             if (g_vm->GetEnv((void**)&env, JNI_VERSION_1_6) == JNI_OK) {
                 if (isDebuggerConnected(env) || !checkTracerPid()) {
-                    LOGE("AntiTamper: Late-attached debugger detected!");
-#if !defined(DEBUG_BUILD) && !defined(ANTITAMPER_TEST_BUILD)
-                    g_force_error = true;
-#endif
+                    LOGD("AntiTamper: Late-attached debugger detected!");
                 }
             } else if (!checkTracerPid()) {
-                LOGE("AntiTamper: Late-attached debugger detected (TracerPid fallback)!");
-#if !defined(DEBUG_BUILD) && !defined(ANTITAMPER_TEST_BUILD)
-                g_force_error = true;
-#endif
+                LOGD("AntiTamper: Late-attached debugger detected (TracerPid fallback)!");
             }
 
             std::ifstream maps(XOR_STR("/proc/self/maps"));
