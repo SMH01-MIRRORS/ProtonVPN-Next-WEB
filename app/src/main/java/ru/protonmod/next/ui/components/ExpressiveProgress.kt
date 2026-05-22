@@ -40,8 +40,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import ru.protonmod.next.data.local.SetupStep
 import ru.protonmod.next.ui.theme.ProtonNextTheme
-import ru.protonmod.next.utils.ProtonLogger
 
 /**
  * A full-screen loading overlay used during setup/login transitions.
@@ -49,7 +49,8 @@ import ru.protonmod.next.utils.ProtonLogger
 @Composable
 fun SetupLoadingScreen(
     message: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    step: SetupStep = SetupStep.LOADING
 ) {
     val colors = ProtonNextTheme.colors
     val infiniteTransition = rememberInfiniteTransition(label = "loading_pulse")
@@ -79,7 +80,7 @@ fun SetupLoadingScreen(
             .fillMaxSize()
             .background(colors.backgroundNorm)
     ) {
-        ExpressiveBackground()
+        ExpressiveBackground(step = step)
         
         Column(
             modifier = Modifier

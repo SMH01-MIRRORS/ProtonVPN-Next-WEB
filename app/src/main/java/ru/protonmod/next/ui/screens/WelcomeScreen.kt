@@ -172,9 +172,12 @@ fun WelcomeScreen(
             )
         }
 
-        ExpressiveBackground()
+        ExpressiveBackground(step = currentStep)
 
-        if (currentStep.ordinal <= SetupStep.LOGIN_2FA.ordinal || currentStep == SetupStep.CONFIG_PORT) {
+        if (currentStep == SetupStep.WELCOME || 
+            currentStep == SetupStep.LOGIN_EMAIL || 
+            currentStep == SetupStep.LOGIN_PASSWORD || 
+            currentStep == SetupStep.LOGIN_2FA) {
             Surface(
                 onClick = onNavigateToApiBypass,
                 modifier = Modifier
@@ -267,7 +270,8 @@ fun WelcomeScreen(
                     onBack = { currentStep = SetupStep.LOGIN_PASSWORD }
                 )
                 SetupStep.LOADING -> SetupLoadingScreen(
-                    message = stringResource(R.string.setup_please_wait)
+                    message = stringResource(R.string.setup_please_wait),
+                    step = step
                 )
                 SetupStep.CONFIG_PORT -> StepConfigPort(
                     onNext = { port ->
@@ -463,8 +467,8 @@ private fun StepLoginEmail(
     var email by remember { mutableStateOf(initialEmail) }
     val colors = ProtonNextTheme.colors
 
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp).background(Color.Transparent)) {
-        Spacer(modifier = Modifier.height(48.dp))
+    Column(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(24.dp).background(Color.Transparent)) {
+        Spacer(modifier = Modifier.height(64.dp))
         
         Box(
             modifier = Modifier.size(64.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
@@ -522,8 +526,8 @@ private fun StepLoginPassword(
     var passwordVisible by remember { mutableStateOf(false) }
     val colors = ProtonNextTheme.colors
 
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp).background(Color.Transparent)) {
-        Spacer(modifier = Modifier.height(48.dp))
+    Column(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(24.dp).background(Color.Transparent)) {
+        Spacer(modifier = Modifier.height(64.dp))
         
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -584,8 +588,8 @@ private fun StepLogin2FA(
     var code by remember { mutableStateOf("") }
     val colors = ProtonNextTheme.colors
 
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp).background(Color.Transparent)) {
-        Spacer(modifier = Modifier.height(48.dp))
+    Column(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(24.dp).background(Color.Transparent)) {
+        Spacer(modifier = Modifier.height(64.dp))
         Text(
             text = stringResource(R.string.title_2fa),
             style = MaterialTheme.typography.headlineSmall,
@@ -637,8 +641,8 @@ private fun StepConfigPort(onNext: (Int) -> Unit, onBack: () -> Unit) {
     val colors = ProtonNextTheme.colors
     val portOptions = remember { listOf(0, 443, 123, 1194, 51820) }
 
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp).background(Color.Transparent)) {
-        Spacer(modifier = Modifier.height(48.dp))
+    Column(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(24.dp).background(Color.Transparent)) {
+        Spacer(modifier = Modifier.height(64.dp))
         
         Box(
             modifier = Modifier.size(64.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
@@ -715,8 +719,8 @@ private fun StepConfigObfuscation(onNext: (Boolean) -> Unit, onBack: () -> Unit)
     var enabled by remember { mutableStateOf(true) }
     val colors = ProtonNextTheme.colors
 
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp).background(Color.Transparent)) {
-        Spacer(modifier = Modifier.height(48.dp))
+    Column(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(24.dp).background(Color.Transparent)) {
+        Spacer(modifier = Modifier.height(64.dp))
         
         Box(
             modifier = Modifier.size(64.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
@@ -793,8 +797,8 @@ private fun StepConfigServerLoad(onNext: (ServerLoadDisplayMode) -> Unit, onBack
     var selectedMode by remember { mutableStateOf(ServerLoadDisplayMode.ALL) }
     val colors = ProtonNextTheme.colors
 
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp).background(Color.Transparent)) {
-        Spacer(modifier = Modifier.height(48.dp))
+    Column(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(24.dp).background(Color.Transparent)) {
+        Spacer(modifier = Modifier.height(64.dp))
         
         Box(
             modifier = Modifier.size(64.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
@@ -840,8 +844,8 @@ private fun StepConfigTheme(onNext: (AppTheme) -> Unit, onBack: () -> Unit) {
     var selectedTheme by remember { mutableStateOf(AppTheme.DARK) }
     val colors = ProtonNextTheme.colors
 
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp).background(Color.Transparent)) {
-        Spacer(modifier = Modifier.height(48.dp))
+    Column(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(24.dp).background(Color.Transparent)) {
+        Spacer(modifier = Modifier.height(64.dp))
         
         Box(
             modifier = Modifier.size(64.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
@@ -889,11 +893,11 @@ private fun StepComplete(onFinish: () -> Unit) {
     val colors = ProtonNextTheme.colors
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(32.dp).verticalScroll(rememberScrollState()).background(Color.Transparent),
+        modifier = Modifier.fillMaxSize().statusBarsPadding().padding(32.dp).verticalScroll(rememberScrollState()).background(Color.Transparent),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(64.dp))
         Icon(Icons.Rounded.CheckCircle, null, modifier = Modifier.size(80.dp), tint = colors.brandNorm)
         Spacer(modifier = Modifier.height(24.dp))
         Text(

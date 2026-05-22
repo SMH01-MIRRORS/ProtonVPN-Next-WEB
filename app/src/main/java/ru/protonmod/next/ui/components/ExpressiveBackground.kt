@@ -38,6 +38,7 @@ import androidx.graphics.shapes.RoundedPolygon
 import androidx.graphics.shapes.circle
 import androidx.graphics.shapes.star
 import androidx.graphics.shapes.toPath
+import ru.protonmod.next.data.local.SetupStep
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 /**
@@ -47,10 +48,56 @@ import ru.protonmod.next.ui.theme.ProtonNextTheme
 @Composable
 fun ExpressiveBackground(
     modifier: Modifier = Modifier,
-    alpha: Float = 0.8f
+    alpha: Float = 0.8f,
+    step: SetupStep = SetupStep.WELCOME
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "expressive_bg")
     val colors = ProtonNextTheme.colors
+
+    // --- Dynamic Background Positions based on Step ---
+    val blob1TargetPosition = remember(step) {
+        when (step) {
+            SetupStep.WELCOME -> Offset(0.8f, 0.2f)
+            SetupStep.LOGIN_EMAIL, SetupStep.LOGIN_PASSWORD, SetupStep.LOGIN_2FA -> Offset(0.2f, 0.15f)
+            SetupStep.LOADING -> Offset(0.5f, 0.3f)
+            SetupStep.CONFIG_PORT -> Offset(0.9f, 0.1f)
+            SetupStep.CONFIG_OBFUSCATION -> Offset(0.1f, 0.4f)
+            SetupStep.CONFIG_SERVER_LOAD -> Offset(0.8f, 0.5f)
+            SetupStep.CONFIG_THEME -> Offset(0.2f, 0.8f)
+            SetupStep.COMPLETE -> Offset(0.5f, 0.5f)
+        }
+    }
+
+    val blob2TargetPosition = remember(step) {
+        when (step) {
+            SetupStep.WELCOME -> Offset(0.1f, 0.8f)
+            SetupStep.LOGIN_EMAIL, SetupStep.LOGIN_PASSWORD, SetupStep.LOGIN_2FA -> Offset(0.85f, 0.75f)
+            SetupStep.LOADING -> Offset(0.5f, 0.7f)
+            SetupStep.CONFIG_PORT -> Offset(0.1f, 0.9f)
+            SetupStep.CONFIG_OBFUSCATION -> Offset(0.9f, 0.6f)
+            SetupStep.CONFIG_SERVER_LOAD -> Offset(0.2f, 0.4f)
+            SetupStep.CONFIG_THEME -> Offset(0.8f, 0.2f)
+            SetupStep.COMPLETE -> Offset(0.5f, 0.5f)
+        }
+    }
+
+    val blob1Pos by animateOffsetAsState(
+        targetValue = blob1TargetPosition,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow),
+        label = "blob1_pos"
+    )
+
+    val blob2Pos by animateOffsetAsState(
+        targetValue = blob2TargetPosition,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow),
+        label = "blob2_pos"
+    )
+
+    val blobScale by animateFloatAsState(
+        targetValue = if (step == SetupStep.LOADING || step == SetupStep.COMPLETE) 1.5f else 1.0f,
+        animationSpec = spring(stiffness = Spring.StiffnessVeryLow),
+        label = "blob_scale"
+    )
 
     // Morph Progress Animation
     val morphProgress by infiniteTransition.animateFloat(
@@ -87,12 +134,12 @@ fun ExpressiveBackground(
     Box(modifier = modifier.fillMaxSize()) {
         // Deep Background Glows (Purple/Brand)
         Canvas(modifier = Modifier.fillMaxSize().blur(120.dp)) {
-            val baseRadius = size.minDimension * 0.7f
+            val baseRadius = size.minDimension * 0.7f * blobScale
             
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(colors.brandNorm.copy(alpha = 0.25f), Color.Transparent),
-                    center = Offset(size.width * 0.8f, size.height * 0.2f),
+                    center = Offset(size.width * blob1Pos.x, size.height * blob1Pos.y),
                     radius = baseRadius
                 )
             )
@@ -100,7 +147,7 @@ fun ExpressiveBackground(
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(colors.brandNorm.copy(alpha = 0.2f), Color.Transparent),
-                    center = Offset(size.width * 0.1f, size.height * 0.8f),
+                    center = Offset(size.width * blob2Pos.x, size.height * blob2Pos.y),
                     radius = baseRadius * 1.2f
                 )
             )
@@ -115,10 +162,10 @@ fun ExpressiveBackground(
         ) {
             val width = size.width
             val height = size.height
-            val baseSize = size.minDimension * 0.9f
+            val baseSize = size.minDimension * 0.9f * blobScale
 
             withTransform({
-                translate(width * 0.5f, height * 0.5f)
+                translate(width * blob1Pos.x, height * blob1Pos.y)
                 rotate(rotation)
                 scale(baseSize, baseSize)
             }) {
@@ -131,7 +178,7 @@ fun ExpressiveBackground(
             }
             
             withTransform({
-                translate(width * 0.4f, height * 0.6f)
+                translate(width * blob2Pos.x, height * blob2Pos.y)
                 rotate(-rotation * 1.2f)
                 scale(baseSize * 1.1f, baseSize * 1.1f)
             }) {
