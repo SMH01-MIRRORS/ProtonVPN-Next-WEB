@@ -360,6 +360,7 @@ private fun StepWelcome(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Spacer(modifier = Modifier.weight(1f))
         Box(contentAlignment = Alignment.Center) {
             Box(
                 modifier = Modifier
@@ -411,7 +412,7 @@ private fun StepWelcome(
             color = colors.textWeak,
             modifier = Modifier.alpha(if (readyToDraw) 1f else 0f)
         )
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.weight(0.5f))
 
         androidx.compose.foundation.text.ClickableText(
             text = annotatedString,
