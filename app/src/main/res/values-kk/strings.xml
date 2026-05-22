@@ -537,4 +537,5 @@
     <string name="tamper_integrity_failure_title">ҚАУІПТІ ТҰТАСТЫҚ ҚАТЕСІ</string>
     <string name="tamper_integrity_failure_desc">Бұл қолданба өзгертілген және бұдан былай қауіпсіз емес. Сәйкес келмейтін ресурстар анықталды.</string>
     <string name="tamper_btn_exit">ШЫҒУ</string>
+    <string name="btn_skip">Өткізіп жіберу</string>
 </resources>

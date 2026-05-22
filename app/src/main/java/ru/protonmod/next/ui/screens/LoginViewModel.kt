@@ -36,6 +36,7 @@ import java.net.SocketTimeoutException
 import java.net.ConnectException
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.local.SessionEntity
+import ru.protonmod.next.data.local.SetupStep
 import ru.protonmod.next.data.repository.AuthRepository
 import ru.protonmod.next.data.network.byedpi.ByeDpiStrategyTester
 import ru.protonmod.next.vpn.WarpManager
@@ -107,6 +108,9 @@ class LoginViewModel @Inject constructor(
     val apiBypassStrategy = settingsManager.apiBypassStrategy
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsManager.STRATEGY_NETLIFY)
 
+    val setupStep = settingsManager.setupStep
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SetupStep.WELCOME)
+
     // Onboarding temporary states
     private val _username = MutableStateFlow("")
     val username: StateFlow<String> = _username.asStateFlow()
@@ -136,6 +140,12 @@ class LoginViewModel @Inject constructor(
     fun setAppTheme(theme: ru.protonmod.next.ui.theme.AppTheme) {
         viewModelScope.launch {
             settingsManager.setAppTheme(theme)
+        }
+    }
+
+    fun setSetupStep(step: SetupStep) {
+        viewModelScope.launch {
+            settingsManager.setSetupStep(step)
         }
     }
 

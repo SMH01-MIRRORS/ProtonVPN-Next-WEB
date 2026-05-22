@@ -121,6 +121,8 @@ class SettingsManager @Inject constructor(
         private val POLICY_ACCEPTED_VERSION = intPreferencesKey("policy_accepted_version")
         const val CURRENT_POLICY_VERSION = 20260426
 
+        private val SETUP_STEP = stringPreferencesKey("setup_step")
+        
         private val AWG_JC = intPreferencesKey("awg_jc")
         private val AWG_JMIN = intPreferencesKey("awg_jmin")
         private val AWG_JMAX = intPreferencesKey("awg_jmax")
@@ -198,6 +200,15 @@ class SettingsManager @Inject constructor(
     val obfuscationEnabled: Flow<Boolean> = context.dataStore.data.map { it[OBFUSCATION_ENABLED] ?: false }
     val obfuscationAdvancedMode: Flow<Boolean> = context.dataStore.data.map { it[OBFUSCATION_ADVANCED_MODE] ?: false }
     val selectedProfileId: Flow<String> = context.dataStore.data.map { it[SELECTED_PROFILE_ID] ?: "standard_1" }
+
+    val setupStep: Flow<SetupStep> = context.dataStore.data.map { preferences ->
+        val stepString = preferences[SETUP_STEP] ?: SetupStep.WELCOME.name
+        try {
+            SetupStep.valueOf(stepString)
+        } catch (e: Exception) {
+            SetupStep.WELCOME
+        }
+    }
 
     val analyticsEnabled: Flow<Boolean> = context.dataStore.data.map { it[ANALYTICS_ENABLED] ?: true }
     val crashReportsEnabled: Flow<Boolean> = context.dataStore.data.map { it[CRASH_REPORTS_ENABLED] ?: true }
@@ -512,6 +523,10 @@ class SettingsManager @Inject constructor(
 
     suspend fun setPauseEndTime(time: Long) {
         context.dataStore.edit { it[PAUSE_END_TIME] = time }
+    }
+
+    suspend fun setSetupStep(step: SetupStep) {
+        context.dataStore.edit { it[SETUP_STEP] = step.name }
     }
 
     suspend fun saveCustomProfiles(profiles: List<ObfuscationProfile>) {

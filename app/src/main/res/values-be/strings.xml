@@ -559,4 +559,5 @@
     <string name="tamper_integrity_failure_title">КРЫТЫЧНАЯ ПАМЫЛКА ЦЭЛАСНАСЦІ</string>
     <string name="tamper_integrity_failure_desc">Гэта дадатак было мадыфікавана і больш не з\'яўляецца бяспечным. Выяўлена неадпаведнасць рэсурсаў.</string>
     <string name="tamper_btn_exit">ВЫХАД</string>
+    <string name="btn_skip">Прапусціць</string>
 </resources>

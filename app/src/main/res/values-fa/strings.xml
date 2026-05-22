@@ -569,4 +569,5 @@
     <string name="tamper_integrity_failure_title">خطای بحرانی در یکپارچگی</string>
     <string name="tamper_integrity_failure_desc">این برنامه دستکاری شده است و دیگر برای استفاده ایمن نیست. منابع ناهماهنگ شناسایی شدند.</string>
     <string name="tamper_btn_exit">خروج</string>
+    <string name="btn_skip">رد کردن</string>
 </resources>

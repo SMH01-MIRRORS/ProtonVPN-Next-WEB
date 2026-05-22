@@ -42,6 +42,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -58,6 +59,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.ServerLoadDisplayMode
+import ru.protonmod.next.data.local.SetupStep
 import ru.protonmod.next.ui.components.*
 import ru.protonmod.next.ui.screens.settings.LoadModePreviewCard
 import ru.protonmod.next.ui.screens.settings.ThemePreviewCard
@@ -65,19 +67,6 @@ import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.utils.ProtonLogger
-
-enum class SetupStep {
-    WELCOME,
-    LOGIN_EMAIL,
-    LOGIN_PASSWORD,
-    LOGIN_2FA,
-    LOADING, // "Please Wait" screen
-    CONFIG_PORT,
-    CONFIG_OBFUSCATION,
-    CONFIG_SERVER_LOAD,
-    CONFIG_THEME,
-    COMPLETE
-}
 
 @Composable
 fun WelcomeScreen(
@@ -87,18 +76,38 @@ fun WelcomeScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
+    val persistedStep by viewModel.setupStep.collectAsStateWithLifecycle()
     var currentStep by remember { mutableStateOf(SetupStep.WELCOME) }
+    var isInitialized by remember { mutableStateOf(false) }
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isWarpLoading by viewModel.isWarpLoading.collectAsStateWithLifecycle()
     val colors = ProtonNextTheme.colors
 
     val savedUsername by viewModel.username.collectAsStateWithLifecycle()
+    var isSkipping by remember { mutableStateOf(false) }
+
+    LaunchedEffect(persistedStep) {
+        if (!isInitialized) {
+            if (persistedStep != SetupStep.WELCOME && persistedStep != SetupStep.COMPLETE) {
+                currentStep = persistedStep
+            }
+            isInitialized = true
+        }
+    }
+
+    val advanceTo: (SetupStep) -> Unit = { nextStep ->
+        currentStep = nextStep
+        if (nextStep.ordinal > persistedStep.ordinal) {
+            viewModel.setSetupStep(nextStep)
+        }
+    }
 
     LaunchedEffect(currentStep) {
         ProtonLogger.d("WelcomeScreen", "Current Step changed to: $currentStep")
     }
 
-    LaunchedEffect(uiState) {
+    LaunchedEffect(uiState, isSkipping, onNavigateToHome) {
         ProtonLogger.d("WelcomeScreen", "UiState changed to: $uiState")
         when (uiState) {
             is LoginUiState.Loading -> {
@@ -106,7 +115,12 @@ fun WelcomeScreen(
                 currentStep = SetupStep.LOADING
             }
             is LoginUiState.Success -> {
-                currentStep = SetupStep.CONFIG_PORT
+                if (isSkipping) {
+                    viewModel.setSetupStep(SetupStep.COMPLETE)
+                    onNavigateToHome()
+                } else {
+                    advanceTo(SetupStep.CONFIG_PORT)
+                }
             }
             is LoginUiState.Requires2FA -> {
                 currentStep = SetupStep.LOGIN_2FA
@@ -137,7 +151,43 @@ fun WelcomeScreen(
     }
 
     Box(modifier = modifier.fillMaxSize().background(colors.backgroundNorm)) {
+        // Top Atmospheric Glow
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        colors.brandNorm.copy(alpha = 0.4f),
+                        colors.brandNorm.copy(alpha = 0.15f),
+                        Color.Transparent
+                    ),
+                    center = androidx.compose.ui.geometry.Offset(size.width / 2, -size.height * 0.1f),
+                    radius = size.width * 1.5f
+                ),
+                center = androidx.compose.ui.geometry.Offset(size.width / 2, -size.height * 0.1f),
+                radius = size.width * 1.5f
+            )
+        }
+
         ExpressiveBackground()
+
+        if (currentStep.ordinal >= SetupStep.CONFIG_PORT.ordinal && currentStep != SetupStep.COMPLETE) {
+            TextButton(
+                onClick = {
+                    viewModel.setSetupStep(SetupStep.COMPLETE)
+                    onNavigateToHome()
+                },
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.btn_skip),
+                    color = colors.brandNorm,
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+        }
 
         AnimatedContent(
             targetState = currentStep,
@@ -186,28 +236,28 @@ fun WelcomeScreen(
                 SetupStep.CONFIG_PORT -> StepConfigPort(
                     onNext = { port ->
                         viewModel.setVpnPort(port)
-                        currentStep = SetupStep.CONFIG_OBFUSCATION
+                        advanceTo(SetupStep.CONFIG_OBFUSCATION)
                     },
                     onBack = { currentStep = SetupStep.WELCOME }
                 )
                 SetupStep.CONFIG_OBFUSCATION -> StepConfigObfuscation(
                     onNext = { enabled ->
                         viewModel.setObfuscationEnabled(enabled)
-                        currentStep = SetupStep.CONFIG_SERVER_LOAD
+                        advanceTo(SetupStep.CONFIG_SERVER_LOAD)
                     },
                     onBack = { currentStep = SetupStep.CONFIG_PORT }
                 )
                 SetupStep.CONFIG_SERVER_LOAD -> StepConfigServerLoad(
                     onNext = { mode ->
                         viewModel.setServerLoadDisplayMode(mode)
-                        currentStep = SetupStep.CONFIG_THEME
+                        advanceTo(SetupStep.CONFIG_THEME)
                     },
                     onBack = { currentStep = SetupStep.CONFIG_OBFUSCATION }
                 )
                 SetupStep.CONFIG_THEME -> StepConfigTheme(
                     onNext = { theme ->
                         viewModel.setAppTheme(theme)
-                        currentStep = SetupStep.COMPLETE
+                        advanceTo(SetupStep.COMPLETE)
                     },
                     onBack = { currentStep = SetupStep.CONFIG_SERVER_LOAD }
                 )
@@ -234,11 +284,26 @@ private fun StepWelcome(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.vpn_welcome_globe),
-            contentDescription = null,
-            modifier = Modifier.size(180.dp)
-        )
+        Box(contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .size(240.dp)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                colors.brandNorm.copy(alpha = 0.25f),
+                                colors.brandNorm.copy(alpha = 0.05f),
+                                Color.Transparent
+                            )
+                        )
+                    )
+            )
+            Image(
+                painter = painterResource(id = R.drawable.vpn_welcome_globe),
+                contentDescription = null,
+                modifier = Modifier.size(180.dp)
+            )
+        }
         Spacer(modifier = Modifier.height(48.dp))
         Text(
             text = stringResource(R.string.welcome_title),

@@ -566,4 +566,5 @@
     <string name="tamper_integrity_failure_title">严重完整性校验失败</string>
     <string name="tamper_integrity_failure_desc">此应用程序已被篡改，不再安全。检测到不匹配的资源。</string>
     <string name="tamper_btn_exit">退出</string>
+    <string name="btn_skip">跳过</string>
 </resources>
