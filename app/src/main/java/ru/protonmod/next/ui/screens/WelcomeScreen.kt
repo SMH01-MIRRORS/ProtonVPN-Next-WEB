@@ -41,12 +41,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -73,6 +76,7 @@ fun WelcomeScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToRegister: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
+    onNavigateToApiBypass: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
@@ -170,6 +174,37 @@ fun WelcomeScreen(
 
         ExpressiveBackground()
 
+        if (currentStep.ordinal <= SetupStep.LOGIN_2FA.ordinal || currentStep == SetupStep.CONFIG_PORT) {
+            Surface(
+                onClick = onNavigateToApiBypass,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .statusBarsPadding()
+                    .padding(16.dp),
+                shape = CircleShape,
+                color = colors.brandNorm.copy(alpha = 0.15f),
+                contentColor = colors.brandNorm,
+                border = BorderStroke(1.dp, colors.brandNorm.copy(alpha = 0.3f))
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Security,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_api_bypass),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
         if (currentStep.ordinal >= SetupStep.CONFIG_PORT.ordinal && currentStep != SetupStep.COMPLETE) {
             TextButton(
                 onClick = {
@@ -204,7 +239,8 @@ fun WelcomeScreen(
             when (step) {
                 SetupStep.WELCOME -> StepWelcome(
                     onLogin = { currentStep = SetupStep.LOGIN_EMAIL },
-                    onGuest = { viewModel.loginAnonymous() }
+                    onGuest = { viewModel.loginAnonymous() },
+                    onPrivacyPolicy = onNavigateToPrivacyPolicy
                 )
                 SetupStep.LOGIN_EMAIL -> StepLoginEmail(
                     initialEmail = savedUsername,
@@ -276,9 +312,49 @@ fun WelcomeScreen(
 @Composable
 private fun StepWelcome(
     onLogin: () -> Unit,
-    onGuest: () -> Unit
+    onGuest: () -> Unit,
+    onPrivacyPolicy: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
+    val privacyPolicyText = stringResource(R.string.settings_privacy_policy)
+    val disclaimerText = stringResource(R.string.settings_disclaimer)
+    val agreementTemplate = stringResource(R.string.welcome_agreement_text, privacyPolicyText, disclaimerText)
+
+    val annotatedString = buildAnnotatedString {
+        val privacyIndex = agreementTemplate.indexOf(privacyPolicyText)
+        val disclaimerIndex = agreementTemplate.indexOf(disclaimerText)
+
+        append(agreementTemplate)
+
+        if (privacyIndex != -1) {
+            addStyle(
+                style = SpanStyle(color = colors.brandNorm, fontWeight = FontWeight.Bold),
+                start = privacyIndex,
+                end = privacyIndex + privacyPolicyText.length
+            )
+            addStringAnnotation(
+                tag = "URL",
+                annotation = "privacy",
+                start = privacyIndex,
+                end = privacyIndex + privacyPolicyText.length
+            )
+        }
+
+        if (disclaimerIndex != -1) {
+            addStyle(
+                style = SpanStyle(color = colors.brandNorm, fontWeight = FontWeight.Bold),
+                start = disclaimerIndex,
+                end = disclaimerIndex + disclaimerText.length
+            )
+            addStringAnnotation(
+                tag = "URL",
+                annotation = "disclaimer",
+                start = disclaimerIndex,
+                end = disclaimerIndex + disclaimerText.length
+            )
+        }
+    }
+
     Column(
         modifier = Modifier.fillMaxSize().padding(32.dp).background(Color.Transparent),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -305,21 +381,56 @@ private fun StepWelcome(
             )
         }
         Spacer(modifier = Modifier.height(48.dp))
+        
+        val baseStyle = MaterialTheme.typography.headlineLarge
+        val minFontSize = MaterialTheme.typography.titleMedium.fontSize
+        var titleFontSize by remember { mutableStateOf(baseStyle.fontSize) }
+        var readyToDraw by remember { mutableStateOf(false) }
+
         Text(
             text = stringResource(R.string.welcome_title),
-            style = MaterialTheme.typography.headlineLarge,
+            style = baseStyle.copy(fontSize = titleFontSize),
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
-            color = colors.textNorm
+            color = colors.textNorm,
+            maxLines = 2,
+            onTextLayout = { textLayoutResult ->
+                if (textLayoutResult.hasVisualOverflow && titleFontSize > minFontSize) {
+                    titleFontSize *= 0.9f
+                } else {
+                    readyToDraw = true
+                }
+            },
+            modifier = Modifier.padding(horizontal = 8.dp).alpha(if (readyToDraw) 1f else 0f)
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = stringResource(R.string.welcome_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
-            color = colors.textWeak
+            color = colors.textWeak,
+            modifier = Modifier.alpha(if (readyToDraw) 1f else 0f)
         )
-        Spacer(modifier = Modifier.height(64.dp))
+        Spacer(modifier = Modifier.weight(1f))
+
+        androidx.compose.foundation.text.ClickableText(
+            text = annotatedString,
+            style = MaterialTheme.typography.bodySmall.copy(
+                textAlign = TextAlign.Center,
+                color = colors.textWeak
+            ),
+            onClick = { offset ->
+                annotatedString.getStringAnnotations(tag = "URL", start = offset, end = offset)
+                    .firstOrNull()?.let { annotation ->
+                        if (annotation.item == "privacy" || annotation.item == "disclaimer") {
+                            onPrivacyPolicy()
+                        }
+                    }
+            },
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
         
         Button(
             onClick = onLogin,

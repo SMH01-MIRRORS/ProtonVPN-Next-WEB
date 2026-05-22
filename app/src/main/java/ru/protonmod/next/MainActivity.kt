@@ -336,6 +336,9 @@ fun ProtonNextAppNavHost(
                     onNavigateToRegister = { /* TODO: Registration flow */ },
                     onNavigateToPrivacyPolicy = {
                         navController.navigate(Screen.PrivacyPolicy.route)
+                    },
+                    onNavigateToApiBypass = {
+                        navController.navigate(Screen.ApiBypass.route)
                     }
                 )
             }
