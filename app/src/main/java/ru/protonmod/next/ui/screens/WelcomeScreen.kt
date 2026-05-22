@@ -119,7 +119,7 @@ fun WelcomeScreen(
                 currentStep = SetupStep.LOADING
             }
             is LoginUiState.Success -> {
-                if (isSkipping) {
+                if (isSkipping || persistedStep == SetupStep.COMPLETE) {
                     viewModel.setSetupStep(SetupStep.COMPLETE)
                     onNavigateToHome()
                 } else {

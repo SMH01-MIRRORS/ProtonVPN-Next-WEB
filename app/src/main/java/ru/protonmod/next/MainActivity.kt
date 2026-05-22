@@ -62,6 +62,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.data.local.SetupStep
 import ru.protonmod.next.ota.OTAUpdateScreen
 import ru.protonmod.next.ui.components.LiquidGlassBottomBar
 import ru.protonmod.next.ui.nav.MainTarget
@@ -117,11 +118,13 @@ class MainViewModel @Inject constructor(
                 settingsManager.setPolicyAcceptedVersion(SettingsManager.CURRENT_POLICY_VERSION)
             }
 
-            if (hasSession) {
-                ru.protonmod.next.utils.ProtonLogger.d("MainViewModel", "User logged in, going home.")
+            val step = settingsManager.setupStep.first()
+
+            if (hasSession && step == SetupStep.COMPLETE) {
+                ru.protonmod.next.utils.ProtonLogger.d("MainViewModel", "User logged in and setup complete, going home.")
                 _startDestination.value = Screen.Home.route
             } else {
-                ru.protonmod.next.utils.ProtonLogger.d("MainViewModel", "No session, going to welcome.")
+                ru.protonmod.next.utils.ProtonLogger.d("MainViewModel", "No session or setup incomplete, going to welcome.")
                 _startDestination.value = "welcome"
             }
         }
