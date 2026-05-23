@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159906,
-      "versionName": "12.0.0-alpha1st4-nightly",
+      "versionCode": 605159916,
+      "versionName": "12.0.0-alpha1st4-10-ga0d3924-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "refactor: relax anti-tamper debugger detection and correct localizations\n\n* refactor: demote debugger and debuggable detection from critical security failures to debug logs\n* refactor: remove automated security event reporting and hard-fail logic when a debugger or tracer is detected\n* fix: correct typos and mixed-language characters in anti-tamper warning strings for Persian, Ukrainian, and Chinese translations",
+      "changelog": "Crowdin updates\n\nNew Crowdin updates",
       "force": false
     },
     "release": {
-      "versionCode": 605159906,
-      "versionName": "12.0.0-alpha1st4-nightly",
+      "versionCode": 605159916,
+      "versionName": "12.0.0-alpha1st4-10-ga0d3924-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "refactor: relax anti-tamper debugger detection and correct localizations\n\n* refactor: demote debugger and debuggable detection from critical security failures to debug logs\n* refactor: remove automated security event reporting and hard-fail logic when a debugger or tracer is detected\n* fix: correct typos and mixed-language characters in anti-tamper warning strings for Persian, Ukrainian, and Chinese translations",
+      "changelog": "Crowdin updates\n\nNew Crowdin updates",
       "force": false
     }
   },
