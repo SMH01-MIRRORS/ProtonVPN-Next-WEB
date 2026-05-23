@@ -24,6 +24,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.*
@@ -44,6 +45,7 @@ import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.local.VpnProfileEntity
+import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.network.PhysicalServer
 import ru.protonmod.next.data.repository.VpnRepository
@@ -106,8 +108,28 @@ class DashboardViewModelTest {
     private val testServer = LogicalServer(
         id = "us_1", name = "US-FREE-1", tier = 0, features = 0,
         entryCountry = "US", exitCountry = "US", city = "New York",
-        averageLoad = 10, servers = listOf(PhysicalServer(id = "p1", domain = "d1", status = 1, load = 10))
-    )
+        servers = listOf(PhysicalServer(id = "p1", domain = "d1", status = 1, load = 10))
+    ).apply { averageLoad = 10 }
+
+    private val serversFlow = MutableStateFlow(listOf(testServer))
+    private val isUpdatingFlow = MutableStateFlow(false)
+    private val vpnStateFlow = MutableStateFlow(AmneziaVpnManager.VpnState.DISCONNECTED)
+    private val certStateFlow = MutableStateFlow(AmneziaVpnManager.CertificateState.Valid)
+    private val connectedServerFlow = MutableStateFlow<LogicalServer?>(null)
+    private val speedFlow = MutableStateFlow<String?>(null)
+    private val trafficRxFlow = MutableStateFlow<String?>(null)
+    private val trafficTxFlow = MutableStateFlow<String?>(null)
+    private val tunnelStateFlow = MutableStateFlow(Tunnel.State.DOWN)
+    
+    // Additional flows from SettingsManager
+    private val quickConnectStrategyFlow = MutableStateFlow("fastest")
+    private val quickConnectTargetIdFlow = MutableStateFlow<String?>(null)
+    private val serverLoadDisplayModeFlow = MutableStateFlow(ServerLoadDisplayMode.ALL)
+    private val autoConnectEnabledFlow = MutableStateFlow(false)
+    private val apiBypassEnabledFlow = MutableStateFlow(false)
+    private val apiBypassStrategyFlow = MutableStateFlow("none")
+    private val customProfilesFlow = MutableStateFlow<List<ObfuscationProfile>>(emptyList())
+    private val pauseEndTimeFlow = MutableStateFlow(0L)
 
     @Before
     fun setup() {
@@ -122,31 +144,35 @@ class DashboardViewModelTest {
         whenever(powerManager.isIgnoringBatteryOptimizations(any())).thenReturn(true)
         whenever(context.resources).thenReturn(resources)
         whenever(resources.getString(any())).thenReturn("Error")
+        whenever(context.getString(any())).thenReturn("Unknown")
         
-        whenever(vpnRepository.getServersFlow()).thenReturn(flowOf(listOf(testServer)))
+        whenever(vpnRepository.getServersFlow()).thenReturn(serversFlow)
         runBlocking {
             whenever(vpnRepository.getCachedServers()).thenReturn(listOf(testServer) )
+            whenever(vpnRepository.getServers(any(), any(), any(), any())).thenReturn(Result.success(listOf(testServer)))
         }
-        whenever(vpnRepository.isUpdating).thenReturn(MutableStateFlow(false))
-        whenever(amneziaVpnManager.vpnState).thenReturn(MutableStateFlow(AmneziaVpnManager.VpnState.DISCONNECTED))
-        whenever(amneziaVpnManager.isConnecting).thenReturn(MutableStateFlow(false))
-        whenever(amneziaVpnManager.certState).thenReturn(MutableStateFlow(AmneziaVpnManager.CertificateState.Valid))
-        whenever(amneziaVpnManager.speed).thenReturn(MutableStateFlow(null))
-        whenever(amneziaVpnManager.trafficRx).thenReturn(MutableStateFlow(null))
-        whenever(amneziaVpnManager.trafficTx).thenReturn(MutableStateFlow(null))
-        whenever(amneziaVpnManager.tunnelState).thenReturn(MutableStateFlow(Tunnel.State.DOWN))
-        whenever(connectedServerState.connectedServer).thenReturn(MutableStateFlow(null))
-        whenever(recentConnectionDao.getRecentConnections()).thenReturn(flowOf(emptyList()))
-        whenever(profileDao.getAllProfilesFlow()).thenReturn(flowOf(emptyList()))
+        whenever(vpnRepository.isUpdating).thenReturn(isUpdatingFlow)
         
-        whenever(settingsManager.quickConnectStrategy).thenReturn(flowOf("fastest"))
-        whenever(settingsManager.quickConnectTargetId).thenReturn(flowOf(null))
-        whenever(settingsManager.serverLoadDisplayMode).thenReturn(flowOf(ServerLoadDisplayMode.ALL))
-        whenever(settingsManager.autoConnectEnabled).thenReturn(flowOf(false))
-        whenever(settingsManager.apiBypassEnabled).thenReturn(flowOf(false))
-        whenever(settingsManager.apiBypassStrategy).thenReturn(flowOf("none"))
-        whenever(settingsManager.customProfiles).thenReturn(flowOf(emptyList()))
-        whenever(settingsManager.pauseEndTime).thenReturn(flowOf(0L))
+        whenever(amneziaVpnManager.vpnState).thenReturn(vpnStateFlow)
+        whenever(amneziaVpnManager.isConnecting).thenReturn(MutableStateFlow(false))
+        whenever(amneziaVpnManager.certState).thenReturn(certStateFlow)
+        whenever(amneziaVpnManager.speed).thenReturn(speedFlow)
+        whenever(amneziaVpnManager.trafficRx).thenReturn(trafficRxFlow)
+        whenever(amneziaVpnManager.trafficTx).thenReturn(trafficTxFlow)
+        whenever(amneziaVpnManager.tunnelState).thenReturn(tunnelStateFlow)
+        
+        whenever(connectedServerState.connectedServer).thenReturn(connectedServerFlow)
+        whenever(recentConnectionDao.getRecentConnections()).thenReturn(MutableStateFlow(emptyList()))
+        whenever(profileDao.getAllProfilesFlow()).thenReturn(MutableStateFlow(emptyList()))
+        
+        whenever(settingsManager.quickConnectStrategy).thenReturn(quickConnectStrategyFlow)
+        whenever(settingsManager.quickConnectTargetId).thenReturn(quickConnectTargetIdFlow)
+        whenever(settingsManager.serverLoadDisplayMode).thenReturn(serverLoadDisplayModeFlow)
+        whenever(settingsManager.autoConnectEnabled).thenReturn(autoConnectEnabledFlow)
+        whenever(settingsManager.apiBypassEnabled).thenReturn(apiBypassEnabledFlow)
+        whenever(settingsManager.apiBypassStrategy).thenReturn(apiBypassStrategyFlow)
+        whenever(settingsManager.customProfiles).thenReturn(customProfilesFlow)
+        whenever(settingsManager.pauseEndTime).thenReturn(pauseEndTimeFlow)
         
         whenever(warpManager.isTunnelActive).thenReturn(false)
         
@@ -177,43 +203,26 @@ class DashboardViewModelTest {
 
     @Test
     fun `initial state becomes Success after loading servers`() = runTest {
-        val collectJob = launch(UnconfinedTestDispatcher()) { viewModel.uiState.collect() }
-        advanceUntilIdle()
+        // uiState uses WhileSubscribed(5000), so it only starts when collected.
+        // first() will start collection and wait for the first value.
+        // Since we want to ensure it's Success, we can filter or just take the first one after advanceUntilIdle
         
-        val state = viewModel.uiState.value
-        if (state is DashboardUiState.Error) {
-            System.err.println("Dashboard ERROR: ${state.message}")
-            throw AssertionError("Expected Success but was Error: ${state.message}")
-        }
-        if (state is DashboardUiState.Loading) {
-             System.err.println("Dashboard is still LOADING")
-        }
+        val state = viewModel.uiState.first { it is DashboardUiState.Success }
+        
+        System.err.println("Dashboard current state: $state")
         assertTrue("Expected Success but was $state", state is DashboardUiState.Success)
-        
-        collectJob.cancel()
     }
 
     @Test
     fun `dashboard updates when VPN state changes`() = runTest {
-        val vpnStateFlow = MutableStateFlow(AmneziaVpnManager.VpnState.DISCONNECTED)
-        whenever(amneziaVpnManager.vpnState).thenReturn(vpnStateFlow)
+        backgroundScope.launch(UnconfinedTestDispatcher()) { viewModel.uiState.collect() }
         
-        // Re-init viewModel to use the new vpnState mock
-        viewModel = DashboardViewModel(
-            context, vpnRepository, sessionDao, settingsManager, amneziaVpnManager,
-            vpnAutomationManager, warpManager, connectedServerState, profileDao, recentConnectionDao
-        )
-
-        val collectJob = launch(UnconfinedTestDispatcher()) { viewModel.uiState.collect() }
-        advanceUntilIdle()
+        // Ensure initial state is Success
+        viewModel.uiState.first { it is DashboardUiState.Success }
         
         vpnStateFlow.value = AmneziaVpnManager.VpnState.CONNECTED
-        advanceUntilIdle()
         
-        val state = viewModel.uiState.value
-        assertTrue(state is DashboardUiState.Success)
-        assertTrue((state as DashboardUiState.Success).isConnected)
-        
-        collectJob.cancel()
+        val state = viewModel.uiState.first { it is DashboardUiState.Success && it.isConnected }
+        assertTrue("Expected isConnected=true", (state as DashboardUiState.Success).isConnected)
     }
 }

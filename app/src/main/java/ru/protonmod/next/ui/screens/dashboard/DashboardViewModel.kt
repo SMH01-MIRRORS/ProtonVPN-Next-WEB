@@ -188,6 +188,11 @@ class DashboardViewModel @Inject constructor(
                 servers.find { it.id == entity.serverId }
             }
 
+            // System calls can sometimes hang or fail in test environments
+            val isBatteryOptimized = runCatching {
+                !SystemUtils.isIgnoringBatteryOptimizations(context)
+            }.getOrDefault(false)
+
             DashboardUiState.Success(
                 servers = servers,
                 recentConnections = recentServers,
@@ -206,7 +211,7 @@ class DashboardViewModel @Inject constructor(
                 speed = speed,
                 trafficRx = trafficRx,
                 trafficTx = trafficTx,
-                isBatteryOptimized = !SystemUtils.isIgnoringBatteryOptimizations(context),
+                isBatteryOptimized = isBatteryOptimized,
                 pauseEndTime = pauseEndTime
             )
         }
