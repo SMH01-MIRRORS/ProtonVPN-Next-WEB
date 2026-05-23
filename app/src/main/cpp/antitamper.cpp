@@ -523,11 +523,6 @@ bool AntiTamper::checkStringIntegrity(JNIEnv* env, jobject context) {
     // List of keys to check integrity for
     std::vector<std::string> keys = {
         XOR_STR("app_name"),
-        XOR_STR("tamper_warning_title"),
-        XOR_STR("tamper_warning_desc"),
-        XOR_STR("tamper_btn_accept_risks"),
-        XOR_STR("tamper_btn_download_official"),
-        XOR_STR("tamper_btn_back"),
         XOR_STR("url_github"),
         XOR_STR("url_codeberg"),
         XOR_STR("url_telegram"),
