@@ -892,6 +892,10 @@ private fun StepConfigTheme(onNext: (AppTheme) -> Unit, onBack: () -> Unit) {
 @Composable
 private fun StepComplete(onFinish: () -> Unit) {
     val colors = ProtonNextTheme.colors
+    val baseStyle = MaterialTheme.typography.headlineMedium
+    val minFontSize = MaterialTheme.typography.titleMedium.fontSize
+    var titleFontSize by remember { mutableStateOf(baseStyle.fontSize) }
+    var readyToDraw by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxSize().statusBarsPadding().padding(32.dp).verticalScroll(rememberScrollState()).background(Color.Transparent),
@@ -903,9 +907,19 @@ private fun StepComplete(onFinish: () -> Unit) {
         Spacer(modifier = Modifier.height(24.dp))
         Text(
             text = stringResource(R.string.setup_complete_title),
-            style = MaterialTheme.typography.headlineMedium,
+            style = baseStyle.copy(fontSize = titleFontSize),
             fontWeight = FontWeight.Bold,
-            color = colors.textNorm
+            textAlign = TextAlign.Center,
+            color = colors.textNorm,
+            maxLines = 1,
+            onTextLayout = { textLayoutResult ->
+                if (textLayoutResult.hasVisualOverflow && titleFontSize > minFontSize) {
+                    titleFontSize *= 0.9f
+                } else {
+                    readyToDraw = true
+                }
+            },
+            modifier = Modifier.padding(horizontal = 8.dp).graphicsLayer { alpha = if (readyToDraw) 1f else 0f }
         )
         Text(
             text = stringResource(R.string.setup_complete_desc),
