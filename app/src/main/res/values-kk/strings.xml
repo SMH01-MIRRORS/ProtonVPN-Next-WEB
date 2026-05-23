@@ -16,14 +16,13 @@
   ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
   -->
 <resources>
-    <string name="app_name" translatable="false">Proton VPN-Next</string>
+    <!-- Welcome Screen -->
     <string name="welcome_title">Proton VPN-Next-ке қош келдіңіз</string>
     <string name="welcome_subtitle">Қауіпсіз, жеке және жылдам VPN көмегімен цифрлық өміріңізді бақылаңыз. Журналдарсыз, бақылаусыз.</string>
     <string name="welcome_get_started">Бастау</string>
     <string name="btn_create_account">Тіркелгі жасау</string>
     <string name="btn_login">Кіру</string>
     <string name="btn_continue_guest">Қонақ ретінде жалғастыру</string>
-
     <!-- Troubleshooting -->
     <string name="troubleshoot_title">Қосылымда ақаулар бар ма?</string>
     <string name="troubleshoot_desc">Біз Proton қызметтеріне қосылуда қиындықтарды анықтадық. Блоктауды айналып өту үшін баламалы маршруттау стратегиясын таңдап көріңіз.</string>
@@ -32,7 +31,6 @@
     <string name="troubleshoot_strategy_byedpi">ByeDPI (Deep Packet Inspection)</string>
     <string name="troubleshoot_btn_next">Келесі</string>
     <string name="troubleshoot_btn_skip">Өткізіп жіберу және қайталау</string>
-
     <!-- ByeDPI Tester Overhaul -->
     <string name="byedpi_tester_title">ByeDPI стратегияларын тексеруші</string>
     <string name="byedpi_tester_desc">Желіңізге сәйкес келетінін табу үшін пакеттерді фрагментациялаудың бірнеше әдісін тексеріңіз.</string>
@@ -42,7 +40,6 @@
     <string name="byedpi_tester_running">%2$d стратегияның %1$d-і тексерілуде…</string>
     <string name="byedpi_tester_success">Жұмыс стратегиясы табылды!</string>
     <string name="byedpi_tester_failed">Жұмыс стратегиясы табылмады.</string>
-
     <!-- Setup Wizard -->
     <string name="setup_initial_config">Бастапқы конфигурация</string>
     <string name="setup_choose_connection">Қосылу әдісін таңдаңыз</string>
@@ -52,7 +49,6 @@
     <string name="setup_btn_finish">Аяқтау</string>
     <string name="setup_please_wait">Күте тұрыңыз…</string>
     <string name="setup_please_wait_subtitle">Тәжірибеңізді оңтайландырудамыз</string>
-
     <string name="setup_showcase_speed_title">Найзағайдай жылдам</string>
     <string name="setup_showcase_speed_desc">Стримдеу және шолу үшін оңтайландырылған жоғары жылдамдықты серверлерді пайдаланыңыз.</string>
     <string name="setup_showcase_privacy_title">Құпиялылық бірінші орында</string>
@@ -61,7 +57,6 @@
     <string name="setup_showcase_security_desc">Күшті шифрлау және AmneziaWG сияқты озық хаттамалар.</string>
     <string name="setup_showcase_bypass_title">Бұғаттауларды айналып өту</string>
     <string name="setup_showcase_bypass_desc">Ақылды маршруттау әдістері арқылы цензураны оңай айналып өтіңіз.</string>
-
     <!-- Login Screen -->
     <string name="login_title">Қайта қош келдіңіз</string>
     <string name="login_subtitle">Proton тіркелгіңізге кіріңіз</string>
@@ -75,6 +70,7 @@
     <string name="msg_2fa_instruction">Аутентификатор қолданбасынан 6 таңбалы TOTP кодын енгізіңіз.</string>
     <string name="hint_2fa_code">6 таңбалы код</string>
     <string name="btn_verify">Тексеру</string>
+    <!-- Dashboard Screen -->
     <string name="dashboard_title">Proton VPN-Next</string>
     <string name="btn_retry">Қайталау</string>
     <string name="error_system_appops">Жүйелік қате: қолданбаны қайта орнатыңыз.</string>
@@ -88,25 +84,23 @@
     <string name="desc_toggle_connection">Қосылымды ауыстыру</string>
     <string name="desc_country">Ел</string>
     <string name="status_vpn">VPN</string>
-    <string name="location_format" translatable="false">%1$s • %2$s</string>
-    <string name="location_city_format" translatable="false">%1$s, %2$s</string>
     <string name="label_fastest_server">Ең жылдам сервер</string>
     <string name="label_select_location">Орынды таңдаңыз</string>
     <string name="label_server_unavailable">Сервер қолжетімсіз</string>
     <string name="desc_change_server">Серверді өзгерту</string>
-    <string name="desc_chevron_right" translatable="false">›</string>
-    <string name="preview_country_name" translatable="false">United States</string>
-    <string name="preview_server_name" translatable="false">US-FREE#1</string>
     <string name="btn_disconnect">Ажырату</string>
     <string name="btn_quick_connect">Жылдам қосылу</string>
+    <!-- VPN Certificate Messages -->
     <string name="cert_msg_expiring_soon">Сертификаттың мерзімі %1$d сағаттан кейін аяқталады. Жақын арада жаңартылады…</string>
     <string name="cert_msg_expired">VPN сертификатыңыздың мерзімі аяқталды және оны жаңарту қажет.</string>
     <string name="cert_msg_refreshing">VPN сертификаты жаңартылуда…</string>
     <string name="cert_msg_refresh_failed">Сертификатты жаңарту сәтсіз аяқталды: %1$s. 15 минуттан кейін қайталанады.</string>
     <string name="cert_msg_auto_refresh_failed">Автоматты жаңарту сәтсіз аяқталды. Қосылымды қамтамасыз ету үшін қолмен жаңартыңыз.</string>
     <string name="cert_btn_refresh_now">Қазір жаңарту</string>
+    <!-- Countries Screen -->
     <string name="countries_title">Елді таңдаңыз</string>
     <string name="desc_more_options">Қосымша опциялар</string>
+    <!-- Settings Screen -->
     <string name="settings_title">Параметрлер</string>
     <string name="settings_connection">Қосылым параметрлері</string>
     <string name="settings_kill_switch">Kill Switch</string>
@@ -178,6 +172,7 @@
     <string name="btn_copy">Көшіру</string>
     <string name="btn_start_test">Жұмыс стратегиясын табу</string>
     <string name="btn_stop_test">Сынақты тоқтату</string>
+    <!-- Country Spoofing -->
     <string name="settings_country_spoofing_title">Елді жалған көрсету</string>
     <string name="settings_country_spoofing_description">Басқа физикалық орынды имитациялау үшін API-ге жіберілетін ел кодын өзгерту.</string>
     <string name="settings_country_spoofing_null_label">Нөлдік жалған көрсету</string>
@@ -185,12 +180,14 @@
     <string name="settings_country_spoofing_code_label">Ел коды (ISO 3166-1 alpha-2)</string>
     <string name="settings_country_spoofing_code_hint">мысалы, US, DE, KZ</string>
     <string name="settings_country_spoofing_update_toast">Серверлер тізімі жаңартылуда…</string>
+    <!-- Custom DNS -->
     <string name="settings_custom_dns">Таңдамалы DNS</string>
     <string name="settings_custom_dns_default">Әдепкі (Proton DNS)</string>
     <string name="settings_custom_dns_title">Таңдамалы DNS сервері</string>
     <string name="settings_custom_dns_desc">IPv4 немесе IPv6 мекенжайын енгізіңіз. Proton-ның әдепкі қауіпсіз DNS-ін пайдалану үшін бос қалдырыңыз.</string>
     <string name="settings_custom_dns_reset">Әдепкіге қайтару</string>
     <string name="settings_custom_dns_placeholder">мысалы, 1.1.1.1 немесе 2606:4700:4700::1111</string>
+    <!-- Customization -->
     <string name="settings_customization">Баптау</string>
     <string name="settings_app_theme">Қолданба тақырыбы</string>
     <string name="settings_load_display_mode">Сервер жүктемесін көрсету</string>
@@ -210,6 +207,7 @@
     <string name="theme_purevpn">PureVPN</string>
     <string name="theme_mullvad">Mullvad</string>
     <string name="theme_windscribe">Windscribe</string>
+    <!-- Error Reporting Settings -->
     <string name="settings_error_reporting">Қателер туралы есеп беру</string>
     <string name="settings_error_reporting_desc">Краш-есептер мен аналитиканы басқару</string>
     <string name="settings_crash_reports">Краш-есептерді жіберу</string>
@@ -228,13 +226,15 @@
     <string name="settings_sentry_logs_desc">Күрделі мәселелерді шешуге көмектесу үшін анонимді жүйелік журналдарды қосу</string>
     <string name="settings_sentry_session_replay">Сеансты қайта ойнату</string>
     <string name="settings_sentry_session_replay_desc">UI мәселелерін шешу үшін анонимді өзара әрекеттесуді қайта ойнату</string>
+    <!-- Kill Switch Screen -->
     <string name="kill_switch_title">Kill Switch</string>
     <string name="kill_switch_subtitle">Kill Switch</string>
     <string name="kill_switch_desc">Трафигіңіздің әрқашан қорғалуын қамтамасыз ету үшін Android ұсынған Kill Switch мүмкіндігін пайдаланыңіз. Бұл VPN қосылымы үзілген жағдайда деректердің ағып кетуін болдырмайды.</string>
     <string name="kill_switch_step_1">1. VPN параметрлерін ашу үшін төмендегі түймені басыңыз.</string>
     <string name="kill_switch_step_2">2. Proton VPN-Next жанындағы параметрлер белгішесін басыңыз.</string>
-    <string name="kill_switch_step_3">3. "Әрқашан қосулы VPN" және "VPN-сіз қосылымдарды блоктау" мүмкіндіктерін қосыңыз.</string>
+    <string name="kill_switch_step_3">3. \"Әрқашан қосулы VPN\" және \"VPN-сіз қосылымдарды блоктау\" мүмкіндіктерін қосыңыз.</string>
     <string name="kill_switch_button">VPN параметрлерін ашу</string>
+    <!-- Obfuscation Params -->
     <string name="obfuscation_jc">Қоқыс пакеттерінің саны (Jc)</string>
     <string name="obfuscation_jmin">Қоқыс пакетінің мин. өлшемі (Jmin)</string>
     <string name="obfuscation_jmax">Қоқыс пакетінің макс. өлшемі (Jmax)</string>
@@ -251,6 +251,7 @@
     <string name="obfuscation_i3">Арнайы қоқыс (I3)</string>
     <string name="obfuscation_i4">Арнайы қоқыс (I4)</string>
     <string name="obfuscation_i5">Арнайы қоқыс (I5)</string>
+    <!-- Obfuscation Modes -->
     <string name="obfuscation_mode_easy">Оңай</string>
     <string name="obfuscation_mode_advanced">Кеңейтілген</string>
     <string name="obfuscation_junk_level">Қоқыс қарқындылығы</string>
@@ -260,6 +261,7 @@
     <string name="obfuscation_junk_custom">Таңдамалы</string>
     <string name="obfuscation_regenerate_i1">Идентификацияны қайта жасау</string>
     <string name="obfuscation_i1_desc">DPI-ді айналып өту үшін пайдаланылатын бірегей идентификациялық жол. Қосылым тұрақсыз болса, қайта жасаңыз.</string>
+    <!-- Settings: Protocol & Obfuscation -->
     <string name="settings_protocol">Хаттама</string>
     <string name="protocol_title">Хаттама</string>
     <string name="protocol_amneziawg">AmneziaWG</string>
@@ -277,6 +279,7 @@
     <string name="obfuscation_category_headers">Тақырыптар</string>
     <string name="obfuscation_category_advanced">Кеңейтілген</string>
     <string name="custom_config">Таңдамалы конфигурация</string>
+    <!-- About App Screen -->
     <string name="about_community">Қоғамдастық</string>
     <string name="about_github">GitHub</string>
     <string name="about_telegram">Telegram</string>
@@ -284,6 +287,7 @@
     <string name="about_crowdin">Аударуға көмектесу</string>
     <string name="about_website">Ресми сайт</string>
     <string name="about_sentry">Sentry негізінде жасалған</string>
+    <!-- Licenses Screen -->
     <string name="licenses_title">Лицензиялар</string>
     <string name="license_app_title">Proton VPN-Next</string>
     <string name="license_app_desc">GNU General Public License v3.0</string>
@@ -300,6 +304,7 @@
     <string name="license_leakcanary_title">LeakCanary</string>
     <string name="license_android_svg_title">Android SVG</string>
     <string name="license_bsl">Business Source License 1.1</string>
+    <!-- Split Tunneling -->
     <string name="settings_st_mode">Бөлек туннельдеу режимі</string>
     <string name="st_mode_exclude">Алып тастау режимі</string>
     <string name="st_mode_exclude_desc">Таңдалған қолданбалар мен IP-лер VPN-ді айналып өтеді</string>
@@ -307,6 +312,18 @@
     <string name="st_mode_include_desc">Тек таңдалған қолданбалар мен IP-лер VPN-ді пайдаланады</string>
     <string name="st_enabled_subtitle">VPN қосылымы бөлек туннельдеу ережелеріне сәйкес болады</string>
     <string name="st_disabled_subtitle">Барлық трафик VPN арқылы өтеді</string>
+    <plurals name="st_apps_selected">
+        <item quantity="one">%1$d қолданба таңдалды</item>
+        <item quantity="other">%1$d қолданба таңдалды</item>
+    </plurals>
+    <plurals name="st_ips_selected">
+        <item quantity="one">%1$d IP таңдалды</item>
+        <item quantity="other">%1$d IP таңдалды</item>
+    </plurals>
+    <plurals name="st_domains_selected">
+        <item quantity="one">%1$d домен таңдалды</item>
+        <item quantity="other">%1$d домен таңдалды</item>
+    </plurals>
     <string name="st_search_apps_hint">Қолданбаларды іздеу</string>
     <string name="st_show_system_apps">Жүйелік қолданбаларды көрсету</string>
     <string name="st_selected_apps_header">Таңдалған қолданбалар (%1$d)</string>
@@ -325,6 +342,7 @@
     <string name="st_included_domains_header">Қосылған домендер (%1$d)</string>
     <string name="st_no_domains_added">Әзірге домендер қосылмаған</string>
     <string name="st_remove_domain_desc">Доменді алып тастау</string>
+    <!-- Notification -->
     <string name="notification_channel_name">VPN күйі</string>
     <string name="notification_channel_desc">VPN-нің ағымдағы қосылым күйін көрсетеді</string>
     <string name="notification_title_connected">%1$s-ге қосылды</string>
@@ -332,6 +350,7 @@
     <string name="notification_title_disconnected">Ажыратылды</string>
     <string name="notification_title_connecting">Қосылуда…</string>
     <string name="notification_action_disconnect">Ажырату</string>
+    <!-- Speed Units -->
     <string name="unit_kb_s">КБ/с</string>
     <string name="unit_mb_s">МБ/с</string>
     <string name="unit_gb_s">ГБ/с</string>
@@ -343,10 +362,12 @@
     <string name="label_download">Жүктеу</string>
     <string name="label_upload">Жүктеу (Upload)</string>
     <string name="label_speed">Жылдамдық</string>
+    <!-- Errors and ViewModels -->
     <string name="error_session_not_found">Белсенді сеанс табылмады. Қайта кіріңіз.</string>
     <string name="error_unknown">Белгісіз қате</string>
     <string name="error_captcha_expired">Капча сессиясының мерзімі бітті. Қайталау үшін \"Кіру\" түймесін басыңыз.</string>
     <string name="unknown">Белгісіз</string>
+    <!-- Profiles Screen -->
     <string name="profiles_title">Профильдер</string>
     <string name="desc_create_profile">Профиль жасау</string>
     <string name="desc_edit_profile">Профильді өңдеу</string>
@@ -359,6 +380,7 @@
     <string name="profile_country_info">%1$s %2$s</string>
     <string name="profile_fastest_info">⚡ %1$s</string>
     <string name="profile_info_format">%1$s • %2$s • %3$s</string>
+    <!-- Edit Profile Screen -->
     <string name="title_create_profile">Профиль жасау</string>
     <string name="title_edit_profile">Профильді өңдеу</string>
     <string name="btn_save">Сақтау</string>
@@ -395,6 +417,7 @@
     <string name="custom_config_name">Таңдамалы конфигурация %1$d</string>
     <string name="title_edit_obfuscation_config">Обфускация конфигурациясын өңдеу</string>
     <string name="error_empty_profile_name">Профиль атауы бос болмауы керек</string>
+    <!-- Debug Tools -->
     <string name="settings_debug">Реттеу құралдары</string>
     <string name="debug_title">Реттеу панелі</string>
     <string name="debug_session_header">VPN сеансы және сертификаты</string>
@@ -402,6 +425,8 @@
     <string name="debug_cert_issued">Берілді: %1$s</string>
     <string name="debug_cert_expires">Мерзімі аяқталады: %1$s</string>
     <string name="debug_btn_refresh_cert">Сертификатты мәжбүрлі жаңарту</string>
+    <string name="debug_btn_refresh_session">Force Refresh Session</string>
+    <string name="debug_session_refreshed">Session refreshed successfully!</string>
     <string name="debug_btn_simulate_expired_cert">Мерзімі өткен сертификатты симуляциялау</string>
     <string name="debug_cert_simulated">Сертификаттың мерзімі аяқталуы симуляцияланды. Баннер бақылау тақтасында пайда болуы керек.</string>
     <string name="debug_exports_header">Экспорттау және диагностика</string>
@@ -412,6 +437,7 @@
     <string name="debug_nuke_confirm">Сенімдісіз бе? Барлық параметрлер, тіркелгілер және сервер кэштері біржола жойылады.</string>
     <string name="debug_device_header">Құрылғы туралы ақпарат</string>
     <string name="debug_select_server">Конфигурацияны экспорттау үшін серверді таңдаңыз</string>
+    <!-- Sentry Debug -->
     <string name="debug_sentry_header">Sentry SDK сынау</string>
     <string name="debug_btn_crash_java">Java крашын тудыру</string>
     <string name="debug_btn_crash_native">Native крашын тудыру</string>
@@ -444,6 +470,7 @@
     <string name="captcha_message">Тіркелгіңізді қауіпсіз сақтау үшін төмендегі тексеруден өтіңіз.</string>
     <string name="captcha_proxy_active">Блоктауға қарсы прокси белсенді</string>
     <string name="desc_close">Жабу</string>
+    <!-- Token Login & Session Management -->
     <string name="btn_login_tokens">Токендер арқылы кіру</string>
     <string name="title_login_tokens">Токен негізінде кіру</string>
     <string name="msg_login_tokens_desc">Тікелей кіру үшін төменде сеанс JSON файлын қойыңыз. Бұл деректерді құпия сақтаңыз!</string>
@@ -458,6 +485,7 @@
     <string name="btn_import">Импорттау</string>
     <string name="btn_logout">Шығу</string>
     <string name="logout_confirmation">Шынымен шыққыңыз келе ме?</string>
+    <!-- OTA Updates -->
     <string name="ota_title">Бағдарламалық жасақтаманы жаңарту</string>
     <string name="ota_new_version">Жаңа нұсқа қолжетімді: %1$s</string>
     <string name="ota_changelog">Жаңалықтар:</string>
@@ -480,6 +508,7 @@
     <string name="ota_status_up_to_date">Қолданба жаңартылған</string>
     <string name="ota_btn_check">Жаңартуларды тексеру</string>
     <string name="ota_downloading">Жаңарту жүктелуде… %1$d%%</string>
+    <!-- VPN Pause -->
     <string name="btn_pause">Кідірту</string>
     <string name="btn_resume">Жалғастыру</string>
     <string name="pause_active_title">VPN кідіртілді</string>
@@ -492,9 +521,11 @@
     <string name="pause_unit_minutes">Минуттар</string>
     <string name="pause_unit_hours">Сағаттар</string>
     <string name="btn_start_pause">Кідіртуді бастау</string>
+    <!-- Battery Optimization -->
     <string name="battery_optimization_title">Батареяны оңтайландыру белсенді</string>
     <string name="battery_optimization_desc">Android қуатты үнемдеу үшін VPN-ді ажыратуы мүмкін. Осы қолданба үшін оңтайландыруды өшіріңіз.</string>
     <string name="btn_fix">Түзету</string>
+    <!-- Trusted Wi-Fi -->
     <string name="settings_trusted_wifi">Сенімді Wi-Fi желілері</string>
     <string name="settings_trusted_wifi_desc">VPN қажет емес желілерді басқару</string>
     <string name="settings_auto_connect_untrusted">Бөтен желілерде автоматты қосылу</string>
@@ -505,35 +536,13 @@
     <string name="trusted_wifi_empty">Сенімді желілер әлі қосылмаған.</string>
     <string name="trusted_wifi_permission_title">Орналасқан жерге кіру рұқсаты қажет</string>
     <string name="trusted_wifi_permission_desc">Android Wi-Fi атауын (SSID) оқу үшін орналасқан жерге кіру рұқсатын талап етеді. Бұл тек сенімді желілерді анықтау үшін пайдаланылады.</string>
-    <plurals name="st_apps_selected">
-        <item quantity="one">%1$d қолданба таңдалды</item>
-        <item quantity="other">%1$d қолданба таңдалды</item>
-    </plurals>
-    <plurals name="st_ips_selected">
-        <item quantity="one">%1$d IP таңдалды</item>
-        <item quantity="other">%1$d IP таңдалды</item>
-    </plurals>
-    <plurals name="st_domains_selected">
-        <item quantity="one">%1$d домен таңдалды</item>
-        <item quantity="other">%1$d домен таңдалды</item>
-    </plurals>
-    <string name="url_sentry" translatable="false">https://sentry.io/</string>
-    <string name="url_github" translatable="false">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
-    <string name="url_codeberg" translatable="false">https://codeberg.org/SMH01/ProtonVPN-Next</string>
-    <string name="url_telegram" translatable="false">https://t.me/ProtonVPN_MOD</string>
-    <string name="url_crowdin" translatable="false">https://crowdin.com/project/protonvpn-next</string>
-    <string name="url_ota_mirror_1" translatable="false">https://kvn.protonnext.qzz.io/update.json</string>
-    <string name="url_ota_mirror_2" translatable="false">https://home.protonnext.qzz.io/update.json</string>
-    <string name="vpn_speed_format" translatable="false">↑ %1$s ↓ %2$s</string>
-    <string name="location_load" translatable="false">%1$d%%</string>
-
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">РЕСМИ ЕМЕС ЖИНАҚ АНЫҚТАЛДЫ!</string>
     <string name="tamper_warning_desc">Proton VPN-Next нұсқасын белгісіз үшінші тарап өзгерткен. Сіздің қауіпсіздігіңіз, құпиялылығыңыз бен деректеріңізге ЖОҒАРЫ ҚАУІП төніп тұр.</string>
     <string name="tamper_btn_accept_risks">Мен қауіпті түсінемін және салдарын қабылдаймын</string>
     <string name="tamper_btn_download_official">Түпнұсқаны жүктеп алу</string>
     <string name="tamper_btn_back">Артқа</string>
-
+    <!-- Integrity failure overlay strings -->
     <string name="tamper_integrity_failure_title">ҚАУІПТІ ТҰТАСТЫҚ ҚАТЕСІ</string>
     <string name="tamper_integrity_failure_desc">Бұл қолданба өзгертілген және бұдан былай қауіпсіз емес. Сәйкес келмейтін ресурстар анықталды.</string>
     <string name="tamper_btn_exit">ШЫҒУ</string>
