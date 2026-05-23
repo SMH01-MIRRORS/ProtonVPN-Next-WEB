@@ -33,10 +33,7 @@
     <string name="troubleshoot_btn_skip">Пропустити та повторити</string>
     <!-- ByeDPI Tester Overhaul -->
     <string name="byedpi_tester_title">Тестер стратегій ByeDPI</string>
-    <string name="byedpi_tester_desc">Протестуйте кілька технік фрагментації пакетів, щоб знайти ту, що працює у вашій мережі.</string>
-    <string name="byedpi_mode_fast">Швидкий (Топ 10)</string>
-    <string name="byedpi_mode_medium">Середній (Топ 30)</string>
-    <string name="byedpi_mode_full">Повний (Всі)</string>
+    <string name="byedpi_tester_desc_old">Протестуйте кілька технік фрагментації пакетів, щоб знайти ту, що працює у вашій мережі.</string>
     <string name="byedpi_tester_running">Тестування стратегії %1$d з %2$d…</string>
     <string name="byedpi_tester_success">Робочу стратегію знайдено!</string>
     <string name="byedpi_tester_failed">Робочу стратегію не знайдено.</string>
@@ -553,4 +550,13 @@
     <string name="tamper_integrity_failure_desc">Цей додаток було модифікована і більше не є безпечним. Виявлено невідповідність ресурсів.</string>
     <string name="tamper_btn_exit">ВИХІД</string>
     <string name="btn_skip">Пропустити</string>
+    <string name="byedpi_test_title">Тестування ByeDPI</string>
+    <string name="byedpi_mode_fast">Швидкий</string>
+    <string name="byedpi_mode_medium">Середній</string>
+    <string name="byedpi_mode_full">Повний</string>
+    <string name="byedpi_mode_select">Оберіть режим тестування</string>
+    <string name="btn_open_tester">Відкрити тестувальник ByeDPI</string>
+    <string name="byedpi_test_desc">Протестуйте різні стратегії, щоб знайти найкращу для вашої мережі.</string>
+    <string name="byedpi_auto_test_title">Оптимізація з\'єднання…</string>
+    <string name="byedpi_auto_test_desc">Ми підбираємо найкращу стратегію підключення для вашого регіону.</string>
 </resources>
