@@ -22,11 +22,8 @@ import io.sentry.Sentry
 import ru.protonmod.next.utils.ProtonLogger
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -39,7 +36,13 @@ import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.local.SetupStep
 import ru.protonmod.next.data.repository.AuthRepository
 import ru.protonmod.next.data.network.byedpi.ByeDpiStrategyTester
+import ru.protonmod.next.data.network.byedpi.ByeDpiManager
 import ru.protonmod.next.vpn.WarpManager
+import ru.protonmod.next.utils.NetworkMonitor
+import ru.protonmod.next.utils.RegionUtils
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
 
 // --- API Error Models ---
@@ -90,9 +93,12 @@ sealed class LoginUiState {
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val authRepository: AuthRepository,
     private val settingsManager: SettingsManager,
     private val warpManager: WarpManager,
+    private val networkMonitor: NetworkMonitor,
+    private val byeDpiManager: ByeDpiManager,
     val byeDpiStrategyTester: ByeDpiStrategyTester
 ) : ViewModel() {
 
@@ -101,6 +107,11 @@ class LoginViewModel @Inject constructor(
 
     private val _isWarpLoading = MutableStateFlow(false)
     val isWarpLoading = _isWarpLoading.asStateFlow()
+
+    private val _isByeDpiAutoTesting = MutableStateFlow(false)
+    val isByeDpiAutoTesting = _isByeDpiAutoTesting.asStateFlow()
+
+    private var hasRunAutoByeDpiTest = false
 
     val isApiBypassEnabled = settingsManager.apiBypassEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
@@ -158,10 +169,16 @@ class LoginViewModel @Inject constructor(
     fun login(username: String, passwordRaw: String, captchaToken: String? = null) {
         if (username.isBlank() || passwordRaw.isBlank() || _uiState.value is LoginUiState.Loading) return
 
-        ProtonLogger.action("Login", "User clicked Login")
-        val startTime = System.currentTimeMillis()
-        _uiState.value = LoginUiState.Loading
         viewModelScope.launch {
+            if (shouldRunAutoByeDpiTest()) {
+                runAutoByeDpiTest { login(username, passwordRaw, captchaToken) }
+                return@launch
+            }
+
+            ProtonLogger.action("Login", "User clicked Login")
+            val startTime = System.currentTimeMillis()
+            _uiState.value = LoginUiState.Loading
+
             val strategy = apiBypassStrategy.value
             val useWarp = isApiBypassEnabled.value && strategy == SettingsManager.STRATEGY_WARP
 
@@ -309,8 +326,13 @@ class LoginViewModel @Inject constructor(
     fun loginAnonymous(captchaToken: String? = null) {
         if (_uiState.value is LoginUiState.Loading) return
 
-        ProtonLogger.action("Login", "User clicked Login Anonymous")
         viewModelScope.launch {
+            if (shouldRunAutoByeDpiTest()) {
+                runAutoByeDpiTest { loginAnonymous(captchaToken) }
+                return@launch
+            }
+
+            ProtonLogger.action("Login", "User clicked Login Anonymous")
             val strategy = apiBypassStrategy.value
             val useWarp = isApiBypassEnabled.value && strategy == SettingsManager.STRATEGY_WARP
 
@@ -369,6 +391,62 @@ class LoginViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun shouldRunAutoByeDpiTest(): Boolean {
+        return RegionUtils.isRussianTimezone() && !networkMonitor.isVpnActive.value && !hasRunAutoByeDpiTest
+    }
+
+    private fun runAutoByeDpiTest(onComplete: () -> Unit) {
+        viewModelScope.launch {
+            _isByeDpiAutoTesting.value = true
+            hasRunAutoByeDpiTest = true
+            try {
+                val sites = try {
+                    context.assets.open("proxytest_proton.sites").bufferedReader().readLines().filter { it.isNotBlank() }
+                } catch (e: Exception) {
+                    listOf("google.com", "proton.me", "github.com")
+                }
+                
+                // Special mode for auto-test: full strategies, success threshold 2
+                if (!byeDpiStrategyTester.isTesting.value) {
+                    byeDpiStrategyTester.startTesting("full", sites, successThreshold = 2)
+                }
+                
+                // Wait for testing to finish (either success or exhaustion)
+                // Use dropWhile to skip the initial 'false' if the test hasn't started yet
+                withTimeoutOrNull(300000) { // 5 minutes max
+                    byeDpiStrategyTester.isTesting
+                        .dropWhile { !it }
+                        .first { !it }
+                }
+
+                ProtonLogger.i("LoginViewModel", "Auto ByeDPI test finished, waiting for proxy stabilization...")
+                
+                // Wait for proxy to be running if it was applied
+                if (settingsManager.apiBypassStrategy.first() == SettingsManager.STRATEGY_BYEDPI &&
+                    settingsManager.apiBypassEnabled.first()) {
+                    withTimeoutOrNull(5000) {
+                        byeDpiManager.isRunning.first { it }
+                    }
+                    // Small grace delay for native stability
+                    delay(1000)
+                }
+
+                ProtonLogger.i("LoginViewModel", "Proxy stable, proceeding to login flow")
+                onComplete()
+            } catch (e: Exception) {
+                ProtonLogger.e("LoginViewModel", "Error during auto ByeDPI test: ${e.message}")
+                onComplete()
+            } finally {
+                _isByeDpiAutoTesting.value = false
+            }
+        }
+    }
+
+    fun stopAutoByeDpiTest() {
+        byeDpiStrategyTester.stopTesting()
+        _isByeDpiAutoTesting.value = false
     }
 
     fun retryWithCaptcha(state: LoginUiState.RequiresCaptcha, verifiedToken: String) {

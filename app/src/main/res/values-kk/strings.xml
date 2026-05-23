@@ -33,10 +33,7 @@
     <string name="troubleshoot_btn_skip">Өткізіп жіберу және қайталау</string>
     <!-- ByeDPI Tester Overhaul -->
     <string name="byedpi_tester_title">ByeDPI стратегияларын тексеруші</string>
-    <string name="byedpi_tester_desc">Желіңізге сәйкес келетінін табу үшін пакеттерді фрагментациялаудың бірнеше әдісін тексеріңіз.</string>
-    <string name="byedpi_mode_fast">Жылдам (Топ 10)</string>
-    <string name="byedpi_mode_medium">Орташа (Топ 30)</string>
-    <string name="byedpi_mode_full">Толық (Барлығы)</string>
+    <string name="byedpi_tester_desc_old">Желіңізге сәйкес келетінін табу үшін пакеттерді фрагментациялаудың бірнеше әдісін тексеріңіз.</string>
     <string name="byedpi_tester_running">%2$d стратегияның %1$d-і тексерілуде…</string>
     <string name="byedpi_tester_success">Жұмыс стратегиясы табылды!</string>
     <string name="byedpi_tester_failed">Жұмыс стратегиясы табылмады.</string>
@@ -547,4 +544,13 @@
     <string name="tamper_integrity_failure_desc">Бұл қолданба өзгертілген және бұдан былай қауіпсіз емес. Сәйкес келмейтін ресурстар анықталды.</string>
     <string name="tamper_btn_exit">ШЫҒУ</string>
     <string name="btn_skip">Өткізіп жіберу</string>
+    <string name="byedpi_test_title">ByeDPI тестілеу</string>
+    <string name="byedpi_mode_fast">Жылдам</string>
+    <string name="byedpi_mode_medium">Орташа</string>
+    <string name="byedpi_mode_full">Толық</string>
+    <string name="byedpi_mode_select">Тестілеу режимін таңдаңыз</string>
+    <string name="btn_open_tester">ByeDPI тестілеушісін ашу</string>
+    <string name="byedpi_test_desc">Желіңіз үшін ең жақсысын табу үшін әртүрлі стратегияларды тексеріңіз.</string>
+    <string name="byedpi_auto_test_title">Қосылымды оңтайландыру…</string>
+    <string name="byedpi_auto_test_desc">Біз сіздің аймағыңыз үшін ең жақсы қосылу стратегиясын таңдап жатырмыз.</string>
 </resources>

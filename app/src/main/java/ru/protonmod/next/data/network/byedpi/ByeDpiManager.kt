@@ -42,6 +42,7 @@ class ByeDpiManager @Inject constructor(
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var proxyJob: Job? = null
     private val mutex = Mutex()
+    private var currentArgs: Array<String> = emptyArray()
     
     private val _isRunning = MutableStateFlow(false)
     val isRunning = _isRunning.asStateFlow()
@@ -98,16 +99,16 @@ class ByeDpiManager @Inject constructor(
 
     suspend fun start(args: Array<String>) {
         mutex.withLock {
+            if (_isRunning.value && args.contentEquals(currentArgs)) {
+                ProtonLogger.d("ByeDpiManager", "ByeDPI already running with same args, skipping restart")
+                return
+            }
+
             if (_isRunning.value) {
-                // If already running with same args, do nothing
-                // But comparing args is complex, let's just restart if requested via start()
-                // Auto-management will call start() if it decides it should be running.
-                // We should probably check if it's already running with DIFFERENT args.
-                // For simplicity, stopInternal always stops it.
                 stopInternal()
             }
 
-            val currentArgs = args
+            currentArgs = args
             proxyJob = scope.launch {
                 _isRunning.value = true
                 ProtonLogger.i("ByeDpiManager", "Starting ByeDPI with args: ${currentArgs.joinToString(" ")}")

@@ -21,15 +21,12 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.LinearWavyProgressIndicator
-import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -50,7 +47,10 @@ import ru.protonmod.next.ui.theme.ProtonNextTheme
 fun SetupLoadingScreen(
     message: String,
     modifier: Modifier = Modifier,
-    step: SetupStep = SetupStep.LOADING
+    step: SetupStep = SetupStep.LOADING,
+    progress: Float? = null,
+    currentStrategy: String? = null,
+    onSkip: (() -> Unit)? = null
 ) {
     val colors = ProtonNextTheme.colors
     val infiniteTransition = rememberInfiniteTransition(label = "loading_pulse")
@@ -133,11 +133,45 @@ fun SetupLoadingScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = stringResource(ru.protonmod.next.R.string.setup_please_wait_subtitle),
+                text = if (progress != null) stringResource(ru.protonmod.next.R.string.byedpi_auto_test_desc)
+                       else stringResource(ru.protonmod.next.R.string.setup_please_wait_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = colors.textWeak,
                 textAlign = TextAlign.Center
             )
+
+            if (progress != null) {
+                Spacer(modifier = Modifier.height(32.dp))
+                
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
+                    color = colors.brandNorm,
+                    trackColor = colors.separatorNorm
+                )
+                
+                if (currentStrategy != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = currentStrategy,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.textWeak,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                        maxLines = 2
+                    )
+                }
+                
+                if (onSkip != null) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    TextButton(
+                        onClick = onSkip,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(ru.protonmod.next.R.string.btn_skip), color = colors.brandNorm)
+                    }
+                }
+            }
         }
     }
 }

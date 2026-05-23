@@ -87,6 +87,9 @@ fun WelcomeScreen(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isWarpLoading by viewModel.isWarpLoading.collectAsStateWithLifecycle()
+    val isByeDpiAutoTesting by viewModel.isByeDpiAutoTesting.collectAsStateWithLifecycle()
+    val byeDpiProgress by viewModel.byeDpiStrategyTester.progress.collectAsStateWithLifecycle()
+    val byeDpiCurrentStrategy by viewModel.byeDpiStrategyTester.currentStrategy.collectAsStateWithLifecycle()
     val colors = ProtonNextTheme.colors
 
     val savedUsername by viewModel.username.collectAsStateWithLifecycle()
@@ -110,6 +113,12 @@ fun WelcomeScreen(
 
     LaunchedEffect(currentStep) {
         ProtonLogger.d("WelcomeScreen", "Current Step changed to: $currentStep")
+    }
+
+    LaunchedEffect(isByeDpiAutoTesting) {
+        if (isByeDpiAutoTesting) {
+            currentStep = SetupStep.LOADING
+        }
     }
 
     LaunchedEffect(uiState, isSkipping, onNavigateToHome) {
@@ -271,8 +280,12 @@ fun WelcomeScreen(
                     onBack = { currentStep = SetupStep.LOGIN_PASSWORD }
                 )
                 SetupStep.LOADING -> SetupLoadingScreen(
-                    message = stringResource(R.string.setup_please_wait),
-                    step = step
+                    message = if (isByeDpiAutoTesting) stringResource(R.string.byedpi_auto_test_title)
+                              else stringResource(R.string.setup_please_wait),
+                    step = step,
+                    progress = if (isByeDpiAutoTesting) byeDpiProgress else null,
+                    currentStrategy = if (isByeDpiAutoTesting) byeDpiCurrentStrategy else null,
+                    onSkip = if (isByeDpiAutoTesting) { { viewModel.stopAutoByeDpiTest() } } else null
                 )
                 SetupStep.CONFIG_PORT -> StepConfigPort(
                     onNext = { port ->

@@ -76,6 +76,7 @@ import ru.protonmod.next.ui.utils.isTablet
 fun ApiBypassScreen(
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
+    onNavigateToByeDpiTest: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
@@ -341,7 +342,7 @@ fun ApiBypassScreen(
                                     onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_BYEDPI) }
                                 )
 
-                                // Configuration for ByeDPI
+                                // Configuration for ByeDPI (Simplified, now navigates to a separate screen)
                                 AnimatedVisibility(
                                     visible = uiState.apiBypassStrategy == SettingsManager.STRATEGY_BYEDPI,
                                     enter = fadeIn() + expandVertically(),
@@ -363,7 +364,7 @@ fun ApiBypassScreen(
 
                                         Spacer(modifier = Modifier.height(12.dp))
 
-                                        // Flags input
+                                        // Flags input (Read-onlyish display)
                                         SettingInputRow(
                                             label = stringResource(R.string.byedpi_flags_label),
                                             value = uiState.byeDpiFlags,
@@ -371,92 +372,14 @@ fun ApiBypassScreen(
                                             placeholder = stringResource(R.string.byedpi_flags_none)
                                         )
 
-                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Spacer(modifier = Modifier.height(16.dp))
 
-                                        if (uiState.isByeDpiTesting) {
-                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                LinearProgressIndicator(
-                                                    progress = { uiState.byeDpiTestProgress },
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    color = colors.brandNorm,
-                                                    trackColor = colors.separatorNorm
-                                                )
-                                                Text(
-                                                    text = uiState.byeDpiCurrentStrategy,
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = colors.textWeak,
-                                                    modifier = Modifier.padding(top = 4.dp)
-                                                )
-                                                Button(
-                                                    onClick = { viewModel.stopByeDpiTesting() },
-                                                    modifier = Modifier.padding(top = 8.dp),
-                                                    colors = ButtonDefaults.buttonColors(containerColor = colors.notificationError)
-                                                ) {
-                                                    Text(stringResource(R.string.btn_stop_test))
-                                                }
-                                            }
-                                        } else {
-                                            Button(
-                                                onClick = { viewModel.startByeDpiTesting() },
-                                                modifier = Modifier.fillMaxWidth(),
-                                                colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
-                                            ) {
-                                                Text(stringResource(R.string.btn_start_test))
-                                            }
-                                        }
-
-                                        // Test Results List
-                                        if (uiState.byeDpiResults.isNotEmpty()) {
-                                            Spacer(modifier = Modifier.height(16.dp))
-                                            Text(
-                                                text = stringResource(R.string.byedpi_test_results_title),
-                                                style = MaterialTheme.typography.labelMedium,
-                                                color = colors.textWeak
-                                            )
-                                            Spacer(modifier = Modifier.height(8.dp))
-                                            
-                                            uiState.byeDpiResults.reversed().forEach { result ->
-                                                Column(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(vertical = 4.dp)
-                                                        .background(colors.backgroundSecondary.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-                                                        .padding(8.dp)
-                                                ) {
-                                                    Row(
-                                                        modifier = Modifier.fillMaxWidth(),
-                                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                                        verticalAlignment = Alignment.CenterVertically
-                                                    ) {
-                                                        Text(
-                                                            text = "${result.successCount}/${result.totalSites}",
-                                                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                                            color = if (result.successCount == result.totalSites) colors.notificationSuccess else colors.textNorm
-                                                        )
-                                                        Row {
-                                                            TextButton(
-                                                                onClick = {
-                                                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                                                                    val clip = android.content.ClipData.newPlainText("ByeDPI Strategy", result.strategy)
-                                                                    clipboard.setPrimaryClip(clip)
-                                                                }
-                                                            ) {
-                                                                Text(stringResource(R.string.btn_copy), style = MaterialTheme.typography.labelSmall)
-                                                            }
-                                                            TextButton(
-                                                                onClick = { viewModel.setByeDpiFlags(result.strategy) }
-                                                            ) {
-                                                                Text(stringResource(R.string.btn_apply), style = MaterialTheme.typography.labelSmall)
-                                                            }
-                                                        }
-                                                    }
-                                                    Text(
-                                                        text = result.strategy,
-                                                        style = MaterialTheme.typography.labelSmall,
-                                                        color = colors.textWeak
-                                                    )
-                                                }
-                                            }
+                                        Button(
+                                            onClick = onNavigateToByeDpiTest,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
+                                        ) {
+                                            Text(stringResource(R.string.btn_open_tester))
                                         }
                                     }
                                 }

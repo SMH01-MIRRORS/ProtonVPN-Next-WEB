@@ -37,10 +37,7 @@
 
     <!-- ByeDPI Tester Overhaul -->
     <string name="byedpi_tester_title">ByeDPI Strategy Tester</string>
-    <string name="byedpi_tester_desc">Test multiple packet fragmentation techniques to find what works in your network.</string>
-    <string name="byedpi_mode_fast">Fast (Top 10)</string>
-    <string name="byedpi_mode_medium">Medium (Top 30)</string>
-    <string name="byedpi_mode_full">Full (All)</string>
+    <string name="byedpi_tester_desc_old">Test multiple packet fragmentation techniques to find what works in your network.</string>
     <string name="byedpi_tester_running">Testing strategy %1$d of %2$d…</string>
     <string name="byedpi_tester_success">Found working strategy!</string>
     <string name="byedpi_tester_failed">No working strategy found.</string>
@@ -610,4 +607,13 @@
     <string name="tamper_integrity_failure_desc">This application has been tampered with and is no longer safe to use. Mismatched resources detected.</string>
     <string name="tamper_btn_exit">EXIT</string>
     <string name="btn_skip">Skip</string>
+    <string name="byedpi_test_title">ByeDPI Testing</string>
+    <string name="byedpi_mode_fast">Fast</string>
+    <string name="byedpi_mode_medium">Medium</string>
+    <string name="byedpi_mode_full">Full</string>
+    <string name="byedpi_mode_select">Select testing mode</string>
+    <string name="btn_open_tester">Open ByeDPI Tester</string>
+    <string name="byedpi_test_desc">Test different strategies to find the best one for your network.</string>
+    <string name="byedpi_auto_test_title">Optimizing connection…</string>
+    <string name="byedpi_auto_test_desc">We are finding the best connection strategy for your region.</string>
 </resources>

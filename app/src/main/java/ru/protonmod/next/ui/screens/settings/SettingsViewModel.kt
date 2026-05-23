@@ -470,10 +470,14 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun startByeDpiTesting() {
+    fun startByeDpiTesting(mode: String = "full") {
         viewModelScope.launch {
-            val sites = context.assets.open("proxytest_proton.sites").bufferedReader().readLines().filter { it.isNotBlank() }
-            byeDpiStrategyTester.startTesting("full", sites)
+            val sites = try {
+                context.assets.open("proxytest_proton.sites").bufferedReader().readLines().filter { it.isNotBlank() }
+            } catch (e: Exception) {
+                listOf("google.com", "proton.me", "github.com")
+            }
+            byeDpiStrategyTester.startTesting(mode, sites)
         }
     }
 

@@ -33,10 +33,7 @@
     <string name="troubleshoot_btn_skip">跳过并重试</string>
     <!-- ByeDPI Tester Overhaul -->
     <string name="byedpi_tester_title">ByeDPI 策略测试器</string>
-    <string name="byedpi_tester_desc">测试多种数据包分片技术，找到适用于您网络的技术。</string>
-    <string name="byedpi_mode_fast">快速 (前 10 个)</string>
-    <string name="byedpi_mode_medium">中等 (前 30 个)</string>
-    <string name="byedpi_mode_full">完整 (全部)</string>
+    <string name="byedpi_tester_desc_old">测试多种数据包分片技术，找到适用于您网络的技术。</string>
     <string name="byedpi_tester_running">正在测试策略 %1$d / %2$d…</string>
     <string name="byedpi_tester_success">找到可用策略！</string>
     <string name="byedpi_tester_failed">未找到可用策略。</string>
@@ -544,4 +541,13 @@
     <string name="tamper_integrity_failure_desc">此应用程序已被篡改，不再安全。检测到不匹配的资源。</string>
     <string name="tamper_btn_exit">退出</string>
     <string name="btn_skip">跳过</string>
+    <string name="byedpi_test_title">ByeDPI 测试</string>
+    <string name="byedpi_mode_fast">快速</string>
+    <string name="byedpi_mode_medium">中等</string>
+    <string name="byedpi_mode_full">全面</string>
+    <string name="byedpi_mode_select">选择测试模式</string>
+    <string name="btn_open_tester">打开 ByeDPI 测试器</string>
+    <string name="byedpi_test_desc">测试不同的策略以找到最适合您网络的策略。</string>
+    <string name="byedpi_auto_test_title">正在优化连接…</string>
+    <string name="byedpi_auto_test_desc">我们正在为您的地区寻找最佳连接策略。</string>
 </resources>

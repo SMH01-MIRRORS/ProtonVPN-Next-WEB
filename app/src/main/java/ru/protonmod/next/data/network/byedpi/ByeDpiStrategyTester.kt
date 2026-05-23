@@ -59,10 +59,17 @@ class ByeDpiStrategyTester @Inject constructor(
 
     private var testJob: Job? = null
 
-    fun startTesting(mode: String, sites: List<String>) {
+    fun startTesting(mode: String, sites: List<String>, successThreshold: Int = -1) {
         if (_isTesting.value) return
 
-        val allStrategies = try {
+        val fastStrategies = listOf(
+            "-Ku -l:\"\\xe3\\x00\\x06\\xec\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\" -a3 -An -f64+se -n {sni} -t5",
+            "-q2 -s2 -s3+s -r3 -s4 -r4 -s5+s -r5+s -s6 -s7+s -r8 -s9+s -Qr -Mh,d,r -a1 -At,r -s2+s -r2 -d2 -s3 -r3 -r4 -s4 -d5+s -r5 -d6 -s7+s -d7 -a1",
+            "-d1 -d3+s -s6+s -d9+s -s12+s -d15+s -s20+s -d25+s -s30+s -d35+s -r1+s -S -a1 -As -d1 -d3+s -s6+s -d9+s -s12+s -d15+s -s20+s -d25+s -s30+s -d35+s -S -a1",
+            "-f-200 -Qr -s3:5+sm -a1 -As -d1 -s4+sm -s8+sh -f-300 -d6+sh -a1 -At,r,s -o2 -f-30 -As -r5 -Mh -r6+sh -f-250 -s2:7+s -s3:6+sm -a1 -At,r,s -s3:5+sm -s6+s -s7:9+s -q30+sm -a1"
+        )
+
+        val fileStrategies = try {
             context.assets.open("proxytest_strategies.list").bufferedReader().readLines()
                 .filter { it.isNotBlank() && !it.startsWith("#") }
         } catch (e: Exception) {
@@ -70,9 +77,9 @@ class ByeDpiStrategyTester @Inject constructor(
         }
 
         val strategies = when (mode) {
-            "fast" -> allStrategies.take(10)
-            "medium" -> allStrategies.take(30)
-            else -> allStrategies
+            "fast" -> fastStrategies
+            "medium" -> (fastStrategies + fileStrategies.take(10)).distinct()
+            else -> (fastStrategies + fileStrategies).distinct()
         }
 
         testJob = CoroutineScope(Dispatchers.IO).launch {
@@ -135,12 +142,28 @@ class ByeDpiStrategyTester @Inject constructor(
                     }
 
                     val result = TestResult(processedStrategy, totalSuccess, sites.size)
-                    _testResults.value = _testResults.value + result
+                    _testResults.value = (_testResults.value + result).sortedByDescending { it.successCount }
                     ProtonLogger.i("ByeDpiStrategyTester", "Added result: $result")
                     
+                    // Threshold check
+                    if (successThreshold != -1 && totalSuccess >= successThreshold) {
+                        ProtonLogger.i("ByeDpiStrategyTester", "Success threshold reached: $totalSuccess >= $successThreshold")
+                        settingsManager.setApiProxyHost("127.0.0.1")
+                        settingsManager.setApiProxyPort(proxyPort)
+                        settingsManager.setByeDpiFlags(processedStrategy)
+                        settingsManager.setApiBypassEnabled(true)
+                        settingsManager.setApiBypassStrategy(SettingsManager.STRATEGY_BYEDPI)
+                        break
+                    }
+
                     // Optimization: if all sites are reachable, we can stop
                     if (totalSuccess == sites.size) {
                         ProtonLogger.i("ByeDpiStrategyTester", "Found perfect strategy: $bestStrategy")
+                        settingsManager.setApiProxyHost("127.0.0.1")
+                        settingsManager.setApiProxyPort(proxyPort)
+                        settingsManager.setByeDpiFlags(processedStrategy)
+                        settingsManager.setApiBypassEnabled(true)
+                        settingsManager.setApiBypassStrategy(SettingsManager.STRATEGY_BYEDPI)
                         break
                     }
 
@@ -151,9 +174,6 @@ class ByeDpiStrategyTester @Inject constructor(
 
                 if (bestStrategy.isNotEmpty() && maxSuccess > 0) {
                     ProtonLogger.i("ByeDpiStrategyTester", "Best strategy found: $bestStrategy with $maxSuccess successes")
-                    settingsManager.setApiProxyHost("127.0.0.1")
-                    settingsManager.setApiProxyPort(proxyPort)
-                    settingsManager.setByeDpiFlags(bestStrategy)
                 } else {
                     ProtonLogger.w("ByeDpiStrategyTester", "No successful strategy found")
                 }
