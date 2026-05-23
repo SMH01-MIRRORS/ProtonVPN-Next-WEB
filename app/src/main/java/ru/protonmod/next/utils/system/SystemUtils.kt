@@ -17,12 +17,61 @@
 
 package ru.protonmod.next.utils.system
 
+import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.os.PowerManager
+import android.provider.Settings
 
 object SystemUtils {
     fun isIgnoringBatteryOptimizations(context: Context): Boolean {
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-        return powerManager.isIgnoringBatteryOptimizations(context.packageName)
+        val standardCheck = powerManager.isIgnoringBatteryOptimizations(context.packageName)
+
+        if (isXiaomi()) {
+            val miuiLevel = getMiuiBatterySaverLevel(context)
+            // Level 0 means "No restrictions" in MIUI
+            if (miuiLevel == 0) return true
+        }
+
+        return standardCheck
+    }
+
+    private fun isXiaomi(): Boolean {
+        return Build.MANUFACTURER.contains("Xiaomi", ignoreCase = true) ||
+                Build.MANUFACTURER.contains("Redmi", ignoreCase = true) ||
+                Build.MANUFACTURER.contains("POCO", ignoreCase = true)
+    }
+
+    private fun getMiuiBatterySaverLevel(context: Context): Int {
+        return try {
+            val processManager = Class.forName("miui.process.ProcessManager")
+            val getPolicyMethod = processManager.getMethod("getAppBatterySaverPolicy", String::class.java)
+            getPolicyMethod.invoke(null, context.packageName) as Int
+        } catch (e: Exception) {
+            -1
+        }
+    }
+
+    fun openBatteryOptimizationSettings(context: Context) {
+        if (isXiaomi()) {
+            try {
+                val intent = Intent()
+                intent.component = ComponentName(
+                    "com.miui.powerkeeper",
+                    "com.miui.powerkeeper.ui.HiddenAppsConfigActivity"
+                )
+                intent.putExtra("package_name", context.packageName)
+                intent.putExtra("package_label", context.getString(context.applicationInfo.labelRes))
+                context.startActivity(intent)
+                return
+            } catch (e: Exception) {
+                // Fallback to standard settings if MIUI activity is not found
+            }
+        }
+
+        val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+        context.startActivity(intent)
     }
 }

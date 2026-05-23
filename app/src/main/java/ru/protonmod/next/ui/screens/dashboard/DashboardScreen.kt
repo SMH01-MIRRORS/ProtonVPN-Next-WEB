@@ -24,6 +24,7 @@ import android.net.VpnService
 import android.os.PowerManager
 import android.provider.Settings
 import android.text.BidiFormatter
+import ru.protonmod.next.utils.system.SystemUtils
 import ru.protonmod.next.utils.ProtonLogger
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -1326,8 +1327,7 @@ fun BatteryOptimizationBanner(
             }
             TextButton(
                 onClick = {
-                    val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-                    context.startActivity(intent)
+                    SystemUtils.openBatteryOptimizationSettings(context)
                 }
             ) {
                 Text(stringResource(R.string.btn_fix), color = colors.notificationWarning)
