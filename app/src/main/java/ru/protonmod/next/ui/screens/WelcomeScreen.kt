@@ -45,6 +45,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -406,7 +407,7 @@ private fun StepWelcome(
                     readyToDraw = true
                 }
             },
-            modifier = Modifier.padding(horizontal = 8.dp).alpha(if (readyToDraw) 1f else 0f)
+            modifier = Modifier.padding(horizontal = 8.dp).graphicsLayer { alpha = if (readyToDraw) 1f else 0f }
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -414,7 +415,7 @@ private fun StepWelcome(
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
             color = colors.textWeak,
-            modifier = Modifier.alpha(if (readyToDraw) 1f else 0f)
+            modifier = Modifier.graphicsLayer { alpha = if (readyToDraw) 1f else 0f }
         )
         Spacer(modifier = Modifier.weight(0.5f))
 
@@ -509,8 +510,8 @@ private fun StepLoginEmail(
         WizardNavigation(
             onBack = onBack,
             onNext = { onNext(email) },
-            nextEnabled = email.isNotBlank(),
-            nextText = stringResource(R.string.troubleshoot_btn_next)
+            nextText = stringResource(R.string.troubleshoot_btn_next),
+            nextEnabled = email.isNotBlank()
         )
     }
 }
@@ -573,8 +574,8 @@ private fun StepLoginPassword(
         WizardNavigation(
             onBack = onBack,
             onNext = { onLogin(password) },
-            nextEnabled = password.isNotBlank(),
-            nextText = stringResource(R.string.btn_login)
+            nextText = stringResource(R.string.btn_login),
+            nextEnabled = password.isNotBlank()
         )
     }
 }
@@ -628,8 +629,8 @@ private fun StepLogin2FA(
         WizardNavigation(
             onBack = onBack,
             onNext = { onVerify(code) },
-            nextEnabled = code.length == 6,
-            nextText = stringResource(R.string.btn_verify)
+            nextText = stringResource(R.string.btn_verify),
+            nextEnabled = code.length == 6
         )
     }
 }
@@ -935,8 +936,8 @@ private fun StepComplete(onFinish: () -> Unit) {
 private fun WizardNavigation(
     onBack: () -> Unit,
     onNext: () -> Unit,
-    nextEnabled: Boolean = true,
-    nextText: String
+    nextText: String,
+    nextEnabled: Boolean = true
 ) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),

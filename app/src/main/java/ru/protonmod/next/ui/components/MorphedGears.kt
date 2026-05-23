@@ -22,7 +22,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -41,11 +40,8 @@ import ru.protonmod.next.utils.ProtonLogger
 @Composable
 fun MorphedGears(
     modifier: Modifier = Modifier,
-    color: Color = ProtonNextTheme.colors.brandNorm
+    color: Color = ProtonNextTheme.colors.brandNorm,
 ) {
-    LaunchedEffect(Unit) {
-        ProtonLogger.v("MorphedGears", "Initializing Animation")
-    }
     // Gear 1 rotation state
     val gear1Rotation = remember { Animatable(0f) }
     // Gear 2 rotation state
@@ -53,13 +49,15 @@ fun MorphedGears(
     // Morph progress
     val morphProgress = remember { Animatable(0f) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(color) {
+        ProtonLogger.v("MorphedGears", "Initializing Animation")
+
         // Gear 1 "ticking" rotation: 45 degrees every 0.5s
         launch {
             while(true) {
                 gear1Rotation.animateTo(
                     targetValue = gear1Rotation.value + 45f,
-                    animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+                    animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
                 )
                 delay(200) // Wait to total 0.5s per tick
             }
@@ -69,7 +67,7 @@ fun MorphedGears(
             while(true) {
                 gear2Rotation.animateTo(
                     targetValue = gear2Rotation.value - 45f,
-                    animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+                    animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
                 )
                 delay(200)
             }
@@ -101,11 +99,13 @@ fun MorphedGears(
         val currentMorph = morph.toPath(morphProgress.value).asComposePath()
 
         // Upper Gear
-        withTransform({
-            translate(size.width / 2, size.height * 0.35f)
-            rotate(gear1Rotation.value)
-            scale(baseSize, baseSize)
-        }) {
+        withTransform(
+            {
+                translate(size.width / 2, size.height * 0.35f)
+                rotate(gear1Rotation.value)
+                scale(baseSize, baseSize)
+            }
+        ) {
             // Draw both stroke and a very faint fill to ensure visibility
             drawPath(
                 path = currentMorph,
@@ -119,11 +119,13 @@ fun MorphedGears(
         }
 
         // Lower Gear
-        withTransform({
-            translate(size.width / 2, size.height * 0.65f)
-            rotate(gear2Rotation.value + 22.5f)
-            scale(baseSize, baseSize)
-        }) {
+        withTransform(
+            {
+                translate(size.width / 2, size.height * 0.65f)
+                rotate(gear2Rotation.value + 22.5f)
+                scale(baseSize, baseSize)
+            }
+        ) {
             drawPath(
                 path = currentMorph,
                 color = color.copy(alpha = 0.1f)
