@@ -17,6 +17,7 @@
 
 package ru.protonmod.next.ui.screens
 
+import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -33,7 +34,11 @@ import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.*
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.network.LoginResponse
+import ru.protonmod.next.data.network.byedpi.ByeDpiManager
+import ru.protonmod.next.data.network.byedpi.ByeDpiStrategyTester
 import ru.protonmod.next.data.repository.AuthRepository
+import ru.protonmod.next.utils.NetworkMonitor
+import ru.protonmod.next.vpn.WarpManager
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainDispatcherRule(
@@ -55,16 +60,25 @@ class LoginViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     @Mock
+    private lateinit var context: Context
+
+    @Mock
     private lateinit var authRepository: AuthRepository
 
     @Mock
     private lateinit var settingsManager: SettingsManager
 
     @Mock
-    private lateinit var warpManager: ru.protonmod.next.vpn.WarpManager
+    private lateinit var warpManager: WarpManager
 
     @Mock
-    private lateinit var byeDpiStrategyTester: ru.protonmod.next.data.network.byedpi.ByeDpiStrategyTester
+    private lateinit var networkMonitor: NetworkMonitor
+
+    @Mock
+    private lateinit var byeDpiManager: ByeDpiManager
+
+    @Mock
+    private lateinit var byeDpiStrategyTester: ByeDpiStrategyTester
 
     private lateinit var viewModel: LoginViewModel
 
@@ -72,7 +86,15 @@ class LoginViewModelTest {
     fun setup() {
         MockitoAnnotations.openMocks(this)
         whenever(settingsManager.apiBypassEnabled).thenReturn(flowOf(false))
-        viewModel = LoginViewModel(authRepository, settingsManager, warpManager, byeDpiStrategyTester)
+        viewModel = LoginViewModel(
+            context,
+            authRepository,
+            settingsManager,
+            warpManager,
+            networkMonitor,
+            byeDpiManager,
+            byeDpiStrategyTester
+        )
     }
 
     @Test
