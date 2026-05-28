@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159930,
-      "versionName": "12.0.0-alpha1st4-24-g30fe3c2-nightly",
+      "versionCode": 605159931,
+      "versionName": "12.0.0-alpha1st4-25-g7030384-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "Update LoginViewModelTest dependencies",
+      "changelog": "Add Captcha support to login flow and implement authentication logging\n\n- Implement `AuthLoggingInterceptor` to log auth-related network traffic when enabled in `BuildConfig`.\n- Add `CAPTCHA` step to `SetupStep` and update `ExpressiveBackground` to handle blob positioning for this step.\n- Update `WelcomeScreen` to handle `LoginUiState.RequiresCaptcha` and navigate to the `CaptchaScreen`.\n- Add debug logging for SRP and anonymous login processes in `AuthRepository`.\n- Register `AuthLoggingInterceptor` in `NetworkModule`.",
       "force": false
     },
     "release": {
-      "versionCode": 605159930,
-      "versionName": "12.0.0-alpha1st4-24-g30fe3c2-nightly",
+      "versionCode": 605159931,
+      "versionName": "12.0.0-alpha1st4-25-g7030384-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "Update LoginViewModelTest dependencies",
+      "changelog": "Add Captcha support to login flow and implement authentication logging\n\n- Implement `AuthLoggingInterceptor` to log auth-related network traffic when enabled in `BuildConfig`.\n- Add `CAPTCHA` step to `SetupStep` and update `ExpressiveBackground` to handle blob positioning for this step.\n- Update `WelcomeScreen` to handle `LoginUiState.RequiresCaptcha` and navigate to the `CaptchaScreen`.\n- Add debug logging for SRP and anonymous login processes in `AuthRepository`.\n- Register `AuthLoggingInterceptor` in `NetworkModule`.",
       "force": false
     }
   },
