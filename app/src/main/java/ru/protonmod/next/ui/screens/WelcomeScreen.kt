@@ -93,6 +93,8 @@ fun WelcomeScreen(
     val colors = ProtonNextTheme.colors
 
     val savedUsername by viewModel.username.collectAsStateWithLifecycle()
+    val isApiBypassEnabled by viewModel.isApiBypassEnabled.collectAsStateWithLifecycle()
+    val apiBypassStrategy by viewModel.apiBypassStrategy.collectAsStateWithLifecycle()
     var isSkipping by remember { mutableStateOf(false) }
 
     LaunchedEffect(persistedStep) {
@@ -139,6 +141,9 @@ fun WelcomeScreen(
             is LoginUiState.Requires2FA -> {
                 currentStep = SetupStep.LOGIN_2FA
             }
+            is LoginUiState.RequiresCaptcha -> {
+                currentStep = SetupStep.CAPTCHA
+            }
             is LoginUiState.Error -> {
                 // If we were loading, go back to appropriate login step on error
                 if (currentStep == SetupStep.LOADING) {
@@ -154,6 +159,10 @@ fun WelcomeScreen(
             SetupStep.LOGIN_EMAIL -> SetupStep.WELCOME
             SetupStep.LOGIN_PASSWORD -> SetupStep.LOGIN_EMAIL
             SetupStep.LOGIN_2FA -> SetupStep.LOGIN_PASSWORD
+            SetupStep.CAPTCHA -> {
+                val state = uiState as? LoginUiState.RequiresCaptcha
+                if (state?.isAnonymous == true) SetupStep.WELCOME else SetupStep.LOGIN_PASSWORD
+            }
             SetupStep.CONFIG_PORT -> SetupStep.WELCOME
             SetupStep.CONFIG_OBFUSCATION -> SetupStep.CONFIG_PORT
             SetupStep.CONFIG_SERVER_LOAD -> SetupStep.CONFIG_OBFUSCATION
@@ -279,6 +288,21 @@ fun WelcomeScreen(
                     },
                     onBack = { currentStep = SetupStep.LOGIN_PASSWORD }
                 )
+                SetupStep.CAPTCHA -> {
+                    val state = uiState as? LoginUiState.RequiresCaptcha
+                    if (state != null) {
+                        CaptchaScreen(
+                            webUrl = state.webUrl,
+                            sessionId = state.sessionId,
+                            isApiBypassEnabled = isApiBypassEnabled,
+                            apiBypassStrategy = apiBypassStrategy,
+                            onDismiss = { viewModel.resetError() },
+                            onCaptchaSolve = { verifiedToken ->
+                                viewModel.retryWithCaptcha(state, verifiedToken)
+                            }
+                        )
+                    }
+                }
                 SetupStep.LOADING -> SetupLoadingScreen(
                     message = if (isByeDpiAutoTesting) stringResource(R.string.byedpi_auto_test_title)
                               else stringResource(R.string.setup_please_wait),

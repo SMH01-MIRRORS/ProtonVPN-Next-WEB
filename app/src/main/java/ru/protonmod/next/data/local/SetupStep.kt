@@ -22,6 +22,7 @@ enum class SetupStep {
     LOGIN_EMAIL,
     LOGIN_PASSWORD,
     LOGIN_2FA,
+    CAPTCHA,
     LOADING, // "Please Wait" screen
     CONFIG_PORT,
     CONFIG_OBFUSCATION,

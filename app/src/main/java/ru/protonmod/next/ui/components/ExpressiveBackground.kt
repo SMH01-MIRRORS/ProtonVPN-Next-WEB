@@ -58,7 +58,7 @@ fun ExpressiveBackground(
     val blob1TargetPosition = remember(step) {
         when (step) {
             SetupStep.WELCOME -> Offset(0.8f, 0.2f)
-            SetupStep.LOGIN_EMAIL, SetupStep.LOGIN_PASSWORD, SetupStep.LOGIN_2FA -> Offset(0.2f, 0.15f)
+            SetupStep.LOGIN_EMAIL, SetupStep.LOGIN_PASSWORD, SetupStep.LOGIN_2FA, SetupStep.CAPTCHA -> Offset(0.2f, 0.15f)
             SetupStep.LOADING -> Offset(0.5f, 0.3f)
             SetupStep.CONFIG_PORT -> Offset(0.9f, 0.1f)
             SetupStep.CONFIG_OBFUSCATION -> Offset(0.1f, 0.4f)
@@ -71,7 +71,7 @@ fun ExpressiveBackground(
     val blob2TargetPosition = remember(step) {
         when (step) {
             SetupStep.WELCOME -> Offset(0.1f, 0.8f)
-            SetupStep.LOGIN_EMAIL, SetupStep.LOGIN_PASSWORD, SetupStep.LOGIN_2FA -> Offset(0.85f, 0.75f)
+            SetupStep.LOGIN_EMAIL, SetupStep.LOGIN_PASSWORD, SetupStep.LOGIN_2FA, SetupStep.CAPTCHA -> Offset(0.85f, 0.75f)
             SetupStep.LOADING -> Offset(0.5f, 0.7f)
             SetupStep.CONFIG_PORT -> Offset(0.1f, 0.9f)
             SetupStep.CONFIG_OBFUSCATION -> Offset(0.9f, 0.6f)

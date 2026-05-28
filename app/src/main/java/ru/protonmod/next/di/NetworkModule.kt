@@ -415,6 +415,7 @@ object NetworkModule {
         return OkHttpClient.Builder()
             .addInterceptor(dynamicBaseUrlInterceptor)
             .addInterceptor(dohFallbackInterceptor)
+            .addInterceptor(AuthLoggingInterceptor())
             .authenticator(tokenAuthenticator)
             .proxyAuthenticator(proxyAuthenticator)
             .dns(dynamicDns)

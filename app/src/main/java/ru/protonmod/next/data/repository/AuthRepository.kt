@@ -164,6 +164,9 @@ class AuthRepository @Inject constructor(
     suspend fun login(username: String, passwordRaw: String, captchaToken: String? = null): Result<LoginResponse> = authMutex.withLock {
         withContext(dispatcherProvider.io() + authJob) {
             try {
+                if (ru.protonmod.next.BuildConfig.ALLOW_LOGCAT) {
+                    android.util.Log.d("AuthLogging", "Starting NATIVE SRP Login for: $username")
+                }
                 ProtonLogger.i(TAG, "Starting NATIVE SRP login flow")
                 
                 val nativeResult = authNativeBridge.login(username, passwordRaw, captchaToken)
@@ -231,6 +234,9 @@ class AuthRepository @Inject constructor(
     suspend fun loginAnonymous(captchaToken: String? = null): Result<LoginResponse> = authMutex.withLock {
         withContext(dispatcherProvider.io() + authJob) {
             try {
+                if (ru.protonmod.next.BuildConfig.ALLOW_LOGCAT) {
+                    android.util.Log.d("AuthLogging", "Starting Anonymous Login...")
+                }
                 val tokenType = if (captchaToken != null) "captcha" else null
                 val challengePayload = pendingChallengePayload ?: buildChallengePayload().also { pendingChallengePayload = it }
 
