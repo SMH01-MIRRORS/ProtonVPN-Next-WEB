@@ -112,8 +112,8 @@ class CountriesViewModelTest {
         advanceUntilIdle()
         
         val state = viewModel.uiState.value
-        assertTrue("Expected CountriesList but was $state", state is CountriesUiState.CountriesList)
-        val countries = (state as CountriesUiState.CountriesList).countries
+        assertTrue("Expected Success but was $state", state is CountriesUiState.Success)
+        val countries = (state as CountriesUiState.Success).countries
         assertEquals(2, countries.size)
         assertEquals("DE", countries[0].code)
         assertEquals("US", countries[1].code)
@@ -122,7 +122,7 @@ class CountriesViewModelTest {
     }
 
     @Test
-    fun `expandCitiesForCountry updates state to CitiesList`() = runTest {
+    fun `expandCitiesForCountry updates bottomSheetContent to Cities`() = runTest {
         val collectJob = launch(UnconfinedTestDispatcher()) { viewModel.uiState.collect() }
         advanceUntilIdle()
         
@@ -130,15 +130,16 @@ class CountriesViewModelTest {
         advanceUntilIdle()
         
         val state = viewModel.uiState.value
-        assertTrue("Expected CitiesList but was $state", state is CountriesUiState.CitiesList)
-        val cities = (state as CountriesUiState.CitiesList).cities
-        assertEquals(2, cities.size)
+        assertTrue(state is CountriesUiState.Success)
+        val content = (state as CountriesUiState.Success).bottomSheetContent
+        assertTrue("Expected BottomSheetContent.Cities but was $content", content is BottomSheetContent.Cities)
+        assertEquals(2, (content as BottomSheetContent.Cities).cities.size)
         
         collectJob.cancel()
     }
 
     @Test
-    fun `expandServersForCity updates state to ServersList`() = runTest {
+    fun `expandServersForCity updates bottomSheetContent to Servers`() = runTest {
         val collectJob = launch(UnconfinedTestDispatcher()) { viewModel.uiState.collect() }
         advanceUntilIdle()
         
@@ -147,9 +148,10 @@ class CountriesViewModelTest {
         advanceUntilIdle()
         
         val state = viewModel.uiState.value
-        assertTrue("Expected ServersList but was $state", state is CountriesUiState.ServersList)
-        val servers = (state as CountriesUiState.ServersList).servers
-        assertEquals(1, servers.size)
+        assertTrue(state is CountriesUiState.Success)
+        val content = (state as CountriesUiState.Success).bottomSheetContent
+        assertTrue("Expected BottomSheetContent.Servers but was $content", content is BottomSheetContent.Servers)
+        assertEquals(1, (content as BottomSheetContent.Servers).servers.size)
         
         collectJob.cancel()
     }

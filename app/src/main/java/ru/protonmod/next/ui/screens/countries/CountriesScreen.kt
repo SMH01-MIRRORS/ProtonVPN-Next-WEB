@@ -170,7 +170,7 @@ fun CountriesScreen(
                                 }
                             }
                         }
-                        is CountriesUiState.CountriesList -> {
+                        is CountriesUiState.Success -> {
                             CountriesListContent(
                                 countries = state.countries.toImmutableList(),
                                 connectedServer = connectedServer,
@@ -186,42 +186,31 @@ fun CountriesScreen(
                                 isTablet = isTablet,
                                 loadDisplayMode = state.loadDisplayMode
                             )
-                        }
-                        is CountriesUiState.CitiesList -> {
-                            CitiesListContent(
-                                countryName = state.country,
-                                cities = state.cities.toImmutableList(),
-                                connectedServer = connectedServer,
-                                onBack = { viewModel.backToCountries() },
-                                onCityClick = { city ->
-                                    checkVpnAndConnect {
-                                        viewModel.selectCity(city.name)
-                                        onNavigateToHome()
-                                    }
-                                },
-                                onCityMore = { city ->
-                                    viewModel.expandServersForCity(city.name)
-                                },
-                                isTablet = isTablet,
-                                loadDisplayMode = state.loadDisplayMode
-                            )
-                        }
-                        is CountriesUiState.ServersList -> {
-                            ServersListContent(
-                                countryName = state.country,
-                                cityName = state.city,
-                                servers = state.servers.toImmutableList(),
-                                connectedServer = connectedServer,
-                                onBack = { viewModel.backToCities() },
-                                onServerClick = { server ->
-                                    checkVpnAndConnect {
-                                        viewModel.selectServer(server)
-                                        onNavigateToHome()
-                                    }
-                                },
-                                isTablet = isTablet,
-                                loadDisplayMode = state.loadDisplayMode
-                            )
+
+                            state.bottomSheetContent?.let { content ->
+                                CountriesBottomSheet(
+                                    onDismiss = { viewModel.backToCountries() },
+                                    content = content,
+                                    connectedServer = connectedServer,
+                                    onCityClick = { city ->
+                                        checkVpnAndConnect {
+                                            viewModel.selectCity(city.name)
+                                            onNavigateToHome()
+                                        }
+                                    },
+                                    onCityMore = { city ->
+                                        viewModel.expandServersForCity(city.name)
+                                    },
+                                    onServerClick = { server ->
+                                        checkVpnAndConnect {
+                                            viewModel.selectServer(server)
+                                            onNavigateToHome()
+                                        }
+                                    },
+                                    onBack = { viewModel.backToCities() },
+                                    loadDisplayMode = state.loadDisplayMode
+                                )
+                            }
                         }
                     }
                 }
@@ -402,78 +391,6 @@ fun CountryCard(
 }
 
 @Composable
-fun CitiesListContent(
-    countryName: String, // This is actually country code
-    cities: ImmutableList<CityDisplayItem>,
-    connectedServer: LogicalServer?,
-    onBack: () -> Unit,
-    onCityClick: (CityDisplayItem) -> Unit,
-    onCityMore: (CityDisplayItem) -> Unit,
-    modifier: Modifier = Modifier,
-    isTablet: Boolean = false,
-    loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
-) {
-    val context = LocalContext.current
-    val localizedCountry = CountryUtils.getCountryName(context, countryName)
-
-    Box(modifier = modifier) {
-        if (isTablet) {
-            val windowInfo = LocalWindowInfo.current
-            val density = LocalDensity.current
-            val screenWidthDp = with(density) { windowInfo.containerSize.width.toDp() }.value
-            val columns = (screenWidthDp / 300).toInt().coerceAtLeast(2)
-
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(columns),
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 140.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                item(span = { GridItemSpan(maxLineSpan) }, contentType = "Header") {
-                    NavigationHeader(title = localizedCountry, onBack = onBack)
-                }
-
-                items(cities, key = { it.name }, contentType = { "City" }) { city ->
-                    CityCard(
-                        city = city,
-                        isConnected = (connectedServer?.city == city.name && connectedServer.exitCountry == countryName),
-                        onClick = { onCityClick(city) },
-                        onMoreClick = { onCityMore(city) },
-                        displayMode = loadDisplayMode
-                    )
-                }
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    start = 16.dp,
-                    top = 0.dp,
-                    end = 16.dp,
-                    bottom = 140.dp
-                ),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                item(contentType = "Header") {
-                    NavigationHeader(title = localizedCountry, onBack = onBack)
-                }
-
-                items(cities, key = { it.name }, contentType = { "City" }) { city ->
-                    CityCard(
-                        city = city,
-                        isConnected = (connectedServer?.city == city.name && connectedServer.exitCountry == countryName),
-                        onClick = { onCityClick(city) },
-                        onMoreClick = { onCityMore(city) },
-                        displayMode = loadDisplayMode
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
 fun CityCard(
     city: CityDisplayItem,
     onClick: () -> Unit,
@@ -561,77 +478,6 @@ fun CityCard(
             }
 
             LoadProgressBar(load = city.averageLoad, displayMode = displayMode)
-        }
-    }
-}
-
-@Composable
-fun ServersListContent(
-    countryName: String, // This is actually country code
-    cityName: String,
-    servers: ImmutableList<LogicalServer>,
-    connectedServer: LogicalServer?,
-    onBack: () -> Unit,
-    onServerClick: (LogicalServer) -> Unit,
-    modifier: Modifier = Modifier,
-    isTablet: Boolean = false,
-    loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
-) {
-    val colors = ProtonNextTheme.colors
-    val context = LocalContext.current
-    val localizedCountry = CountryUtils.getCountryName(context, countryName)
-
-    Box(modifier = modifier) {
-        if (isTablet) {
-            val windowInfo = LocalWindowInfo.current
-            val density = LocalDensity.current
-            val screenWidthDp = with(density) { windowInfo.containerSize.width.toDp() }.value
-            val columns = (screenWidthDp / 300).toInt().coerceAtLeast(2)
-
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(columns),
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 140.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                item(span = { GridItemSpan(maxLineSpan) }, contentType = "Header") {
-                    NavigationHeader(title = "$localizedCountry, $cityName", onBack = onBack)
-                }
-
-                items(servers, key = { it.id }, contentType = { "Server" }) { server ->
-                    ServerItemCard(
-                        server = server,
-                        isConnected = connectedServer?.id == server.id,
-                        onClick = { onServerClick(server) },
-                        displayMode = loadDisplayMode
-                    )
-                }
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    start = 16.dp,
-                    top = 8.dp,
-                    end = 16.dp,
-                    bottom = 140.dp
-                ),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                item(contentType = "Header") {
-                    NavigationHeader(title = "$localizedCountry, $cityName", onBack = onBack)
-                }
-
-                items(servers, key = { it.id }, contentType = { "Server" }) { server ->
-                    ServerItemCard(
-                        server = server,
-                        isConnected = connectedServer?.id == server.id,
-                        onClick = { onServerClick(server) },
-                        displayMode = loadDisplayMode
-                    )
-                }
-            }
         }
     }
 }
