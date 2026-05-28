@@ -144,75 +144,90 @@ fun CountriesScreen(
                     )
             )
 
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+            ) {
+                val isSuccess = uiState is CountriesUiState.Success
+                
                 AnimatedContent(
-                    targetState = uiState,
-                    label = "countries_state",
+                    targetState = isSuccess,
+                    label = "countries_state_root",
                     modifier = Modifier.weight(1f)
-                ) { state ->
-                    when (state) {
-                        is CountriesUiState.Loading -> {
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                ExpressiveCircularProgressIndicator(color = colors.brandNorm)
+                ) { success ->
+                    if (!success) {
+                        when (val state = uiState) {
+                            is CountriesUiState.Loading -> {
+                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    ExpressiveCircularProgressIndicator(color = colors.brandNorm)
+                                }
                             }
-                        }
-                        is CountriesUiState.Error -> {
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(state.message, color = colors.notificationError)
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Button(
-                                        onClick = { viewModel.loadServers() },
-                                        colors = ButtonDefaults.buttonColors(containerColor = colors.interactionNorm)
-                                    ) {
-                                        Text(stringResource(R.string.btn_retry), color = colors.textInverted)
+                            is CountriesUiState.Error -> {
+                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(state.message, color = colors.notificationError)
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Button(
+                                            onClick = { viewModel.loadServers() },
+                                            colors = ButtonDefaults.buttonColors(containerColor = colors.interactionNorm)
+                                        ) {
+                                            Text(stringResource(R.string.btn_retry), color = colors.textInverted)
+                                        }
                                     }
                                 }
                             }
+                            else -> {}
                         }
-                        is CountriesUiState.Success -> {
-                            CountriesListContent(
-                                countries = state.countries.toImmutableList(),
-                                connectedServer = connectedServer,
-                                onCountryClick = { country ->
-                                    checkVpnAndConnect {
-                                        viewModel.selectCountry(country.code)
-                                        onNavigateToHome()
-                                    }
-                                },
-                                onCountryMore = { country ->
-                                    viewModel.expandCitiesForCountry(country.code)
-                                },
-                                isTablet = isTablet,
-                                loadDisplayMode = state.loadDisplayMode
-                            )
-
-                            state.bottomSheetContent?.let { content ->
-                                CountriesBottomSheet(
-                                    onDismiss = { viewModel.backToCountries() },
-                                    content = content,
-                                    connectedServer = connectedServer,
-                                    onCityClick = { city ->
-                                        checkVpnAndConnect {
-                                            viewModel.selectCity(city.name)
-                                            onNavigateToHome()
-                                        }
-                                    },
-                                    onCityMore = { city ->
-                                        viewModel.expandServersForCity(city.name)
-                                    },
-                                    onServerClick = { server ->
-                                        checkVpnAndConnect {
-                                            viewModel.selectServer(server)
-                                            onNavigateToHome()
-                                        }
-                                    },
-                                    onBack = { viewModel.backToCities() },
-                                    loadDisplayMode = state.loadDisplayMode
-                                )
-                            }
-                        }
+                    } else {
+                        val state = uiState as CountriesUiState.Success
+                        val countries = remember(state.countries) { state.countries.toImmutableList() }
+                        
+                        CountriesListContent(
+                            countries = countries,
+                            connectedServer = connectedServer,
+                            onCountryClick = { country ->
+                                checkVpnAndConnect {
+                                    viewModel.selectCountry(country.code)
+                                    onNavigateToHome()
+                                }
+                            },
+                            onCountryMore = { country ->
+                                viewModel.expandCitiesForCountry(country.code)
+                            },
+                            isTablet = isTablet,
+                            loadDisplayMode = state.loadDisplayMode
+                        )
                     }
+                }
+
+                val successState by remember {
+                    derivedStateOf { uiState as? CountriesUiState.Success }
+                }
+
+                if (successState?.bottomSheetContent != null) {
+                    CountriesBottomSheet(
+                        onDismiss = { viewModel.backToCountries() },
+                        content = successState?.bottomSheetContent!!,
+                        connectedServer = connectedServer,
+                        onCityClick = { city ->
+                            checkVpnAndConnect {
+                                viewModel.selectCity(city.name)
+                                onNavigateToHome()
+                            }
+                        },
+                        onCityMore = { city ->
+                            viewModel.expandServersForCity(city.name)
+                        },
+                        onServerClick = { server ->
+                            checkVpnAndConnect {
+                                viewModel.selectServer(server)
+                                onNavigateToHome()
+                            }
+                        },
+                        onBack = { viewModel.backToCities() },
+                        loadDisplayMode = successState?.loadDisplayMode ?: ServerLoadDisplayMode.ALL
+                    )
                 }
             }
         }

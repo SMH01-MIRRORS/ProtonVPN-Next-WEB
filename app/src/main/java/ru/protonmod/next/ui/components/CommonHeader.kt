@@ -41,7 +41,6 @@ fun NavigationHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .statusBarsPadding()
             .padding(horizontal = 8.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -74,7 +73,6 @@ fun MainHeader(
         style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
         color = colors.textNorm,
         modifier = modifier
-            .statusBarsPadding()
             .padding(horizontal = 8.dp, vertical = 24.dp)
     )
 }

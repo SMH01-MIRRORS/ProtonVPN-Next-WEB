@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
@@ -62,7 +63,8 @@ sealed class CountriesUiState {
     data class Success(
         val countries: List<CountryDisplayItem>,
         val bottomSheetContent: BottomSheetContent? = null,
-        val loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
+        val loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
+        val isBottomSheetOpen: Boolean = false
     ) : CountriesUiState()
     data class Error(val message: String) : CountriesUiState()
 }
@@ -132,8 +134,10 @@ class CountriesViewModel @Inject constructor(
             }
         }
 
-        CountriesUiState.Success(countries, bottomSheetContent, loadMode)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CountriesUiState.Loading)
+        CountriesUiState.Success(countries, bottomSheetContent, loadMode, nav != NavigationState.Countries)
+    }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CountriesUiState.Loading)
 
     val connectedServer: StateFlow<LogicalServer?> = connectedServerState.connectedServer
 
