@@ -417,8 +417,18 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.animation)
 
-    debugImplementation(libs.androidx.compose.ui.tooling)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
+    // Debug Tools
+    val debugToolsImplementation = listOf(
+        libs.androidx.compose.ui.tooling,
+        libs.androidx.compose.ui.test.manifest,
+        libs.leakcanary.android
+    )
+
+    listOf("debug", "debugWithAntitamperAndLogs", "debugWithAntitamperWithoutLogs").forEach { type ->
+        debugToolsImplementation.forEach { tool ->
+            add("${type}Implementation", tool)
+        }
+    }
 
     // Dependency Injection (Hilt)
     implementation(libs.hilt.android)
@@ -442,9 +452,6 @@ dependencies {
     // VPN Protocols
     implementation(libs.amneziawg.android)
     implementation(libs.go.vpn.lib)
-
-    // Debug Tools
-    debugImplementation(libs.leakcanary.android)
 
     // Sentry
     implementation(libs.sentry.android)
