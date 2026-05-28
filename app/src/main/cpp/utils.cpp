@@ -44,19 +44,16 @@ std::vector<std::string> IpSubnetCalculator::rangeToCidrs(uint32_t start, uint32
     uint64_t e = end;
     while (s <= e) {
         int pref = (s != 0) ? (32 - __builtin_ctzll(s)) : 0;
-        while (pref >= 0) {
-            uint32_t mask = (pref == 0) ? 0 : (0xFFFFFFFF << (32 - pref));
-            uint64_t blockSize = (static_cast<uint64_t>(~mask) & 0xFFFFFFFF) + 1;
-            if (s + blockSize - 1 > e) { pref++; break; }
-            if (pref == 0 || (s & mask) == s) {
+        while (true) {
+            uint64_t blockSize = 1ULL << (32 - pref);
+            if (s + blockSize - 1 <= e) {
                 result.push_back(uint32ToIp(static_cast<uint32_t>(s)) + "/" + std::to_string(pref));
                 s += blockSize;
-                goto next_s;
+                break;
             }
-            pref--;
+            pref++;
+            if (pref > 32) break;
         }
-        if (pref > 32) break;
-        next_s:;
     }
     return result;
 }
