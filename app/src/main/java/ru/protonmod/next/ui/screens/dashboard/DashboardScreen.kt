@@ -553,7 +553,7 @@ fun DashboardScreen(
                                 onResume = { viewModel.resumeVpn() },
                                 onRefreshCert = { viewModel.refreshCertificate() },
                                 onToggleIpVisibility = { viewModel.toggleIpVisibility() },
-                                onChangeQuickConnect = { showQuickConnectConfig = false }
+                                onChangeQuickConnect = { showQuickConnectConfig = true }
                             )
 
                             if (showPauseDialog) {
