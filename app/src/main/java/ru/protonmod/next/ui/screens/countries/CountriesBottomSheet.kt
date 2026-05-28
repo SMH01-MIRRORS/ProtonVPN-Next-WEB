@@ -17,6 +17,8 @@
 
 package ru.protonmod.next.ui.screens.countries
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -53,56 +55,75 @@ fun CountriesBottomSheet(
         containerColor = colors.backgroundNorm,
         dragHandle = { BottomSheetDefaults.DragHandle(color = colors.iconWeak) }
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 32.dp)
-        ) {
-            when (content) {
-                is BottomSheetContent.Cities -> {
-                    val localizedCountry = CountryUtils.getCountryName(context, content.countryCode)
-                    NavigationHeader(
-                        title = localizedCountry,
-                        onBack = onDismiss,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-                    
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(content.cities, key = { it.name }) { city ->
-                            CityCard(
-                                city = city,
-                                isConnected = (connectedServer?.city == city.name && connectedServer.exitCountry == content.countryCode),
-                                onClick = { onCityClick(city) },
-                                onMoreClick = { onCityMore(city) },
-                                displayMode = loadDisplayMode
-                            )
+        AnimatedContent(
+            targetState = content,
+            transitionSpec = {
+                // Determine direction: if coming from Cities to Servers, slide in from right.
+                // If going back from Servers to Cities, slide in from left.
+                val isGoingForward = targetState is BottomSheetContent.Servers
+                
+                if (isGoingForward) {
+                    (slideInHorizontally { it } + fadeIn(tween(300)))
+                        .togetherWith(slideOutHorizontally { -it } + fadeOut(tween(300)))
+                } else {
+                    (slideInHorizontally { -it } + fadeIn(tween(300)))
+                        .togetherWith(slideOutHorizontally { it } + fadeOut(tween(300)))
+                }.using(SizeTransform(clip = false))
+            },
+            label = "bottom_sheet_transition",
+            modifier = Modifier.fillMaxWidth()
+        ) { targetContent ->
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp)
+            ) {
+                when (targetContent) {
+                    is BottomSheetContent.Cities -> {
+                        val localizedCountry = CountryUtils.getCountryName(context, targetContent.countryCode)
+                        NavigationHeader(
+                            title = localizedCountry,
+                            onBack = onDismiss,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                        
+                        LazyColumn(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(targetContent.cities, key = { it.name }) { city ->
+                                CityCard(
+                                    city = city,
+                                    isConnected = (connectedServer?.city == city.name && connectedServer.exitCountry == targetContent.countryCode),
+                                    onClick = { onCityClick(city) },
+                                    onMoreClick = { onCityMore(city) },
+                                    displayMode = loadDisplayMode
+                                )
+                            }
                         }
                     }
-                }
-                is BottomSheetContent.Servers -> {
-                    val localizedCountry = CountryUtils.getCountryName(context, content.countryCode)
-                    NavigationHeader(
-                        title = "$localizedCountry, ${content.cityName}",
-                        onBack = onBack,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
+                    is BottomSheetContent.Servers -> {
+                        val localizedCountry = CountryUtils.getCountryName(context, targetContent.countryCode)
+                        NavigationHeader(
+                            title = "$localizedCountry, ${targetContent.cityName}",
+                            onBack = onBack,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
 
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(content.servers, key = { it.id }) { server ->
-                            ServerItemCard(
-                                server = server,
-                                isConnected = connectedServer?.id == server.id,
-                                onClick = { onServerClick(server) },
-                                displayMode = loadDisplayMode
-                            )
+                        LazyColumn(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(targetContent.servers, key = { it.id }) { server ->
+                                ServerItemCard(
+                                    server = server,
+                                    isConnected = connectedServer?.id == server.id,
+                                    onClick = { onServerClick(server) },
+                                    displayMode = loadDisplayMode
+                                )
+                            }
                         }
                     }
                 }
