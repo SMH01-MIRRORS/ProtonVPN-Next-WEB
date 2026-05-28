@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159942,
-      "versionName": "12.0.0-alpha1st4-36-g5250980-nightly",
+      "versionCode": 605159944,
+      "versionName": "12.0.0-alpha1st4-38-g8cee349-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "Add transition animations to CountriesBottomSheet\n\nWraps the bottom sheet content in AnimatedContent to provide horizontal slide and fade transitions when navigating between the cities and servers views.",
+      "changelog": "Fix: Prevent multi-process DataStore access in VPN service",
       "force": false
     },
     "release": {
-      "versionCode": 605159942,
-      "versionName": "12.0.0-alpha1st4-36-g5250980-nightly",
+      "versionCode": 605159944,
+      "versionName": "12.0.0-alpha1st4-38-g8cee349-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "Add transition animations to CountriesBottomSheet\n\nWraps the bottom sheet content in AnimatedContent to provide horizontal slide and fade transitions when navigating between the cities and servers views.",
+      "changelog": "Fix: Prevent multi-process DataStore access in VPN service",
       "force": false
     }
   },
