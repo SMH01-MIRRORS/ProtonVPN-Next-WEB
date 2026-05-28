@@ -87,6 +87,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     private var killSwitchEnabled: Boolean = false
     private var isManualDisconnect: Boolean = false
     private var isVerified: Boolean = false
+    private var lastLogicalServerId: String? = null
 
     // Cached PendingIntent objects to reduce IPC calls to system service
     // These are reused across notification updates to avoid DeadSystemException
@@ -104,6 +105,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         const val ACTION_UPDATE_SETTINGS = "ru.protonmod.next.vpn.UPDATE_SETTINGS"
         const val ACTION_STATS_UPDATED = "ru.protonmod.next.vpn.STATS_UPDATED"
         const val ACTION_SET_VERIFIED = "ru.protonmod.next.vpn.SET_VERIFIED"
+        const val ACTION_QUERY_STATE = "ru.protonmod.next.vpn.QUERY_STATE"
 
         // Intent Extras
         const val EXTRA_CONFIG = "config_string"
@@ -117,6 +119,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         const val EXTRA_KILL_SWITCH_ENABLED = "kill_switch_enabled"
         const val EXTRA_NON_FATAL_ENABLED = "non_fatal_enabled"
         const val EXTRA_ANALYTICS_ENABLED = "analytics_enabled"
+        const val EXTRA_LOGICAL_SERVER_ID = "logical_server_id"
 
         const val TUNNEL_NAME = "proton_awg"
         private const val NOTIFICATION_ID = 1001
@@ -154,6 +157,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             // Broadcast the new state to the rest of the application
             val broadcast = Intent(ACTION_STATE_CHANGED).apply {
                 putExtra(EXTRA_STATE, newState.name)
+                putExtra(EXTRA_LOGICAL_SERVER_ID, lastLogicalServerId)
                 setPackage(packageName)
             }
             sendBroadcast(broadcast)
@@ -276,6 +280,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 isManualDisconnect = false
                 isVerified = false
                 val configStr = intent.getStringExtra(EXTRA_CONFIG)
+                lastLogicalServerId = intent.getStringExtra(EXTRA_LOGICAL_SERVER_ID)
                 notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, true)
                 killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, false)
 
@@ -299,6 +304,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                             // Broadcast connecting state to UI
                             val broadcast = Intent(ACTION_STATE_CHANGED).apply {
                                 putExtra(EXTRA_STATE, STATE_CONNECTING)
+                                putExtra(EXTRA_LOGICAL_SERVER_ID, lastLogicalServerId)
                                 setPackage(packageName)
                             }
                             sendBroadcast(broadcast)
@@ -334,6 +340,27 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 isVerified = true
                 val label = if (currentTunnelState == Tunnel.State.UP) Tunnel.State.UP.name else STATE_CONNECTING
                 updateNotification(label)
+            }
+            ACTION_QUERY_STATE -> {
+                ProtonLogger.d(TAG, "Action QUERY_STATE: Broadcasting current status")
+                val stateBroadcast = Intent(ACTION_STATE_CHANGED).apply {
+                    val label = if (isCurrentlyConnecting) STATE_CONNECTING else currentTunnelState.name
+                    putExtra(EXTRA_STATE, label)
+                    putExtra(EXTRA_LOGICAL_SERVER_ID, lastLogicalServerId)
+                    setPackage(packageName)
+                }
+                sendBroadcast(stateBroadcast)
+
+                if (currentTunnelState == Tunnel.State.UP) {
+                    val speedBroadcast = Intent(ACTION_STATS_UPDATED).apply {
+                        putExtra(EXTRA_SPEED, lastSpeedText)
+                        putExtra(EXTRA_LOGICAL_SERVER_ID, lastLogicalServerId)
+                        // Note: Traffic Rx/Tx are usually only available in the statsJob, 
+                        // but if it's already running, it will send the next update soon.
+                        setPackage(packageName)
+                    }
+                    sendBroadcast(speedBroadcast)
+                }
             }
             else -> {
                 return super.onStartCommand(intent, flags, startId)
@@ -399,6 +426,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                             putExtra(EXTRA_SPEED, lastSpeedText)
                             putExtra(EXTRA_TRAFFIC_RX, totalRxStr)
                             putExtra(EXTRA_TRAFFIC_TX, totalTxStr)
+                            putExtra(EXTRA_LOGICAL_SERVER_ID, lastLogicalServerId)
                             setPackage(packageName)
                         }
                         sendBroadcast(speedBroadcast)

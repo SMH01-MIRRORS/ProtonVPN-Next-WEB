@@ -31,6 +31,7 @@ class SystemContextWrapper @Inject constructor(
 ) {
     fun startVpnService(
         configStr: String,
+        logicalServerId: String?,
         notificationsEnabled: Boolean,
         killSwitchEnabled: Boolean,
         excludedApps: Set<String>,
@@ -39,6 +40,7 @@ class SystemContextWrapper @Inject constructor(
         val intent = Intent(context, ProtonVpnService::class.java).apply {
             action = ProtonVpnService.ACTION_CONNECT
             putExtra(ProtonVpnService.EXTRA_CONFIG, configStr)
+            putExtra(ProtonVpnService.EXTRA_LOGICAL_SERVER_ID, logicalServerId)
             putExtra(ProtonVpnService.EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
             putExtra(ProtonVpnService.EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
             putStringArrayListExtra(ProtonVpnService.EXTRA_EXCLUDED_APPS, ArrayList(excludedApps))
@@ -71,6 +73,13 @@ class SystemContextWrapper @Inject constructor(
     fun setVpnVerified() {
         val intent = Intent(context, ProtonVpnService::class.java).apply {
             action = ProtonVpnService.ACTION_SET_VERIFIED
+        }
+        context.startService(intent)
+    }
+
+    fun queryVpnState() {
+        val intent = Intent(context, ProtonVpnService::class.java).apply {
+            action = ProtonVpnService.ACTION_QUERY_STATE
         }
         context.startService(intent)
     }

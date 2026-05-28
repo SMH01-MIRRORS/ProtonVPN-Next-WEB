@@ -168,6 +168,18 @@ class AmneziaVpnManager @Inject constructor(
                 when (intent?.action) {
                     ProtonVpnService.ACTION_STATE_CHANGED -> {
                         val stateStr = intent.getStringExtra(ProtonVpnService.EXTRA_STATE)
+                        val serverId = intent.getStringExtra(ProtonVpnService.EXTRA_LOGICAL_SERVER_ID)
+                        
+                        if (serverId != null && serverId != currentServerId) {
+                            currentServerId = serverId
+                            applicationScope.launch {
+                                val resolved = vpnRepositoryProvider.get().getCachedServers().find { it.id == serverId }
+                                if (resolved != null) {
+                                    connectedServerState.setConnectedServer(resolved)
+                                }
+                            }
+                        }
+
                         stateStr?.let {
                             if (it == STATE_CONNECTING) {
                                 _isConnecting.value = true
@@ -189,6 +201,17 @@ class AmneziaVpnManager @Inject constructor(
                         }
                     }
                     ProtonVpnService.ACTION_STATS_UPDATED -> {
+                        val serverId = intent.getStringExtra(ProtonVpnService.EXTRA_LOGICAL_SERVER_ID)
+                        if (serverId != null && serverId != currentServerId) {
+                            currentServerId = serverId
+                            applicationScope.launch {
+                                val resolved = vpnRepositoryProvider.get().getCachedServers().find { it.id == serverId }
+                                if (resolved != null) {
+                                    connectedServerState.setConnectedServer(resolved)
+                                }
+                            }
+                        }
+
                         _speed.value = intent.getStringExtra(ProtonVpnService.EXTRA_SPEED)
                 _trafficRx.value = intent.getStringExtra(ProtonVpnService.EXTRA_TRAFFIC_RX)
                 _trafficTx.value = intent.getStringExtra(ProtonVpnService.EXTRA_TRAFFIC_TX)
@@ -196,6 +219,9 @@ class AmneziaVpnManager @Inject constructor(
                 }
             }
         }, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+
+        // Query current VPN state from service on startup
+        systemContextWrapper.queryVpnState()
 
         // Monitor settings changes and update the service accordingly.
         // We use a single coroutine with a small initial delay to avoid competing 
@@ -698,6 +724,7 @@ class AmneziaVpnManager @Inject constructor(
             ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: Starting Service", SentryLevel.INFO, "vpn.connect")
             systemContextWrapper.startVpnService(
                 configStr = configStr,
+                logicalServerId = logicalServerId,
                 notificationsEnabled = settingsManager.notificationsEnabled.first(),
                 killSwitchEnabled = settingsManager.killSwitchEnabled.first(),
                 excludedApps = selectedApps,

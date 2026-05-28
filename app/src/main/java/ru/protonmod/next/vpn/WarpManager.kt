@@ -146,6 +146,7 @@ class WarpManager @Inject constructor(
         ProtonLogger.i(TAG, "Starting WARP tunnel for API bypass...")
         systemContextWrapper.startVpnService(
             configStr = awgConfig,
+            logicalServerId = null,
             notificationsEnabled = false,
             killSwitchEnabled = false,
             excludedApps = emptySet(),
