@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159944,
-      "versionName": "12.0.0-alpha1st4-38-g8cee349-nightly",
+      "versionCode": 605159946,
+      "versionName": "12.0.0-alpha1st4-40-g0795661-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "Fix: Prevent multi-process DataStore access in VPN service",
+      "changelog": "Fix: Resolve infinite loop in IP subnet calculation\n\nRefactors the subnet range generation logic in `utils.cpp` to prevent hangs when calculating IP prefixes. Adds `IpSubnetCalculatorInstrumentedTest` to verify CIDR validation and ensure correct calculation of excluded subnet complements.",
       "force": false
     },
     "release": {
-      "versionCode": 605159944,
-      "versionName": "12.0.0-alpha1st4-38-g8cee349-nightly",
+      "versionCode": 605159946,
+      "versionName": "12.0.0-alpha1st4-40-g0795661-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "Fix: Prevent multi-process DataStore access in VPN service",
+      "changelog": "Fix: Resolve infinite loop in IP subnet calculation\n\nRefactors the subnet range generation logic in `utils.cpp` to prevent hangs when calculating IP prefixes. Adds `IpSubnetCalculatorInstrumentedTest` to verify CIDR validation and ensure correct calculation of excluded subnet complements.",
       "force": false
     }
   },
