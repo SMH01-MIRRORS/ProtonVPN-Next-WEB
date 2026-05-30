@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159948,
-      "versionName": "12.0.0-alpha1st4-42-g31be476-nightly",
+      "versionCode": 605159949,
+      "versionName": "12.0.0-alpha1st4-43-gf77a080-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "Fix: Improve Captcha DNS resolution and proxy handling\n\nImplements a dedicated DNS-over-HTTPS (DoH) client in `CaptchaScreen` to resolve `ERR_NAME_NOT_RESOLVED` errors when API bypass is disabled. Updates the `WebView` interception logic to handle all Proton-related GET requests using an appropriate `OkHttpClient`.\n\nKey changes:\n- Introduced a `dohClient` using Cloudflare DNS for reliable resolution.\n- Updated `shouldInterceptRequest` to support both DoH resolution and global proxy bypass strategies.\n- Ensured critical headers like `x-pm-uid` are manually re-injected during request interception.\n- Made JS injection for POST request rewriting conditional on the API bypass state.\n- Injected the global `OkHttpClient` into `LoginViewModel` to provide proxy support to the captcha flow.",
+      "changelog": "refactor: wrap screen layouts in Box for consistent modifier handling\n\nWraps screen and component content in root Box containers across the application (Login, Welcome, Dashboard, Debug, and EditProfile screens). This ensures that passed-in modifiers are correctly applied to the layout root and improves modifier propagation.\n\nAdditional changes:\n- Updates `SmoothTextField` and `SmoothOutlinedTextField` to use Box wrappers for better layout control.\n- Improves `ByeDpiTestScreen` performance by adding `contentType` and `key` to `LazyColumn` items.\n- Standardizes the use of `Modifier` in `MainActivity` and `MorphedGears`.",
       "force": false
     },
     "release": {
-      "versionCode": 605159948,
-      "versionName": "12.0.0-alpha1st4-42-g31be476-nightly",
+      "versionCode": 605159949,
+      "versionName": "12.0.0-alpha1st4-43-gf77a080-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "Fix: Improve Captcha DNS resolution and proxy handling\n\nImplements a dedicated DNS-over-HTTPS (DoH) client in `CaptchaScreen` to resolve `ERR_NAME_NOT_RESOLVED` errors when API bypass is disabled. Updates the `WebView` interception logic to handle all Proton-related GET requests using an appropriate `OkHttpClient`.\n\nKey changes:\n- Introduced a `dohClient` using Cloudflare DNS for reliable resolution.\n- Updated `shouldInterceptRequest` to support both DoH resolution and global proxy bypass strategies.\n- Ensured critical headers like `x-pm-uid` are manually re-injected during request interception.\n- Made JS injection for POST request rewriting conditional on the API bypass state.\n- Injected the global `OkHttpClient` into `LoginViewModel` to provide proxy support to the captcha flow.",
+      "changelog": "refactor: wrap screen layouts in Box for consistent modifier handling\n\nWraps screen and component content in root Box containers across the application (Login, Welcome, Dashboard, Debug, and EditProfile screens). This ensures that passed-in modifiers are correctly applied to the layout root and improves modifier propagation.\n\nAdditional changes:\n- Updates `SmoothTextField` and `SmoothOutlinedTextField` to use Box wrappers for better layout control.\n- Improves `ByeDpiTestScreen` performance by adding `contentType` and `key` to `LazyColumn` items.\n- Standardizes the use of `Modifier` in `MainActivity` and `MorphedGears`.",
       "force": false
     }
   },
