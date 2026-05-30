@@ -125,6 +125,7 @@ fun ApiBypassScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .statusBarsPadding()
                     .verticalScroll(rememberScrollState())
                     .padding(bottom = 16.dp),
                 horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start

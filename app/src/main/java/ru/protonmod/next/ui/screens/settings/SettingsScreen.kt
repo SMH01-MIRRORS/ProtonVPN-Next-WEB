@@ -128,7 +128,9 @@ fun SettingsScreen(
                 onOtaFrequencyChange = viewModel::setOtaUpdateFrequency,
                 onOtaChannelChange = viewModel::setOtaUpdateChannel,
                 onCheckForUpdates = viewModel::checkForUpdates,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
             )
         }
     }

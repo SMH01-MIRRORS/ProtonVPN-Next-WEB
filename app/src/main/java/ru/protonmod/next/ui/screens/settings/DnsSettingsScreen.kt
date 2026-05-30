@@ -79,7 +79,9 @@ fun DnsSettingsScreen(
                 NavigationHeader(
                     title = stringResource(R.string.settings_custom_dns),
                     onBack = onBack,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier
+                        .statusBarsPadding()
+                        .padding(bottom = 8.dp)
                 )
 
                 Box(

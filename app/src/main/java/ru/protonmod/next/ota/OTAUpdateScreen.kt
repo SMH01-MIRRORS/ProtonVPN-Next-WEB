@@ -69,7 +69,9 @@ fun OTAUpdateScreen(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
-                    modifier = Modifier.widthIn(max = 400.dp)
+                    modifier = Modifier
+                        .widthIn(max = 400.dp)
+                        .statusBarsPadding()
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.SystemUpdate,

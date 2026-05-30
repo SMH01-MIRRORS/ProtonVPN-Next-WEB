@@ -91,7 +91,9 @@ fun ByeDpiTestScreen(
             )
 
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding(),
                 horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start
             ) {
                 NavigationHeader(

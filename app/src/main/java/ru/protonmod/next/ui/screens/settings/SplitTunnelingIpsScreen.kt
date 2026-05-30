@@ -88,6 +88,7 @@ fun SplitTunnelingIpsScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
+                    .statusBarsPadding()
             ) {
                 item(contentType = "Header") {
                     NavigationHeader(

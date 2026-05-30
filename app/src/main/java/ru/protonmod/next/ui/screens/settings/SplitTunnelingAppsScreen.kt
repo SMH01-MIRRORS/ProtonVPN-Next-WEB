@@ -89,6 +89,7 @@ fun SplitTunnelingAppsScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
+                    .statusBarsPadding()
             ) {
                 item(contentType = "Header") {
                     NavigationHeader(

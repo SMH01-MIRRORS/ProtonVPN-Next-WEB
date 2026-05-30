@@ -80,6 +80,7 @@ fun KillSwitchScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .statusBarsPadding()
                     .verticalScroll(rememberScrollState())
                     .padding(bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally

@@ -148,7 +148,9 @@ fun ProfilesScreen(
             )
 
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
             ) {
                 if (profiles.isEmpty()) {
                     // Header for empty state

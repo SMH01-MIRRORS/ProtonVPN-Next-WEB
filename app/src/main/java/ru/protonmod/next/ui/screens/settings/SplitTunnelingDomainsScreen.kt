@@ -88,6 +88,7 @@ fun SplitTunnelingDomainsScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
+                    .statusBarsPadding()
             ) {
                 item(contentType = "Header") {
                     NavigationHeader(

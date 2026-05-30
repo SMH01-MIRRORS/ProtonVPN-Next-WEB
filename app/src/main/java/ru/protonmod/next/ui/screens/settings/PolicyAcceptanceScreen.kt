@@ -105,7 +105,11 @@ fun PolicyAcceptanceScreen(
                     )
             )
 
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+            ) {
                 Text(
                     text = stringResource(R.string.settings_privacy_policy),
                     style = MaterialTheme.typography.headlineSmall,

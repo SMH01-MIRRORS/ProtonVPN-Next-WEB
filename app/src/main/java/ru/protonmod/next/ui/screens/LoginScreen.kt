@@ -145,6 +145,7 @@ fun LoginScreen(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(padding)
+                                .statusBarsPadding()
                                 .widthIn(max = 480.dp)
                                 .verticalScroll(rememberScrollState())
                                 .padding(bottom = 16.dp),
@@ -249,6 +250,7 @@ fun LoginScreen(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(padding)
+                                .statusBarsPadding()
                                 .widthIn(max = 480.dp)
                                 .verticalScroll(rememberScrollState())
                                 .padding(bottom = 16.dp),

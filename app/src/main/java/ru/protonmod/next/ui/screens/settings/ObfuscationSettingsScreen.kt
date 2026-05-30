@@ -97,7 +97,9 @@ fun ObfuscationSettingsScreen(
             )
 
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding(),
                 horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start,
                 contentPadding = PaddingValues(bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)

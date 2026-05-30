@@ -96,6 +96,7 @@ fun SplitTunnelingMainScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .statusBarsPadding()
                     .verticalScroll(rememberScrollState())
                     .padding(bottom = 16.dp)
             ) {

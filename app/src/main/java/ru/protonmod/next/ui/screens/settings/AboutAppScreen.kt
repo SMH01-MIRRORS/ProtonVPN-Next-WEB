@@ -88,7 +88,8 @@ fun AboutAppScreen(
 
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize(),
+                    .fillMaxSize()
+                    .statusBarsPadding(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 contentPadding = PaddingValues(bottom = 16.dp)
             ) {

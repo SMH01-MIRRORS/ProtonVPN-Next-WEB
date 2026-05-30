@@ -78,7 +78,9 @@ fun ErrorReportingScreen(
             )
 
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding(),
                 contentPadding = PaddingValues(bottom = 16.dp)
             ) {
                 item(contentType = "Header") {
