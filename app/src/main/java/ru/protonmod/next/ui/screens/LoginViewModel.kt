@@ -99,7 +99,8 @@ class LoginViewModel @Inject constructor(
     private val warpManager: WarpManager,
     private val networkMonitor: NetworkMonitor,
     private val byeDpiManager: ByeDpiManager,
-    val byeDpiStrategyTester: ByeDpiStrategyTester
+    val byeDpiStrategyTester: ByeDpiStrategyTester,
+    val okHttpClient: okhttp3.OkHttpClient
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)

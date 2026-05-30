@@ -126,6 +126,7 @@ fun LoginScreen(
                         sessionId = state.sessionId,
                         isApiBypassEnabled = isApiBypassEnabled,
                         apiBypassStrategy = apiBypassStrategy,
+                        okHttpClient = viewModel.okHttpClient,
                         onDismiss = { viewModel.resetError() },
                         onCaptchaSolve = { verifiedToken ->
                             viewModel.retryWithCaptcha(state, verifiedToken)

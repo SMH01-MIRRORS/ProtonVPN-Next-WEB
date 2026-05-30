@@ -41,13 +41,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.Dns
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import okhttp3.dnsoverhttps.DnsOverHttps
 import org.json.JSONObject
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.SettingsManager
@@ -58,6 +59,8 @@ import ru.protonmod.next.utils.DeviceInfoProvider
 import ru.protonmod.next.utils.ProtonLogger
 import ru.protonmod.next.ui.utils.isTablet
 import java.io.ByteArrayInputStream
+import java.net.InetAddress
+import java.util.concurrent.TimeUnit
 
 @SuppressLint("SetJavaScriptEnabled")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,7 +72,8 @@ fun CaptchaScreen(
     modifier: Modifier = Modifier,
     sessionId: String? = null,
     isApiBypassEnabled: Boolean = false,
-    apiBypassStrategy: String = "netlify"
+    apiBypassStrategy: String = "netlify",
+    okHttpClient: OkHttpClient? = null
 ) {
     val colors = ProtonNextTheme.colors
     val coroutineScope = rememberCoroutineScope()
@@ -78,16 +82,35 @@ fun CaptchaScreen(
     var hasSolved by remember { mutableStateOf(false) }
     val isTablet = isTablet()
 
-    val captchaHttpClient = remember {
-        OkHttpClient.Builder().build()
+    // Create a dedicated DoH client to fix ERR_NAME_NOT_RESOLVED without intrusive global interceptors.
+    // The global OkHttpClient contains dynamicBaseUrlInterceptor and AuthLoggingInterceptor 
+    // which inject headers and rewrite URLs in ways that may cause 404 on verify.proton.me.
+    val dohClient = remember {
+        val bootstrapClient = OkHttpClient.Builder()
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            .build()
+
+        val doh = DnsOverHttps.Builder().client(bootstrapClient)
+            .url("https://cloudflare-dns.com/dns-query".toHttpUrl())
+            .bootstrapDnsHosts(
+                InetAddress.getByName("1.1.1.1"),
+                InetAddress.getByName("1.0.0.1")
+            )
+            .build()
+
+        OkHttpClient.Builder()
+            .dns(doh)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .build()
     }
-    DisposableEffect(captchaHttpClient) {
-        onDispose {
-            CoroutineScope(Dispatchers.IO).launch {
-                captchaHttpClient.dispatcher.executorService.shutdown()
-                captchaHttpClient.connectionPool.evictAll()
-            }
-        }
+
+    // Determine which client to use:
+    // - If bypass is enabled, we MUST use the global client to go through proxies.
+    // - If bypass is disabled, we MUST use the dedicated DoH client to avoid 404s while still fixing resolution.
+    val effectiveClient = remember(isApiBypassEnabled, okHttpClient, dohClient) {
+        if (isApiBypassEnabled && okHttpClient != null) okHttpClient else dohClient
     }
 
     Scaffold(
@@ -177,11 +200,6 @@ fun CaptchaScreen(
             ) {
                 var webView by remember { mutableStateOf<WebView?>(null) }
 
-                val shouldProxyDirectly = isApiBypassEnabled && (
-                        apiBypassStrategy == SettingsManager.STRATEGY_NETLIFY ||
-                                apiBypassStrategy == SettingsManager.STRATEGY_CLOUDFLARE
-                        )
-
                 val proxyBaseUrl = if (apiBypassStrategy == SettingsManager.STRATEGY_CLOUDFLARE) {
                     "https://api.protonnext.qzz.io"
                 } else {
@@ -191,7 +209,7 @@ fun CaptchaScreen(
                 LaunchedEffect(webUrl, sessionId, webView) {
                     val wv = webView ?: return@LaunchedEffect
 
-                    // Always normalize to direct URL so shouldInterceptRequest can match it
+                    // Normalize to direct URL so shouldInterceptRequest can match it
                     val directWebUrl = try {
                         val httpUrl = webUrl.toHttpUrl()
                         val host = httpUrl.host
@@ -206,10 +224,6 @@ fun CaptchaScreen(
                         webUrl
                     }
 
-                    // FIX: We must load the direct URL into the WebView here!
-                    // This forces the WebView to trigger `shouldInterceptRequest` with "https://verify.proton.me"
-                    // If we pass the effective (proxy) URL directly, the interceptor ignores it, the JS is never injected,
-                    // and critical headers are lost causing 12087!
                     val optimizedUrl = buildString {
                         append(directWebUrl)
                         if (!directWebUrl.contains("?")) append("?") else append("&")
@@ -281,8 +295,6 @@ fun CaptchaScreen(
                             }
 
                             webViewClient = object : WebViewClient() {
-                                private val okHttpClient = captchaHttpClient
-
                                 override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                                     super.onPageStarted(view, url, favicon)
                                 }
@@ -311,22 +323,19 @@ fun CaptchaScreen(
                                     view: WebView,
                                     request: WebResourceRequest
                                 ): WebResourceResponse? {
-                                    if (!shouldProxyDirectly) return super.shouldInterceptRequest(view, request)
-
                                     val originalUrl = request.url.toString()
-                                    if (request.method != "GET") return super.shouldInterceptRequest(view, request)
+                                    
+                                    // Intercept all GET requests to Proton domains to provide DoH/Proxy support
+                                    // and fix DNS resolution issues (ERR_NAME_NOT_RESOLVED).
+                                    val isProtonDomain = originalUrl.contains("proton.me") || 
+                                                       originalUrl.contains("protonmail.ch") ||
+                                                       originalUrl.contains("protonvpn.ch") ||
+                                                       originalUrl.contains("protonvpn.com")
 
-                                    var targetProxyUrl: String? = null
-                                    if (originalUrl.startsWith("https://verify.proton.me")) {
-                                        targetProxyUrl = originalUrl.replace("https://verify.proton.me", "$proxyBaseUrl/verify")
-                                    } else if (originalUrl.startsWith("https://verify-api.proton.me")) {
-                                        targetProxyUrl = originalUrl.replace("https://verify-api.proton.me", "$proxyBaseUrl/verify-api")
-                                    }
-
-                                    if (targetProxyUrl != null) {
+                                    if (request.method == "GET" && isProtonDomain) {
                                         try {
                                             val okRequest = Request.Builder()
-                                                .url(targetProxyUrl)
+                                                .url(originalUrl)
                                                 .apply {
                                                     val headersMap = request.requestHeaders ?: emptyMap()
                                                     headersMap.forEach { (key, value) ->
@@ -335,9 +344,7 @@ fun CaptchaScreen(
                                                         }
                                                     }
 
-                                                    // FIX 12087: WebResourceRequest OFTEN strips custom headers provided to loadUrl()
-                                                    // We MUST manually re-inject x-pm-uid here so OkHttpClient passes it to the backend.
-                                                    // If we don't, the backend generates a new session and 12087 occurs!
+                                                    // Re-inject critical headers
                                                     if (sessionId != null && !headersMap.keys.any { it.equals("x-pm-uid", ignoreCase = true) }) {
                                                         addHeader("x-pm-uid", sessionId)
                                                     }
@@ -350,7 +357,7 @@ fun CaptchaScreen(
                                                 }
                                                 .build()
 
-                                            val response = okHttpClient.newCall(okRequest).execute()
+                                            val response = effectiveClient.newCall(okRequest).execute()
                                             val contentTypeHeader = response.header("Content-Type", "application/octet-stream") ?: "application/octet-stream"
                                             val mimeType = contentTypeHeader.substringBefore(";").trim()
                                             val encoding = if (contentTypeHeader.contains("charset=")) {
@@ -364,7 +371,14 @@ fun CaptchaScreen(
                                             var bodyStream = response.body.byteStream()
                                             if (mimeType.contains("text/html", ignoreCase = true)) {
                                                 val html = response.body.string()
-                                                val jsInject = """
+                                                
+                                                // If bypass is active, we still inject JS to help with POST requests 
+                                                // by rewriting their URLs to resolvable proxy endpoints.
+                                                val jsInject = if (isApiBypassEnabled && (
+                                                    apiBypassStrategy == SettingsManager.STRATEGY_NETLIFY ||
+                                                    apiBypassStrategy == SettingsManager.STRATEGY_CLOUDFLARE
+                                                )) {
+                                                    """
                                                     <script>
                                                     (function() {
                                                         var proxyBase = '$proxyBaseUrl';
@@ -397,19 +411,23 @@ fun CaptchaScreen(
                                                         };
                                                     })();
                                                     </script>
-                                                """.trimIndent()
+                                                    """.trimIndent()
+                                                } else ""
 
-                                                val injectedHtml = if (html.contains("<head>", ignoreCase = true)) {
-                                                    html.replaceFirst(Regex("<head>", RegexOption.IGNORE_CASE), "<head>\n$jsInject")
-                                                } else {
-                                                    jsInject + html
-                                                }
+                                                val injectedHtml = if (jsInject.isNotEmpty()) {
+                                                    if (html.contains("<head>", ignoreCase = true)) {
+                                                        html.replaceFirst(Regex("<head>", RegexOption.IGNORE_CASE), "<head>\n$jsInject")
+                                                    } else {
+                                                        jsInject + html
+                                                    }
+                                                } else html
+                                                
                                                 bodyStream = ByteArrayInputStream(injectedHtml.toByteArray())
                                             }
 
                                             return WebResourceResponse(mimeType, encoding, 200, "OK", responseHeaders, bodyStream)
                                         } catch (e: Exception) {
-                                            ProtonLogger.e("CaptchaScreen", "Proxy Error", e)
+                                            ProtonLogger.e("CaptchaScreen", "Proxy/DoH Error for $originalUrl", e)
                                         }
                                     }
                                     return super.shouldInterceptRequest(view, request)

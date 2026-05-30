@@ -80,6 +80,9 @@ class LoginViewModelTest {
     @Mock
     private lateinit var byeDpiStrategyTester: ByeDpiStrategyTester
 
+    @Mock
+    private lateinit var okHttpClient: okhttp3.OkHttpClient
+
     private lateinit var viewModel: LoginViewModel
 
     @Before
@@ -93,7 +96,8 @@ class LoginViewModelTest {
             warpManager,
             networkMonitor,
             byeDpiManager,
-            byeDpiStrategyTester
+            byeDpiStrategyTester,
+            okHttpClient
         )
     }
 
