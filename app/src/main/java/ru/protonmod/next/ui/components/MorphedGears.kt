@@ -19,6 +19,7 @@ package ru.protonmod.next.ui.components
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -49,92 +50,94 @@ fun MorphedGears(
     // Morph progress
     val morphProgress = remember { Animatable(0f) }
 
-    LaunchedEffect(color) {
-        ProtonLogger.v("MorphedGears", "Initializing Animation")
+    Box(modifier = modifier) {
+        LaunchedEffect(color) {
+            ProtonLogger.v("MorphedGears", "Initializing Animation")
 
-        // Gear 1 "ticking" rotation: 45 degrees every 0.5s
-        launch {
-            while(true) {
-                gear1Rotation.animateTo(
-                    targetValue = gear1Rotation.value + 45f,
-                    animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+            // Gear 1 "ticking" rotation: 45 degrees every 0.5s
+            launch {
+                while(true) {
+                    gear1Rotation.animateTo(
+                        targetValue = gear1Rotation.value + 45f,
+                        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+                    )
+                    delay(200) // Wait to total 0.5s per tick
+                }
+            }
+            // Gear 2 (opposite)
+            launch {
+                while(true) {
+                    gear2Rotation.animateTo(
+                        targetValue = gear2Rotation.value - 45f,
+                        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+                    )
+                    delay(200)
+                }
+            }
+            // Continuous Morphing
+            launch {
+                while(true) {
+                    morphProgress.animateTo(1f, tween(2000, easing = LinearEasing))
+                    morphProgress.animateTo(0f, tween(2000, easing = LinearEasing))
+                }
+            }
+        }
+
+        val gear1 = remember {
+            RoundedPolygon.star(
+                numVerticesPerRadius = 8,
+                innerRadius = 0.6f,
+                rounding = CornerRounding(0.2f)
+            )
+        }
+        val gear2 = remember {
+            RoundedPolygon.circle(numVertices = 8)
+        }
+        val morph = remember { Morph(gear1, gear2) }
+
+        Canvas(modifier = Modifier.size(120.dp)) {
+            val baseSize = size.minDimension * 0.4f
+
+            val currentMorph = morph.toPath(morphProgress.value).asComposePath()
+
+            // Upper Gear
+            withTransform(
+                {
+                    translate(size.width / 2, size.height * 0.35f)
+                    rotate(gear1Rotation.value)
+                    scale(baseSize, baseSize)
+                }
+            ) {
+                // Draw both stroke and a very faint fill to ensure visibility
+                drawPath(
+                    path = currentMorph,
+                    color = color.copy(alpha = 0.1f)
                 )
-                delay(200) // Wait to total 0.5s per tick
-            }
-        }
-        // Gear 2 (opposite)
-        launch {
-            while(true) {
-                gear2Rotation.animateTo(
-                    targetValue = gear2Rotation.value - 45f,
-                    animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+                drawPath(
+                    path = currentMorph,
+                    color = color.copy(alpha = 0.8f),
+                    style = Stroke(width = 3.dp.toPx())
                 )
-                delay(200)
             }
-        }
-        // Continuous Morphing
-        launch {
-            while(true) {
-                morphProgress.animateTo(1f, tween(2000, easing = LinearEasing))
-                morphProgress.animateTo(0f, tween(2000, easing = LinearEasing))
+
+            // Lower Gear
+            withTransform(
+                {
+                    translate(size.width / 2, size.height * 0.65f)
+                    rotate(gear2Rotation.value + 22.5f)
+                    scale(baseSize, baseSize)
+                }
+            ) {
+                drawPath(
+                    path = currentMorph,
+                    color = color.copy(alpha = 0.1f)
+                )
+                drawPath(
+                    path = currentMorph,
+                    color = color.copy(alpha = 0.5f),
+                    style = Stroke(width = 2.dp.toPx())
+                )
             }
-        }
-    }
-
-    val gear1 = remember {
-        RoundedPolygon.star(
-            numVerticesPerRadius = 8,
-            innerRadius = 0.6f,
-            rounding = CornerRounding(0.2f)
-        )
-    }
-    val gear2 = remember {
-        RoundedPolygon.circle(numVertices = 8)
-    }
-    val morph = remember { Morph(gear1, gear2) }
-
-    Canvas(modifier = modifier.size(120.dp)) {
-        val baseSize = size.minDimension * 0.4f
-        
-        val currentMorph = morph.toPath(morphProgress.value).asComposePath()
-
-        // Upper Gear
-        withTransform(
-            {
-                translate(size.width / 2, size.height * 0.35f)
-                rotate(gear1Rotation.value)
-                scale(baseSize, baseSize)
-            }
-        ) {
-            // Draw both stroke and a very faint fill to ensure visibility
-            drawPath(
-                path = currentMorph,
-                color = color.copy(alpha = 0.1f)
-            )
-            drawPath(
-                path = currentMorph,
-                color = color.copy(alpha = 0.8f),
-                style = Stroke(width = 3.dp.toPx())
-            )
-        }
-
-        // Lower Gear
-        withTransform(
-            {
-                translate(size.width / 2, size.height * 0.65f)
-                rotate(gear2Rotation.value + 22.5f)
-                scale(baseSize, baseSize)
-            }
-        ) {
-            drawPath(
-                path = currentMorph,
-                color = color.copy(alpha = 0.1f)
-            )
-            drawPath(
-                path = currentMorph,
-                color = color.copy(alpha = 0.5f),
-                style = Stroke(width = 2.dp.toPx())
-            )
         }
     }
 }

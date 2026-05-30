@@ -70,389 +70,391 @@ fun DebugSettingsScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(uiState.message) {
-        uiState.message?.let {
-            snackbarHostState.showSnackbar(it)
-            viewModel.clearMessage()
-        }
-    }
-
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = colors.backgroundNorm,
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            // Background gradient decoration (immersive)
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Red.copy(alpha = 0.15f), // Red highlight for Debug
-                                colors.backgroundNorm.copy(alpha = 0.1f),
-                                colors.backgroundNorm
-                            )
-                        )
-                    )
-            )
-
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding(),
-                contentPadding = PaddingValues(bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                item(contentType = "Header") {
-                    NavigationHeader(
-                        title = stringResource(R.string.debug_title),
-                        onBack = onBack
-                    )
-                }
-
-                // Session & Certificate Info
-                item(contentType = "DebugSection") {
-                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                        DebugSection(title = stringResource(R.string.debug_session_header)) {
-                            uiState.session?.let { session ->
-                                DebugInfoRow("User ID", session.userId)
-                                DebugInfoRow("Tier", when (session.userTier) {
-                                    1 -> "Basic"
-                                    2 -> "Plus"
-                                    else -> "Free"
-                                })
-                                HorizontalDivider(
-                                    modifier = Modifier.padding(vertical = 8.dp),
-                                    color = colors.separatorNorm.copy(alpha = 0.3f)
-                                )
-
-                                val idLabel =
-                                    stringResource(R.string.debug_cert_id, "").trim().removeSuffix(":")
-                                        .trim()
-                                val issuedLabel = stringResource(R.string.debug_cert_issued, "").trim()
-                                    .removeSuffix(":").trim()
-                                val expiresLabel = stringResource(R.string.debug_cert_expires, "").trim()
-                                    .removeSuffix(":").trim()
-
-                                DebugInfoRow(idLabel, session.sessionId)
-                                uiState.certIssued?.let { DebugInfoRow(issuedLabel, it) }
-                                uiState.certExpires?.let { DebugInfoRow(expiresLabel, it) }
-
-                                Button(
-                                    onClick = { viewModel.forceRefreshCertificate() },
-                                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
-                                    shape = RoundedCornerShape(12.dp),
-                                    enabled = !uiState.isLoading
-                                ) {
-                                    Icon(Icons.Rounded.Refresh, contentDescription = null)
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(stringResource(R.string.debug_btn_refresh_cert))
-                                }
-
-                                Button(
-                                    onClick = { viewModel.forceRefreshSession() },
-                                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm.copy(alpha = 0.8f)),
-                                    shape = RoundedCornerShape(12.dp),
-                                    enabled = !uiState.isLoading
-                                ) {
-                                    Icon(Icons.Rounded.Refresh, contentDescription = null)
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(stringResource(R.string.debug_btn_refresh_session))
-                                }
-
-                                Button(
-                                    onClick = { viewModel.simulateExpiredCertificate() },
-                                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = colors.notificationError.copy(alpha = 0.8f)),
-                                    shape = RoundedCornerShape(12.dp),
-                                    enabled = !uiState.isLoading
-                                ) {
-                                    Icon(Icons.Rounded.BugReport, contentDescription = null)
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(stringResource(R.string.debug_btn_simulate_expired_cert))
-                                }
-                            } ?: Text(
-                                "No active session",
-                                color = colors.textWeak,
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
-                    }
-                }
-
-                // Exports
-                item(contentType = "DebugSection") {
-                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                        DebugSection(title = stringResource(R.string.debug_exports_header)) {
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                DebugActionRow(
-                                    icon = Icons.Rounded.History,
-                                    title = stringResource(R.string.debug_btn_export_logs),
-                                    onClick = { viewModel.exportLogs() }
-                                )
-                                DebugActionRow(
-                                    icon = Icons.Rounded.FileDownload,
-                                    title = stringResource(R.string.debug_btn_export_config),
-                                    onClick = { showServerSelect = true }
-                                )
-                                DebugActionRow(
-                                    icon = Icons.Rounded.ContentCopy,
-                                    title = stringResource(R.string.debug_btn_export_session),
-                                    onClick = { showExportConfirm = true }
-                                )
-                                DebugActionRow(
-                                    icon = Icons.AutoMirrored.Rounded.Input,
-                                    title = stringResource(R.string.debug_btn_import_session),
-                                    onClick = { showImportDialog = true }
-                                )
-                                DebugActionRow(
-                                    icon = Icons.Rounded.Public,
-                                    title = stringResource(R.string.debug_btn_fetch_domains),
-                                    onClick = { viewModel.fetchAvailableDomains() }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // Device Info
-                item(contentType = "DebugSection") {
-                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                        DebugSection(title = stringResource(R.string.debug_device_header)) {
-                            Text(
-                                text = viewModel.getDeviceInfo(),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = colors.textWeak,
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
-                    }
-                }
-
-                // Sentry Tests
-                item(contentType = "DebugSection") {
-                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                        DebugSection(
-                            title = stringResource(R.string.debug_sentry_header),
-                            titleColor = Color.Magenta
-                        ) {
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                DebugActionRow(
-                                    icon = Icons.Rounded.BugReport,
-                                    title = stringResource(R.string.debug_btn_fake_crash),
-                                    onClick = { viewModel.triggerJavaCrash() }
-                                )
-                                DebugActionRow(
-                                    icon = Icons.Rounded.BugReport,
-                                    title = stringResource(R.string.debug_btn_crash_java),
-                                    onClick = { viewModel.triggerJavaCrash() }
-                                )
-                                DebugActionRow(
-                                    icon = Icons.Rounded.BugReport,
-                                    title = stringResource(R.string.debug_btn_crash_native),
-                                    onClick = { viewModel.triggerNativeCrash() }
-                                )
-                                DebugActionRow(
-                                    icon = Icons.Rounded.BugReport,
-                                    title = stringResource(R.string.debug_btn_arithmetic_error),
-                                    onClick = { viewModel.triggerArithmeticException() }
-                                )
-                                DebugActionRow(
-                                    icon = Icons.Rounded.BugReport,
-                                    title = stringResource(R.string.debug_btn_null_pointer),
-                                    onClick = { viewModel.triggerNullPointer() }
-                                )
-                                DebugActionRow(
-                                    icon = Icons.Rounded.BugReport,
-                                    title = stringResource(R.string.debug_btn_background_crash),
-                                    onClick = { viewModel.triggerBackgroundCrash() }
-                                )
-                                DebugActionRow(
-                                    icon = Icons.Rounded.History,
-                                    title = stringResource(R.string.debug_btn_anr),
-                                    onClick = { viewModel.triggerAnr() }
-                                )
-                                DebugActionRow(
-                                    icon = Icons.Rounded.CleaningServices,
-                                    title = stringResource(R.string.debug_btn_oom),
-                                    onClick = { viewModel.triggerOom() }
-                                )
-                                DebugActionRow(
-                                    icon = Icons.Rounded.Info,
-                                    title = stringResource(R.string.debug_btn_capture_exception),
-                                    onClick = { viewModel.captureNonFatal() }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // Danger Zone
-                item(contentType = "DebugSection") {
-                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                        DebugSection(
-                            title = stringResource(R.string.debug_danger_header),
-                            titleColor = colors.notificationError
-                        ) {
-                            Button(
-                                onClick = { showNukeConfirm = true },
-                                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = colors.notificationError),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Icon(Icons.Rounded.CleaningServices, contentDescription = null)
-                                Spacer(Modifier.width(8.dp))
-                                Text(stringResource(R.string.debug_btn_nuke))
-                            }
-                        }
-                    }
-                }
+    Box(modifier = modifier.fillMaxSize()) {
+        LaunchedEffect(uiState.message) {
+            uiState.message?.let {
+                snackbarHostState.showSnackbar(it)
+                viewModel.clearMessage()
             }
         }
-    }
 
-    // Nuke Confirmation Dialog
-    if (showNukeConfirm) {
-        AlertDialog(
-            onDismissRequest = { showNukeConfirm = false },
-            title = { Text(stringResource(R.string.debug_btn_nuke)) },
-            text = { Text(stringResource(R.string.debug_nuke_confirm)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showNukeConfirm = false
-                        viewModel.nukeEverything()
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = colors.notificationError)
-                ) {
-                    Text(stringResource(R.string.btn_disconnect)) // Using "Disconnect" as "Confirm" if better string not found, or just HARD reset
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showNukeConfirm = false }) {
-                    Text(stringResource(R.string.btn_cancel))
-                }
-            }
-        )
-    }
-
-    // Server Selection for Config Export
-    if (showServerSelect) {
-        ModalBottomSheet(
-            onDismissRequest = { showServerSelect = false },
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
             containerColor = colors.backgroundNorm,
-            dragHandle = { BottomSheetDefaults.DragHandle(color = colors.iconWeak) }
-        ) {
-            Column(modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)) {
-                Text(
-                    text = stringResource(R.string.debug_select_server),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = colors.textNorm,
-                    modifier = Modifier.padding(16.dp)
-                )
-                LazyColumn(modifier = Modifier.fillMaxHeight(0.6f)) {
-                    items(uiState.servers) { server ->
-                        ListItem(
-                            headlineContent = { Text(server.name, color = colors.textNorm) },
-                            supportingContent = { Text(server.exitCountry, color = colors.textWeak) },
-                            modifier = Modifier.clickable {
-                                viewModel.exportConfig(server)
-                                showServerSelect = false
-                            },
-                            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            snackbarHost = { SnackbarHost(snackbarHostState) }
+        ) { paddingValues ->
+            Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+                // Background gradient decoration (immersive)
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Red.copy(alpha = 0.15f), // Red highlight for Debug
+                                    colors.backgroundNorm.copy(alpha = 0.1f),
+                                    colors.backgroundNorm
+                                )
+                            )
                         )
+                )
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding(),
+                    contentPadding = PaddingValues(bottom = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    item(contentType = "Header") {
+                        NavigationHeader(
+                            title = stringResource(R.string.debug_title),
+                            onBack = onBack
+                        )
+                    }
+
+                    // Session & Certificate Info
+                    item(contentType = "DebugSection") {
+                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            DebugSection(title = stringResource(R.string.debug_session_header)) {
+                                uiState.session?.let { session ->
+                                    DebugInfoRow("User ID", session.userId)
+                                    DebugInfoRow("Tier", when (session.userTier) {
+                                        1 -> "Basic"
+                                        2 -> "Plus"
+                                        else -> "Free"
+                                    })
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(vertical = 8.dp),
+                                        color = colors.separatorNorm.copy(alpha = 0.3f)
+                                    )
+
+                                    val idLabel =
+                                        stringResource(R.string.debug_cert_id, "").trim().removeSuffix(":")
+                                            .trim()
+                                    val issuedLabel = stringResource(R.string.debug_cert_issued, "").trim()
+                                        .removeSuffix(":").trim()
+                                    val expiresLabel = stringResource(R.string.debug_cert_expires, "").trim()
+                                        .removeSuffix(":").trim()
+
+                                    DebugInfoRow(idLabel, session.sessionId)
+                                    uiState.certIssued?.let { DebugInfoRow(issuedLabel, it) }
+                                    uiState.certExpires?.let { DebugInfoRow(expiresLabel, it) }
+
+                                    Button(
+                                        onClick = { viewModel.forceRefreshCertificate() },
+                                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
+                                        shape = RoundedCornerShape(12.dp),
+                                        enabled = !uiState.isLoading
+                                    ) {
+                                        Icon(Icons.Rounded.Refresh, contentDescription = null)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(stringResource(R.string.debug_btn_refresh_cert))
+                                    }
+
+                                    Button(
+                                        onClick = { viewModel.forceRefreshSession() },
+                                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm.copy(alpha = 0.8f)),
+                                        shape = RoundedCornerShape(12.dp),
+                                        enabled = !uiState.isLoading
+                                    ) {
+                                        Icon(Icons.Rounded.Refresh, contentDescription = null)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(stringResource(R.string.debug_btn_refresh_session))
+                                    }
+
+                                    Button(
+                                        onClick = { viewModel.simulateExpiredCertificate() },
+                                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = colors.notificationError.copy(alpha = 0.8f)),
+                                        shape = RoundedCornerShape(12.dp),
+                                        enabled = !uiState.isLoading
+                                    ) {
+                                        Icon(Icons.Rounded.BugReport, contentDescription = null)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(stringResource(R.string.debug_btn_simulate_expired_cert))
+                                    }
+                                } ?: Text(
+                                    "No active session",
+                                    color = colors.textWeak,
+                                    modifier = Modifier.padding(16.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // Exports
+                    item(contentType = "DebugSection") {
+                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            DebugSection(title = stringResource(R.string.debug_exports_header)) {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    DebugActionRow(
+                                        icon = Icons.Rounded.History,
+                                        title = stringResource(R.string.debug_btn_export_logs),
+                                        onClick = { viewModel.exportLogs() }
+                                    )
+                                    DebugActionRow(
+                                        icon = Icons.Rounded.FileDownload,
+                                        title = stringResource(R.string.debug_btn_export_config),
+                                        onClick = { showServerSelect = true }
+                                    )
+                                    DebugActionRow(
+                                        icon = Icons.Rounded.ContentCopy,
+                                        title = stringResource(R.string.debug_btn_export_session),
+                                        onClick = { showExportConfirm = true }
+                                    )
+                                    DebugActionRow(
+                                        icon = Icons.AutoMirrored.Rounded.Input,
+                                        title = stringResource(R.string.debug_btn_import_session),
+                                        onClick = { showImportDialog = true }
+                                    )
+                                    DebugActionRow(
+                                        icon = Icons.Rounded.Public,
+                                        title = stringResource(R.string.debug_btn_fetch_domains),
+                                        onClick = { viewModel.fetchAvailableDomains() }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Device Info
+                    item(contentType = "DebugSection") {
+                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            DebugSection(title = stringResource(R.string.debug_device_header)) {
+                                Text(
+                                    text = viewModel.getDeviceInfo(),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = colors.textWeak,
+                                    modifier = Modifier.padding(16.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // Sentry Tests
+                    item(contentType = "DebugSection") {
+                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            DebugSection(
+                                title = stringResource(R.string.debug_sentry_header),
+                                titleColor = Color.Magenta
+                            ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    DebugActionRow(
+                                        icon = Icons.Rounded.BugReport,
+                                        title = stringResource(R.string.debug_btn_fake_crash),
+                                        onClick = { viewModel.triggerJavaCrash() }
+                                    )
+                                    DebugActionRow(
+                                        icon = Icons.Rounded.BugReport,
+                                        title = stringResource(R.string.debug_btn_crash_java),
+                                        onClick = { viewModel.triggerJavaCrash() }
+                                    )
+                                    DebugActionRow(
+                                        icon = Icons.Rounded.BugReport,
+                                        title = stringResource(R.string.debug_btn_crash_native),
+                                        onClick = { viewModel.triggerNativeCrash() }
+                                    )
+                                    DebugActionRow(
+                                        icon = Icons.Rounded.BugReport,
+                                        title = stringResource(R.string.debug_btn_arithmetic_error),
+                                        onClick = { viewModel.triggerArithmeticException() }
+                                    )
+                                    DebugActionRow(
+                                        icon = Icons.Rounded.BugReport,
+                                        title = stringResource(R.string.debug_btn_null_pointer),
+                                        onClick = { viewModel.triggerNullPointer() }
+                                    )
+                                    DebugActionRow(
+                                        icon = Icons.Rounded.BugReport,
+                                        title = stringResource(R.string.debug_btn_background_crash),
+                                        onClick = { viewModel.triggerBackgroundCrash() }
+                                    )
+                                    DebugActionRow(
+                                        icon = Icons.Rounded.History,
+                                        title = stringResource(R.string.debug_btn_anr),
+                                        onClick = { viewModel.triggerAnr() }
+                                    )
+                                    DebugActionRow(
+                                        icon = Icons.Rounded.CleaningServices,
+                                        title = stringResource(R.string.debug_btn_oom),
+                                        onClick = { viewModel.triggerOom() }
+                                    )
+                                    DebugActionRow(
+                                        icon = Icons.Rounded.Info,
+                                        title = stringResource(R.string.debug_btn_capture_exception),
+                                        onClick = { viewModel.captureNonFatal() }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Danger Zone
+                    item(contentType = "DebugSection") {
+                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            DebugSection(
+                                title = stringResource(R.string.debug_danger_header),
+                                titleColor = colors.notificationError
+                            ) {
+                                Button(
+                                    onClick = { showNukeConfirm = true },
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = colors.notificationError),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(Icons.Rounded.CleaningServices, contentDescription = null)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(stringResource(R.string.debug_btn_nuke))
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Nuke Confirmation Dialog
+                if (showNukeConfirm) {
+                    AlertDialog(
+                        onDismissRequest = { showNukeConfirm = false },
+                        title = { Text(stringResource(R.string.debug_btn_nuke)) },
+                        text = { Text(stringResource(R.string.debug_nuke_confirm)) },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    showNukeConfirm = false
+                                    viewModel.nukeEverything()
+                                },
+                                colors = ButtonDefaults.textButtonColors(contentColor = colors.notificationError)
+                            ) {
+                                Text(stringResource(R.string.btn_disconnect)) // Using "Disconnect" as "Confirm" if better string not found, or just HARD reset
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showNukeConfirm = false }) {
+                                Text(stringResource(R.string.btn_cancel))
+                            }
+                        }
+                    )
+                }
+
+                // Server Selection for Config Export
+                if (showServerSelect) {
+                    ModalBottomSheet(
+                        onDismissRequest = { showServerSelect = false },
+                        containerColor = colors.backgroundNorm,
+                        dragHandle = { BottomSheetDefaults.DragHandle(color = colors.iconWeak) }
+                    ) {
+                        Column(modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)) {
+                            Text(
+                                text = stringResource(R.string.debug_select_server),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = colors.textNorm,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                            LazyColumn(modifier = Modifier.fillMaxHeight(0.6f)) {
+                                items(uiState.servers) { server ->
+                                    ListItem(
+                                        headlineContent = { Text(server.name, color = colors.textNorm) },
+                                        supportingContent = { Text(server.exitCountry, color = colors.textWeak) },
+                                        modifier = Modifier.clickable {
+                                            viewModel.exportConfig(server)
+                                            showServerSelect = false
+                                        },
+                                        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (showExportConfirm) {
+                    AlertDialog(
+                        onDismissRequest = { showExportConfirm = false },
+                        title = { Text(stringResource(R.string.debug_export_session_title)) },
+                        text = { Text(stringResource(R.string.debug_export_session_msg)) },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    viewModel.exportSession()
+                                    showExportConfirm = false
+                                },
+                                colors = ButtonDefaults.textButtonColors(contentColor = colors.brandNorm)
+                            ) {
+                                Text(stringResource(R.string.debug_btn_copy))
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showExportConfirm = false }) {
+                                Text(stringResource(R.string.btn_cancel))
+                            }
+                        },
+                        containerColor = colors.backgroundSecondary,
+                        titleContentColor = colors.textNorm,
+                        textContentColor = colors.textWeak
+                    )
+                }
+
+                if (showImportDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showImportDialog = false },
+                        title = { Text(stringResource(R.string.debug_btn_import_session)) },
+                        text = {
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.debug_import_session_warning),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = colors.notificationError,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+                                SmoothOutlinedTextField(
+                                    value = importJson,
+                                    onValueChange = { importJson = it },
+                                    label = { Text(stringResource(R.string.hint_session_json)) },
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = colors.brandNorm,
+                                        unfocusedBorderColor = colors.shade20,
+                                        focusedTextColor = colors.textNorm,
+                                        unfocusedTextColor = colors.textNorm
+                                    )
+                                )
+                            }
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    if (importJson.isNotBlank()) {
+                                        viewModel.importSession(importJson)
+                                        showImportDialog = false
+                                    }
+                                },
+                                enabled = importJson.isNotBlank()
+                            ) {
+                                Text(stringResource(R.string.btn_import))
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showImportDialog = false }) {
+                                Text(stringResource(R.string.btn_cancel))
+                            }
+                        },
+                        containerColor = colors.backgroundSecondary,
+                        titleContentColor = colors.textNorm,
+                        textContentColor = colors.textWeak
+                    )
+                }
+
+                if (uiState.isLoading) {
+                    Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)), contentAlignment = Alignment.Center) {
+                        ExpressiveCircularProgressIndicator(color = colors.brandNorm)
                     }
                 }
             }
-        }
-    }
-
-    if (showExportConfirm) {
-        AlertDialog(
-            onDismissRequest = { showExportConfirm = false },
-            title = { Text(stringResource(R.string.debug_export_session_title)) },
-            text = { Text(stringResource(R.string.debug_export_session_msg)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.exportSession()
-                        showExportConfirm = false
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = colors.brandNorm)
-                ) {
-                    Text(stringResource(R.string.debug_btn_copy))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showExportConfirm = false }) {
-                    Text(stringResource(R.string.btn_cancel))
-                }
-            },
-            containerColor = colors.backgroundSecondary,
-            titleContentColor = colors.textNorm,
-            textContentColor = colors.textWeak
-        )
-    }
-
-    if (showImportDialog) {
-        AlertDialog(
-            onDismissRequest = { showImportDialog = false },
-            title = { Text(stringResource(R.string.debug_btn_import_session)) },
-            text = {
-                Column {
-                    Text(
-                        text = stringResource(R.string.debug_import_session_warning),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colors.notificationError,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                        SmoothOutlinedTextField(
-                            value = importJson,
-                            onValueChange = { importJson = it },
-                            label = { Text(stringResource(R.string.hint_session_json)) },
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = colors.brandNorm,
-                                unfocusedBorderColor = colors.shade20,
-                                focusedTextColor = colors.textNorm,
-                                unfocusedTextColor = colors.textNorm
-                            )
-                        )
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        if (importJson.isNotBlank()) {
-                            viewModel.importSession(importJson)
-                            showImportDialog = false
-                        }
-                    },
-                    enabled = importJson.isNotBlank()
-                ) {
-                    Text(stringResource(R.string.btn_import))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showImportDialog = false }) {
-                    Text(stringResource(R.string.btn_cancel))
-                }
-            },
-            containerColor = colors.backgroundSecondary,
-            titleContentColor = colors.textNorm,
-            textContentColor = colors.textWeak
-        )
-    }
-
-    if (uiState.isLoading) {
-        Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)), contentAlignment = Alignment.Center) {
-            ExpressiveCircularProgressIndicator(color = colors.brandNorm)
         }
     }
 }

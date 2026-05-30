@@ -236,58 +236,57 @@ private fun ObscurableText(
     // Track the previous target string to rebuild the base perfectly when the IP changes
     var previousTargetText by remember { mutableStateOf(targetText) }
 
-    val indicesToAnimate = remember(isObscured, targetText) {
-        targetText.indices
-            .filter { !preserveCharacters.contains(targetText[it]) }
-            .shuffled()
-    }
+    Box(modifier = modifier) {
+        val indicesToAnimate = remember(isObscured, targetText) {
+            targetText.indices
+                .filter { !preserveCharacters.contains(targetText[it]) }
+                .shuffled()
+        }
 
-    LaunchedEffect(isObscured, targetText) {
-        val targetChars = targetText.toCharArray()
-        var currentChars = displayText.toCharArray()
+        LaunchedEffect(isObscured, targetText) {
+            val targetChars = targetText.toCharArray()
+            var currentChars = displayText.toCharArray()
 
-        // Check if the underlying string itself has changed (e.g., completely new IP loaded)
-        // This is critical because if lengths match but dot positions differ, the old
-        // asterisks will remain stuck since the animation filter preserves the new dots.
-        val baseChanged = previousTargetText != targetText || currentChars.size != targetChars.size
+            // Check if the underlying string itself has changed (e.g., completely new IP loaded)
+            // This is critical because if lengths match but dot positions differ, the old
+            // asterisks will remain stuck since the animation filter preserves the new dots.
+            val baseChanged = previousTargetText != targetText || currentChars.size != targetChars.size
 
-        if (baseChanged) {
-            // Reset fixed width to allow the layout to remeasure for the new string
-            fixedWidth = null
-            previousTargetText = targetText
+            if (baseChanged) {
+                // Reset fixed width to allow the layout to remeasure for the new string
+                fixedWidth = null
+                previousTargetText = targetText
 
-            val baseChars = targetChars.clone()
-            if (isObscured) {
-                // Instantly obscure the new text, applying the new dot/dash placement
-                for (i in baseChars.indices) {
-                    if (!preserveCharacters.contains(baseChars[i])) baseChars[i] = targetCharacter
+                val baseChars = targetChars.clone()
+                if (isObscured) {
+                    // Instantly obscure the new text, applying the new dot/dash placement
+                    for (i in baseChars.indices) {
+                        if (!preserveCharacters.contains(baseChars[i])) baseChars[i] = targetCharacter
+                    }
+                    displayText = String(baseChars)
+                } else {
+                    // If we are unobscuring to a NEW target, start from its obscured version
+                    // and let the animation below reveal the new characters gracefully.
+                    for (i in baseChars.indices) {
+                        if (!preserveCharacters.contains(baseChars[i])) baseChars[i] = targetCharacter
+                    }
+                    currentChars = baseChars
+                    displayText = String(currentChars)
                 }
-                displayText = String(baseChars)
-                return@LaunchedEffect
             } else {
-                // If we are unobscuring to a NEW target, start from its obscured version
-                // and let the animation below reveal the new characters gracefully.
-                for (i in baseChars.indices) {
-                    if (!preserveCharacters.contains(baseChars[i])) baseChars[i] = targetCharacter
+                // Animate the differences character by character
+                for (i in indicesToAnimate) {
+                    if (isObscured && currentChars[i] == targetCharacter) continue
+                    if (!isObscured && currentChars[i] == targetChars[i]) continue
+
+                    delay(duration.toLong())
+                    val newChar = if (isObscured) targetCharacter else targetChars[i]
+                    currentChars[i] = newChar
+                    displayText = String(currentChars)
                 }
-                currentChars = baseChars
-                displayText = String(currentChars)
             }
         }
 
-        // Animate the differences character by character
-        for (i in indicesToAnimate) {
-            if (isObscured && currentChars[i] == targetCharacter) continue
-            if (!isObscured && currentChars[i] == targetChars[i]) continue
-
-            delay(duration.toLong())
-            val newChar = if (isObscured) targetCharacter else targetChars[i]
-            currentChars[i] = newChar
-            displayText = String(currentChars)
-        }
-    }
-
-    Box(modifier = modifier) {
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
             val colors = ProtonNextTheme.colors
             Layout(
@@ -514,69 +513,73 @@ fun DashboardScreen(
                 is DashboardUiState.Success -> 2
             }
 
-            AnimatedContent(
-                targetState = baseState,
-                label = "dashboard_state",
-                modifier = Modifier.fillMaxSize()
-            ) { target ->
-                when (target) {
-                    0 -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            ExpressiveCircularProgressIndicator(color = colors.brandNorm)
+            Box(modifier = Modifier.fillMaxSize()) {
+                AnimatedContent(
+                    targetState = baseState,
+                    label = "dashboard_state",
+                    modifier = Modifier.fillMaxSize()
+                ) { target ->
+                    when (target) {
+                        0 -> {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                ExpressiveCircularProgressIndicator(color = colors.brandNorm)
+                            }
                         }
-                    }
-                    1 -> {
-                        val errorState = uiState as? DashboardUiState.Error
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(errorState?.message.orEmpty(), color = colors.notificationError)
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Button(
-                                    onClick = { viewModel.loadServers() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = colors.interactionNorm)
-                                ) {
-                                    Text(stringResource(R.string.btn_retry), color = colors.textInverted)
+                        1 -> {
+                            val errorState = uiState as? DashboardUiState.Error
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(errorState?.message.orEmpty(), color = colors.notificationError)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Button(
+                                        onClick = { viewModel.loadServers() },
+                                        colors = ButtonDefaults.buttonColors(containerColor = colors.interactionNorm)
+                                    ) {
+                                        Text(stringResource(R.string.btn_retry), color = colors.textInverted)
+                                    }
                                 }
                             }
                         }
-                    }
-                    2 -> {
-                        val state = uiState as? DashboardUiState.Success
-                        if (state != null) {
-                            DashboardContent(
-                                state = state,
-                                isTablet = isTablet,
-                                onServerClick = { server -> checkVpnAndConnect(server) },
-                                onQuickConnect = { checkVpnAndQuickConnect() },
-                                onDisconnect = { viewModel.disconnect() },
-                                onPause = { showPauseDialog = true },
-                                onResume = { viewModel.resumeVpn() },
-                                onRefreshCert = { viewModel.refreshCertificate() },
-                                onToggleIpVisibility = { viewModel.toggleIpVisibility() },
-                                onChangeQuickConnect = { showQuickConnectConfig = true }
-                            )
+                        2 -> {
+                            val state = uiState as? DashboardUiState.Success
+                            if (state != null) {
+                                Box(modifier = Modifier.fillMaxSize()) {
+                                    DashboardContent(
+                                        state = state,
+                                        isTablet = isTablet,
+                                        onServerClick = { server -> checkVpnAndConnect(server) },
+                                        onQuickConnect = { checkVpnAndQuickConnect() },
+                                        onDisconnect = { viewModel.disconnect() },
+                                        onPause = { showPauseDialog = true },
+                                        onResume = { viewModel.resumeVpn() },
+                                        onRefreshCert = { viewModel.refreshCertificate() },
+                                        onToggleIpVisibility = { viewModel.toggleIpVisibility() },
+                                        onChangeQuickConnect = { showQuickConnectConfig = true }
+                                    )
+                                }
 
-                            if (showPauseDialog) {
-                                PauseDialog(
-                                    onDismiss = { showPauseDialog = false },
-                                    onPause = { durationMs ->
-                                        viewModel.pauseVpn(durationMs)
-                                        showPauseDialog = false
-                                    }
-                                )
-                            }
+                                if (showPauseDialog) {
+                                    PauseDialog(
+                                        onDismiss = { showPauseDialog = false },
+                                        onPause = { durationMs ->
+                                            viewModel.pauseVpn(durationMs)
+                                            showPauseDialog = false
+                                        }
+                                    )
+                                }
 
-                            if (showQuickConnectConfig) {
-                                QuickConnectBottomSheet(
-                                    onDismiss = { showQuickConnectConfig = false },
-                                    currentStrategy = state.quickConnectStrategy,
-                                    currentTargetId = state.quickConnectTargetId,
-                                    profiles = state.profiles.toImmutableList(),
-                                    recentServers = state.recentConnections.toImmutableList(),
-                                    onStrategySelect = { strategy, targetId ->
-                                        viewModel.setQuickConnectStrategy(strategy, targetId)
-                                    }
-                                )
+                                if (showQuickConnectConfig) {
+                                    QuickConnectBottomSheet(
+                                        onDismiss = { showQuickConnectConfig = false },
+                                        currentStrategy = state.quickConnectStrategy,
+                                        currentTargetId = state.quickConnectTargetId,
+                                        profiles = state.profiles.toImmutableList(),
+                                        recentServers = state.recentConnections.toImmutableList(),
+                                        onStrategySelect = { strategy, targetId ->
+                                            viewModel.setQuickConnectStrategy(strategy, targetId)
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -1347,48 +1350,50 @@ fun PauseBanner(
         mutableLongStateOf((endTime - System.currentTimeMillis()).coerceAtLeast(0) / 1000)
     }
 
-    LaunchedEffect(endTime) {
-        while (timeLeft > 0) {
-            delay(1000)
-            timeLeft = (endTime - System.currentTimeMillis()).coerceAtLeast(0) / 1000
-        }
-    }
-
-    val minutes = timeLeft / 60
-    val seconds = timeLeft % 60
-    val timeStr = String.format("%02d:%02d", minutes, seconds)
-
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = colors.brandNorm.copy(alpha = 0.1f)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Speed, // Using Speed icon for Pause indicator
-                contentDescription = null,
-                tint = colors.brandNorm,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.pause_active_title),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = colors.brandNorm,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = stringResource(R.string.pause_active_desc, timeStr),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colors.brandNorm
-                )
+    Box(modifier = modifier) {
+        LaunchedEffect(endTime) {
+            while (timeLeft > 0) {
+                delay(1000)
+                timeLeft = (endTime - System.currentTimeMillis()).coerceAtLeast(0) / 1000
             }
-            TextButton(onClick = onResume) {
-                Text(stringResource(R.string.btn_resume), color = colors.brandNorm)
+        }
+
+        val minutes = timeLeft / 60
+        val seconds = timeLeft % 60
+        val timeStr = String.format("%02d:%02d", minutes, seconds)
+
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            color = colors.brandNorm.copy(alpha = 0.1f)
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Speed, // Using Speed icon for Pause indicator
+                    contentDescription = null,
+                    tint = colors.brandNorm,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.pause_active_title),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = colors.brandNorm,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = stringResource(R.string.pause_active_desc, timeStr),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.brandNorm
+                    )
+                }
+                TextButton(onClick = onResume) {
+                    Text(stringResource(R.string.btn_resume), color = colors.brandNorm)
+                }
             }
         }
     }

@@ -97,83 +97,82 @@ fun WelcomeScreen(
     val apiBypassStrategy by viewModel.apiBypassStrategy.collectAsStateWithLifecycle()
     var isSkipping by remember { mutableStateOf(false) }
 
-    LaunchedEffect(persistedStep) {
-        if (!isInitialized) {
-            if (persistedStep != SetupStep.WELCOME && persistedStep != SetupStep.COMPLETE) {
-                currentStep = persistedStep
+    Box(modifier = modifier.fillMaxSize().background(colors.backgroundNorm)) {
+        val advanceTo: (SetupStep) -> Unit = { nextStep ->
+            currentStep = nextStep
+            if (nextStep.ordinal > persistedStep.ordinal) {
+                viewModel.setSetupStep(nextStep)
             }
-            isInitialized = true
         }
-    }
 
-    val advanceTo: (SetupStep) -> Unit = { nextStep ->
-        currentStep = nextStep
-        if (nextStep.ordinal > persistedStep.ordinal) {
-            viewModel.setSetupStep(nextStep)
+        LaunchedEffect(persistedStep) {
+            if (!isInitialized) {
+                if (persistedStep != SetupStep.WELCOME && persistedStep != SetupStep.COMPLETE) {
+                    currentStep = persistedStep
+                }
+                isInitialized = true
+            }
         }
-    }
-
-    LaunchedEffect(currentStep) {
-        ProtonLogger.d("WelcomeScreen", "Current Step changed to: $currentStep")
-    }
-
-    LaunchedEffect(isByeDpiAutoTesting) {
-        if (isByeDpiAutoTesting) {
-            currentStep = SetupStep.LOADING
+        LaunchedEffect(currentStep) {
+            ProtonLogger.d("WelcomeScreen", "Current Step changed to: $currentStep")
         }
-    }
 
-    LaunchedEffect(uiState, isSkipping, onNavigateToHome) {
-        ProtonLogger.d("WelcomeScreen", "UiState changed to: $uiState")
-        when (uiState) {
-            is LoginUiState.Loading -> {
-                ProtonLogger.i("WelcomeScreen", "Transitioning to LOADING step")
+        LaunchedEffect(isByeDpiAutoTesting) {
+            if (isByeDpiAutoTesting) {
                 currentStep = SetupStep.LOADING
             }
-            is LoginUiState.Success -> {
-                if (isSkipping || persistedStep == SetupStep.COMPLETE) {
-                    viewModel.setSetupStep(SetupStep.COMPLETE)
-                    onNavigateToHome()
-                } else {
-                    advanceTo(SetupStep.CONFIG_PORT)
-                }
-            }
-            is LoginUiState.Requires2FA -> {
-                currentStep = SetupStep.LOGIN_2FA
-            }
-            is LoginUiState.RequiresCaptcha -> {
-                currentStep = SetupStep.CAPTCHA
-            }
-            is LoginUiState.Error -> {
-                // If we were loading, go back to appropriate login step on error
-                if (currentStep == SetupStep.LOADING) {
-                    currentStep = if (savedUsername.isBlank()) SetupStep.WELCOME else SetupStep.LOGIN_PASSWORD
-                }
-            }
-            else -> {}
         }
-    }
 
-    BackHandler(currentStep != SetupStep.WELCOME && currentStep != SetupStep.LOADING) {
-        currentStep = when (currentStep) {
-            SetupStep.LOGIN_EMAIL -> SetupStep.WELCOME
-            SetupStep.LOGIN_PASSWORD -> SetupStep.LOGIN_EMAIL
-            SetupStep.LOGIN_2FA -> SetupStep.LOGIN_PASSWORD
-            SetupStep.CAPTCHA -> {
-                val state = uiState as? LoginUiState.RequiresCaptcha
-                if (state?.isAnonymous == true) SetupStep.WELCOME else SetupStep.LOGIN_PASSWORD
+        LaunchedEffect(uiState, isSkipping, onNavigateToHome) {
+            ProtonLogger.d("WelcomeScreen", "UiState changed to: $uiState")
+            when (uiState) {
+                is LoginUiState.Loading -> {
+                    ProtonLogger.i("WelcomeScreen", "Transitioning to LOADING step")
+                    currentStep = SetupStep.LOADING
+                }
+                is LoginUiState.Success -> {
+                    if (isSkipping || persistedStep == SetupStep.COMPLETE) {
+                        viewModel.setSetupStep(SetupStep.COMPLETE)
+                        onNavigateToHome()
+                    } else {
+                        advanceTo(SetupStep.CONFIG_PORT)
+                    }
+                }
+                is LoginUiState.Requires2FA -> {
+                    currentStep = SetupStep.LOGIN_2FA
+                }
+                is LoginUiState.RequiresCaptcha -> {
+                    currentStep = SetupStep.CAPTCHA
+                }
+                is LoginUiState.Error -> {
+                    // If we were loading, go back to appropriate login step on error
+                    if (currentStep == SetupStep.LOADING) {
+                        currentStep = if (savedUsername.isBlank()) SetupStep.WELCOME else SetupStep.LOGIN_PASSWORD
+                    }
+                }
+                else -> {}
             }
-            SetupStep.CONFIG_PORT -> SetupStep.WELCOME
-            SetupStep.CONFIG_OBFUSCATION -> SetupStep.CONFIG_PORT
-            SetupStep.CONFIG_SERVER_LOAD -> SetupStep.CONFIG_OBFUSCATION
-            SetupStep.CONFIG_THEME -> SetupStep.CONFIG_SERVER_LOAD
-            SetupStep.COMPLETE -> SetupStep.CONFIG_THEME
-            else -> SetupStep.WELCOME
         }
-        viewModel.resetError()
-    }
 
-    Box(modifier = modifier.fillMaxSize().background(colors.backgroundNorm)) {
+        BackHandler(currentStep != SetupStep.WELCOME && currentStep != SetupStep.LOADING) {
+            currentStep = when (currentStep) {
+                SetupStep.LOGIN_EMAIL -> SetupStep.WELCOME
+                SetupStep.LOGIN_PASSWORD -> SetupStep.LOGIN_EMAIL
+                SetupStep.LOGIN_2FA -> SetupStep.LOGIN_PASSWORD
+                SetupStep.CAPTCHA -> {
+                    val state = uiState as? LoginUiState.RequiresCaptcha
+                    if (state?.isAnonymous == true) SetupStep.WELCOME else SetupStep.LOGIN_PASSWORD
+                }
+                SetupStep.CONFIG_PORT -> SetupStep.WELCOME
+                SetupStep.CONFIG_OBFUSCATION -> SetupStep.CONFIG_PORT
+                SetupStep.CONFIG_SERVER_LOAD -> SetupStep.CONFIG_OBFUSCATION
+                SetupStep.CONFIG_THEME -> SetupStep.CONFIG_SERVER_LOAD
+                SetupStep.COMPLETE -> SetupStep.CONFIG_THEME
+                else -> SetupStep.WELCOME
+            }
+            viewModel.resetError()
+        }
+
         // Top Atmospheric Glow
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawCircle(

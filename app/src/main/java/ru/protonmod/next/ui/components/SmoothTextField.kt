@@ -19,6 +19,7 @@ package ru.protonmod.next.ui.components
 
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -59,47 +60,49 @@ fun SmoothTextField(
     suffix: @Composable (() -> Unit)? = null,
     supportingText: @Composable (() -> Unit)? = null
 ) {
-    var textFieldValueState by remember {
-        mutableStateOf(TextFieldValue(text = value))
-    }
-
-    LaunchedEffect(value) {
-        if (value != textFieldValueState.text) {
-            textFieldValueState = textFieldValueState.copy(text = value)
+    Box(modifier = modifier) {
+        var textFieldValueState by remember {
+            mutableStateOf(TextFieldValue(text = value))
         }
-    }
 
-    TextField(
-        value = textFieldValueState,
-        onValueChange = { newValue ->
-            val oldText = textFieldValueState.text
-            textFieldValueState = newValue
-            if (newValue.text != oldText) {
-                onValueChange(newValue.text)
+        LaunchedEffect(value) {
+            if (value != textFieldValueState.text) {
+                textFieldValueState = textFieldValueState.copy(text = value)
             }
-        },
-        modifier = modifier,
-        enabled = enabled,
-        readOnly = readOnly,
-        textStyle = textStyle,
-        label = label,
-        placeholder = placeholder,
-        leadingIcon = leadingIcon,
-        trailingIcon = trailingIcon,
-        prefix = prefix,
-        suffix = suffix,
-        supportingText = supportingText,
-        isError = isError,
-        visualTransformation = visualTransformation,
-        keyboardOptions = keyboardOptions,
-        keyboardActions = keyboardActions,
-        singleLine = singleLine,
-        maxLines = maxLines,
-        minLines = minLines,
-        interactionSource = interactionSource as? MutableInteractionSource,
-        shape = shape,
-        colors = colors
-    )
+        }
+
+        TextField(
+            value = textFieldValueState,
+            onValueChange = { newValue ->
+                val oldText = textFieldValueState.text
+                textFieldValueState = newValue
+                if (newValue.text != oldText) {
+                    onValueChange(newValue.text)
+                }
+            },
+            modifier = Modifier,
+            enabled = enabled,
+            readOnly = readOnly,
+            textStyle = textStyle,
+            label = label,
+            placeholder = placeholder,
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
+            prefix = prefix,
+            suffix = suffix,
+            supportingText = supportingText,
+            isError = isError,
+            visualTransformation = visualTransformation,
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+            singleLine = singleLine,
+            maxLines = maxLines,
+            minLines = minLines,
+            interactionSource = interactionSource as? MutableInteractionSource,
+            shape = shape,
+            colors = colors
+        )
+    }
 }
 
 /**
@@ -132,50 +135,52 @@ fun SmoothOutlinedTextField(
     suffix: @Composable (() -> Unit)? = null,
     supportingText: @Composable (() -> Unit)? = null
 ) {
-    // Local state as TextFieldValue to preserve cursor and selection
-    var textFieldValueState by remember {
-        mutableStateOf(TextFieldValue(text = value))
-    }
-
-    // Sync from external value ONLY if it's truly an external change
-    LaunchedEffect(value) {
-        if (value != textFieldValueState.text) {
-            textFieldValueState = textFieldValueState.copy(text = value)
+    Box(modifier = modifier) {
+        // Local state as TextFieldValue to preserve cursor and selection
+        var textFieldValueState by remember {
+            mutableStateOf(TextFieldValue(text = value))
         }
-    }
 
-    OutlinedTextField(
-        value = textFieldValueState,
-        onValueChange = { newValue ->
-            // Update local state immediately for smooth typing
-            val oldText = textFieldValueState.text
-            textFieldValueState = newValue
-
-            // Notify external listener if text changed
-            if (newValue.text != oldText) {
-                onValueChange(newValue.text)
+        // Sync from external value ONLY if it's truly an external change
+        LaunchedEffect(value) {
+            if (value != textFieldValueState.text) {
+                textFieldValueState = textFieldValueState.copy(text = value)
             }
-        },
-        modifier = modifier,
-        enabled = enabled,
-        readOnly = readOnly,
-        textStyle = textStyle,
-        label = label,
-        placeholder = placeholder,
-        leadingIcon = leadingIcon,
-        trailingIcon = trailingIcon,
-        prefix = prefix,
-        suffix = suffix,
-        supportingText = supportingText,
-        isError = isError,
-        visualTransformation = visualTransformation,
-        keyboardOptions = keyboardOptions,
-        keyboardActions = keyboardActions,
-        singleLine = singleLine,
-        maxLines = maxLines,
-        minLines = minLines,
-        interactionSource = interactionSource as? MutableInteractionSource,
-        shape = shape,
-        colors = colors
-    )
+        }
+
+        OutlinedTextField(
+            value = textFieldValueState,
+            onValueChange = { newValue ->
+                // Update local state immediately for smooth typing
+                val oldText = textFieldValueState.text
+                textFieldValueState = newValue
+
+                // Notify external listener if text changed
+                if (newValue.text != oldText) {
+                    onValueChange(newValue.text)
+                }
+            },
+            modifier = Modifier,
+            enabled = enabled,
+            readOnly = readOnly,
+            textStyle = textStyle,
+            label = label,
+            placeholder = placeholder,
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
+            prefix = prefix,
+            suffix = suffix,
+            supportingText = supportingText,
+            isError = isError,
+            visualTransformation = visualTransformation,
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+            singleLine = singleLine,
+            maxLines = maxLines,
+            minLines = minLines,
+            interactionSource = interactionSource as? MutableInteractionSource,
+            shape = shape,
+            colors = colors
+        )
+    }
 }

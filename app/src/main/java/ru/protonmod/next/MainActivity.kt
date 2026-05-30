@@ -234,19 +234,20 @@ fun OTAUpdateOverlay(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    
-    LaunchedEffect(viewModel) {
-        viewModel.checkForUpdates()
-    }
 
-    if (uiState.updateInfo != null) {
-        OTAUpdateScreen(
-            uiState = uiState,
-            onInstall = { viewModel.installUpdate(context) },
-            onDownload = { info -> viewModel.startDownload(context, info) },
-            onDismiss = { viewModel.dismissUpdate() },
-            modifier = modifier
-        )
+    Box(modifier = modifier) {
+        LaunchedEffect(viewModel) {
+            viewModel.checkForUpdates()
+        }
+
+        if (uiState.updateInfo != null) {
+            OTAUpdateScreen(
+                uiState = uiState,
+                onInstall = { viewModel.installUpdate(context) },
+                onDownload = { info -> viewModel.startDownload(context, info) },
+                onDismiss = { viewModel.dismissUpdate() }
+            )
+        }
     }
 }
 
@@ -261,59 +262,59 @@ fun ProtonNextAppNavHost(
 
     if (startDestination.isEmpty()) return
 
-    val currentOnNavControllerReady by rememberUpdatedState(onNavControllerReady)
-    val navController = rememberNavController()
-    
-    LaunchedEffect(navController) {
-        currentOnNavControllerReady(navController)
-    }
-    
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+    Box(modifier = modifier.fillMaxSize()) {
+        val currentOnNavControllerReady by rememberUpdatedState(onNavControllerReady)
+        val navController = rememberNavController()
 
-    var lastKnownTarget by remember { mutableStateOf<MainTarget?>(null) }
-    val currentTarget = remember(currentRoute) {
-        val target = when (currentRoute) {
-            Screen.Home.route -> MainTarget.Home
-            Screen.Countries.route -> MainTarget.Countries
-            Screen.Profiles.route -> MainTarget.Profiles
-            Screen.Settings.route -> MainTarget.Settings
-            else -> null
+        LaunchedEffect(navController) {
+            currentOnNavControllerReady(navController)
         }
-        if (target != null) {
-            lastKnownTarget = target
+
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
+
+        var lastKnownTarget by remember { mutableStateOf<MainTarget?>(null) }
+        val currentTarget = remember(currentRoute) {
+            val target = when (currentRoute) {
+                Screen.Home.route -> MainTarget.Home
+                Screen.Countries.route -> MainTarget.Countries
+                Screen.Profiles.route -> MainTarget.Profiles
+                Screen.Settings.route -> MainTarget.Settings
+                else -> null
+            }
+            if (target != null) {
+                lastKnownTarget = target
+            }
+            // If current route is null (transitioning), use last known target to avoid jump
+            target ?: if (currentRoute == null) lastKnownTarget else null
         }
-        // If current route is null (transitioning), use last known target to avoid jump
-        target ?: if (currentRoute == null) lastKnownTarget else null
-    }
 
-    // Track previous session state to detect real logouts
-    var previousSessionWasNotNull by remember { mutableStateOf(session != null) }
+        // Track previous session state to detect real logouts
+        var previousSessionWasNotNull by remember { mutableStateOf(session != null) }
 
-    LaunchedEffect(session) {
-        val isLoggingOut = previousSessionWasNotNull && session == null
-        previousSessionWasNotNull = session != null
+        LaunchedEffect(session) {
+            val isLoggingOut = previousSessionWasNotNull && session == null
+            previousSessionWasNotNull = session != null
 
-        if (isLoggingOut && startDestination.isNotEmpty() && startDestination != Screen.PolicyAcceptance.route) {
-            ru.protonmod.next.utils.ProtonLogger.d("MainActivity", "User logged out, navigating to welcome. Current route: $currentRoute")
-            // Only navigate if we're not already on a public screen
-            if (currentRoute != "welcome" && currentRoute != "login" && currentRoute != Screen.ApiBypass.route) {
-                navController.navigate("welcome") {
+            if (isLoggingOut && startDestination.isNotEmpty() && startDestination != Screen.PolicyAcceptance.route) {
+                ru.protonmod.next.utils.ProtonLogger.d("MainActivity", "User logged out, navigating to welcome. Current route: $currentRoute")
+                // Only navigate if we're not already on a public screen
+                if (currentRoute != "welcome" && currentRoute != "login" && currentRoute != Screen.ApiBypass.route) {
+                    navController.navigate("welcome") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            }
+        }
+
+        LaunchedEffect(startDestination) {
+            if (startDestination.isNotEmpty() && currentRoute != startDestination) {
+                navController.navigate(startDestination) {
                     popUpTo(0) { inclusive = true }
                 }
             }
         }
-    }
 
-    LaunchedEffect(startDestination) {
-        if (startDestination.isNotEmpty() && currentRoute != startDestination) {
-            navController.navigate(startDestination) {
-                popUpTo(0) { inclusive = true }
-            }
-        }
-    }
-
-    Box(modifier = modifier.fillMaxSize()) {
         NavHost(
             navController = navController,
             startDestination = startDestination,

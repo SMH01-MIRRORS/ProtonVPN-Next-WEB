@@ -123,49 +123,50 @@ fun EditProfileScreen(
 
     var isLoaded by rememberSaveable { mutableStateOf(false) }
 
-    // Navigation and results
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    LaunchedEffect(navBackStackEntry) {
-        navBackStackEntry?.savedStateHandle?.get<Int>("selectedPort")?.let { port ->
-            selectedPort = port
-            navBackStackEntry?.savedStateHandle?.remove<Int>("selectedPort")
-        }
-        navBackStackEntry?.savedStateHandle?.get<String>("selectedProtocol")?.let { protocol ->
-            selectedProtocol = protocol
-            navBackStackEntry?.savedStateHandle?.remove<String>("selectedProtocol")
-        }
-        navBackStackEntry?.savedStateHandle?.get<String>("selectedUrl")?.let { url ->
-            autoOpenUrl = url
-            navBackStackEntry?.savedStateHandle?.remove<String>("selectedUrl")
-        }
-    }
-
-    // Update state when editingProfile is loaded
-    LaunchedEffect(editingProfile) {
-        if (!isLoaded && editingProfile != null) {
-            editingProfile.let {
-                profileName = it.name
-                targetCountry = it.targetCountry
-                targetCity = it.targetCity
-                targetCityLocalized = it.localizedCity
-                targetServerId = it.targetServerId
-                targetServerName = it.targetServerName
-                selectedProtocol = it.protocol
-                selectedPort = it.port
-                autoOpenUrl = it.autoOpenUrl ?: ""
-                obfuscationEnabled = it.isObfuscationEnabled
-                obfuscationProfileId = it.obfuscationProfileId ?: "standard_1"
-            }
-            isLoaded = true
-        }
-    }
-
     var showLocationDialog by remember { mutableStateOf(false) }
     var showObfuscationConfigDialog by remember { mutableStateOf(false) }
 
     val standardProfileName = stringResource(R.string.obfuscation_config_standard)
 
     Box(modifier = modifier.fillMaxSize().background(colors.backgroundNorm)) {
+        // Navigation and results
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        LaunchedEffect(navBackStackEntry) {
+            navBackStackEntry?.savedStateHandle?.get<Int>("selectedPort")?.let { port ->
+                selectedPort = port
+                navBackStackEntry?.savedStateHandle?.remove<Int>("selectedPort")
+            }
+            navBackStackEntry?.savedStateHandle?.get<String>("selectedProtocol")?.let { protocol ->
+                selectedProtocol = protocol
+                navBackStackEntry?.savedStateHandle?.remove<String>("selectedProtocol")
+            }
+            navBackStackEntry?.savedStateHandle?.get<String>("selectedUrl")?.let { url ->
+                autoOpenUrl = url
+                navBackStackEntry?.savedStateHandle?.remove<String>("selectedUrl")
+            }
+        }
+
+        // Update state when editingProfile is loaded
+        LaunchedEffect(editingProfile) {
+            if (!isLoaded && editingProfile != null) {
+                editingProfile.let {
+                    profileName = it.name
+                    targetCountry = it.targetCountry
+                    targetCity = it.targetCity
+                    targetCityLocalized = it.localizedCity
+                    targetServerId = it.targetServerId
+                    targetServerName = it.targetServerName
+                    selectedProtocol = it.protocol
+                    selectedPort = it.port
+                    autoOpenUrl = it.autoOpenUrl ?: ""
+                    obfuscationEnabled = it.isObfuscationEnabled
+                    obfuscationProfileId = it.obfuscationProfileId ?: "standard_1"
+                }
+                isLoaded = true
+            }
+        }
+
+        // Background gradient
         // Background gradient
         Box(
             modifier = Modifier
@@ -349,58 +350,58 @@ fun EditProfileScreen(
                 }
             }
         }
-    }
 
-    if (showLocationDialog) {
-        LocationSelectionDialog(
-            countries = countries.toImmutableList(),
-            onGetCities = viewModel::getCitiesForCountry,
-            onGetServers = viewModel::getServersForCity,
-            onLocationSelect = { country, city, cityLocalized, serverId, serverName ->
-                targetCountry = country
-                targetCity = city
-                targetCityLocalized = cityLocalized
-                targetServerId = serverId
-                targetServerName = serverName
-                showLocationDialog = false
-            },
-            onDismiss = { showLocationDialog = false },
-            selectedCountry = targetCountry,
-            selectedCity = targetCity,
-            loadDisplayMode = serverLoadDisplayMode
-        )
-    }
+        if (showLocationDialog) {
+            LocationSelectionDialog(
+                countries = countries.toImmutableList(),
+                onGetCities = viewModel::getCitiesForCountry,
+                onGetServers = viewModel::getServersForCity,
+                onLocationSelect = { country, city, cityLocalized, serverId, serverName ->
+                    targetCountry = country
+                    targetCity = city
+                    targetCityLocalized = cityLocalized
+                    targetServerId = serverId
+                    targetServerName = serverName
+                    showLocationDialog = false
+                },
+                onDismiss = { showLocationDialog = false },
+                selectedCountry = targetCountry,
+                selectedCity = targetCity,
+                loadDisplayMode = serverLoadDisplayMode
+            )
+        }
 
-    if (showObfuscationConfigDialog) {
-        val newConfigName = stringResource(R.string.custom_config_name, customObfuscationConfigs.size + 1)
+        if (showObfuscationConfigDialog) {
+            val newConfigName = stringResource(R.string.custom_config_name, customObfuscationConfigs.size + 1)
 
-        ObfuscationConfigSelectionDialog(
-            configs = (listOf(ObfuscationProfile.getStandardProfile(standardProfileName)) + customObfuscationConfigs).toImmutableList(),
-            selectedId = obfuscationProfileId,
-            onDismiss = { showObfuscationConfigDialog = false },
-            onConfigSelect = {
-                obfuscationProfileId = it
-                showObfuscationConfigDialog = false
-            },
-            onCreateNew = {
-                val newConfig = ObfuscationProfile.createDefaultCustomProfile(
-                    id = UUID.randomUUID().toString(),
-                    name = newConfigName
-                )
-                viewModel.saveObfuscationProfile(newConfig)
-                obfuscationProfileId = newConfig.id
-                showObfuscationConfigDialog = false
-            },
-            onEdit = { profile ->
-                viewModel.saveObfuscationProfile(profile)
-            },
-            onDelete = { profileIdToDelete ->
-                viewModel.deleteObfuscationProfile(profileIdToDelete)
-                if (obfuscationProfileId == profileIdToDelete) {
-                    obfuscationProfileId = "standard_1"
+            ObfuscationConfigSelectionDialog(
+                configs = (listOf(ObfuscationProfile.getStandardProfile(standardProfileName)) + customObfuscationConfigs).toImmutableList(),
+                selectedId = obfuscationProfileId,
+                onDismiss = { showObfuscationConfigDialog = false },
+                onConfigSelect = {
+                    obfuscationProfileId = it
+                    showObfuscationConfigDialog = false
+                },
+                onCreateNew = {
+                    val newConfig = ObfuscationProfile.createDefaultCustomProfile(
+                        id = UUID.randomUUID().toString(),
+                        name = newConfigName
+                    )
+                    viewModel.saveObfuscationProfile(newConfig)
+                    obfuscationProfileId = newConfig.id
+                    showObfuscationConfigDialog = false
+                },
+                onEdit = { profile ->
+                    viewModel.saveObfuscationProfile(profile)
+                },
+                onDelete = { profileIdToDelete ->
+                    viewModel.deleteObfuscationProfile(profileIdToDelete)
+                    if (obfuscationProfileId == profileIdToDelete) {
+                        obfuscationProfileId = "standard_1"
+                    }
                 }
-            }
-        )
+            )
+        }
     }
 }
 

@@ -108,7 +108,7 @@ fun ByeDpiTestScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    item {
+                    item(contentType = "Description") {
                         Text(
                             text = stringResource(R.string.byedpi_test_desc),
                             style = MaterialTheme.typography.bodyMedium,
@@ -118,15 +118,15 @@ fun ByeDpiTestScreen(
                         )
                     }
 
-                    item {
+                    item(contentType = "ModeSelector") {
                         ModeSelectorCard(
                             selectedMode = selectedMode,
-                            onModeSelected = { if (!uiState.isByeDpiTesting) selectedMode = it },
+                            onSelectMode = { if (!uiState.isByeDpiTesting) selectedMode = it },
                             enabled = !uiState.isByeDpiTesting
                         )
                     }
 
-                    item {
+                    item(contentType = "Progress") {
                         TestingProgressCard(
                             isTesting = uiState.isByeDpiTesting,
                             progress = uiState.byeDpiTestProgress,
@@ -137,7 +137,7 @@ fun ByeDpiTestScreen(
                     }
 
                     if (uiState.byeDpiResults.isNotEmpty()) {
-                        item {
+                        item(contentType = "ResultsTitle") {
                             Text(
                                 text = stringResource(R.string.byedpi_test_results_title),
                                 style = MaterialTheme.typography.titleMedium,
@@ -146,7 +146,7 @@ fun ByeDpiTestScreen(
                             )
                         }
 
-                        items(uiState.byeDpiResults) { result ->
+                        items(uiState.byeDpiResults, key = { it.strategy }, contentType = { "Result" }) { result ->
                             ResultItem(
                                 result = result,
                                 onCopy = {
@@ -167,13 +167,14 @@ fun ByeDpiTestScreen(
 @Composable
 fun ModeSelectorCard(
     selectedMode: String,
-    onModeSelected: (String) -> Unit,
-    enabled: Boolean
+    onSelectMode: (String) -> Unit,
+    enabled: Boolean,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .liquidGlass(shape = RoundedCornerShape(16.dp), alpha = 0.4f, shadowElevation = 0.dp)
     ) {
@@ -193,21 +194,21 @@ fun ModeSelectorCard(
                     modifier = Modifier.weight(1f),
                     label = stringResource(R.string.byedpi_mode_fast),
                     isSelected = selectedMode == "fast",
-                    onClick = { onModeSelected("fast") },
+                    onClick = { onSelectMode("fast") },
                     enabled = enabled
                 )
                 ModeButton(
                     modifier = Modifier.weight(1f),
                     label = stringResource(R.string.byedpi_mode_medium),
                     isSelected = selectedMode == "medium",
-                    onClick = { onModeSelected("medium") },
+                    onClick = { onSelectMode("medium") },
                     enabled = enabled
                 )
                 ModeButton(
                     modifier = Modifier.weight(1f),
                     label = stringResource(R.string.byedpi_mode_full),
                     isSelected = selectedMode == "full",
-                    onClick = { onModeSelected("full") },
+                    onClick = { onSelectMode("full") },
                     enabled = enabled
                 )
             }
@@ -249,12 +250,13 @@ fun TestingProgressCard(
     progress: Float,
     currentStrategy: String,
     onStart: () -> Unit,
-    onStop: () -> Unit
+    onStop: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .liquidGlass(shape = RoundedCornerShape(16.dp), alpha = 0.4f, shadowElevation = 0.dp)
     ) {
@@ -308,12 +310,13 @@ fun TestingProgressCard(
 fun ResultItem(
     result: ByeDpiStrategyTester.TestResult,
     onCopy: () -> Unit,
-    onApply: () -> Unit
+    onApply: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(colors.backgroundSecondary.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
             .padding(16.dp)
