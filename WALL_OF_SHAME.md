@@ -19,6 +19,7 @@ The following channels distribute modified versions of Proton VPN-Next that may 
 - ❌ **TrimMOD / MODNIY** (`t.me/TrimMOD`, `t.me/MODNIY`) — Distributes unauthorized modifications.
     - **Greed:** Charges 500 Telegram Stars just to send a private message to the owner, blocking communication and support for users.
     - **Branding:** Inserts a "TM" (trademark) symbol into the version name.
+    - **Update Sabotage:** Inflates the internal version code to the maximum possible value (2147483647) to permanently block official updates from being installed.
 - ❌ **Modi Apk Store** (`@ModiApkStore`, `@ModiApkStore_bot`, `@SafeAppsStore`, `@ModiOtt`, `t.me/+RNJ8WChbcZc4ZDZl`) — Re-packages tampered APKs from `Getmodpcs`.
     - **Deceptive Tactics:** Uses fake version numbers (e.g., v6.x) to mimic the original Proton VPN.
     - **Impersonation:** Uses the official package name and renames the app to "Proton VPN" to deceive users.
@@ -40,6 +41,7 @@ The following channels distribute modified versions of Proton VPN-Next that may 
 - ❌ **TrimMOD / MODNIY** (`t.me/TrimMOD`, `t.me/MODNIY`) — Распространяет несанкционированные модификации.
     - **Жадность:** Требует 500 Telegram Stars только за возможность отправить личное сообщение владельцу, что исключает нормальную связь и поддержку.
     - **Брендинг:** Вставляет символ "TM" (товарный знак) в название версии.
+    - **Саботаж обновлений:** Завышает внутренний код версии до максимально возможного значения (2147483647), чтобы навсегда заблокировать установку официальных обновлений.
 - ❌ **Modi Apk Store** (`@ModiApkStore`, `@ModiApkStore_bot`, `@SafeAppsStore`, `@ModiOtt`, `t.me/+RNJ8WChbcZc4ZDZl`) — Переупаковывает поддельные APK от `Getmodpcs`.
     - **Обман:** Использует ложные номера версий (например, v6.x), чтобы имитировать оригинальный Proton VPN.
     - **Маскировка:** Использует официальное имя пакета и меняет название на "Proton VPN" для обмана пользователей.
@@ -61,6 +63,7 @@ The following channels distribute modified versions of Proton VPN-Next that may 
 - ❌ **TrimMOD / MODNIY** (`t.me/TrimMOD`, `t.me/MODNIY`) — Розповсюджує несанкціоновані модифікації.
     - **Жадібність:** Вимагає 500 Telegram Stars лише за можливість надіслати приватне повідомлення власнику, що виключає нормальний зв'язок та підтримку.
     - **Брендинг:** Вставляє символ "TM" у назву версії.
+    - **Саботаж оновлень:** Завищує внутрішній код версії до максимально можливого значення (2147483647), щоб назавжди заблокувати встановлення офіційних оновлень.
 - ❌ **Modi Apk Store** (`@ModiApkStore`, `@ModiApkStore_bot`, `@SafeAppsStore`, `@ModiOtt`, `t.me/+RNJ8WChbcZc4ZDZl`) — Перепаковує підроблені APK від `Getmodpcs`.
     - **Обман:** Використовує фальшиві номери версій (наприклад, v6.x), щоб імітувати оригінальний Proton VPN.
     - **Маскування:** Використовує офіційну назву пакета та змінює назву на "Proton VPN" для обману користувачів.
@@ -82,7 +85,8 @@ The following channels distribute modified versions of Proton VPN-Next that may 
 - ❌ **TrimMOD / MODNIY** (`t.me/TrimMOD`, `t.me/MODNIY`) — Распаўсюджвае несанкцыянаваныя мадыфікацыі.
     - **Жадібнасць:** Патрабуе 500 Telegram Stars толькі за магчымасць адправіць асабістае паведамленне ўладальніку, што выключае нармальную сувязь і падтрымку.
     - **Брэндынг:** Устаўляе сімвал "TM" у назву версіі.
-- ❌ **Modi Apk Store** (`@ModiApkStore`, `@ModiApkStore_bot`, `@SafeAppsStore`, `@ModiOtt`, `t.me/+RNJ8WChbcZc4ZDZl`) — Перапакоўвае падробленыя APK ад `Getmodpcs`.
+    - **Сабатаж абнаўленняў:** Завышае ўнутраны код версіі да максімальна магчымага значэння (2147483647), каб назаўжды заблакаваць установку афіцыйных абнаўленняў.
+- ❌ **Modi Apk Store** (`@ModiApkStore`, `@ModiApkStore_bot`, `@SafeAppsStore`, `@ModiOtt`, `t.me/+RNJ8WChbcZc4ZDZl`) — Перапакоўвае падробленыя APK від `Getmodpcs`.
     - **Абман:** Викарыстоўвае ілжывыя нумары версій (напрыклад, v6.x), каб імітаваць арыгінальны Proton VPN.
     - **Маскіроўка:** Выкарыстоўвае афіцыйную назву пакета і змяняе назву на "Proton VPN" для падману карыстальнікаў.
     - **Абарона:** Выкарыстоўвае абфускацыю "360" для схавання шкоднага кода.
@@ -103,6 +107,7 @@ The following channels distribute modified versions of Proton VPN-Next that may 
 - ❌ **TrimMOD / MODNIY** (`t.me/TrimMOD`, `t.me/MODNIY`) — Рұқсат етілмеген модификацияларды таратады.
     - **Ашкөздік:** Иесіне жеке хабарлама жіберу мүмкіндігі үшін 500 Telegram Stars талап етеді, бұл қалыпты байланыс пен қолдауды шектейді.
     - **Брендинг:** Нұсқа атауына "TM" белгісін қояды.
+    - **Жаңарту саботажы:** Ресми жаңартуларды орнатуды біржола блоктау үшін ішкі нұсқа кодын ең жоғары мүмкін мәнге (2147483647) дейін көтереді.
 - ❌ **Modi Apk Store** (`@ModiApkStore`, `@ModiApkStore_bot`, `@SafeAppsStore`, `@ModiOtt`, `t.me/+RNJ8WChbcZc4ZDZl`) — `Getmodpcs` ұсынған жалған APK файлдарын қайта жинақтайды.
     - **Алдамшы тактика:** Түпнұсқа Proton VPN-ге ұқсату үшін жалған нұсқа нөмірлерін (мысалы, v6.x) пайдаланады.
     - **Кейіптеу:** Пайдаланушыларды алдау үшін ресми пакет атауын пайдаланады және қолданба атауын "Proton VPN" деп өзгертеді.
@@ -124,9 +129,10 @@ The following channels distribute modified versions of Proton VPN-Next that may 
 - ❌ **TrimMOD / MODNIY** (`t.me/TrimMOD`, `t.me/MODNIY`) — تغییرات غیرمجاز را توزیع می‌کند.
     - **طمع:** برای ارسال یک پیام خصوصی به مالک ۵۰۰ ستاره تلگرام (Telegram Stars) طلب می‌کند که عملاً ارتباط و پشتیبانی کاربران را مسدود می‌کند.
     - **برندسازی:** درج نماد "TM" در نام نسخه.
+    - **خرابکاری در به‌روزرسانی:** کد نسخه داخلی را به حداکثر مقدار ممکن (2147483647) افزایش می‌دهد تا برای همیشه مانع از نصب به‌روزرسانی‌های رسمی شود.
 - ❌ **Modi Apk Store** (`@ModiApkStore`, `@ModiApkStore_bot`, `@SafeAppsStore`, `@ModiOtt`, `t.me/+RNJ8WChbcZc4ZDZl`) — نسخه‌های دستکاری شده از `Getmodpcs` را دوباره بسته‌بندی می‌کند.
     - **تاکتیک‌های فریبنده:** استفاده از شماره نسخه‌های جعلی (مثلاً v6.x) برای شبیه‌سازی نسخه اصلی Proton VPN.
-    - **جعل هویت:** استفاده از نام پکیج رسمی و تغییر نام برنامه به "Proton VPN" برای فریب کاربران.
+    - **جعل هویت:** استفاده از نام پکیج رسمی و تغییر نام برنامه to "Proton VPN" برای فریب کاربران.
     - **مبهم‌سازی:** استفاده از محافظت/مبهم‌سازی "360" برای پنهان کردن کدهای مخرب.
     - **سوئیچ قطع (Kill-switch):** اجرای تاریخ‌های "Valid Until" برای غیرفعال کردن برنامه از راه دور.
 
@@ -145,6 +151,7 @@ The following channels distribute modified versions of Proton VPN-Next that may 
 - ❌ **TrimMOD / MODNIY** (`t.me/TrimMOD`, `t.me/MODNIY`) — 分发未经授权的修改版本。
     - **贪婪行为：** 仅为了向所有者发送私信就索要 500 颗 Telegram Stars，实际上阻断了用户的正常沟通和支持。
     - **品牌打造：** 在版本名称中插入 "TM"（商标）符号。
+    - **破坏更新：** 将内部版本号增加到最大可能值 (2147483647)，以永久阻止安装官方更新。
 - ❌ **Modi Apk Store** (`@ModiApkStore`, `@ModiApkStore_bot`, `@SafeAppsStore`, `@ModiOtt`, `t.me/+RNJ8WChbcZc4ZDZl`) — 重新包装来自 `Getmodpcs` 的篡改 APK。
     - **欺骗手段：** 使用虚假版本号（如 v6.x）来模仿原版 Proton VPN。
     - **冒充：** 使用官方包名并将应用重命名为 "Proton VPN" 以欺骗用户。
