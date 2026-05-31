@@ -18,6 +18,8 @@
 ### 🚨 About Fakes & Counterfeit APKs
 > **Warning:** Counterfeit versions of this app have been found in the wild. These fake APKs are **dangerous** — they may contain malware, steal your credentials, or silently redirect update checks to attacker-controlled servers.
 
+**See the [Wall of Shame](WALL_OF_SHAME.md) for a list of known malicious distribution channels.**
+
 **The ONLY official sources for Proton VPN-Next are:**
 - ✅ GitHub repository: [SMH01-MIRRORS/ProtonVPN-Next-MIRROR](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR)
 - ✅ Codeberg repository: [SMH01/ProtonVPN-Next](https://codeberg.org/SMH01/ProtonVPN-Next)
@@ -25,7 +27,7 @@
 - ✅ Official Telegram channel: [@ProtonVPN_MOD](https://t.me/ProtonVPN_MOD)
 
 **Known fake/counterfeit distribution channels (DO NOT use):**
-- ❌ Telegram channel `t.me/Getmodpcs` — distributes a tampered APK that modifies the update server to point to their Telegram channel. This fake has been caught sending non-JSON responses to the app and may contain malware.
+- ❌ See the [Wall of Shame](WALL_OF_SHAME.md) for the full list of dangerous channels.
 
 **How to verify you have the real app:**
 1. Check the package name must be `ru.protonmod.next` (NOT `ch.protonvpn.android` or any other name).
@@ -98,6 +100,8 @@ Ensure you have the Android SDK and JDK 17 installed.
 ### 🚨 О фейках и поддельных APK
 > **Внимание:** В сети обнаружены поддельные версии этого приложения. Такие APK **опасны** — они могут содержать вредоносное ПО, красть ваши данные или перенаправлять проверки обновлений на серверы злоумышленников.
 
+**Смотрите [Доску позора (Wall of Shame)](WALL_OF_SHAME.md) для списка известных вредоносных каналов распространения.**
+
 **ЕДИНСТВЕННЫЕ официальные источники Proton VPN-Next:**
 - ✅ Репозиторий GitHub: [SMH01-MIRRORS/ProtonVPN-Next-MIRROR](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR)
 - ✅ Репозиторий Codeberg: [SMH01/ProtonVPN-Next](https://codeberg.org/SMH01/ProtonVPN-Next)
@@ -105,7 +109,7 @@ Ensure you have the Android SDK and JDK 17 installed.
 - ✅ Официальный Telegram-канал: [@ProtonVPN_MOD](https://t.me/ProtonVPN_MOD)
 
 **Известные поддельные каналы распространения (НЕ использовать):**
-- ❌ Telegram-канал `t.me/Getmodpcs` — распространяет модифицированный APK, который изменяет сервер обновлений на свой Telegram-канал. Этот фейк был замечен в отправке некорректных ответов и может содержать вредоносный код.
+- ❌ Полный список опасных каналов доступен на [Доске позора (Wall of Shame)](WALL_OF_SHAME.md).
 
 **Как убедиться, что у вас настоящее приложение:**
 1. Имя пакета должно быть `ru.protonmod.next` (НЕ `ch.protonvpn.android` и никакое другое).
