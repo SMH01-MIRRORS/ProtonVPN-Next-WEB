@@ -9,39 +9,39 @@
         android:scaleY="0.75"
         android:translateX="69"
         android:translateY="69">
-        <!-- Shadow/Depth effect -->
-        <path
-            android:pathData="M243.637,419.72 L109.732,177.114 C95.596,151.503 116.289,120.62 145.351,123.952 L417.942,155.21 C444.575,158.264 458.647,188.314 443.94,210.727 L305.254,422.075 C290.38,444.741 256.738,443.455 243.637,419.72 L109.732,177.114Z"
-            android:fillColor="#40000B18"
-            android:strokeColor="#20000000"
-            android:strokeWidth="12"
-            android:strokeLineJoin="round"
-            android:strokeLineCap="round" />
 
-        <!-- Main Body with Gradient -->
+        <!-- Refined Smooth Drop Shadow -->
         <path
-            android:pathData="M243.637,419.72 L109.732,177.114 C95.596,151.503 116.289,120.62 145.351,123.952 L417.942,155.21 C444.575,158.264 458.647,188.314 443.94,210.727 L305.254,422.075 C290.38,444.741 256.738,443.455 243.637,419.72 L109.732,177.114Z"
+            android:pathData="M243.637,422.72 L109.732,180.114 C95.596,154.503 116.289,123.62 145.351,126.952 L417.942,158.21 C444.575,161.264 458.647,191.314 443.94,213.727 L305.254,425.075 C290.38,447.741 256.738,446.455 243.637,422.72 Z"
+            android:fillColor="#35000000" />
+
+        <!-- Main Body with New Blue-Red Gradient -->
+        <path
+            android:pathData="M243.637,419.72 L109.732,177.114 C95.596,151.503 116.289,120.62 145.351,123.952 L417.942,155.21 C444.575,158.264 458.647,188.314 443.94,210.727 L305.254,422.075 C290.38,444.741 256.738,443.455 243.637,419.72 Z"
             android:strokeColor="#FFFFFF"
-            android:strokeWidth="12"
+            android:strokeWidth="3"
             android:strokeLineJoin="round"
             android:strokeLineCap="round">
             <aapt:attr name="android:fillColor">
                 <gradient
                     android:startX="150"
-                    android:startY="150"
+                    android:startY="120"
                     android:endX="400"
-                    android:endY="400"
+                    android:endY="450"
                     android:type="linear">
-                    <item android:offset="0" android:color="#FFFFFFFF"/>
-                    <item android:offset="1" android:color="#FFD1E3F5"/>
+                    <!-- Light Sky Blue -->
+                    <item android:offset="0" android:color="#FFB3E5FC"/>
+                    <!-- Light Purple transition -->
+                    <item android:offset="0.5" android:color="#FFE1BEE7"/>
+                    <!-- Light Red/Pink -->
+                    <item android:offset="1" android:color="#FFFFCDD2"/>
                 </gradient>
             </aapt:attr>
         </path>
 
-        <!-- Accent/Fold Detail -->
+        <!-- Realistic Fold/Accent with Darker Color-matched Shadow -->
         <path
-            android:pathData="M263.756,379.083 L251.447,397.584 C246.46,405.081 235.301,404.619 230.95,396.736 L252.06,430 C267.797,443.184 292.949,440.825 305.254,422.073 L443.94,210.726 C458.647,188.313 444.575,158.264 417.942,155.21 L145.351,123.951 C116.289,120.619 95.596,151.503 109.732,177.113 L342.83,205.909 C357.619,207.62 365.421,224.313 357.247,236.756 L263.756,379.083Z"
-            android:fillAlpha="0.3">
+            android:pathData="M263.756,379.083 L251.447,397.584 C246.46,405.081 235.301,404.619 230.95,396.736 L252.06,430 C267.797,443.184 292.949,440.825 305.254,422.073 L443.94,210.726 C458.647,188.313 444.575,158.264 417.942,155.21 L145.351,123.951 C116.289,120.619 95.596,151.503 109.732,177.113 L342.83,205.909 C357.619,207.62 365.421,224.313 357.247,236.756 L263.756,379.083Z">
             <aapt:attr name="android:fillColor">
                 <gradient
                     android:startX="200"
@@ -50,9 +50,15 @@
                     android:endY="450"
                     android:type="linear">
                     <item android:offset="0" android:color="#00FFFFFF"/>
-                    <item android:offset="1" android:color="#60000000"/>
+                    <item android:offset="1" android:color="#25000000"/>
                 </gradient>
             </aapt:attr>
         </path>
+
+        <!-- Subtle Inner Highlight Rim -->
+        <path
+            android:pathData="M243.637,415.72 L113.732,181.114 C103.596,162.503 116.289,135.62 145.351,133.952 L413.942,165.21 C434.575,168.264 443.647,193.314 433.94,210.727 L305.254,412.075 C290.38,434.741 266.738,433.455 243.637,415.72 Z"
+            android:strokeColor="#60FFFFFF"
+            android:strokeWidth="2" />
     </group>
 </vector>
