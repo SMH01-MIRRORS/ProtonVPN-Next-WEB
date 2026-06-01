@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159955,
-      "versionName": "12.0.0-alpha1st4-49-g6bb0930-nightly",
+      "versionCode": 605159956,
+      "versionName": "12.0.0-alpha1st4p1-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "docs: update WALL_OF_SHAME policies and CI release artifacts\n\n- Updated `WALL_OF_SHAME.md` across all supported languages to include a formal redistribution policy, specific criteria for listing malicious entities, and requirements for legitimate modders.\n- Expanded descriptions of malicious entities to highlight link hijacking and the injection of adware/pop-up banners.\n- Modified `.woodpecker.yml` to generate SHA256 checksums for all APKs during the build process.\n- Updated the release and pre-release steps in the CI pipeline to include `.sha256` files as part of the uploaded artifacts.",
+      "changelog": "Update launcher icon visuals\n\nRefines the app launcher icon by updating foreground and background gradients to a new blue-purple-red color scheme. Adjusts the foreground shadow, reduces body stroke width, and adds a subtle inner highlight rim for improved depth.",
       "force": false
     },
     "release": {
-      "versionCode": 605159955,
-      "versionName": "12.0.0-alpha1st4-49-g6bb0930-nightly",
+      "versionCode": 605159956,
+      "versionName": "12.0.0-alpha1st4p1-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "docs: update WALL_OF_SHAME policies and CI release artifacts\n\n- Updated `WALL_OF_SHAME.md` across all supported languages to include a formal redistribution policy, specific criteria for listing malicious entities, and requirements for legitimate modders.\n- Expanded descriptions of malicious entities to highlight link hijacking and the injection of adware/pop-up banners.\n- Modified `.woodpecker.yml` to generate SHA256 checksums for all APKs during the build process.\n- Updated the release and pre-release steps in the CI pipeline to include `.sha256` files as part of the uploaded artifacts.",
+      "changelog": "Update launcher icon visuals\n\nRefines the app launcher icon by updating foreground and background gradients to a new blue-purple-red color scheme. Adjusts the foreground shadow, reduces body stroke width, and adds a subtle inner highlight rim for improved depth.",
       "force": false
     }
   },
