@@ -565,7 +565,6 @@
     <string name="backup_import_error">Параметрлерді импорттау сәтсіз аяқталды</string>
     <string name="backup_import_confirm">Бұл таңдалған санаттардағы ағымдағы параметрлерді алмастырады. Жалғастырасыз ба?</string>
     <string name="backup_no_categories">Кем дегенде бір санатты таңдаңыз</string>
-
     <!-- Integrity failure overlay strings -->
     <string name="tamper_integrity_failure_title">ҚАУІПТІ ТҰТАСТЫҚ ҚАТЕСІ</string>
     <string name="tamper_integrity_failure_desc">Бұл қолданба өзгертілген және бұдан былай қауіпсіз емес. Сәйкес келмейтін ресурстар анықталды.</string>
