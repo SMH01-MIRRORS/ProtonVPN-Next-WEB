@@ -571,7 +571,6 @@
     <string name="backup_import_error">Памылка пры імпарце налад</string>
     <string name="backup_import_confirm">Гэта перазапіша вашы бягучыя налады ў выбраных катэгорыях. Працягнуць?</string>
     <string name="backup_no_categories">Калі ласка, выберыце хаця б адну катэгорыю</string>
-
     <!-- Integrity failure overlay strings -->
     <string name="tamper_integrity_failure_title">КРЫТЫЧНАЯ ПАМЫЛКА ЦЭЛАСНАСЦІ</string>
     <string name="tamper_integrity_failure_desc">Гэта дадатак было мадыфікавана і больш не з\'яўляецца бяспечным. Выяўлена неадпаведнасць рэсурсаў.</string>
