@@ -571,7 +571,6 @@
     <string name="backup_import_error">Ошибка при импорте настроек</string>
     <string name="backup_import_confirm">Это перезапишет ваши текущие настройки в выбранных категориях. Продолжить?</string>
     <string name="backup_no_categories">Пожалуйста, выберите хотя бы одну категорию</string>
-
     <!-- Integrity failure overlay strings -->
     <string name="tamper_integrity_failure_title">КРИТИЧЕСКАЯ ОШИБКА ЦЕЛОСТНОСТИ</string>
     <string name="tamper_integrity_failure_desc">Это приложение было модифицировано и более не является безопасным. Обнаружено несовпадение ресурсов.</string>
