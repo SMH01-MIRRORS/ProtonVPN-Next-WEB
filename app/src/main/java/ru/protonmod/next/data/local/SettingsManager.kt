@@ -19,19 +19,25 @@ package ru.protonmod.next.data.local
 
 import android.content.Context
 import androidx.core.content.edit
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import ru.protonmod.next.utils.ProtonLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.json.JSONArray
 import org.json.JSONObject
 import ru.protonmod.next.data.model.ObfuscationProfile
+import ru.protonmod.next.ui.theme.AppTheme
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -587,6 +593,150 @@ class SettingsManager @Inject constructor(
     }
 
     suspend fun clearAll() {
+        prefs.edit { clear() }
         context.dataStore.edit { it.clear() }
+    }
+
+    suspend fun getAllPreferences(): Map<String, String> {
+        val prefs = context.dataStore.data.first()
+        return prefs.asMap().entries.associate { (key, value) ->
+            val stringValue = when (value) {
+                is Set<*> -> Json.encodeToString(value as Set<String>)
+                else -> value.toString()
+            }
+            key.name to stringValue
+        }
+    }
+
+    suspend fun importPreferences(preferences: Map<String, String>) {
+        context.dataStore.edit { settings ->
+            preferences.forEach { (keyName, value) ->
+                val key = findKey(keyName) ?: return@forEach
+                
+                // Manually handle each key based on its known type
+                when (keyName) {
+                    KILL_SWITCH.name, AUTO_CONNECT.name, NOTIFICATIONS.name, 
+                    SPLIT_TUNNELING_ENABLED.name, ST_SHOW_SYSTEM_APPS.name,
+                    API_BYPASS_ENABLED.name, SPOOF_COUNTRY_ENABLED.name, 
+                    SPOOF_COUNTRY_NULL.name, OBFUSCATION_ENABLED.name, 
+                    OBFUSCATION_ADVANCED_MODE.name, ANALYTICS_ENABLED.name, 
+                    CRASH_REPORTS_ENABLED.name, SENTRY_PERFORMANCE_ENABLED.name, 
+                    SENTRY_NON_FATAL_ENABLED.name, SENTRY_SESSION_REPLAY_ENABLED.name, 
+                    SENTRY_ANR_ENABLED.name, SENTRY_METRICS_ENABLED.name, 
+                    SENTRY_LOGS_ENABLED.name, AUTO_CONNECT_ON_UNTRUSTED.name -> {
+                        val boolValue = value.toBoolean()
+                        settings[key as Preferences.Key<Boolean>] = boolValue
+                        prefs.edit { putBoolean(keyName, boolValue) }
+                    }
+                    
+                    VPN_PORT.name, API_PROXY_PORT.name, POLICY_ACCEPTED_VERSION.name, 
+                    AWG_JC.name, AWG_JMIN.name, AWG_JMAX.name, AWG_S1.name, AWG_S2.name, 
+                    AWG_S3.name, AWG_S4.name, AWG_JUNK_LEVEL.name -> {
+                        val intValue = value.toIntOrNull() ?: return@forEach
+                        settings[key as Preferences.Key<Int>] = intValue
+                        prefs.edit { putInt(keyName, intValue) }
+                    }
+                    
+                    OTA_LAST_CHECK_TIME.name, PAUSE_END_TIME.name -> {
+                        val longValue = value.toLongOrNull() ?: return@forEach
+                        settings[key as Preferences.Key<Long>] = longValue
+                        prefs.edit { putLong(keyName, longValue) }
+                    }
+                    
+                    OTA_UPDATE_FREQUENCY.name, OTA_UPDATE_CHANNEL.name, APP_THEME.name, 
+                    SERVER_LOAD_DISPLAY_MODE.name, SPLIT_TUNNELING_MODE.name, CUSTOM_DNS.name, 
+                    API_BYPASS_STRATEGY.name, BYEDPI_FLAGS.name, BYEDPI_SNI.name, 
+                    API_PROXY_HOST.name, API_PROXY_TYPE.name, API_PROXY_USERNAME.name, 
+                    API_PROXY_PASSWORD.name, SPOOF_COUNTRY_CODE.name, SELECTED_PROFILE_ID.name, 
+                    CUSTOM_PROFILES.name, QUICK_CONNECT_STRATEGY.name, 
+                    QUICK_CONNECT_TARGET_ID.name, SETUP_STEP.name, AWG_H1.name, 
+                    AWG_H2.name, AWG_H3.name, AWG_H4.name, AWG_I1.name, AWG_I2.name, 
+                    AWG_I3.name, AWG_I4.name, AWG_I5.name -> {
+                        settings[key as Preferences.Key<String>] = value
+                        prefs.edit { putString(keyName, value) }
+                    }
+                    
+                    EXCLUDED_APPS.name, EXCLUDED_IPS.name, EXCLUDED_DOMAINS.name, 
+                    TRUSTED_WIFI_NETWORKS.name -> {
+                        try {
+                            val set = Json.decodeFromString<Set<String>>(value)
+                            settings[key as Preferences.Key<Set<String>>] = set
+                        } catch (e: Exception) {
+                            // ignore
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun findKey(name: String): Preferences.Key<*>? {
+        return when (name) {
+            KILL_SWITCH.name -> KILL_SWITCH
+            AUTO_CONNECT.name -> AUTO_CONNECT
+            NOTIFICATIONS.name -> NOTIFICATIONS
+            OTA_UPDATE_FREQUENCY.name -> OTA_UPDATE_FREQUENCY
+            OTA_LAST_CHECK_TIME.name -> OTA_LAST_CHECK_TIME
+            OTA_UPDATE_CHANNEL.name -> OTA_UPDATE_CHANNEL
+            APP_THEME.name -> APP_THEME
+            SERVER_LOAD_DISPLAY_MODE.name -> SERVER_LOAD_DISPLAY_MODE
+            SPLIT_TUNNELING_ENABLED.name -> SPLIT_TUNNELING_ENABLED
+            SPLIT_TUNNELING_MODE.name -> SPLIT_TUNNELING_MODE
+            EXCLUDED_APPS.name -> EXCLUDED_APPS
+            EXCLUDED_IPS.name -> EXCLUDED_IPS
+            EXCLUDED_DOMAINS.name -> EXCLUDED_DOMAINS
+            ST_SHOW_SYSTEM_APPS.name -> ST_SHOW_SYSTEM_APPS
+            VPN_PORT.name -> VPN_PORT
+            CUSTOM_DNS.name -> CUSTOM_DNS
+            API_BYPASS_ENABLED.name -> API_BYPASS_ENABLED
+            API_BYPASS_STRATEGY.name -> API_BYPASS_STRATEGY
+            BYEDPI_FLAGS.name -> BYEDPI_FLAGS
+            BYEDPI_SNI.name -> BYEDPI_SNI
+            API_PROXY_HOST.name -> API_PROXY_HOST
+            API_PROXY_PORT.name -> API_PROXY_PORT
+            API_PROXY_TYPE.name -> API_PROXY_TYPE
+            API_PROXY_USERNAME.name -> API_PROXY_USERNAME
+            API_PROXY_PASSWORD.name -> API_PROXY_PASSWORD
+            SPOOF_COUNTRY_ENABLED.name -> SPOOF_COUNTRY_ENABLED
+            SPOOF_COUNTRY_NULL.name -> SPOOF_COUNTRY_NULL
+            SPOOF_COUNTRY_CODE.name -> SPOOF_COUNTRY_CODE
+            OBFUSCATION_ENABLED.name -> OBFUSCATION_ENABLED
+            OBFUSCATION_ADVANCED_MODE.name -> OBFUSCATION_ADVANCED_MODE
+            SELECTED_PROFILE_ID.name -> SELECTED_PROFILE_ID
+            CUSTOM_PROFILES.name -> CUSTOM_PROFILES
+            ANALYTICS_ENABLED.name -> ANALYTICS_ENABLED
+            CRASH_REPORTS_ENABLED.name -> CRASH_REPORTS_ENABLED
+            SENTRY_PERFORMANCE_ENABLED.name -> SENTRY_PERFORMANCE_ENABLED
+            SENTRY_NON_FATAL_ENABLED.name -> SENTRY_NON_FATAL_ENABLED
+            SENTRY_SESSION_REPLAY_ENABLED.name -> SENTRY_SESSION_REPLAY_ENABLED
+            SENTRY_ANR_ENABLED.name -> SENTRY_ANR_ENABLED
+            SENTRY_METRICS_ENABLED.name -> SENTRY_METRICS_ENABLED
+            SENTRY_LOGS_ENABLED.name -> SENTRY_LOGS_ENABLED
+            QUICK_CONNECT_STRATEGY.name -> QUICK_CONNECT_STRATEGY
+            QUICK_CONNECT_TARGET_ID.name -> QUICK_CONNECT_TARGET_ID
+            TRUSTED_WIFI_NETWORKS.name -> TRUSTED_WIFI_NETWORKS
+            AUTO_CONNECT_ON_UNTRUSTED.name -> AUTO_CONNECT_ON_UNTRUSTED
+            PAUSE_END_TIME.name -> PAUSE_END_TIME
+            POLICY_ACCEPTED_VERSION.name -> POLICY_ACCEPTED_VERSION
+            SETUP_STEP.name -> SETUP_STEP
+            AWG_JC.name -> AWG_JC
+            AWG_JMIN.name -> AWG_JMIN
+            AWG_JMAX.name -> AWG_JMAX
+            AWG_S1.name -> AWG_S1
+            AWG_S2.name -> AWG_S2
+            AWG_S3.name -> AWG_S3
+            AWG_S4.name -> AWG_S4
+            AWG_H1.name -> AWG_H1
+            AWG_H2.name -> AWG_H2
+            AWG_H3.name -> AWG_H3
+            AWG_H4.name -> AWG_H4
+            AWG_I1.name -> AWG_I1
+            AWG_I2.name -> AWG_I2
+            AWG_I3.name -> AWG_I3
+            AWG_I4.name -> AWG_I4
+            AWG_I5.name -> AWG_I5
+            AWG_JUNK_LEVEL.name -> AWG_JUNK_LEVEL
+            else -> null
+        }
     }
 }

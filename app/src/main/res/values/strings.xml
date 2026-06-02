@@ -602,6 +602,33 @@
     <string name="tamper_btn_download_official">Get Official App</string>
     <string name="tamper_btn_back">Back</string>
 
+    <!-- Backup & Restore -->
+    <string name="backup_title">Backup &amp; Restore</string>
+    <string name="backup_export">Export Settings</string>
+    <string name="backup_import">Import Settings</string>
+    <string name="backup_export_desc">Save your configurations to a file</string>
+    <string name="backup_import_desc">Restore configurations from a file</string>
+    <string name="backup_categories">Select categories to include</string>
+    <string name="backup_cat_general">General Settings</string>
+    <string name="backup_cat_obfuscation">Obfuscation Configs</string>
+    <string name="backup_cat_api_bypass">API Bypass Settings</string>
+    <string name="backup_cat_profiles">VPN Profiles</string>
+    <string name="backup_cat_recent">Recent Connections</string>
+    <string name="backup_cat_quick_connect">Quick Connect</string>
+    <string name="backup_cat_split_tunneling">Split Tunneling</string>
+    <string name="backup_cat_vpn_port">VPN Port</string>
+    <string name="backup_cat_dns">DNS Settings</string>
+    <string name="backup_cat_spoof_country">Country Spoofing</string>
+    <string name="backup_cat_ota">Update Settings</string>
+    <string name="backup_cat_trusted_wifi">Trusted Networks</string>
+    <string name="backup_cat_sentry">Analytics &amp; Crash Reports</string>
+    <string name="backup_export_success">Settings exported successfully</string>
+    <string name="backup_export_error">Failed to export settings</string>
+    <string name="backup_import_success">Settings imported successfully</string>
+    <string name="backup_import_error">Failed to import settings</string>
+    <string name="backup_import_confirm">This will overwrite your current settings in the selected categories. Continue?</string>
+    <string name="backup_no_categories">Please select at least one category</string>
+
     <!-- Integrity failure overlay strings -->
     <string name="tamper_integrity_failure_title">CRITICAL INTEGRITY FAILURE</string>
     <string name="tamper_integrity_failure_desc">This application has been tampered with and is no longer safe to use. Mismatched resources detected.</string>

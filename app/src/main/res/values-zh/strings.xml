@@ -536,6 +536,33 @@
     <string name="tamper_btn_accept_risks">我了解风险并接受后果</string>
     <string name="tamper_btn_download_official">下载官方版本</string>
     <string name="tamper_btn_back">返回</string>
+    <!-- Backup & Restore -->
+    <string name="backup_title">备份与恢复</string>
+    <string name="backup_export">导出设置</string>
+    <string name="backup_import">导入设置</string>
+    <string name="backup_export_desc">将您的配置保存到文件</string>
+    <string name="backup_import_desc">从文件恢复配置</string>
+    <string name="backup_categories">选择要包含的类别</string>
+    <string name="backup_cat_general">常规设置</string>
+    <string name="backup_cat_obfuscation">混淆配置</string>
+    <string name="backup_cat_api_bypass">API 绕过设置</string>
+    <string name="backup_cat_profiles">VPN 方案</string>
+    <string name="backup_cat_recent">最近连接</string>
+    <string name="backup_cat_quick_connect">快速连接</string>
+    <string name="backup_cat_split_tunneling">拆分隧道</string>
+    <string name="backup_cat_vpn_port">VPN 端口</string>
+    <string name="backup_cat_dns">DNS 设置</string>
+    <string name="backup_cat_spoof_country">国家伪装</string>
+    <string name="backup_cat_ota">更新设置</string>
+    <string name="backup_cat_trusted_wifi">受信任的网络</string>
+    <string name="backup_cat_sentry">分析与错误报告</string>
+    <string name="backup_export_success">设置导出成功</string>
+    <string name="backup_export_error">设置导出失败</string>
+    <string name="backup_import_success">设置导入成功</string>
+    <string name="backup_import_error">设置导入失败</string>
+    <string name="backup_import_confirm">这将覆盖所选类别中的当前设置。是否继续？</string>
+    <string name="backup_no_categories">请至少选择一个类别</string>
+
     <!-- Integrity failure overlay strings -->
     <string name="tamper_integrity_failure_title">严重完整性校验失败</string>
     <string name="tamper_integrity_failure_desc">此应用程序已被篡改，不再安全。检测到不匹配的资源。</string>

@@ -42,6 +42,12 @@ interface ProfileDao {
     @Query("DELETE FROM profiles WHERE id = :id")
     suspend fun deleteProfileById(id: String)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertProfiles(profiles: List<VpnProfileEntity>)
+
+    @Query("SELECT * FROM profiles ORDER BY createdAt DESC")
+    suspend fun getAllProfiles(): List<VpnProfileEntity>
+
     @Query("DELETE FROM profiles")
     suspend fun deleteAllProfiles()
 }

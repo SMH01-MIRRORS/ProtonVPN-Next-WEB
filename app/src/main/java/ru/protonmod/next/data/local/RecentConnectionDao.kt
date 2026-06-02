@@ -31,6 +31,12 @@ interface RecentConnectionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addRecentConnection(connection: RecentConnectionEntity)
 
+    @Query("SELECT * FROM recent_connections ORDER BY lastConnectedAt DESC")
+    suspend fun getAllRecentConnections(): List<RecentConnectionEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRecentConnections(connections: List<RecentConnectionEntity>)
+
     @Query("DELETE FROM recent_connections")
     suspend fun clearHistory()
 }

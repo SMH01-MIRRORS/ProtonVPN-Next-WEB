@@ -61,6 +61,7 @@ sealed class Screen(val route: String) {
     data object ThemeSelection : Screen("theme_selection")
     data object LoadDisplayModeSelection : Screen("load_display_mode_selection")
     data object DebugSettings : Screen("debug_settings")
+    data object BackupSettings : Screen("backup_settings")
 
     data object CustomDns : Screen("custom_dns")
     data object PortSelection : Screen("port_selection?currentPort={currentPort}&isGlobal={isGlobal}") {
@@ -120,6 +121,9 @@ fun NavGraphBuilder.appNavGraph(
             },
             onNavigateToDebug = {
                 navController.navigate(Screen.DebugSettings.route)
+            },
+            onNavigateToBackup = {
+                navController.navigate(Screen.BackupSettings.route)
             },
             onNavigateToCustomDns = {
                 navController.navigate(Screen.CustomDns.route)
@@ -201,6 +205,12 @@ fun NavGraphBuilder.appNavGraph(
     composable(Screen.DebugSettings.route) {
         DebugSettingsScreen(
             onBack = { navController.popBackStack() }
+        )
+    }
+
+    composable(Screen.BackupSettings.route) {
+        BackupScreen(
+            onNavigateBack = { navController.popBackStack() }
         )
     }
 

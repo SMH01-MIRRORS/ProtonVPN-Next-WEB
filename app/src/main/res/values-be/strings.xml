@@ -545,6 +545,33 @@
     <string name="tamper_btn_accept_risks">Я ўсведамляю рызыку і прымаю наступствы</string>
     <string name="tamper_btn_download_official">Спампаваць арыгінал</string>
     <string name="tamper_btn_back">Назад</string>
+    <!-- Backup & Restore -->
+    <string name="backup_title">Рэзервовае капіраванне</string>
+    <string name="backup_export">Экспарт налад</string>
+    <string name="backup_import">Імпарт налад</string>
+    <string name="backup_export_desc">Захаваць вашы канфігурацыі ў файл</string>
+    <string name="backup_import_desc">Аднавіць канфігурацыі з файла</string>
+    <string name="backup_categories">Выберыце катэгорыі для ўключэння</string>
+    <string name="backup_cat_general">Агульныя налады</string>
+    <string name="backup_cat_obfuscation">Канфігі абфускацыі</string>
+    <string name="backup_cat_api_bypass">Налады абыходу API</string>
+    <string name="backup_cat_profiles">Профілі VPN</string>
+    <string name="backup_cat_recent">Нядаўнія падключэнні</string>
+    <string name="backup_cat_quick_connect">Хуткае падключэнне</string>
+    <string name="backup_cat_split_tunneling">Раздзельнае тунэляванне</string>
+    <string name="backup_cat_vpn_port">Порт VPN</string>
+    <string name="backup_cat_dns">Налады DNS</string>
+    <string name="backup_cat_spoof_country">Падмена краіны</string>
+    <string name="backup_cat_ota">Налады абнаўленняў</string>
+    <string name="backup_cat_trusted_wifi">Давераныя сеткі</string>
+    <string name="backup_cat_sentry">Аналітыка і справаздачы аб збоях</string>
+    <string name="backup_export_success">Налады паспяхова экспартаваныя</string>
+    <string name="backup_export_error">Памылка пры экспарце налад</string>
+    <string name="backup_import_success">Налады паспяхова імпартаваныя</string>
+    <string name="backup_import_error">Памылка пры імпарце налад</string>
+    <string name="backup_import_confirm">Гэта перазапіша вашы бягучыя налады ў выбраных катэгорыях. Працягнуць?</string>
+    <string name="backup_no_categories">Калі ласка, выберыце хаця б адну катэгорыю</string>
+
     <!-- Integrity failure overlay strings -->
     <string name="tamper_integrity_failure_title">КРЫТЫЧНАЯ ПАМЫЛКА ЦЭЛАСНАСЦІ</string>
     <string name="tamper_integrity_failure_desc">Гэта дадатак было мадыфікавана і больш не з\'яўляецца бяспечным. Выяўлена неадпаведнасць рэсурсаў.</string>

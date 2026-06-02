@@ -70,6 +70,7 @@ fun SettingsScreen(
     onNavigateToThemeSelection: (() -> Unit)? = null,
     onNavigateToLoadDisplayMode: (() -> Unit)? = null,
     onNavigateToDebug: (() -> Unit)? = null,
+    onNavigateToBackup: (() -> Unit)? = null,
     onNavigateToCustomDns: (() -> Unit)? = null,
     onNavigateToCountrySpoofing: (() -> Unit)? = null,
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
@@ -121,6 +122,7 @@ fun SettingsScreen(
                 onNavigateToThemeSelection = onNavigateToThemeSelection,
                 onNavigateToLoadDisplayMode = onNavigateToLoadDisplayMode,
                 onNavigateToDebug = onNavigateToDebug,
+                onNavigateToBackup = onNavigateToBackup,
                 onNavigateToCustomDns = onNavigateToCustomDns,
                 onNavigateToCountrySpoofing = onNavigateToCountrySpoofing,
                 onNavigateToPortSelection = onNavigateToPortSelection,
@@ -156,6 +158,7 @@ fun SettingsContent(
     onNavigateToThemeSelection: (() -> Unit)? = null,
     onNavigateToLoadDisplayMode: (() -> Unit)? = null,
     onNavigateToDebug: (() -> Unit)? = null,
+    onNavigateToBackup: (() -> Unit)? = null,
     onNavigateToCustomDns: (() -> Unit)? = null,
     onNavigateToCountrySpoofing: (() -> Unit)? = null,
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
@@ -245,6 +248,7 @@ fun SettingsContent(
                         AboutSettingsSection(
                             onNavigateToAbout = onNavigateToAbout,
                             onNavigateToDebug = onNavigateToDebug,
+                            onNavigateToBackup = onNavigateToBackup,
                             onLogout = onLogout
                         )
                     }
@@ -315,7 +319,8 @@ fun SettingsContent(
                     onLogout = onLogout,
                     modifier = contentModifier,
                     onNavigateToAbout = onNavigateToAbout,
-                    onNavigateToDebug = onNavigateToDebug
+                    onNavigateToDebug = onNavigateToDebug,
+                    onNavigateToBackup = onNavigateToBackup
                 )
             }
         }
@@ -644,7 +649,8 @@ private fun AboutSettingsSection(
     onLogout: () -> Unit,
     modifier: Modifier = Modifier,
     onNavigateToAbout: (() -> Unit)? = null,
-    onNavigateToDebug: (() -> Unit)? = null
+    onNavigateToDebug: (() -> Unit)? = null,
+    onNavigateToBackup: (() -> Unit)? = null
 ) {
     var showLogoutDialog by remember { mutableStateOf(false) }
 
@@ -654,6 +660,13 @@ private fun AboutSettingsSection(
             title = stringResource(R.string.settings_about),
             subtitle = stringResource(R.string.settings_version, BuildConfig.VERSION_NAME),
             onClick = onNavigateToAbout
+        )
+
+        SettingRowWithIcon(
+            icon = Icons.Rounded.Backup,
+            title = stringResource(R.string.backup_title),
+            subtitle = stringResource(R.string.backup_export_desc),
+            onClick = onNavigateToBackup
         )
 
         if (BuildConfig.DEBUG) {

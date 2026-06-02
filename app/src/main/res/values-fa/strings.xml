@@ -539,6 +539,33 @@
     <string name="tamper_btn_accept_risks">خطر را می‌پذیرم</string>
     <string name="tamper_btn_download_official">دریافت نسخه اصلی</string>
     <string name="tamper_btn_back">بازگشت</string>
+    <!-- Backup & Restore -->
+    <string name="backup_title">پشتیبان‌گیری</string>
+    <string name="backup_export">خروجی تنظیمات</string>
+    <string name="backup_import">وارد کردن تنظیمات</string>
+    <string name="backup_export_desc">ذخیره پیکربندی‌های شما در یک فایل</string>
+    <string name="backup_import_desc">بازیابی پیکربندی‌ها از یک فایل</string>
+    <string name="backup_categories">دسته‌بندی‌ها را برای گنجاندن انتخاب کنید</string>
+    <string name="backup_cat_general">تنظیمات عمومی</string>
+    <string name="backup_cat_obfuscation">پیکربندی‌های مبهم‌سازی</string>
+    <string name="backup_cat_api_bypass">تنظیمات دور زدن API</string>
+    <string name="backup_cat_profiles">پروفایل‌های VPN</string>
+    <string name="backup_cat_recent">اتصال‌های اخیر</string>
+    <string name="backup_cat_quick_connect">اتصال سریع</string>
+    <string name="backup_cat_split_tunneling">تونل‌زنی تقسیم‌شده</string>
+    <string name="backup_cat_vpn_port">پورت VPN</string>
+    <string name="backup_cat_dns">تنظیمات DNS</string>
+    <string name="backup_cat_spoof_country">جعل کشور</string>
+    <string name="backup_cat_ota">تنظیمات به‌روزرسانی</string>
+    <string name="backup_cat_trusted_wifi">شبکه‌های مورد اعتماد</string>
+    <string name="backup_cat_sentry">تجزیه و تحلیل و گزارش‌های خرابی</string>
+    <string name="backup_export_success">تنظیمات با موفقیت صادر شد</string>
+    <string name="backup_export_error">صادر کردن تنظیمات ناموفق بود</string>
+    <string name="backup_import_success">تنظیمات با موفقیت وارد شد</string>
+    <string name="backup_import_error">وارد کردن تنظیمات ناموفق بود</string>
+    <string name="backup_import_confirm">این کار تنظیمات فعلی شما را در دسته‌بندی‌های انتخاب شده بازنویسی می‌کند. ادامه می‌دهید؟</string>
+    <string name="backup_no_categories">لطفاً حداقل یک دسته‌بندی را انتخاب کنید</string>
+
     <!-- Integrity failure overlay strings -->
     <string name="tamper_integrity_failure_title">خطای بحرانی در یکپارچگی</string>
     <string name="tamper_integrity_failure_desc">این برنامه دستکاری شده است و دیگر برای استفاده ایمن نیست. منابع ناهماهنگ شناسایی شدند.</string>

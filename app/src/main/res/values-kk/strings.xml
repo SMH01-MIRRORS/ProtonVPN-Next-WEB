@@ -539,6 +539,33 @@
     <string name="tamper_btn_accept_risks">Мен қауіпті түсінемін және салдарын қабылдаймын</string>
     <string name="tamper_btn_download_official">Түпнұсқаны жүктеп алу</string>
     <string name="tamper_btn_back">Артқа</string>
+    <!-- Backup & Restore -->
+    <string name="backup_title">Сақтық көшірме жасау</string>
+    <string name="backup_export">Параметрлерді экспорттау</string>
+    <string name="backup_import">Параметрлерді импорттау</string>
+    <string name="backup_export_desc">Конфигурацияларыңызды файлға сақтау</string>
+    <string name="backup_import_desc">Конфигурацияларды файлдан қалпына келтіру</string>
+    <string name="backup_categories">Қосылатын санаттарды таңдаңыз</string>
+    <string name="backup_cat_general">Жалпы параметрлер</string>
+    <string name="backup_cat_obfuscation">Обфускация конфигтері</string>
+    <string name="backup_cat_api_bypass">API-ді айналып өту параметрлері</string>
+    <string name="backup_cat_profiles">VPN профильдері</string>
+    <string name="backup_cat_recent">Соңғы қосылымдар</string>
+    <string name="backup_cat_quick_connect">Жылдам қосылу</string>
+    <string name="backup_cat_split_tunneling">Бөлек туннельдеу</string>
+    <string name="backup_cat_vpn_port">VPN порты</string>
+    <string name="backup_cat_dns">DNS параметрлері</string>
+    <string name="backup_cat_spoof_country">Елді жалған көрсету</string>
+    <string name="backup_cat_ota">Жаңарту параметрлері</string>
+    <string name="backup_cat_trusted_wifi">Сенімді желілер</string>
+    <string name="backup_cat_sentry">Аналитика және краш-есептер</string>
+    <string name="backup_export_success">Параметрлер сәтті экспортталды</string>
+    <string name="backup_export_error">Параметрлерді экспорттау сәтсіз аяқталды</string>
+    <string name="backup_import_success">Параметрлер сәтті импортталды</string>
+    <string name="backup_import_error">Параметрлерді импорттау сәтсіз аяқталды</string>
+    <string name="backup_import_confirm">Бұл таңдалған санаттардағы ағымдағы параметрлерді алмастырады. Жалғастырасыз ба?</string>
+    <string name="backup_no_categories">Кем дегенде бір санатты таңдаңыз</string>
+
     <!-- Integrity failure overlay strings -->
     <string name="tamper_integrity_failure_title">ҚАУІПТІ ТҰТАСТЫҚ ҚАТЕСІ</string>
     <string name="tamper_integrity_failure_desc">Бұл қолданба өзгертілген және бұдан былай қауіпсіз емес. Сәйкес келмейтін ресурстар анықталды.</string>

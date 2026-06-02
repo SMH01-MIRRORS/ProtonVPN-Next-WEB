@@ -19,8 +19,10 @@ package ru.protonmod.next.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.serialization.Serializable
 
 @Entity(tableName = "recent_connections")
+@Serializable
 data class RecentConnectionEntity(
     @PrimaryKey
     val serverId: String,

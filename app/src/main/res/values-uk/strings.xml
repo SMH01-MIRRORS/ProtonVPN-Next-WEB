@@ -545,6 +545,33 @@
     <string name="tamper_btn_accept_risks">Я усвідомлюю ризик і приймаю наслідки</string>
     <string name="tamper_btn_download_official">Завантажити оригінал</string>
     <string name="tamper_btn_back">Назад</string>
+    <!-- Backup & Restore -->
+    <string name="backup_title">Резервне копіювання</string>
+    <string name="backup_export">Експорт налаштувань</string>
+    <string name="backup_import">Імпорт налаштувань</string>
+    <string name="backup_export_desc">Зберегти ваші конфігурації у файл</string>
+    <string name="backup_import_desc">Відновити конфігурації з файлу</string>
+    <string name="backup_categories">Виберіть категорії для включення</string>
+    <string name="backup_cat_general">Загальні налаштування</string>
+    <string name="backup_cat_obfuscation">Конфіги обфускації</string>
+    <string name="backup_cat_api_bypass">Налаштування обходу API</string>
+    <string name="backup_cat_profiles">Профілі VPN</string>
+    <string name="backup_cat_recent">Останні підключення</string>
+    <string name="backup_cat_quick_connect">Швидке підключення</string>
+    <string name="backup_cat_split_tunneling">Роздільне тунелювання</string>
+    <string name="backup_cat_vpn_port">Порт VPN</string>
+    <string name="backup_cat_dns">Налаштування DNS</string>
+    <string name="backup_cat_spoof_country">Підміна країни</string>
+    <string name="backup_cat_ota">Налаштування оновлень</string>
+    <string name="backup_cat_trusted_wifi">Довірені мережі</string>
+    <string name="backup_cat_sentry">Аналітика та звіти про збої</string>
+    <string name="backup_export_success">Налаштування успішно експортовані</string>
+    <string name="backup_export_error">Помилка при експорті налаштувань</string>
+    <string name="backup_import_success">Налаштування успішно імпортовані</string>
+    <string name="backup_import_error">Помилка при імпорті налаштувань</string>
+    <string name="backup_import_confirm">Це перезапише ваші поточні налаштування у вибраних категоріях. Продовжити?</string>
+    <string name="backup_no_categories">Будь ласка, виберіть хоча б одну категорію</string>
+
     <!-- Integrity failure overlay strings -->
     <string name="tamper_integrity_failure_title">КРИТИЧНА ПОМИЛКА ЦІЛІСНОСТІ</string>
     <string name="tamper_integrity_failure_desc">Цей додаток було модифікована і більше не є безпечним. Виявлено невідповідність ресурсів.</string>

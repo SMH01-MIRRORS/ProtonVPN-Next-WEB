@@ -15,25 +15,34 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.protonmod.next.data.local
+package ru.protonmod.next.data.model
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
+import ru.protonmod.next.data.local.RecentConnectionEntity
+import ru.protonmod.next.data.local.VpnProfileEntity
 
-@Entity(tableName = "profiles")
 @Serializable
-data class VpnProfileEntity(
-    @PrimaryKey
-    val id: String,
-    val name: String,
-    val protocol: String,
-    val port: Int,
-    val isObfuscationEnabled: Boolean,
-    val obfuscationProfileId: String?, // Link to a custom obfuscation config
-    val autoOpenUrl: String?,
-    val targetServerId: String?,
-    val targetCountry: String?,
-    val targetCity: String?,
-    val createdAt: Long = System.currentTimeMillis()
+enum class BackupCategory {
+    GENERAL_SETTINGS,
+    OBFUSCATION,
+    API_BYPASS,
+    PROFILES,
+    RECENT_CONNECTIONS,
+    QUICK_CONNECT,
+    SPLIT_TUNNELING,
+    VPN_PORT,
+    DNS,
+    SPOOF_COUNTRY,
+    OTA_UPDATES,
+    TRUSTED_WIFI,
+    SENTRY_ANALYTICS
+}
+
+@Serializable
+data class BackupData(
+    val version: Int = 1,
+    val timestamp: Long = System.currentTimeMillis(),
+    val settings: Map<String, String>? = null,
+    val profiles: List<VpnProfileEntity>? = null,
+    val recentConnections: List<RecentConnectionEntity>? = null
 )

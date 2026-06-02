@@ -17,8 +17,10 @@
 
 package ru.protonmod.next.data.model
 
+import kotlinx.serialization.Serializable
 import ru.protonmod.next.data.local.SettingsManager
 
+@Serializable
 data class ObfuscationProfile(
     val id: String,
     val name: String,
