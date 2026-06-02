@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159958,
-      "versionName": "12.0.0-alpha1st4p1-2-gae03343-nightly",
+      "versionCode": 605159960,
+      "versionName": "12.0.0-alpha1st4p1-4-gd58fd0b-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "Fix: ClassCastException in CountriesScreen during state transition",
+      "changelog": "Security: Harden anti-tamper against game-hacking tools",
       "force": false
     },
     "release": {
-      "versionCode": 605159958,
-      "versionName": "12.0.0-alpha1st4p1-2-gae03343-nightly",
+      "versionCode": 605159960,
+      "versionName": "12.0.0-alpha1st4p1-4-gd58fd0b-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "Fix: ClassCastException in CountriesScreen during state transition",
+      "changelog": "Security: Harden anti-tamper against game-hacking tools",
       "force": false
     }
   },
