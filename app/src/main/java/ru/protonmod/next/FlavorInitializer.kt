@@ -53,10 +53,17 @@ object FlavorInitializer {
             options.isEnableScopeSync = false
             options.isSendDefaultPii = false
 
-            // Global PII filtering for all Sentry events
+            // Global PII filtering and master kill-switch for all Sentry events
             options.setBeforeSend { event, _ ->
                 val currentCrashEnabled = settingsManager.isCrashReportsEnabledSync()
-                if (!currentCrashEnabled) return@setBeforeSend null
+                val currentNonFatalEnabled = settingsManager.isNonFatalEnabledSync()
+                val currentAnalyticsEnabled = settingsManager.isAnalyticsEnabledSync()
+                
+                // If it's a crash and crashes are disabled, drop it
+                if (event.isCrashed && !currentCrashEnabled) return@setBeforeSend null
+                
+                // If it's NOT a crash and non-fatals/analytics are disabled, drop it
+                if (!event.isCrashed && (!currentNonFatalEnabled || !currentAnalyticsEnabled)) return@setBeforeSend null
 
                 // Scrub event message
                 event.message?.let { it.message = PiiScrubber.scrub(it.message) }

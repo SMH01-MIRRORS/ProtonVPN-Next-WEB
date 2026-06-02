@@ -582,49 +582,56 @@ class SettingsViewModel @Inject constructor(
     fun setAnalyticsEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setAnalyticsEnabled(enabled)
+            ru.protonmod.next.vpn.SentryConfigurator.applySettings(settingsManager)
         }
     }
 
     fun setCrashReportsEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setCrashReportsEnabled(enabled)
+            ru.protonmod.next.vpn.SentryConfigurator.applySettings(settingsManager)
         }
     }
 
     fun setSentryPerformanceEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setSentryPerformanceEnabled(enabled)
+            ru.protonmod.next.vpn.SentryConfigurator.applySettings(settingsManager)
         }
     }
 
     fun setSentryNonFatalEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setSentryNonFatalEnabled(enabled)
+            ru.protonmod.next.vpn.SentryConfigurator.applySettings(settingsManager)
         }
     }
 
     fun setSentrySessionReplayEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setSentrySessionReplayEnabled(enabled)
+            ru.protonmod.next.vpn.SentryConfigurator.applySettings(settingsManager)
         }
     }
 
     fun setSentryAnrEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setSentryAnrEnabled(enabled)
+            ru.protonmod.next.vpn.SentryConfigurator.applySettings(settingsManager)
         }
     }
 
     fun setSentryMetricsEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setSentryMetricsEnabled(enabled)
+            ru.protonmod.next.vpn.SentryConfigurator.applySettings(settingsManager)
         }
     }
 
     fun setSentryLogsEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setSentryLogsEnabled(enabled)
-            ru.protonmod.next.utils.ProtonLogger.isSentryLogsEnabled = enabled
+            ru.protonmod.next.vpn.SentryConfigurator.applySettings(settingsManager)
         }
     }
 
