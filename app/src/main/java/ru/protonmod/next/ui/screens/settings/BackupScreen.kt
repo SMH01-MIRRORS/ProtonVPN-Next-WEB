@@ -22,34 +22,36 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Upload
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.automirrored.rounded.AltRoute
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.data.model.BackupCategory
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.theme.ProtonColors
 import ru.protonmod.next.ui.components.NavigationHeader
 
 @Composable
 fun BackupScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: BackupViewModel = hiltViewModel()
+    viewModel: BackupViewModel = hiltViewModel(),
 ) {
-    val context = LocalContext.current
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    var showImportConfirm by remember { mutableStateOf(false) }
+    var showImportConfirm by remember { mutableStateOf(value = false) }
     var pendingImportUri by remember { mutableStateOf<android.net.Uri?>(null) }
     val colors = ProtonNextTheme.colors
 
@@ -68,156 +70,199 @@ fun BackupScreen(
         }
     }
 
-    LaunchedEffect(uiState.showSuccessExport) {
-        if (uiState.showSuccessExport) {
-            snackbarHostState.showSnackbar(context.getString(R.string.backup_export_success))
-            viewModel.clearMessages()
-        }
-    }
+    val exportSuccessMsg = stringResource(R.string.backup_export_success)
+    val importSuccessMsg = stringResource(R.string.backup_import_success)
 
-    LaunchedEffect(uiState.showSuccessImport) {
-        if (uiState.showSuccessImport) {
-            snackbarHostState.showSnackbar(context.getString(R.string.backup_import_success))
-            viewModel.clearMessages()
+    Box(modifier = modifier) {
+        LaunchedEffect(uiState.showSuccessExport, uiState.showSuccessImport, uiState.lastError) {
+            if (uiState.showSuccessExport) {
+                snackbarHostState.showSnackbar(exportSuccessMsg)
+                viewModel.clearMessages()
+            }
+            if (uiState.showSuccessImport) {
+                snackbarHostState.showSnackbar(importSuccessMsg)
+                viewModel.clearMessages()
+            }
+            uiState.lastError?.let { error ->
+                snackbarHostState.showSnackbar(error)
+                viewModel.clearMessages()
+            }
         }
-    }
 
-    LaunchedEffect(uiState.lastError) {
-        uiState.lastError?.let { error ->
-            snackbarHostState.showSnackbar(error)
-            viewModel.clearMessages()
-        }
-    }
-
-    if (showImportConfirm) {
-        AlertDialog(
-            onDismissRequest = { showImportConfirm = false },
-            title = { Text(stringResource(R.string.backup_import), color = colors.textNorm) },
-            text = { Text(stringResource(R.string.backup_import_confirm), color = colors.textWeak) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showImportConfirm = false
-                    viewModel.importFromUri(pendingImportUri)
-                }) {
-                    Text(stringResource(android.R.string.ok), color = colors.brandNorm)
+        BackupScreenContent(
+            uiState = uiState,
+            colors = colors,
+            snackbarHostState = snackbarHostState,
+            showImportConfirm = showImportConfirm,
+            onDismissImportConfirm = { showImportConfirm = false },
+            onConfirmImport = {
+                showImportConfirm = false
+                viewModel.importFromUri(pendingImportUri)
+            },
+            onNavigateBack = onNavigateBack,
+            onExport = {
+                if (!uiState.isExporting) {
+                    exportLauncher.launch("proton_vpn_backup_${System.currentTimeMillis()}.json")
                 }
             },
-            dismissButton = {
-                TextButton(onClick = { showImportConfirm = false }) {
-                    Text(stringResource(R.string.btn_cancel), color = colors.textWeak)
+            onImport = {
+                if (!uiState.isImporting) {
+                    importLauncher.launch(arrayOf("application/json", "application/octet-stream"))
                 }
             },
-            containerColor = colors.backgroundSecondary
+            onToggleCategory = viewModel::toggleCategory,
+            modifier = Modifier.fillMaxSize()
         )
     }
+}
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = colors.backgroundNorm,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        contentWindowInsets = WindowInsets(0, 0, 0, 0)
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            // Background gradient decoration
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                colors.brandNorm.copy(alpha = 0.25f),
-                                colors.backgroundNorm.copy(alpha = 0.1f),
-                                colors.backgroundNorm
-                            )
-                        )
-                    )
-            )
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding()
-            ) {
-                NavigationHeader(
-                    title = stringResource(R.string.backup_title),
-                    onBack = onNavigateBack
-                )
-
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    item {
-                        SettingsCategory(title = stringResource(R.string.backup_categories)) {
-                            BackupCategory.entries.forEach { category ->
-                                SettingToggleRow(
-                                    title = getCategoryName(category),
-                                    checked = uiState.selectedCategories.contains(category),
-                                    onCheckedChange = { viewModel.toggleCategory(category) }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // Action Buttons at the bottom
-                Surface(
-                    color = colors.backgroundSecondary.copy(alpha = 0.5f),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+@Composable
+private fun BackupScreenContent(
+    uiState: BackupUiState,
+    colors: ProtonColors,
+    snackbarHostState: SnackbarHostState,
+    showImportConfirm: Boolean,
+    onDismissImportConfirm: () -> Unit,
+    onConfirmImport: () -> Unit,
+    onNavigateBack: () -> Unit,
+    onExport: () -> Unit,
+    onImport: () -> Unit,
+    onToggleCategory: (BackupCategory) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.fillMaxSize()) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = colors.backgroundNorm,
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            floatingActionButton = {
+                if (uiState.selectedCategories.isNotEmpty()) {
                     Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier
                             .padding(16.dp)
                             .navigationBarsPadding()
                     ) {
-                        Button(
-                            onClick = { 
-                                if (uiState.selectedCategories.isNotEmpty()) {
-                                    exportLauncher.launch("proton_vpn_backup_${System.currentTimeMillis()}.json")
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = uiState.selectedCategories.isNotEmpty() && !uiState.isExporting,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = colors.brandNorm,
-                                contentColor = colors.textInverted
-                            )
-                        ) {
-                            Icon(Icons.Default.Upload, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(stringResource(R.string.backup_export))
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        OutlinedButton(
-                            onClick = { 
-                                if (uiState.selectedCategories.isNotEmpty()) {
-                                    importLauncher.launch(arrayOf("application/json", "application/octet-stream"))
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = uiState.selectedCategories.isNotEmpty() && !uiState.isImporting,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, colors.brandNorm),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = colors.brandNorm
-                            )
+                        SmallFloatingActionButton(
+                            onClick = onImport,
+                            containerColor = colors.backgroundSecondary.copy(alpha = 0.85f),
+                            contentColor = colors.brandNorm,
                         ) {
                             Icon(Icons.Default.Download, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(stringResource(R.string.backup_import))
+                        }
+
+                        ExtendedFloatingActionButton(
+                            text = { Text(stringResource(R.string.backup_export)) },
+                            icon = { Icon(Icons.Default.Upload, contentDescription = null) },
+                            onClick = onExport,
+                            containerColor = colors.brandNorm,
+                            contentColor = colors.textInverted
+                        )
+                    }
+                }
+            }
+        ) { padding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                // Background gradient decoration
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    colors.brandNorm.copy(alpha = 0.25f),
+                                    colors.backgroundNorm.copy(alpha = 0.1f),
+                                    colors.backgroundNorm
+                                )
+                            )
+                        )
+                )
+
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        contentPadding = PaddingValues(
+                            start = 16.dp,
+                            end = 16.dp,
+                            top = 0.dp,
+                            bottom = 140.dp
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        item(contentType = "Header") {
+                            Column {
+                                Spacer(modifier = Modifier.statusBarsPadding())
+                                NavigationHeader(
+                                    title = stringResource(R.string.backup_title),
+                                    onBack = onNavigateBack
+                                )
+                            }
+                        }
+
+                        item(contentType = "Categories") {
+                            SettingsCategory(title = stringResource(R.string.backup_categories)) {
+                                BackupCategory.entries.forEach { category ->
+                                    SettingToggleRow(
+                                        title = getCategoryName(category),
+                                        icon = getCategoryIcon(category),
+                                        checked = uiState.selectedCategories.contains(category),
+                                        onCheckedChange = { onToggleCategory(category) }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+
+        if (showImportConfirm) {
+            AlertDialog(
+                onDismissRequest = onDismissImportConfirm,
+                title = { Text(stringResource(R.string.backup_import), color = colors.textNorm) },
+                text = { Text(stringResource(R.string.backup_import_confirm), color = colors.textWeak) },
+                confirmButton = {
+                    TextButton(onClick = onConfirmImport) {
+                        Text(stringResource(android.R.string.ok), color = colors.brandNorm)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = onDismissImportConfirm) {
+                        Text(stringResource(R.string.btn_cancel), color = colors.textWeak)
+                    }
+                },
+                containerColor = colors.backgroundSecondary
+            )
+        }
+    }
+}
+
+@Composable
+private fun getCategoryIcon(category: BackupCategory): ImageVector {
+    return when (category) {
+        BackupCategory.GENERAL_SETTINGS -> Icons.Rounded.Settings
+        BackupCategory.OBFUSCATION -> Icons.Rounded.Security
+        BackupCategory.API_BYPASS -> Icons.Rounded.CloudSync
+        BackupCategory.PROFILES -> Icons.Rounded.Description
+        BackupCategory.RECENT_CONNECTIONS -> Icons.Rounded.History
+        BackupCategory.QUICK_CONNECT -> Icons.Rounded.FlashOn
+        BackupCategory.SPLIT_TUNNELING -> Icons.AutoMirrored.Rounded.AltRoute
+        BackupCategory.VPN_PORT -> Icons.Rounded.Numbers
+        BackupCategory.DNS -> Icons.Rounded.Dns
+        BackupCategory.SPOOF_COUNTRY -> Icons.Rounded.Public
+        BackupCategory.OTA_UPDATES -> Icons.Rounded.SystemUpdate
+        BackupCategory.TRUSTED_WIFI -> Icons.Rounded.Wifi
+        BackupCategory.SENTRY_ANALYTICS -> Icons.Rounded.Analytics
     }
 }
 
