@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159963,
-      "versionName": "12.0.0-alpha1st4p1-7-g697d866-nightly",
+      "versionCode": 605159966,
+      "versionName": "12.0.0-alpha1st4p1-10-g46b92f9-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "fix: improve VPN state management and server tracking during disconnection\n\n- Clear `lastLogicalServerId` in `ProtonVpnService` when the tunnel state transitions to `DOWN`.\n- Update `HomeMap` to use an explicit `isConnected` parameter for more accurate map highlighting and state memoization.\n- Add guards in `AmneziaVpnManager` to prevent updating the `currentServerId` when the VPN is disconnecting or already disconnected.",
+      "changelog": "ui: update default map region to full view in HomeMap\n\nUpdates the initial map region in `HomeMap.kt` by changing the default value from `DEFAULT_PORTRAIT_REGION` to `FULL_REGION`.",
       "force": false
     },
     "release": {
-      "versionCode": 605159963,
-      "versionName": "12.0.0-alpha1st4p1-7-g697d866-nightly",
+      "versionCode": 605159966,
+      "versionName": "12.0.0-alpha1st4p1-10-g46b92f9-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "fix: improve VPN state management and server tracking during disconnection\n\n- Clear `lastLogicalServerId` in `ProtonVpnService` when the tunnel state transitions to `DOWN`.\n- Update `HomeMap` to use an explicit `isConnected` parameter for more accurate map highlighting and state memoization.\n- Add guards in `AmneziaVpnManager` to prevent updating the `currentServerId` when the VPN is disconnecting or already disconnected.",
+      "changelog": "ui: update default map region to full view in HomeMap\n\nUpdates the initial map region in `HomeMap.kt` by changing the default value from `DEFAULT_PORTRAIT_REGION` to `FULL_REGION`.",
       "force": false
     }
   },
