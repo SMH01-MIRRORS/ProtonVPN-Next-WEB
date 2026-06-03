@@ -609,7 +609,7 @@ private fun updateMapView(
     scope: CoroutineScope,
     mapHighlight: Pair<String, CountryHighlight>?
 ) {
-    var region = TvMapRenderer.DEFAULT_PORTRAIT_REGION
+    var region = TvMapRenderer.FULL_REGION
     var highlights = emptyList<CountryHighlightInfo>()
     var pins = emptyList<PinInfo>()
 
