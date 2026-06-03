@@ -296,6 +296,9 @@ class MapView constructor(
     private var targetRenderData: RenderData? = null
     private var renderedMap: RenderedMap? = null
 
+    // Track metadata for pending render requests to ensure they are applied atomically with the bitmap.
+    private val pendingRenderData = java.util.concurrent.ConcurrentHashMap<Long, RenderData>()
+
     data class RenderData(
         val region: MapRegion,
         val pins: List<PinInfo>,
@@ -338,19 +341,17 @@ class MapView constructor(
             config,
             FUZZY_BORDER_COUNTRIES
         ) { map, id ->
-            targetRenderData?.let { renderData ->
-                if (id == renderData.id) {
-                    if (renderedMap == null) {
-                        animate()
-                            .alpha(1f)
-                            .duration = fadeInDurationMs
-                    }
-                    renderedMap = map
-                    renderTimeInfo = Pair(elapsedClockMs(), renderData.stage)
-                    currentRenderData = targetRenderData
-
-                    invalidate()
+            val renderData = pendingRenderData.remove(id) ?: targetRenderData
+            if (renderData != null && id == renderData.id) {
+                if (renderedMap == null) {
+                    animate()
+                        .alpha(1f)
+                        .duration = fadeInDurationMs
                 }
+                renderedMap = map
+                renderTimeInfo = Pair(elapsedClockMs(), renderData.stage)
+                currentRenderData = renderData // ATOMIC UPDATE with map
+                invalidate()
             }
         }
     }
@@ -473,8 +474,13 @@ class MapView constructor(
                 h = (w * normalH).roundToInt()
             }
             val newId = mapRenderer.updateSize(w, h)
-            if (newId != null)
-                targetRenderData = targetRenderData?.copy(id = newId)
+            if (newId != null) {
+                val renderData = targetRenderData?.copy(id = newId)
+                if (renderData != null) {
+                    pendingRenderData[newId] = renderData
+                    targetRenderData = renderData
+                }
+            }
         }
     }
 
@@ -496,7 +502,9 @@ class MapView constructor(
             newMapRegion = newRegion,
             newHighlights = newHighlights,
         )
-        targetRenderData = RenderData(newRegion, newPins, highlightStage, id)
+        val renderData = RenderData(newRegion, newPins, highlightStage, id)
+        pendingRenderData[id] = renderData
+        targetRenderData = renderData
     }
 
     companion object {

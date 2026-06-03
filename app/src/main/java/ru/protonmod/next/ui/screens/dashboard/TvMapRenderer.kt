@@ -87,8 +87,10 @@ class TvMapRenderer(
         if (renderTarget?.isSize(w, h) != true) {
             val id = ++currentId
             renderTarget = RenderTarget(w, h)
+            val targetRegion = mapRegion ?: DEFAULT_PORTRAIT_REGION
+            val targetHighlights = highlights.toList()
             scope.launch {
-                renderTarget?.render(id)
+                renderTarget?.render(id, targetRegion, targetHighlights)
             }
             return id
         }
@@ -102,12 +104,14 @@ class TvMapRenderer(
             CountryHighlight.CONNECTED -> toCssColor(config.connected)
         }
 
-    private suspend fun RenderTarget.render(id: Long) {
-        val regionToRender = mapRegion ?: return
-
+    private suspend fun RenderTarget.render(
+        id: Long,
+        regionToRender: MapRegion,
+        highlightsToRender: List<CountryHighlightInfo>
+    ) {
         renderJob?.cancelAndJoin()
         renderJob = scope.launch(renderContext) {
-            val highlightsCss = highlights
+            val highlightsCss = highlightsToRender
                 .filter { it.country !in fuzzyBorderCountries }
                 .joinToString(separator = " ") { (country, highlight) ->
                     "#$country { fill: ${highlight.cssColor}; }"
@@ -117,7 +121,7 @@ class TvMapRenderer(
             } else {
                 config.borderWidth
             }
-            val noBorder = highlights.any { it.country in fuzzyBorderCountries }
+            val noBorder = highlightsToRender.any { it.country in fuzzyBorderCountries }
             val borderColor = if (noBorder) config.country else config.border
             val css = "$highlightsCss path { fill: ${toCssColor(config.country)}; stroke: ${toCssColor(borderColor)}; stroke-width: $borderWidth; }"
             val width = map.width.toFloat()
@@ -140,14 +144,14 @@ class TvMapRenderer(
                     documentHeight * viewBoxScale * regionScale
                 )
 
-            canvas.drawColor(android.graphics.Color.TRANSPARENT)
+            canvas.drawColor(android.graphics.Color.TRANSPARENT, android.graphics.PorterDuff.Mode.CLEAR)
             svg.renderToCanvas(canvas, renderOptions)
 
             // If current render job was canceled don't produce and pass output bitmap to client,
             // but if it's still active don't suspend and finish blocking current (background)
             // thread to avoid starting new render before map is fully copied to output bitmap.
             if (isActive) withContext(NonCancellable + Dispatchers.Main) {
-                outCanvas.drawColor(android.graphics.Color.TRANSPARENT)
+                outCanvas.drawColor(android.graphics.Color.TRANSPARENT, android.graphics.PorterDuff.Mode.CLEAR)
                 outCanvas.drawBitmap(map, 0f, 0f, null)
                 val regionHeight = height / width * region.w
                 val regionRect = RectF(region.x, region.y, region.x + region.w, region.y + regionHeight)
@@ -161,20 +165,19 @@ class TvMapRenderer(
         newHighlights: List<CountryHighlightInfo>? = null,
         newMapRegion: MapRegion? = null,
     ): Long {
-        val regionChanged = newMapRegion != null && newMapRegion != mapRegion
-        val highlightsChanged = newHighlights != null && newHighlights != highlights
-        if (highlightsChanged || regionChanged) {
-            if (newMapRegion != null)
-                mapRegion = newMapRegion
-            if (newHighlights != null)
-                highlights = newHighlights
-            val id = ++currentId
-            scope.launch {
-                renderTarget?.render(id)
-            }
-            return id
+        if (newMapRegion != null)
+            mapRegion = newMapRegion
+        if (newHighlights != null)
+            highlights = newHighlights
+        
+        val id = ++currentId
+        val targetRegion = mapRegion ?: DEFAULT_PORTRAIT_REGION
+        val targetHighlights = highlights.toList()
+
+        scope.launch {
+            renderTarget?.render(id, targetRegion, targetHighlights)
         }
-        return currentId
+        return id
     }
 
     companion object {
