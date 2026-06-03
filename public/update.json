@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159962,
-      "versionName": "12.0.0-alpha1st4p1-6-g8521134-nightly",
+      "versionCode": 605159963,
+      "versionName": "12.0.0-alpha1st4p1-7-g697d866-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "refactor: improve BackupScreen UI and cleanup DashboardScreen imports\n\n- Refactored `BackupScreen` to separate state management from UI content, improving maintainability.\n- Replaced fixed bottom action buttons with a Floating Action Button (FAB) pattern for export and import actions.\n- Added descriptive icons to backup categories in the settings list.\n- Migrated UI state collection to `collectAsStateWithLifecycle` for better lifecycle awareness.\n- Cleaned up numerous unused imports and icon references in `DashboardScreen.kt`.\n- Adjusted layout padding and structure in `BackupScreen` to better handle system bars and overlapping UI elements.",
+      "changelog": "fix: improve VPN state management and server tracking during disconnection\n\n- Clear `lastLogicalServerId` in `ProtonVpnService` when the tunnel state transitions to `DOWN`.\n- Update `HomeMap` to use an explicit `isConnected` parameter for more accurate map highlighting and state memoization.\n- Add guards in `AmneziaVpnManager` to prevent updating the `currentServerId` when the VPN is disconnecting or already disconnected.",
       "force": false
     },
     "release": {
-      "versionCode": 605159962,
-      "versionName": "12.0.0-alpha1st4p1-6-g8521134-nightly",
+      "versionCode": 605159963,
+      "versionName": "12.0.0-alpha1st4p1-7-g697d866-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "refactor: improve BackupScreen UI and cleanup DashboardScreen imports\n\n- Refactored `BackupScreen` to separate state management from UI content, improving maintainability.\n- Replaced fixed bottom action buttons with a Floating Action Button (FAB) pattern for export and import actions.\n- Added descriptive icons to backup categories in the settings list.\n- Migrated UI state collection to `collectAsStateWithLifecycle` for better lifecycle awareness.\n- Cleaned up numerous unused imports and icon references in `DashboardScreen.kt`.\n- Adjusted layout padding and structure in `BackupScreen` to better handle system bars and overlapping UI elements.",
+      "changelog": "fix: improve VPN state management and server tracking during disconnection\n\n- Clear `lastLogicalServerId` in `ProtonVpnService` when the tunnel state transitions to `DOWN`.\n- Update `HomeMap` to use an explicit `isConnected` parameter for more accurate map highlighting and state memoization.\n- Add guards in `AmneziaVpnManager` to prevent updating the `currentServerId` when the VPN is disconnecting or already disconnected.",
       "force": false
     }
   },
