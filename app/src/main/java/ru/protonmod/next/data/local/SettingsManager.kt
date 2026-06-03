@@ -119,6 +119,8 @@ class SettingsManager @Inject constructor(
         private val QUICK_CONNECT_STRATEGY = stringPreferencesKey("quick_connect_strategy") // "fastest", "recent", "profile"
         private val QUICK_CONNECT_TARGET_ID = stringPreferencesKey("quick_connect_target_id")
 
+        private val IP_HIDDEN = booleanPreferencesKey("is_ip_hidden")
+
         private val TRUSTED_WIFI_NETWORKS = stringSetPreferencesKey("trusted_wifi_networks")
         private val AUTO_CONNECT_ON_UNTRUSTED = booleanPreferencesKey("auto_connect_on_untrusted")
 
@@ -260,6 +262,7 @@ class SettingsManager @Inject constructor(
 
     val quickConnectStrategy: Flow<String> = context.dataStore.data.map { it[QUICK_CONNECT_STRATEGY] ?: "fastest" }
     val quickConnectTargetId: Flow<String?> = context.dataStore.data.map { it[QUICK_CONNECT_TARGET_ID] }
+    val isIpHidden: Flow<Boolean> = context.dataStore.data.map { it[IP_HIDDEN] ?: false }
 
     val trustedWifiNetworks: Flow<Set<String>> = context.dataStore.data.map { it[TRUSTED_WIFI_NETWORKS] ?: emptySet() }
     val autoConnectOnUntrusted: Flow<Boolean> = context.dataStore.data.map { it[AUTO_CONNECT_ON_UNTRUSTED] ?: false }
@@ -519,6 +522,10 @@ class SettingsManager @Inject constructor(
         }
     }
 
+    suspend fun setIpHidden(hidden: Boolean) {
+        context.dataStore.edit { it[IP_HIDDEN] = hidden }
+    }
+
     suspend fun setTrustedWifiNetworks(networks: Set<String>) {
         context.dataStore.edit { it[TRUSTED_WIFI_NETWORKS] = networks }
     }
@@ -623,7 +630,8 @@ class SettingsManager @Inject constructor(
                     CRASH_REPORTS_ENABLED.name, SENTRY_PERFORMANCE_ENABLED.name, 
                     SENTRY_NON_FATAL_ENABLED.name, SENTRY_SESSION_REPLAY_ENABLED.name, 
                     SENTRY_ANR_ENABLED.name, SENTRY_METRICS_ENABLED.name, 
-                    SENTRY_LOGS_ENABLED.name, AUTO_CONNECT_ON_UNTRUSTED.name -> {
+                    SENTRY_LOGS_ENABLED.name, AUTO_CONNECT_ON_UNTRUSTED.name,
+                    IP_HIDDEN.name -> {
                         val boolValue = value.toBoolean()
                         settings[key as Preferences.Key<Boolean>] = boolValue
                         prefs.edit { putBoolean(keyName, boolValue) }
@@ -714,6 +722,7 @@ class SettingsManager @Inject constructor(
             SENTRY_LOGS_ENABLED.name -> SENTRY_LOGS_ENABLED
             QUICK_CONNECT_STRATEGY.name -> QUICK_CONNECT_STRATEGY
             QUICK_CONNECT_TARGET_ID.name -> QUICK_CONNECT_TARGET_ID
+            IP_HIDDEN.name -> IP_HIDDEN
             TRUSTED_WIFI_NETWORKS.name -> TRUSTED_WIFI_NETWORKS
             AUTO_CONNECT_ON_UNTRUSTED.name -> AUTO_CONNECT_ON_UNTRUSTED
             PAUSE_END_TIME.name -> PAUSE_END_TIME

@@ -232,42 +232,32 @@ private fun ObscurableText(
             var currentChars = displayText.toCharArray()
 
             // Check if the underlying string itself has changed (e.g., completely new IP loaded)
-            // This is critical because if lengths match but dot positions differ, the old
-            // asterisks will remain stuck since the animation filter preserves the new dots.
             val baseChanged = previousTargetText != targetText || currentChars.size != targetChars.size
 
             if (baseChanged) {
-                // Reset fixed width to allow the layout to remeasure for the new string
                 fixedWidth = null
                 previousTargetText = targetText
 
                 val baseChars = targetChars.clone()
                 if (isObscured) {
-                    // Instantly obscure the new text, applying the new dot/dash placement
                     for (i in baseChars.indices) {
                         if (!preserveCharacters.contains(baseChars[i])) baseChars[i] = targetCharacter
                     }
-                    displayText = String(baseChars)
-                } else {
-                    // If we are unobscuring to a NEW target, start from its obscured version
-                    // and let the animation below reveal the new characters gracefully.
-                    for (i in baseChars.indices) {
-                        if (!preserveCharacters.contains(baseChars[i])) baseChars[i] = targetCharacter
-                    }
-                    currentChars = baseChars
-                    displayText = String(currentChars)
                 }
-            } else {
-                // Animate the differences character by character
-                for (i in indicesToAnimate) {
-                    if (isObscured && currentChars[i] == targetCharacter) continue
-                    if (!isObscured && currentChars[i] == targetChars[i]) continue
+                // Update displayText immediately for base change to align characters
+                displayText = String(baseChars)
+                currentChars = baseChars
+            }
 
-                    delay(duration.toLong())
-                    val newChar = if (isObscured) targetCharacter else targetChars[i]
-                    currentChars[i] = newChar
-                    displayText = String(currentChars)
-                }
+            // Always run the animation loop to ensure state matches targetText/isObscured
+            for (i in indicesToAnimate) {
+                if (isObscured && currentChars[i] == targetCharacter) continue
+                if (!isObscured && currentChars[i] == targetChars[i]) continue
+
+                delay(duration.toLong())
+                val newChar = if (isObscured) targetCharacter else targetChars[i]
+                currentChars[i] = newChar
+                displayText = String(currentChars)
             }
         }
 

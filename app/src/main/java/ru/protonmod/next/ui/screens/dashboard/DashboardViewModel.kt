@@ -59,7 +59,6 @@ import ru.protonmod.next.utils.system.SystemUtils
 import io.sentry.Sentry
 import java.net.Proxy
 import javax.inject.Inject
-import androidx.core.content.edit
 import kotlinx.coroutines.flow.first
 
 data class LocationText(
@@ -122,17 +121,12 @@ class DashboardViewModel @Inject constructor(
         .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
         .build()
 
-    private val prefs = context.getSharedPreferences("dashboard_ui_prefs", Context.MODE_PRIVATE)
-
     private val _errorMessage = MutableStateFlow<String?>(null)
 
     // Store original unprotected location
     private val _originalLocationText = MutableStateFlow<LocationText?>(null)
     // Store the secure VPN location (fetched after connection)
     private val _vpnLocationText = MutableStateFlow<LocationText?>(null)
-
-    // Persistent privacy state for hiding IP
-    private val _isIpHidden = MutableStateFlow(prefs.getBoolean("is_ip_hidden", false))
 
     val uiState: StateFlow<DashboardUiState> = combine(
         vpnRepository.getServersFlow(),
@@ -148,7 +142,7 @@ class DashboardViewModel @Inject constructor(
         settingsManager.serverLoadDisplayMode,
         _originalLocationText,
         _vpnLocationText,
-        _isIpHidden,
+        settingsManager.isIpHidden,
         amneziaVpnManager.speed,
         amneziaVpnManager.trafficRx,
         amneziaVpnManager.trafficTx,
@@ -282,14 +276,12 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Toggles the visibility of the IP address and persists the setting.
-     */
     fun toggleIpVisibility() {
         ProtonLogger.action("Dashboard", "User toggled IP visibility")
-        val newValue = !_isIpHidden.value
-        _isIpHidden.value = newValue
-        prefs.edit { putBoolean("is_ip_hidden", newValue) }
+        viewModelScope.launch {
+            val currentValue = (uiState.value as? DashboardUiState.Success)?.isIpHidden ?: false
+            settingsManager.setIpHidden(!currentValue)
+        }
     }
 
     private fun fetchOriginalLocation() {

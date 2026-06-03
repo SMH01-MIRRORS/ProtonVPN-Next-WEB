@@ -129,6 +129,7 @@ class DashboardViewModelTest {
     private val apiBypassEnabledFlow = MutableStateFlow(false)
     private val apiBypassStrategyFlow = MutableStateFlow("none")
     private val customProfilesFlow = MutableStateFlow<List<ObfuscationProfile>>(emptyList())
+    private val isIpHiddenFlow = MutableStateFlow(false)
     private val pauseEndTimeFlow = MutableStateFlow(0L)
 
     @Before
@@ -172,6 +173,7 @@ class DashboardViewModelTest {
         whenever(settingsManager.apiBypassEnabled).thenReturn(apiBypassEnabledFlow)
         whenever(settingsManager.apiBypassStrategy).thenReturn(apiBypassStrategyFlow)
         whenever(settingsManager.customProfiles).thenReturn(customProfilesFlow)
+        whenever(settingsManager.isIpHidden).thenReturn(isIpHiddenFlow)
         whenever(settingsManager.pauseEndTime).thenReturn(pauseEndTimeFlow)
         
         whenever(warpManager.isTunnelActive).thenReturn(false)
