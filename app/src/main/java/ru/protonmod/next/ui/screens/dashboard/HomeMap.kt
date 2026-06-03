@@ -571,6 +571,9 @@ fun HomeMap(
         targetCode?.let { it to highlight }
     }
 
+    // Track the last state that was actually applied to the native view
+    var lastAppliedState by remember { mutableStateOf<Pair<String, CountryHighlight>?>(null) }
+
     AndroidView(
         modifier = modifier.fillMaxSize(),
         factory = { context ->
@@ -585,7 +588,10 @@ fun HomeMap(
             }
         },
         update = { mapView ->
-            updateMapView(mapView, scope, mapState)
+            if (mapState != lastAppliedState) {
+                lastAppliedState = mapState
+                updateMapView(mapView, scope, mapState)
+            }
         }
     )
 }

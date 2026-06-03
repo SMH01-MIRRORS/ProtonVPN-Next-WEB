@@ -308,7 +308,10 @@ fun ProtonNextAppNavHost(
         }
 
         LaunchedEffect(startDestination) {
-            if (startDestination.isNotEmpty() && currentRoute != startDestination) {
+            // Only navigate if startDestination actually changed after the NavHost was already initialized.
+            // When NavHost is first created, it handles startDestination itself.
+            if (startDestination.isNotEmpty() && currentRoute != null && currentRoute != startDestination) {
+                ru.protonmod.next.utils.ProtonLogger.d("MainActivity", "startDestination changed to: $startDestination, navigating. Current route: $currentRoute")
                 navController.navigate(startDestination) {
                     popUpTo(0) { inclusive = true }
                 }
