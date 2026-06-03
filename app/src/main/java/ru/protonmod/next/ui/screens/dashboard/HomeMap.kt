@@ -581,6 +581,7 @@ fun HomeMap(
 
     // Track the last state that was actually applied to the native view
     var lastAppliedState by remember { mutableStateOf<Pair<String, CountryHighlight>?>(null) }
+    var isInitialized by remember { mutableStateOf(false) }
 
     AndroidView(
         modifier = modifier.fillMaxSize(),
@@ -596,8 +597,9 @@ fun HomeMap(
             }
         },
         update = { mapView ->
-            if (mapState != lastAppliedState) {
+            if (mapState != lastAppliedState || !isInitialized) {
                 lastAppliedState = mapState
+                isInitialized = true
                 updateMapView(mapView, scope, mapState)
             }
         }
