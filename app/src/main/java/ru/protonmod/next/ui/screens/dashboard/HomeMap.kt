@@ -530,6 +530,7 @@ class MapView constructor(
 fun HomeMap(
     allServers: ImmutableList<LogicalServer>,
     connectedServer: LogicalServer?,
+    isConnected: Boolean,
     isConnecting: Boolean,
     modifier: Modifier = Modifier,
     userCountryCode: String? = null,
@@ -556,8 +557,7 @@ fun HomeMap(
         CountryHighlight.CONNECTED to colors.notificationSuccess.toArgb(),
     )
 
-    val mapState = remember(connectedServer, isConnecting, userCountryCode) {
-        val isConnected = connectedServer != null && !isConnecting
+    val mapState = remember(connectedServer, isConnected, isConnecting, userCountryCode) {
         val highlight = when {
             isConnected -> CountryHighlight.CONNECTED
             isConnecting -> CountryHighlight.CONNECTING

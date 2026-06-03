@@ -161,6 +161,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
 
             // Handle traffic updates based on the current state
             if (newState == Tunnel.State.DOWN) {
+                lastLogicalServerId = null
                 stopTrafficUpdates()
                 stopLogcatCollection()
             }

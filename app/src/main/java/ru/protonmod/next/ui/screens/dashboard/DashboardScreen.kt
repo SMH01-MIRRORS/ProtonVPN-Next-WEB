@@ -449,6 +449,7 @@ fun DashboardScreen(
                 HomeMap(
                     allServers = (successState?.servers ?: emptyList()).toImmutableList(),
                     connectedServer = successState?.connectedServer,
+                    isConnected = isConnected,
                     isConnecting = isConnecting,
                     modifier = Modifier.fillMaxSize(),
                     userCountryCode = successState?.originalLocationText?.countryCode,

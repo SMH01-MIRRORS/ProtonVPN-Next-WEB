@@ -170,7 +170,7 @@ class AmneziaVpnManager @Inject constructor(
                         val stateStr = intent.getStringExtra(ProtonVpnService.EXTRA_STATE)
                         val serverId = intent.getStringExtra(ProtonVpnService.EXTRA_LOGICAL_SERVER_ID)
                         
-                        if (serverId != null && serverId != currentServerId) {
+                        if (serverId != null && serverId != currentServerId && stateStr != Tunnel.State.DOWN.name) {
                             currentServerId = serverId
                             applicationScope.launch {
                                 val resolved = vpnRepositoryProvider.get().getCachedServers().find { it.id == serverId }
@@ -202,7 +202,7 @@ class AmneziaVpnManager @Inject constructor(
                     }
                     ProtonVpnService.ACTION_STATS_UPDATED -> {
                         val serverId = intent.getStringExtra(ProtonVpnService.EXTRA_LOGICAL_SERVER_ID)
-                        if (serverId != null && serverId != currentServerId) {
+                        if (serverId != null && serverId != currentServerId && _vpnState.value != VpnState.DISCONNECTED && _vpnState.value != VpnState.DISCONNECTING) {
                             currentServerId = serverId
                             applicationScope.launch {
                                 val resolved = vpnRepositoryProvider.get().getCachedServers().find { it.id == serverId }
