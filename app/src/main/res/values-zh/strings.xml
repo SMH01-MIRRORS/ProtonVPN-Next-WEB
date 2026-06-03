@@ -562,7 +562,6 @@
     <string name="backup_import_error">设置导入失败</string>
     <string name="backup_import_confirm">这将覆盖所选类别中的当前设置。是否继续？</string>
     <string name="backup_no_categories">请至少选择一个类别</string>
-
     <!-- Integrity failure overlay strings -->
     <string name="tamper_integrity_failure_title">严重完整性校验失败</string>
     <string name="tamper_integrity_failure_desc">此应用程序已被篡改，不再安全。检测到不匹配的资源。</string>
