@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159975,
-      "versionName": "12.0.0-alpha1st4p1-19-g8fe8970-nightly",
+      "versionCode": 605159976,
+      "versionName": "12.0.0-alpha1st4p1-20-gcff8292-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "Crowdin updates\n\nNew Crowdin updates",
+      "changelog": "feat: enhance anti-tamper protections with native syscalls and SHA-256\n\n- Implemented a native SHA-256 class to replace Java-based `MessageDigest` calls for APK signature verification.\n- Introduced direct assembly syscalls for `aarch64` and `x86_64` architectures to read `/proc/self/maps` and `/proc/self/status`, bypassing potential libc hooks.\n- Added initialization state tracking (`g_initialized`) and a `checkSelfIntegrity` check to prevent JNI initialization bypasses.\n- Strengthened string obfuscation by transitioning from a static XOR key to a position-based sliding key in the `XorString` template.\n- Added a mandatory security check in `loginNative` to ensure the anti-tamper module is active before processing authentication.",
       "force": false
     },
     "release": {
-      "versionCode": 605159975,
-      "versionName": "12.0.0-alpha1st4p1-19-g8fe8970-nightly",
+      "versionCode": 605159976,
+      "versionName": "12.0.0-alpha1st4p1-20-gcff8292-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "Crowdin updates\n\nNew Crowdin updates",
+      "changelog": "feat: enhance anti-tamper protections with native syscalls and SHA-256\n\n- Implemented a native SHA-256 class to replace Java-based `MessageDigest` calls for APK signature verification.\n- Introduced direct assembly syscalls for `aarch64` and `x86_64` architectures to read `/proc/self/maps` and `/proc/self/status`, bypassing potential libc hooks.\n- Added initialization state tracking (`g_initialized`) and a `checkSelfIntegrity` check to prevent JNI initialization bypasses.\n- Strengthened string obfuscation by transitioning from a static XOR key to a position-based sliding key in the `XorString` template.\n- Added a mandatory security check in `loginNative` to ensure the anti-tamper module is active before processing authentication.",
       "force": false
     }
   },
