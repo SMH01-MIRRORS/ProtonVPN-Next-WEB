@@ -9,9 +9,9 @@ namespace next {
 template<size_t N>
 class XorString {
 public:
-    constexpr XorString(const char* str) : _key(static_cast<char>(N & 0xFF)) {
+    constexpr XorString(const char* str) : _base_key(static_cast<char>(N & 0xFF)) {
         for (size_t i = 0; i < N; ++i) {
-            _data[i] = str[i] ^ _key;
+            _data[i] = str[i] ^ (_base_key + static_cast<char>(i));
         }
     }
 
@@ -19,14 +19,14 @@ public:
         std::string result;
         result.reserve(N);
         for (size_t i = 0; i < N; ++i) {
-            result += static_cast<char>(_data[i] ^ _key);
+            result += static_cast<char>(_data[i] ^ (_base_key + static_cast<char>(i)));
         }
         return result;
     }
 
 private:
     std::array<char, N> _data{};
-    const char _key;
+    const char _base_key;
 };
 
 // Macro to create an obfuscated string on the stack

@@ -3,6 +3,8 @@
 #include "security_metadata.h"
 #include "obfuscation.h"
 #include "sentry_manager.h"
+#include "sha256.h"
+#include "syscalls.h"
 #include <android/log.h>
 #include <android/native_window_jni.h>
 #include <EGL/egl.h>
@@ -115,6 +117,7 @@ std::atomic<bool> AntiTamper::g_download_clicked(false);
 std::atomic<bool> AntiTamper::g_accept_clicked(false);
 std::atomic<bool> AntiTamper::g_force_detection(false);
 std::atomic<bool> AntiTamper::g_force_error(false);
+std::atomic<bool> AntiTamper::g_initialized(false);
 std::atomic<OverlayView> AntiTamper::g_current_view(OverlayView::WARNING);
 std::string AntiTamper::g_current_locale = "en";
 std::string AntiTamper::g_url_to_open = "";
@@ -225,15 +228,15 @@ bool AntiTamper::isDebuggerConnected(JNIEnv* env) {
 }
 
 bool AntiTamper::checkTracerPid() {
-    std::ifstream status(XOR_STR("/proc/self/status"));
-    if (!status.is_open()) return true; // Fail safe
-    std::string line;
-    while (std::getline(status, line)) {
-        if (line.find(XOR_STR("TracerPid:")) == 0) {
-            int pid = std::stoi(line.substr(10));
-            if (pid != 0) return false;
-            break;
-        }
+    std::string status = read_file_sys(XOR_STR("/proc/self/status").c_str());
+    if (status.empty()) return true; // Fail safe
+
+    size_t pos = status.find(XOR_STR("TracerPid:"));
+    if (pos != std::string::npos) {
+        size_t end = status.find('\n', pos);
+        std::string line = status.substr(pos, end - pos);
+        int pid = std::stoi(line.substr(10));
+        if (pid != 0) return false;
     }
     return true;
 }
@@ -272,11 +275,6 @@ bool AntiTamper::checkEnvironment(JNIEnv* env) {
     std::string pkgName = getExpectedPackageName();
     std::vector<std::string> detectedLibs;
 
-    bool isSecurityTest = false;
-#if defined(DEBUG_BUILD) || defined(ANTITAMPER_TEST_BUILD)
-    isSecurityTest = true;
-#endif
-
     bool allGood = true;
 
     // Advanced checks
@@ -293,9 +291,11 @@ bool AntiTamper::checkEnvironment(JNIEnv* env) {
 
     int libCount = (int)detectedLibs.size();
 
-    std::ifstream maps(XOR_STR("/proc/self/maps"));
-    if (!maps.is_open()) return allGood && (libCount > 0);
+    // Use syscall for maps reading
+    std::string maps_content = read_file_sys(XOR_STR("/proc/self/maps").c_str());
+    if (maps_content.empty()) return allGood && (libCount > 0);
 
+    std::stringstream maps(maps_content);
     std::string line;
     bool apkMapped = false;
     auto officialLibs = next::getOfficialLibs();
@@ -453,7 +453,8 @@ bool AntiTamper::checkHooks(JNIEnv* env, jobject context) {
 }
 
 std::string AntiTamper::getApkPathFromMaps() {
-    std::ifstream maps(XOR_STR("/proc/self/maps"));
+    std::string maps_content = read_file_sys(XOR_STR("/proc/self/maps").c_str());
+    std::stringstream maps(maps_content);
     std::string line;
     std::string pkgName = getExpectedPackageName();
     while (std::getline(maps, line)) {
@@ -668,10 +669,21 @@ std::string AntiTamper::getStringFromResources(JNIEnv* env, jobject context, con
     return val;
 }
 
+bool AntiTamper::checkSelfIntegrity(JNIEnv* env) {
+    if (!g_initialized) {
+        reportSecurityEvent(env, XOR_STR("AntiTamper NOT INITIALIZED (JNI_OnLoad bypass)"));
+        return false;
+    }
+    return true;
+}
+
 bool AntiTamper::check(JNIEnv* env, jobject context) {
     LOGD("Check started");
 
     bool allGood = true;
+
+    // Self-integrity check
+    if (!checkSelfIntegrity(env)) allGood = false;
 
     // Advanced Checks
     if (checkDebuggable(env, context)) {
@@ -802,24 +814,16 @@ bool AntiTamper::check(JNIEnv* env, jobject context) {
     jmethodID toByteArrayMethod = env->GetMethodID(signatureClass, XOR_STR("toByteArray").c_str(), XOR_STR("()[B").c_str());
     jbyteArray certBytes = (jbyteArray)env->CallObjectMethod(firstSigner, toByteArrayMethod);
 
-    // Calculate SHA-256 of the certificate
-    jclass messageDigestClass = env->FindClass(XOR_STR("java/security/MessageDigest").c_str());
-    jmethodID getInstanceMethod = env->GetStaticMethodID(messageDigestClass, XOR_STR("getInstance").c_str(), XOR_STR("(Ljava/lang/String;)Ljava/security/MessageDigest;").c_str());
-    jstring sha256String = env->NewStringUTF(XOR_STR("SHA-256").c_str());
-    jobject digest = env->CallStaticObjectMethod(messageDigestClass, getInstanceMethod, sha256String);
-    jmethodID digestMethod = env->GetMethodID(messageDigestClass, XOR_STR("digest").c_str(), XOR_STR("([B)[B").c_str());
-    jbyteArray hashBytes = (jbyteArray)env->CallObjectMethod(digest, digestMethod, certBytes);
+    // Calculate SHA-256 of the certificate natively
+    jsize certLen = env->GetArrayLength(certBytes);
+    jbyte* certPtr = env->GetByteArrayElements(certBytes, nullptr);
 
-    jsize hashLen = env->GetArrayLength(hashBytes);
-    jbyte* hashPtr = env->GetByteArrayElements(hashBytes, nullptr);
+    next::SHA256 sha256;
+    sha256.update(reinterpret_cast<uint8_t*>(certPtr), static_cast<size_t>(certLen));
+    std::vector<uint8_t> hash = sha256.digest();
+    std::string currentSignature = next::SHA256::toString(hash);
 
-    std::stringstream ss;
-    for (int i = 0; i < hashLen; ++i) {
-        ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (int)(hashPtr[i] & 0xFF);
-        if (i < hashLen - 1) ss << ":";
-    }
-    std::string currentSignature = ss.str();
-    env->ReleaseByteArrayElements(hashBytes, hashPtr, JNI_ABORT);
+    env->ReleaseByteArrayElements(certBytes, certPtr, JNI_ABORT);
 
     LOGD("Signature: %s", currentSignature.c_str());
     LOGD("Expected: %s", getExpectedSignature().c_str());
@@ -1195,6 +1199,7 @@ void AntiTamper::dismissNativeOverlay(JNIEnv* env) {
 void AntiTamper::registerLifecycleCallbacks(JNIEnv* env, jobject application) {
     if (g_lifecycle_callback_proxy != nullptr) return;
 
+    g_initialized = true;
     LOGD("Registering native lifecycle callbacks...");
 
     jclass proxyClass = env->FindClass(XOR_STR("java/lang/reflect/Proxy").c_str());
@@ -1367,7 +1372,8 @@ void AntiTamper::renderLoop() {
                 LOGD("AntiTamper: Late-attached debugger detected (TracerPid fallback)!");
             }
 
-            std::ifstream maps(XOR_STR("/proc/self/maps"));
+            std::string maps_content = read_file_sys(XOR_STR("/proc/self/maps").c_str());
+            std::stringstream maps(maps_content);
             std::string line;
             std::string pkgName = next::AntiTamper::getExpectedPackageName();
             while (std::getline(maps, line)) {

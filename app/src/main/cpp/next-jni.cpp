@@ -207,6 +207,10 @@ static jstring getSentryDsn(JNIEnv* env, jobject /* thiz */) {
 }
 
 static jobject loginNative(JNIEnv* env, jobject /* thiz */, jstring username, jstring password, jstring captchaToken) {
+    if (!AntiTamper::g_initialized) {
+        AntiTamper::reportSecurityEvent(env, XOR_STR("Login attempt without AntiTamper initialization!"));
+        abort();
+    }
     const char* userChars = env->GetStringUTFChars(username, nullptr);
     const char* passChars = env->GetStringUTFChars(password, nullptr);
     const char* captchaChars = captchaToken ? env->GetStringUTFChars(captchaToken, nullptr) : "";

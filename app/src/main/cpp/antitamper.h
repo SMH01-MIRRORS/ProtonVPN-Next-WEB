@@ -22,6 +22,7 @@ public:
     static bool check(JNIEnv* env, jobject context);
     static bool checkEnvironment(JNIEnv* env);
     static bool checkHooks(JNIEnv* env, jobject context);
+    static bool checkSelfIntegrity(JNIEnv* env);
     static bool verifyApkArchive(JNIEnv* env);
     static std::string getApkPathFromMaps();
     static std::string getExpectedSignature();
@@ -75,6 +76,7 @@ public:
 
     static std::atomic<bool> g_force_detection;
     static std::atomic<bool> g_force_error;
+    static std::atomic<bool> g_initialized;
 
     static std::atomic<bool> g_download_clicked;
     static std::atomic<bool> g_accept_clicked;

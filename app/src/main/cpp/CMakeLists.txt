@@ -27,6 +27,7 @@ set(NEXT_SOURCES
     auth.cpp
     utils.cpp
     sentry_manager.cpp
+    sha256.cpp
     next-jni.cpp
 )
 
