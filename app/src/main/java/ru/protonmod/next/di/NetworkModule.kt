@@ -148,7 +148,9 @@ object NetworkModule {
 
         val certificatePinner = CertificatePinner.Builder()
             .apply {
-                val allPins = NetworkConstants.DEFAULT_SPKI_PINS + NetworkConstants.ALTERNATIVE_API_SPKI_PINS
+                val allPins = NetworkConstants.DEFAULT_SPKI_PINS + 
+                            NetworkConstants.ALTERNATIVE_API_SPKI_PINS +
+                            NetworkConstants.PROXY_SPKI_PINS
                 listOf(
                     "vpn-api.proton.me",
                     "api.protonmail.ch",
@@ -303,7 +305,9 @@ object NetworkModule {
 
             // If standard verification fails (likely because of IP or decoy domain),
             // we check if the certificate is one we trust via pinning.
-            val allPins = NetworkConstants.DEFAULT_SPKI_PINS + NetworkConstants.ALTERNATIVE_API_SPKI_PINS
+            val allPins = NetworkConstants.DEFAULT_SPKI_PINS + 
+                        NetworkConstants.ALTERNATIVE_API_SPKI_PINS +
+                        NetworkConstants.PROXY_SPKI_PINS
             val isIp = hostname.matches(Regex("""\d+\.\d+\.\d+\.\d+"""))
             
             if (isIp || hostname.endsWith(".qzz.io") || hostname.endsWith(".netlify.app") || 

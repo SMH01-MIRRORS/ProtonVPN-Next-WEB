@@ -39,4 +39,13 @@ object NetworkConstants {
         "MSlVrBCdL0hKyczvgYVSRNm88RicyY04Q2y5qrBt0xA=",
         "C2UxW0T1Ckl9s+8cXfjXxlEqwAfPM4HiW2y3UdtBeCw="
     )
+
+    /**
+     * SPKI pins for Netlify proxy and other mirrors (base64, SHA-256).
+     */
+    val PROXY_SPKI_PINS = listOf(
+        "DFv0rPImhleLzIvctvEusBa5wnzQ/+aSqyW18y26L+s=", // Leaf (*.netlify.app)
+        "Wec45nQiFwKvHtuHxSAMGkt19k+uPSw9JlEkxhvYPHk=", // Intermediate (DigiCert Global G2 TLS RSA SHA256 2020 CA1)
+        "i7WTqTvh0OioIruIfFR4kMPnBqrS2rdiVPl/s2uC/CY="  // Root (DigiCert Global Root G2)
+    )
 }
