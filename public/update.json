@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159977,
-      "versionName": "12.0.0-alpha1st4p1-21-g47a5156-nightly",
+      "versionCode": 605159978,
+      "versionName": "12.0.0-alpha1st4p1-22-gb597549-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "feat: add SPKI pins for proxy and Netlify mirrors\n\n- Added `PROXY_SPKI_PINS` to `NetworkConstants` containing SHA-256 hashes for Netlify and DigiCert certificates.\n- Updated `NetworkModule` to include the new proxy pins in the standard `CertificatePinner` configuration.\n- Extended the custom certificate verification logic to utilize proxy pins when validating connections to IP addresses or decoy domains such as `.netlify.app` and `.qzz.io`.",
+      "changelog": "chore: update project dependencies\n\n- Update KSP to 2.3.9.\n- Update Sentry to 6.9.0 and Sentry Android to 8.43.1.\n- Update Core Ktx to 1.19.0.\n- Update Compose Material3 to 1.5.0-alpha21.",
       "force": false
     },
     "release": {
-      "versionCode": 605159977,
-      "versionName": "12.0.0-alpha1st4p1-21-g47a5156-nightly",
+      "versionCode": 605159978,
+      "versionName": "12.0.0-alpha1st4p1-22-gb597549-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "feat: add SPKI pins for proxy and Netlify mirrors\n\n- Added `PROXY_SPKI_PINS` to `NetworkConstants` containing SHA-256 hashes for Netlify and DigiCert certificates.\n- Updated `NetworkModule` to include the new proxy pins in the standard `CertificatePinner` configuration.\n- Extended the custom certificate verification logic to utilize proxy pins when validating connections to IP addresses or decoy domains such as `.netlify.app` and `.qzz.io`.",
+      "changelog": "chore: update project dependencies\n\n- Update KSP to 2.3.9.\n- Update Sentry to 6.9.0 and Sentry Android to 8.43.1.\n- Update Core Ktx to 1.19.0.\n- Update Compose Material3 to 1.5.0-alpha21.",
       "force": false
     }
   },
