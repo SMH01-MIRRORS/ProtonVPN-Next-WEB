@@ -71,6 +71,7 @@
     <string name="dashboard_title">Proton VPN-Next</string>
     <string name="btn_retry">Қайталау</string>
     <string name="error_system_appops">Жүйелік қате: қолданбаны қайта орнатыңыз.</string>
+    <string name="error_vpn_permission_dialog_not_found">VPN permission dialog not available on this device.</string>
     <string name="title_recent_connections">Соңғы қосылымдар</string>
     <string name="status_connected">Қосылды</string>
     <string name="status_connecting">Қосылуда…</string>
