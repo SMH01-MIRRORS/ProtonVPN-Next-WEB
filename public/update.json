@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159978,
-      "versionName": "12.0.0-alpha1st4p1-22-gb597549-nightly",
+      "versionCode": 605159980,
+      "versionName": "12.0.0-alpha1st4p1-24-g991445d-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "chore: update project dependencies\n\n- Update KSP to 2.3.9.\n- Update Sentry to 6.9.0 and Sentry Android to 8.43.1.\n- Update Core Ktx to 1.19.0.\n- Update Compose Material3 to 1.5.0-alpha21.",
+      "changelog": "Crowdin updates\n\nNew Crowdin updates",
       "force": false
     },
     "release": {
-      "versionCode": 605159978,
-      "versionName": "12.0.0-alpha1st4p1-22-gb597549-nightly",
+      "versionCode": 605159980,
+      "versionName": "12.0.0-alpha1st4p1-24-g991445d-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "chore: update project dependencies\n\n- Update KSP to 2.3.9.\n- Update Sentry to 6.9.0 and Sentry Android to 8.43.1.\n- Update Core Ktx to 1.19.0.\n- Update Compose Material3 to 1.5.0-alpha21.",
+      "changelog": "Crowdin updates\n\nNew Crowdin updates",
       "force": false
     }
   },
