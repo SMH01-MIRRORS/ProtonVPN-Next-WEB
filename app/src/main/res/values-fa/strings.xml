@@ -71,6 +71,7 @@
     <string name="dashboard_title">Proton VPN-Next</string>
     <string name="btn_retry">تلاش مجدد</string>
     <string name="error_system_appops">خطای سیستم: لطفاً برنامه را دوباره نصب کنید.</string>
+    <string name="error_vpn_permission_dialog_not_found">VPN permission dialog not available on this device.</string>
     <string name="title_recent_connections">اتصال‌های اخیر</string>
     <string name="status_connected">متصل شد</string>
     <string name="status_connecting">در حال اتصال…</string>

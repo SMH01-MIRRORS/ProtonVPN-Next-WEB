@@ -71,6 +71,7 @@
     <string name="dashboard_title">Proton VPN-Next</string>
     <string name="btn_retry">Повторити</string>
     <string name="error_system_appops">Системна помилка: будь ласка, перевстановіть додаток.</string>
+    <string name="error_vpn_permission_dialog_not_found">VPN permission dialog not available on this device.</string>
     <string name="title_recent_connections">Останні підключення</string>
     <string name="status_connected">Підключено</string>
     <string name="status_connecting">Підключення…</string>

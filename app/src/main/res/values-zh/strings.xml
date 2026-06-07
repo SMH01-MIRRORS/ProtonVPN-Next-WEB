@@ -71,6 +71,7 @@
     <string name="dashboard_title">Proton VPN-Next</string>
     <string name="btn_retry">重试</string>
     <string name="error_system_appops">系统错误：请重新安装应用。</string>
+    <string name="error_vpn_permission_dialog_not_found">VPN permission dialog not available on this device.</string>
     <string name="title_recent_connections">最近连接</string>
     <string name="status_connected">已连接</string>
     <string name="status_connecting">正在连接…</string>
