@@ -39,11 +39,15 @@ object FlavorInitializer {
     }
 
     /**
-     * Performs the heavy Sentry SDK initialization.
-     * Must be called from a background coroutine (Dispatchers.IO) to avoid
-     * blocking the main thread and triggering a Background ANR.
+     * Performs the Sentry SDK initialization.
+     * This method is called by the native AntiTamper code via JNI.
+     * It MUST remain a static method with the signature (Landroid/content/Context;)V.
+     *
+     * In ProtonNextApp, it is called from Dispatchers.IO to avoid blocking the main thread
+     * and triggering a Background ANR during startup.
      */
-    suspend fun initialize(context: Context) = withContext(Dispatchers.IO) {
+    @JvmStatic
+    fun initialize(context: Context) {
         // Read settings synchronously — SharedPreferences reads are thread-safe
         val settingsManager = SettingsManager(context)
         val isAnalyticsEnabled = settingsManager.isAnalyticsEnabledSync()
@@ -53,7 +57,7 @@ object FlavorInitializer {
         val isMetricsEnabled = settingsManager.isMetricsEnabledSync()
         val isLogsEnabled = settingsManager.isLogsEnabledSync()
 
-        // Sentry initialization (blocking I/O — runs on Dispatchers.IO)
+        // Sentry initialization
         SentryAndroid.init(context) { options ->
             options.dsn = SentryBridge.getSentryDsn()
             options.isDebug = BuildConfig.DEBUG // Helpful for local development
