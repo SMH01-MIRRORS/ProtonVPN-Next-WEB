@@ -17,18 +17,7 @@
 
 package ru.protonmod.next.vpn
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
-import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkCapabilities
-import android.net.NetworkRequest
-import android.net.wifi.WifiInfo
-import android.net.wifi.WifiManager
-import android.os.Build
-import android.telephony.TelephonyManager
-import androidx.core.content.ContextCompat
 import ru.protonmod.next.utils.ProtonLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -48,7 +37,6 @@ import javax.inject.Singleton
 
 @Singleton
 class VpnAutomationManager @Inject constructor(
-    @ApplicationContext private val context: Context,
     private val amneziaVpnManager: AmneziaVpnManager,
     private val settingsManager: SettingsManager,
     private val vpnRepository: VpnRepository,
@@ -57,9 +45,6 @@ class VpnAutomationManager @Inject constructor(
     @ApplicationScope private val applicationScope: CoroutineScope
 ) {
     private val TAG = "VpnAutomationManager"
-    private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    private var lastHandledNetworkName: String? = null
-    private var debounceJob: kotlinx.coroutines.Job? = null
 
     init {
         applicationScope.launch {
@@ -75,7 +60,6 @@ class VpnAutomationManager @Inject constructor(
                     val currentEndTime = settingsManager.pauseEndTime.first()
                     if (currentEndTime != 0L && currentEndTime <= System.currentTimeMillis()) {
                         ProtonLogger.i(TAG, "Pause expired, auto-resuming...")
-                        lastHandledNetworkName = null // Clear to allow trigger
                         amneziaVpnManager.resumeVpn()
                         triggerAutoConnect()
                     }
@@ -86,108 +70,18 @@ class VpnAutomationManager @Inject constructor(
                     val currentEndTime = settingsManager.pauseEndTime.first()
                     if (currentEndTime > 0 && currentEndTime <= System.currentTimeMillis()) {
                         ProtonLogger.i(TAG, "Detected expired pause, clearing and resuming...")
-                        lastHandledNetworkName = null // Clear to allow trigger
                         amneziaVpnManager.resumeVpn()
                         triggerAutoConnect()
                     }
                 }
             }
         }
-
-        val networkRequest = NetworkRequest.Builder()
-            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-            .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
-            .build()
-
-        connectivityManager.registerNetworkCallback(networkRequest, object : ConnectivityManager.NetworkCallback() {
-            override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
-                val name = if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                    getSsid(capabilities)
-                } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                    getCarrierName()
-                } else null
-
-                if (name != null) {
-                    debounceNetworkChange(name)
-                }
-            }
-
-            override fun onLost(network: Network) {
-                // Potential to handle auto-connect on mobile data here
-            }
-        })
-    }
-
-    private fun debounceNetworkChange(networkName: String) {
-        debounceJob?.cancel()
-        debounceJob = applicationScope.launch {
-            delay(1000) // Debounce for 1 second to let network stabilize
-            handleNetworkChanged(networkName)
-        }
-    }
-
-    private fun getSsid(capabilities: NetworkCapabilities): String? {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val wifiInfo = capabilities.transportInfo as? WifiInfo
-            return wifiInfo?.ssid?.removeSurrounding("\"")?.takeIf { it != "<unknown ssid>" }
-        } else {
-            val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-            @Suppress("DEPRECATION")
-            return wifiManager.connectionInfo.ssid?.removeSurrounding("\"")?.takeIf { it != "<unknown ssid>" }
-        }
-    }
-
-    private fun getCarrierName(): String? {
-        val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-        return tm.networkOperatorName?.takeIf { it.isNotBlank() }
     }
 
     suspend fun resumeVpn() {
         ProtonLogger.i(TAG, "resumeVpn: Manually requested resumption.")
-        lastHandledNetworkName = null // Force re-evaluation of current network
         amneziaVpnManager.resumeVpn()
         triggerAutoConnect()
-    }
-
-    private fun handleNetworkChanged(networkName: String) {
-        if (networkName == lastHandledNetworkName) {
-            // Already handled this network, and it hasn't changed.
-            // Only re-handle if VPN is unexpectedly down.
-            if (amneziaVpnManager.tunnelState.value == Tunnel.State.UP || 
-                amneziaVpnManager.vpnState.value == AmneziaVpnManager.VpnState.CONNECTING) {
-                return
-            }
-        }
-
-        lastHandledNetworkName = networkName
-
-        applicationScope.launch {
-            val isEnabled = settingsManager.autoConnectOnUntrusted.first()
-            if (!isEnabled) return@launch
-
-            // Don't automate if VPN is currently paused
-            val pauseEndTime = settingsManager.pauseEndTime.first()
-            if (pauseEndTime > System.currentTimeMillis()) {
-                ProtonLogger.d(TAG, "Network changed to $networkName but VPN is paused. Skipping automation.")
-                return@launch
-            }
-
-            val trustedNetworks = settingsManager.trustedWifiNetworks.first()
-            val isTrusted = trustedNetworks.contains(networkName)
-            val isVpnConnected = amneziaVpnManager.tunnelState.value == Tunnel.State.UP
-            val isConnecting = amneziaVpnManager.vpnState.value == AmneziaVpnManager.VpnState.CONNECTING ||
-                               amneziaVpnManager.vpnState.value == AmneziaVpnManager.VpnState.VERIFYING
-
-            ProtonLogger.d(TAG, "Network changed to $networkName (isTrusted=$isTrusted, vpnActive=$isVpnConnected, isConnecting=$isConnecting)")
-
-            if (isTrusted && (isVpnConnected || isConnecting)) {
-                ProtonLogger.i(TAG, "Connected to trusted network $networkName. Disconnecting VPN.")
-                amneziaVpnManager.disconnect()
-            } else if (!isTrusted && !isVpnConnected && !isConnecting) {
-                ProtonLogger.i(TAG, "Connected to untrusted network $networkName. Connecting VPN.")
-                triggerAutoConnect()
-            }
-        }
     }
 
     private suspend fun triggerAutoConnect() {

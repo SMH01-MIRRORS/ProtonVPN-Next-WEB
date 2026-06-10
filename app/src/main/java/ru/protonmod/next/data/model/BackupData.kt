@@ -34,7 +34,6 @@ enum class BackupCategory {
     DNS,
     SPOOF_COUNTRY,
     OTA_UPDATES,
-    TRUSTED_WIFI,
     SENTRY_ANALYTICS
 }
 

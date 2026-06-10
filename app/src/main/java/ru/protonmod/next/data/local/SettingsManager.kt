@@ -121,9 +121,6 @@ class SettingsManager @Inject constructor(
 
         private val IP_HIDDEN = booleanPreferencesKey("is_ip_hidden")
 
-        private val TRUSTED_WIFI_NETWORKS = stringSetPreferencesKey("trusted_wifi_networks")
-        private val AUTO_CONNECT_ON_UNTRUSTED = booleanPreferencesKey("auto_connect_on_untrusted")
-
         private val PAUSE_END_TIME = androidx.datastore.preferences.core.longPreferencesKey("pause_end_time_v2")
 
         private val POLICY_ACCEPTED_VERSION = intPreferencesKey("policy_accepted_version")
@@ -264,8 +261,6 @@ class SettingsManager @Inject constructor(
     val quickConnectTargetId: Flow<String?> = context.dataStore.data.map { it[QUICK_CONNECT_TARGET_ID] }
     val isIpHidden: Flow<Boolean> = context.dataStore.data.map { it[IP_HIDDEN] ?: false }
 
-    val trustedWifiNetworks: Flow<Set<String>> = context.dataStore.data.map { it[TRUSTED_WIFI_NETWORKS] ?: emptySet() }
-    val autoConnectOnUntrusted: Flow<Boolean> = context.dataStore.data.map { it[AUTO_CONNECT_ON_UNTRUSTED] ?: false }
     val pauseEndTime: Flow<Long> = context.dataStore.data.map { it[PAUSE_END_TIME] ?: 0L }
 
     val policyAcceptedVersion: Flow<Int> = context.dataStore.data.map { it[POLICY_ACCEPTED_VERSION] ?: 0 }
@@ -526,14 +521,6 @@ class SettingsManager @Inject constructor(
         context.dataStore.edit { it[IP_HIDDEN] = hidden }
     }
 
-    suspend fun setTrustedWifiNetworks(networks: Set<String>) {
-        context.dataStore.edit { it[TRUSTED_WIFI_NETWORKS] = networks }
-    }
-
-    suspend fun setAutoConnectOnUntrusted(enabled: Boolean) {
-        context.dataStore.edit { it[AUTO_CONNECT_ON_UNTRUSTED] = enabled }
-    }
-
     suspend fun setPauseEndTime(time: Long) {
         context.dataStore.edit { it[PAUSE_END_TIME] = time }
     }
@@ -630,7 +617,7 @@ class SettingsManager @Inject constructor(
                     CRASH_REPORTS_ENABLED.name, SENTRY_PERFORMANCE_ENABLED.name, 
                     SENTRY_NON_FATAL_ENABLED.name, SENTRY_SESSION_REPLAY_ENABLED.name, 
                     SENTRY_ANR_ENABLED.name, SENTRY_METRICS_ENABLED.name, 
-                    SENTRY_LOGS_ENABLED.name, AUTO_CONNECT_ON_UNTRUSTED.name,
+                    SENTRY_LOGS_ENABLED.name,
                     IP_HIDDEN.name -> {
                         val boolValue = value.toBoolean()
                         settings[key as Preferences.Key<Boolean>] = boolValue
@@ -664,8 +651,7 @@ class SettingsManager @Inject constructor(
                         prefs.edit { putString(keyName, value) }
                     }
                     
-                    EXCLUDED_APPS.name, EXCLUDED_IPS.name, EXCLUDED_DOMAINS.name, 
-                    TRUSTED_WIFI_NETWORKS.name -> {
+                    EXCLUDED_APPS.name, EXCLUDED_IPS.name, EXCLUDED_DOMAINS.name -> {
                         try {
                             val set = Json.decodeFromString<Set<String>>(value)
                             settings[key as Preferences.Key<Set<String>>] = set
@@ -723,8 +709,6 @@ class SettingsManager @Inject constructor(
             QUICK_CONNECT_STRATEGY.name -> QUICK_CONNECT_STRATEGY
             QUICK_CONNECT_TARGET_ID.name -> QUICK_CONNECT_TARGET_ID
             IP_HIDDEN.name -> IP_HIDDEN
-            TRUSTED_WIFI_NETWORKS.name -> TRUSTED_WIFI_NETWORKS
-            AUTO_CONNECT_ON_UNTRUSTED.name -> AUTO_CONNECT_ON_UNTRUSTED
             PAUSE_END_TIME.name -> PAUSE_END_TIME
             POLICY_ACCEPTED_VERSION.name -> POLICY_ACCEPTED_VERSION
             SETUP_STEP.name -> SETUP_STEP

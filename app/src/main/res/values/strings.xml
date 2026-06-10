@@ -584,18 +584,6 @@
     <string name="battery_optimization_desc">Android may disconnect the VPN to save power. Please disable optimization for this app.</string>
     <string name="btn_fix">Fix</string>
 
-    <!-- Trusted Wi-Fi -->
-    <string name="settings_trusted_wifi">Trusted Networks</string>
-    <string name="settings_trusted_wifi_desc">Manage Wi-Fi and mobile networks where VPN is not required</string>
-    <string name="settings_auto_connect_untrusted">Auto-connect on Untrusted</string>
-    <string name="settings_auto_connect_untrusted_desc">Automatically connect VPN when joining unknown networks</string>
-    <string name="trusted_wifi_title">Trusted Wi-Fi &amp; Mobile</string>
-    <string name="trusted_wifi_desc">The VPN will automatically disconnect when you connect to these Wi-Fi or mobile networks.</string>
-    <string name="trusted_wifi_add">Add current network: %1$s</string>
-    <string name="trusted_wifi_empty">No trusted networks added yet.</string>
-    <string name="trusted_wifi_permission_title">Network Access Required</string>
-    <string name="trusted_wifi_permission_desc">Android requires location permission to identify Wi-Fi networks. Mobile networks are identified by carrier name. This is used only for automation.</string>
-
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">UNOFFICIAL BUILD DETECTED!</string>
     <string name="tamper_warning_desc">This version of Proton VPN-Next has been modified by an unknown third party. Your security, privacy, and data are at HIGH RISK.</string>
@@ -621,7 +609,6 @@
     <string name="backup_cat_dns">DNS Settings</string>
     <string name="backup_cat_spoof_country">Country Spoofing</string>
     <string name="backup_cat_ota">Update Settings</string>
-    <string name="backup_cat_trusted_wifi">Trusted Networks</string>
     <string name="backup_cat_sentry">Analytics &amp; Crash Reports</string>
     <string name="backup_export_success">Settings exported successfully</string>
     <string name="backup_export_error">Failed to export settings</string>

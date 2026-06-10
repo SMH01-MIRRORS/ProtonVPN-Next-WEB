@@ -125,7 +125,6 @@ class BackupRepository @Inject constructor(
             BackupCategory.DNS -> listOf("custom_dns")
             BackupCategory.SPOOF_COUNTRY -> listOf("spoof_country_enabled", "spoof_country_null", "spoof_country_code")
             BackupCategory.OTA_UPDATES -> listOf("ota_update_frequency", "ota_update_channel")
-            BackupCategory.TRUSTED_WIFI -> listOf("trusted_wifi_networks", "auto_connect_on_untrusted")
             BackupCategory.SENTRY_ANALYTICS -> listOf(
                 "analytics_enabled", "crash_reports_enabled", "sentry_performance_enabled", "sentry_non_fatal_enabled",
                 "sentry_session_replay_enabled", "sentry_anr_enabled", "sentry_metrics_enabled", "sentry_logs_enabled"

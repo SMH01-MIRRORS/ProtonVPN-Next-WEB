@@ -261,7 +261,6 @@ private fun getCategoryIcon(category: BackupCategory): ImageVector {
         BackupCategory.DNS -> Icons.Rounded.Dns
         BackupCategory.SPOOF_COUNTRY -> Icons.Rounded.Public
         BackupCategory.OTA_UPDATES -> Icons.Rounded.SystemUpdate
-        BackupCategory.TRUSTED_WIFI -> Icons.Rounded.Wifi
         BackupCategory.SENTRY_ANALYTICS -> Icons.Rounded.Analytics
     }
 }
@@ -280,7 +279,6 @@ private fun getCategoryName(category: BackupCategory): String {
         BackupCategory.DNS -> stringResource(R.string.backup_cat_dns)
         BackupCategory.SPOOF_COUNTRY -> stringResource(R.string.backup_cat_spoof_country)
         BackupCategory.OTA_UPDATES -> stringResource(R.string.backup_cat_ota)
-        BackupCategory.TRUSTED_WIFI -> stringResource(R.string.backup_cat_trusted_wifi)
         BackupCategory.SENTRY_ANALYTICS -> stringResource(R.string.backup_cat_sentry)
     }
 }
