@@ -24,7 +24,11 @@
 namespace next {
 
 std::string SentryManager::getSentryDsn() {
+#ifdef PRIVACY_FLAVOR
+    return "";
+#else
     return XOR_STR("https://c9a1c0cf35e7706fca405af8ee26e147@o4511097624199168.ingest.de.sentry.io/4510986956374096");
+#endif
 }
 
 void SentryManager::init(const char*, bool, const char*, int, const char*) {
@@ -36,6 +40,9 @@ void SentryManager::shutdown() {
 }
 
 void SentryManager::reportSecurityEvent(JNIEnv* env, const std::string& event) {
+#ifdef PRIVACY_FLAVOR
+    __android_log_print(ANDROID_LOG_INFO, TAG, "[PRIVACY] Security event: %s", event.c_str());
+#endif
     if (!env) {
         __android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot report security event: JNIEnv is null. Event: %s", event.c_str());
         return;
@@ -59,7 +66,9 @@ void SentryManager::reportSecurityEvent(JNIEnv* env, const std::string& event) {
     env->CallStaticVoidMethod(bridgeClass, reportMethod, jEvent);
     env->DeleteLocalRef(jEvent);
 
+#ifndef PRIVACY_FLAVOR
     __android_log_print(ANDROID_LOG_INFO, TAG, "Security event forwarded to Sentry Android: %s", event.c_str());
+#endif
 }
 
 void SentryManager::flushAndTerminate(JNIEnv* env) {
@@ -83,8 +92,8 @@ void SentryManager::flushAndTerminate(JNIEnv* env) {
         return;
     }
 
-    // This calls Sentry.flush(3000) then killProcess() on the Kotlin side.
-    // The process will not return from this call.
+    // In privacy flavor, this just calls Process.killProcess()
+    // In other flavors, it calls Sentry.flush(3000) then killProcess()
     env->CallStaticVoidMethod(bridgeClass, flushMethod);
 
     // Fallback: if the JVM call somehow returns, abort hard.

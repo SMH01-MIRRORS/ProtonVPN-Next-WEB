@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <meta-data android:name="io.sentry.dsn" android:value="https://7b74cef88678ecb3e6047ac6b4abf139@o4510986952310784.ingest.de.sentry.io/4510986956374096" />
+        <meta-data android:name="io.sentry.auto-init" android:value="false" />
+        <meta-data android:name="io.sentry.performance.app-start-profiling.enable" android:value="false" />
+    </application>
+</manifest>

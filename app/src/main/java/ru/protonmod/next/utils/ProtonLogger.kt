@@ -18,10 +18,6 @@
 package ru.protonmod.next.utils
 
 import android.util.Log
-import io.sentry.Sentry
-import io.sentry.Breadcrumb
-import io.sentry.SentryLevel
-import io.sentry.SentryLogLevel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -33,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap
  * A professional logging wrapper for Proton VPN-Next.
  *
  * Automatically handles debug/release logic, tag generation from stack trace,
- * and integrates with Sentry for remote diagnostics.
+ * and integrates with Sentry (if available) for remote diagnostics.
  */
 object ProtonLogger {
 
@@ -42,31 +38,12 @@ object ProtonLogger {
 
     /**
      * Minimum interval (ms) between breadcrumbs with the same category+message prefix.
-     * Prevents high-frequency tunnel log loops from flooding the Sentry breadcrumb buffer
-     * and saturating DefaultDispatcher worker threads (which causes background ANRs).
      */
     private const val BREADCRUMB_RATE_LIMIT_MS = 1_000L
 
-    /**
-     * Tracks the last time a breadcrumb with a given dedup key was emitted.
-     * Key = "$category:${message.take(60)}" to group near-duplicate messages.
-     * ConcurrentHashMap so it is safe to access from multiple IO threads.
-     */
     private val breadcrumbLastEmitted = ConcurrentHashMap<String, Long>()
-
-    /**
-     * Tracks the last time a Sentry log entry with a given dedup key was emitted.
-     * Key = "$tag:${message.take(60)}" to group near-duplicate messages.
-     * Mirrors breadcrumbLastEmitted to prevent the same high-frequency log flood
-     * from saturating Sentry SDK internals and causing background ANRs.
-     */
     private val sentryLogLastEmitted = ConcurrentHashMap<String, Long>()
 
-    /**
-     * Dedicated background scope for dispatching Sentry log calls off the calling thread.
-     * Ensures Sentry.logger().log() (which acquires a scope lock) never blocks the
-     * main/broadcast thread and cannot cause a background ANR.
-     */
     private val logScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /** Controlled by SettingsManager at runtime/startup */
@@ -78,6 +55,9 @@ object ProtonLogger {
     /** Global toggle for logcat output. Can be overridden in release builds. */
     var isLogcatEnabled: Boolean = BuildConfig.DEBUG
 
+    /** Abstracted reporter for crashlytics/analytics */
+    var crashReporter: CrashReporter? = null
+
     /** Log at VERBOSE level */
     fun v(tag: String? = null, message: String, throwable: Throwable? = null) {
         val finalTag = tag ?: getAutoTag()
@@ -86,11 +66,11 @@ object ProtonLogger {
         if (isLogcatEnabled) {
             Log.v(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, message, SentryLevel.DEBUG)
-        addSentryLog(finalTag, decoratedMsg, SentryLevel.DEBUG, throwable)
+        addSentryBreadcrumb(finalTag, message, "DEBUG")
+        addSentryLog(finalTag, decoratedMsg, "DEBUG", throwable)
     }
 
-    /** Log at VERBOSE level with a lazy message lambda for better performance */
+    /** Log at VERBOSE level with a lazy message lambda */
     inline fun v(tag: String? = null, throwable: Throwable? = null, crossinline message: () -> String) {
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
@@ -99,8 +79,8 @@ object ProtonLogger {
         if (isLogcatEnabled) {
             Log.v(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, msg, SentryLevel.DEBUG)
-        addSentryLog(finalTag, decoratedMsg, SentryLevel.DEBUG, throwable)
+        addSentryBreadcrumb(finalTag, msg, "DEBUG")
+        addSentryLog(finalTag, decoratedMsg, "DEBUG", throwable)
     }
 
     /** Log at DEBUG level */
@@ -111,11 +91,11 @@ object ProtonLogger {
         if (isLogcatEnabled) {
             Log.d(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, message, SentryLevel.DEBUG)
-        addSentryLog(finalTag, decoratedMsg, SentryLevel.DEBUG, throwable)
+        addSentryBreadcrumb(finalTag, message, "DEBUG")
+        addSentryLog(finalTag, decoratedMsg, "DEBUG", throwable)
     }
 
-    /** Log at DEBUG level with a lazy message lambda for better performance */
+    /** Log at DEBUG level with a lazy message lambda */
     inline fun d(tag: String? = null, throwable: Throwable? = null, crossinline message: () -> String) {
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
@@ -124,8 +104,8 @@ object ProtonLogger {
         if (isLogcatEnabled) {
             Log.d(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, msg, SentryLevel.DEBUG)
-        addSentryLog(finalTag, decoratedMsg, SentryLevel.DEBUG, throwable)
+        addSentryBreadcrumb(finalTag, msg, "DEBUG")
+        addSentryLog(finalTag, decoratedMsg, "DEBUG", throwable)
     }
 
     /** Log at INFO level */
@@ -136,11 +116,11 @@ object ProtonLogger {
         if (isLogcatEnabled) {
             Log.i(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, message, SentryLevel.INFO)
-        addSentryLog(finalTag, decoratedMsg, SentryLevel.INFO, throwable)
+        addSentryBreadcrumb(finalTag, message, "INFO")
+        addSentryLog(finalTag, decoratedMsg, "INFO", throwable)
     }
 
-    /** Log at INFO level with a lazy message lambda for better performance */
+    /** Log at INFO level with a lazy message lambda */
     inline fun i(tag: String? = null, throwable: Throwable? = null, crossinline message: () -> String) {
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
@@ -149,8 +129,8 @@ object ProtonLogger {
         if (isLogcatEnabled) {
             Log.i(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, msg, SentryLevel.INFO)
-        addSentryLog(finalTag, decoratedMsg, SentryLevel.INFO, throwable)
+        addSentryBreadcrumb(finalTag, msg, "INFO")
+        addSentryLog(finalTag, decoratedMsg, "INFO", throwable)
     }
 
     /** Log at WARN level */
@@ -161,14 +141,14 @@ object ProtonLogger {
         if (isLogcatEnabled) {
             Log.w(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, message, SentryLevel.WARNING)
-        addSentryLog(finalTag, decoratedMsg, SentryLevel.WARNING, throwable)
+        addSentryBreadcrumb(finalTag, message, "WARNING")
+        addSentryLog(finalTag, decoratedMsg, "WARNING", throwable)
         if (throwable != null && isNonFatalEnabled) {
-            Sentry.captureException(throwable)
+            crashReporter?.captureException(throwable)
         }
     }
 
-    /** Log at WARN level with a lazy message lambda for better performance */
+    /** Log at WARN level with a lazy message lambda */
     inline fun w(tag: String? = null, throwable: Throwable? = null, crossinline message: () -> String) {
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
@@ -177,10 +157,10 @@ object ProtonLogger {
         if (isLogcatEnabled) {
             Log.w(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, msg, SentryLevel.WARNING)
-        addSentryLog(finalTag, decoratedMsg, SentryLevel.WARNING, throwable)
+        addSentryBreadcrumb(finalTag, msg, "WARNING")
+        addSentryLog(finalTag, decoratedMsg, "WARNING", throwable)
         if (throwable != null && isNonFatalEnabled) {
-            Sentry.captureException(throwable)
+            crashReporter?.captureException(throwable)
         }
     }
 
@@ -192,18 +172,18 @@ object ProtonLogger {
         if (isLogcatEnabled) {
             Log.e(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, message, SentryLevel.ERROR)
-        addSentryLog(finalTag, decoratedMsg, SentryLevel.ERROR, throwable)
+        addSentryBreadcrumb(finalTag, message, "ERROR")
+        addSentryLog(finalTag, decoratedMsg, "ERROR", throwable)
         if (isNonFatalEnabled) {
             if (throwable != null) {
-                Sentry.captureException(throwable)
+                crashReporter?.captureException(throwable)
             } else {
-                Sentry.captureMessage(PiiScrubber.scrub(message), SentryLevel.ERROR)
+                crashReporter?.captureMessage(PiiScrubber.scrub(message), "ERROR")
             }
         }
     }
 
-    /** Log at ERROR level with a lazy message lambda for better performance */
+    /** Log at ERROR level with a lazy message lambda */
     inline fun e(tag: String? = null, throwable: Throwable? = null, crossinline message: () -> String) {
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
@@ -212,31 +192,26 @@ object ProtonLogger {
         if (isLogcatEnabled) {
             Log.e(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, msg, SentryLevel.ERROR)
-        addSentryLog(finalTag, decoratedMsg, SentryLevel.ERROR, throwable)
+        addSentryBreadcrumb(finalTag, msg, "ERROR")
+        addSentryLog(finalTag, decoratedMsg, "ERROR", throwable)
         if (isNonFatalEnabled) {
             if (throwable != null) {
-                Sentry.captureException(throwable)
+                crashReporter?.captureException(throwable)
             } else {
-                Sentry.captureMessage(PiiScrubber.scrub(msg), SentryLevel.ERROR)
+                crashReporter?.captureMessage(PiiScrubber.scrub(msg), "ERROR")
             }
         }
     }
 
-    /**
-     * Records a user action as a breadcrumb.
-     * Useful for tracking UI interactions and sequence of events leading to a crash.
-     */
+    /** Records a user action as a breadcrumb. */
     fun action(tag: String, message: String) {
         if (isLogcatEnabled) {
             Log.d(tag, "[ACTION] $message")
         }
-        addSentryBreadcrumb(tag, message, SentryLevel.INFO, category = "ui.action")
+        addSentryBreadcrumb(tag, message, "INFO", category = "ui.action")
     }
 
-    /**
-     * Professional error logging that accepts a message and an optional throwable.
-     */
+    /** Professional error logging that accepts a message and an optional throwable. */
     fun error(tag: String? = null, message: String, throwable: Throwable? = null) {
         e(tag, message, throwable)
     }
@@ -245,90 +220,47 @@ object ProtonLogger {
     internal fun addSentryBreadcrumb(
         tag: String,
         message: String,
-        level: SentryLevel,
+        level: String,
         category: String = "log.message"
     ) {
         if (!isAnalyticsEnabled) return
 
         val scrubbedMessage = PiiScrubber.scrub(message)
-
-        // Rate-limit repetitive breadcrumbs (e.g. high-frequency tunnel handshake/keepalive
-        // log lines) to prevent saturating Dispatcher.IO threads and causing background ANRs.
         val dedupKey = "$category:${scrubbedMessage.take(60)}"
         val now = System.currentTimeMillis()
         val last = breadcrumbLastEmitted[dedupKey]
         if (last != null && now - last < BREADCRUMB_RATE_LIMIT_MS) {
-            return // Drop this breadcrumb; an identical one was emitted very recently
+            return
         }
         breadcrumbLastEmitted[dedupKey] = now
 
-        val breadcrumb = Breadcrumb().apply {
-            this.category = if (category == "log.message") tag else category
-            this.message = scrubbedMessage
-            this.level = level
-            if (category != "log.message") {
-                this.setData("tag", tag)
-            }
-        }
-        Sentry.addBreadcrumb(breadcrumb)
+        crashReporter?.addBreadcrumb(tag, scrubbedMessage, level, category)
     }
 
-    /**
-     * Forwards a log entry to the Sentry Logs API (requires options.logs.isEnabled = true).
-     * This feeds the real-time "Logs" explorer in Sentry, separate from breadcrumbs.
-     *
-     * Rate-limited (same interval as breadcrumbs) to drop high-frequency duplicate log lines
-     * and dispatched asynchronously on [logScope] so the Sentry SDK's internal scope-lock
-     * acquisition (Scope.getSpan) never blocks the calling thread — preventing background ANRs.
-     */
     @PublishedApi
-    internal fun addSentryLog(tag: String, message: String, level: SentryLevel, throwable: Throwable? = null) {
+    internal fun addSentryLog(tag: String, message: String, level: String, throwable: Throwable? = null) {
         if (!isAnalyticsEnabled || !isSentryLogsEnabled) return
 
         val scrubbedMessage = PiiScrubber.scrub(message)
-
-        // Rate-limit: drop near-duplicate log lines emitted faster than BREADCRUMB_RATE_LIMIT_MS.
         val dedupKey = "$tag:${scrubbedMessage.take(60)}"
         val now = System.currentTimeMillis()
         val last = sentryLogLastEmitted[dedupKey]
         if (last != null && now - last < BREADCRUMB_RATE_LIMIT_MS) {
-            return // Drop; an identical entry was emitted very recently.
+            return
         }
         sentryLogLastEmitted[dedupKey] = now
 
-        val fullMessage = "[$tag] $scrubbedMessage"
-        val logLevel = when (level) {
-            SentryLevel.DEBUG -> SentryLogLevel.DEBUG
-            SentryLevel.INFO -> SentryLogLevel.INFO
-            SentryLevel.WARNING -> SentryLogLevel.WARN
-            SentryLevel.ERROR -> SentryLogLevel.ERROR
-            SentryLevel.FATAL -> SentryLogLevel.FATAL
-        }
-
-        // Dispatch off the calling thread so Sentry.logger().log() (which acquires a
-        // scope lock) cannot stall the main/broadcast thread and trigger a background ANR.
         logScope.launch {
-            // Use the official Sentry Logs API (v8.12.0+)
-            // This ensures logs are sent to the "Logs" explorer in both debug and release.
-            if (throwable != null) {
-                val scrubbedThrowableMsg = PiiScrubber.scrub(throwable.message)
-                Sentry.logger().log(logLevel, "$fullMessage: $scrubbedThrowableMsg", throwable)
-            } else {
-                Sentry.logger().log(logLevel, fullMessage)
-            }
+            crashReporter?.addLog(tag, scrubbedMessage, level, throwable)
         }
     }
 
-    /**
-     * Automatically extracts the class name from the stack trace to use as a tag.
-     */
     @PublishedApi
     internal fun getAutoTag(): String {
         val stackTrace = Thread.currentThread().stackTrace
         return if (stackTrace.size > CALL_STACK_INDEX) {
             val element = stackTrace[CALL_STACK_INDEX]
             val className = element.className.substringAfterLast('.')
-            // If the caller is an anonymous class or lambda, cleanup the name
             className.substringBefore('$')
         } else {
             DEFAULT_TAG
