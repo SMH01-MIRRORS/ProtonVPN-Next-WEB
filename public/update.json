@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159985,
-      "versionName": "12.0.0-alpha1st4p1-29-g96e9b00-nightly",
+      "versionCode": 605159993,
+      "versionName": "12.0.0-alpha1st4p1-37-ge7c51ec-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "refactor: update Sentry initialization for JNI compatibility\n\n- Added `@JvmStatic` to `FlavorInitializer.initialize` to allow invocation from native AntiTamper code via JNI.\n- Removed the `suspend` modifier and internal `withContext(Dispatchers.IO)` block, shifting threading responsibility to the caller.\n- Updated documentation to specify the required JNI method signature `(Landroid/content/Context;)V`.",
+      "changelog": "feat: remove trusted networks and vpn automation logic\n\n- Removed the \"Trusted Networks\" feature and the \"Auto-connect on untrusted\" setting.\n- Deleted `TrustedWifiScreen.kt` and removed its associated routes from the navigation graph.\n- Removed `ACCESS_FINE_LOCATION` and `ACCESS_COARSE_LOCATION` permissions from the manifest as they are no longer required.\n- Simplified `VpnAutomationManager` by removing network callback logic, SSID/carrier identification, and automatic connection/disconnection based on network trust levels.\n- Cleaned up `SettingsManager`, `SettingsViewModel`, and `BackupRepository` to remove DataStore keys and backup categories related to trusted networks.\n- Deleted localized UI strings associated with trusted network settings and location permission prompts.",
       "force": false
     },
     "release": {
-      "versionCode": 605159985,
-      "versionName": "12.0.0-alpha1st4p1-29-g96e9b00-nightly",
+      "versionCode": 605159993,
+      "versionName": "12.0.0-alpha1st4p1-37-ge7c51ec-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "refactor: update Sentry initialization for JNI compatibility\n\n- Added `@JvmStatic` to `FlavorInitializer.initialize` to allow invocation from native AntiTamper code via JNI.\n- Removed the `suspend` modifier and internal `withContext(Dispatchers.IO)` block, shifting threading responsibility to the caller.\n- Updated documentation to specify the required JNI method signature `(Landroid/content/Context;)V`.",
+      "changelog": "feat: remove trusted networks and vpn automation logic\n\n- Removed the \"Trusted Networks\" feature and the \"Auto-connect on untrusted\" setting.\n- Deleted `TrustedWifiScreen.kt` and removed its associated routes from the navigation graph.\n- Removed `ACCESS_FINE_LOCATION` and `ACCESS_COARSE_LOCATION` permissions from the manifest as they are no longer required.\n- Simplified `VpnAutomationManager` by removing network callback logic, SSID/carrier identification, and automatic connection/disconnection based on network trust levels.\n- Cleaned up `SettingsManager`, `SettingsViewModel`, and `BackupRepository` to remove DataStore keys and backup categories related to trusted networks.\n- Deleted localized UI strings associated with trusted network settings and location permission prompts.",
       "force": false
     }
   },
