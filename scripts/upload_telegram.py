@@ -97,13 +97,22 @@ async def main():
 
     for apk_path in apk_files:
         file_name = os.path.basename(apk_path)
-        is_debug = "debug" in apk_path.lower()
-        build_type = "DEBUG" if is_debug else "RELEASE"
+
+        # Extract flavor and build type from path: app/build/outputs/apk/<flavor>/<build_type>/...
+        path_parts = apk_path.split(os.sep)
+        # Assuming structure: app, build, outputs, apk, flavor, build_type, filename
+        if len(path_parts) >= 3:
+            flavor = path_parts[-3].upper()
+            build_type = path_parts[-2].upper()
+        else:
+            is_debug = "debug" in apk_path.lower()
+            build_type = "DEBUG" if is_debug else "RELEASE"
+            flavor = "UNKNOWN"
 
         tag_str = f"\n🏷️ **Tag:** `{TAG}`" if TAG else ""
 
         caption = (
-            f"🚀 **New Build ({build_type}): {REPO_NAME}**\n\n"
+            f"🚀 **New Build ({flavor} {build_type}): {REPO_NAME}**\n\n"
             f"📝 **{commit_label}:** {commit_summary}\n"
             f"👤 **Author:** {COMMIT_AUTHOR}\n"
             f"🌿 **Branch:** `{BRANCH}`{tag_str}\n"
