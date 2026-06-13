@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605159993,
-      "versionName": "12.0.0-alpha1st4p1-37-ge7c51ec-nightly",
+      "versionCode": 605160000,
+      "versionName": "12.0.0-alpha1st4p1-44-g1bf3a23-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "feat: remove trusted networks and vpn automation logic\n\n- Removed the \"Trusted Networks\" feature and the \"Auto-connect on untrusted\" setting.\n- Deleted `TrustedWifiScreen.kt` and removed its associated routes from the navigation graph.\n- Removed `ACCESS_FINE_LOCATION` and `ACCESS_COARSE_LOCATION` permissions from the manifest as they are no longer required.\n- Simplified `VpnAutomationManager` by removing network callback logic, SSID/carrier identification, and automatic connection/disconnection based on network trust levels.\n- Cleaned up `SettingsManager`, `SettingsViewModel`, and `BackupRepository` to remove DataStore keys and backup categories related to trusted networks.\n- Deleted localized UI strings associated with trusted network settings and location permission prompts.",
+      "changelog": "feat: implement Sentry-based telemetry and crash reporting for nightly flavor\n\n- Add `FlavorInitializer` to configure Sentry with comprehensive PII scrubbing and dynamic preference syncing from `SettingsManager`.\n- Implement `SentryBridge` to enable native JNI calls for reporting security events, bridging logs, and performing clean process termination upon tamper detection.\n- Add `SentryCrashReporter` as a `CrashReporter` implementation to route application logs, exceptions, and metrics to Sentry.\n- Introduce `SentryConfigurator` to handle runtime updates of telemetry and analytics settings.\n- Secure Sentry DSN by retrieving it from native code via JNI.",
       "force": false
     },
     "release": {
-      "versionCode": 605159993,
-      "versionName": "12.0.0-alpha1st4p1-37-ge7c51ec-nightly",
+      "versionCode": 605160000,
+      "versionName": "12.0.0-alpha1st4p1-44-g1bf3a23-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "feat: remove trusted networks and vpn automation logic\n\n- Removed the \"Trusted Networks\" feature and the \"Auto-connect on untrusted\" setting.\n- Deleted `TrustedWifiScreen.kt` and removed its associated routes from the navigation graph.\n- Removed `ACCESS_FINE_LOCATION` and `ACCESS_COARSE_LOCATION` permissions from the manifest as they are no longer required.\n- Simplified `VpnAutomationManager` by removing network callback logic, SSID/carrier identification, and automatic connection/disconnection based on network trust levels.\n- Cleaned up `SettingsManager`, `SettingsViewModel`, and `BackupRepository` to remove DataStore keys and backup categories related to trusted networks.\n- Deleted localized UI strings associated with trusted network settings and location permission prompts.",
+      "changelog": "feat: implement Sentry-based telemetry and crash reporting for nightly flavor\n\n- Add `FlavorInitializer` to configure Sentry with comprehensive PII scrubbing and dynamic preference syncing from `SettingsManager`.\n- Implement `SentryBridge` to enable native JNI calls for reporting security events, bridging logs, and performing clean process termination upon tamper detection.\n- Add `SentryCrashReporter` as a `CrashReporter` implementation to route application logs, exceptions, and metrics to Sentry.\n- Introduce `SentryConfigurator` to handle runtime updates of telemetry and analytics settings.\n- Secure Sentry DSN by retrieving it from native code via JNI.",
       "force": false
     }
   },
