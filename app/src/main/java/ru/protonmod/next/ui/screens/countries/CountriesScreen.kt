@@ -151,6 +151,11 @@ fun CountriesScreen(
             ) {
                 AnimatedContent(
                     targetState = uiState,
+                    contentKey = { state ->
+                        // Use the class as key to avoid transition animations between different Success states
+                        // (e.g. when opening/closing the bottom sheet), but still animate between Loading/Success/Error.
+                        state::class
+                    },
                     label = "countries_state_root",
                     modifier = Modifier.weight(1f)
                 ) { state ->
@@ -309,8 +314,8 @@ fun CountryCard(
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
-    val flagResId = CountryUtils.getFlagResource(context, country.code)
-    val localizedName = CountryUtils.getCountryName(context, country.code)
+    val flagResId = remember(country.code) { CountryUtils.getFlagResource(context, country.code) }
+    val localizedName = remember(country.code) { CountryUtils.getCountryName(context, country.code) }
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(

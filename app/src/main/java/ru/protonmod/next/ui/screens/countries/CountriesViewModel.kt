@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
@@ -92,26 +93,31 @@ class CountriesViewModel @Inject constructor(
     private val _navState = MutableStateFlow<NavigationState>(NavigationState.Countries)
     private val _error = MutableStateFlow<String?>(null)
 
+    // Memoized countries list to prevent unnecessary instance changes and recalculations.
+    // Use distinctUntilChanged to only emit when the content actually changes (including loads).
+    private val _countries = vpnRepository.getServersFlow()
+        .map { servers ->
+            servers.groupBy { it.exitCountry }
+                .map { (code, countryServers) ->
+                    val avg = if (countryServers.isEmpty()) 0 else countryServers.map { it.averageLoad }.average().toInt()
+                    CountryDisplayItem(code, avg)
+                }
+                .sortedBy { it.code }
+        }
+        .distinctUntilChanged()
+
     val uiState: StateFlow<CountriesUiState> = combine(
-        vpnRepository.getServersFlow(),
-        _navState,
+        combine(_countries, vpnRepository.getServersFlow(), _navState) { c, s, n -> Triple(c, s, n) },
         vpnRepository.isUpdating,
         settingsManager.serverLoadDisplayMode,
         _error
-    ) { servers, nav, isUpdating, loadMode, error ->
+    ) { (countries, servers, nav), isUpdating, loadMode, error ->
         if (isUpdating && servers.isEmpty()) {
             return@combine CountriesUiState.Loading
         }
         if (error != null && servers.isEmpty()) {
             return@combine CountriesUiState.Error(error)
         }
-
-        val countries = servers.groupBy { it.exitCountry }
-            .map { (code, countryServers) ->
-                val avg = if (countryServers.isEmpty()) 0 else countryServers.map { it.averageLoad }.average().toInt()
-                CountryDisplayItem(code, avg)
-            }
-            .sortedBy { it.code }
 
         val bottomSheetContent = when (nav) {
             is NavigationState.Countries -> null
