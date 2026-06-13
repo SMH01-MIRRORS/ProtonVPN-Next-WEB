@@ -158,6 +158,15 @@ android {
         getByName("main") {
             java.srcDirs("src/main/java", "src/main/kotlin")
         }
+        getByName("stable") {
+            java.srcDirs("src/stable/java")
+        }
+        getByName("nightly") {
+            java.srcDirs("src/nightly/java")
+        }
+        getByName("privacy") {
+            java.srcDirs("src/privacy/java")
+        }
     }
 
     lint {
@@ -495,6 +504,7 @@ dependencies {
         libs.sentry.replay
     )
     listOf("stable", "nightly").forEach { flavor ->
+        add("${flavor}Implementation", platform(libs.sentry.bom))
         sentryDeps.forEach { dep ->
             add("${flavor}Implementation", dep)
         }
