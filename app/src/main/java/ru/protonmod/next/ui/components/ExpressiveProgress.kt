@@ -78,9 +78,9 @@ fun SetupLoadingScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(colors.backgroundNorm)
     ) {
-        ExpressiveBackground(step = step)
+        // Optimization: Removed redundant ExpressiveBackground call here because 
+        // SetupLoadingScreen is used inside WelcomeScreen which already provides the background.
         
         Column(
             modifier = Modifier

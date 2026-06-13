@@ -25,6 +25,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -134,8 +135,17 @@ fun ExpressiveBackground(
 
     Box(modifier = modifier.fillMaxSize()) {
         // Deep Background Glows (Purple/Brand)
-        Canvas(modifier = Modifier.fillMaxSize().blur(120.dp)) {
-            val baseRadius = size.minDimension * 0.7f * blobScale
+        // Optimization: Reduced blur radius from 120dp to 48dp and increased gradient size to maintain the look.
+        // Using graphicsLayer to ensure efficient GPU handling of the blur effect.
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    clip = false
+                }
+                .blur(48.dp)
+        ) {
+            val baseRadius = size.minDimension * 0.9f * blobScale
             
             drawCircle(
                 brush = Brush.radialGradient(
@@ -149,17 +159,21 @@ fun ExpressiveBackground(
                 brush = Brush.radialGradient(
                     colors = listOf(colors.brandNorm.copy(alpha = 0.2f), Color.Transparent),
                     center = Offset(size.width * blob2Pos.x, size.height * blob2Pos.y),
-                    radius = baseRadius * 1.2f
+                    radius = baseRadius * 1.3f
                 )
             )
         }
 
         // Outlined Morphing Shapes (Moving slowly)
+        // Optimization: Reduced blur from 4dp to 2dp as it's sufficient for the "soft" look.
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
                 .alpha(alpha)
-                .blur(4.dp)
+                .graphicsLayer {
+                    clip = false
+                }
+                .blur(2.dp)
         ) {
             val width = size.width
             val height = size.height
