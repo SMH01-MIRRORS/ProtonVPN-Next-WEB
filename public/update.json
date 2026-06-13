@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160000,
-      "versionName": "12.0.0-alpha1st4p1-44-g1bf3a23-nightly",
+      "versionCode": 605160001,
+      "versionName": "12.0.0-alpha1st4p1-45-g71ea70d-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "feat: implement Sentry-based telemetry and crash reporting for nightly flavor\n\n- Add `FlavorInitializer` to configure Sentry with comprehensive PII scrubbing and dynamic preference syncing from `SettingsManager`.\n- Implement `SentryBridge` to enable native JNI calls for reporting security events, bridging logs, and performing clean process termination upon tamper detection.\n- Add `SentryCrashReporter` as a `CrashReporter` implementation to route application logs, exceptions, and metrics to Sentry.\n- Introduce `SentryConfigurator` to handle runtime updates of telemetry and analytics settings.\n- Secure Sentry DSN by retrieving it from native code via JNI.",
+      "changelog": "perf: optimize countries list processing and UI recomposition\n\n- Memoize country list calculation in `CountriesViewModel` using `distinctUntilChanged` to prevent redundant processing and unnecessary UI updates.\n- Wrap country name and flag resource lookups in `remember` blocks within `CountriesScreen` and `CountriesBottomSheet` to optimize recomposition.\n- Define a `contentKey` for `AnimatedContent` in `CountriesScreen` to prevent transition animations between different success states while maintaining them for Loading/Error transitions.",
       "force": false
     },
     "release": {
-      "versionCode": 605160000,
-      "versionName": "12.0.0-alpha1st4p1-44-g1bf3a23-nightly",
+      "versionCode": 605160001,
+      "versionName": "12.0.0-alpha1st4p1-45-g71ea70d-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "feat: implement Sentry-based telemetry and crash reporting for nightly flavor\n\n- Add `FlavorInitializer` to configure Sentry with comprehensive PII scrubbing and dynamic preference syncing from `SettingsManager`.\n- Implement `SentryBridge` to enable native JNI calls for reporting security events, bridging logs, and performing clean process termination upon tamper detection.\n- Add `SentryCrashReporter` as a `CrashReporter` implementation to route application logs, exceptions, and metrics to Sentry.\n- Introduce `SentryConfigurator` to handle runtime updates of telemetry and analytics settings.\n- Secure Sentry DSN by retrieving it from native code via JNI.",
+      "changelog": "perf: optimize countries list processing and UI recomposition\n\n- Memoize country list calculation in `CountriesViewModel` using `distinctUntilChanged` to prevent redundant processing and unnecessary UI updates.\n- Wrap country name and flag resource lookups in `remember` blocks within `CountriesScreen` and `CountriesBottomSheet` to optimize recomposition.\n- Define a `contentKey` for `AnimatedContent` in `CountriesScreen` to prevent transition animations between different success states while maintaining them for Loading/Error transitions.",
       "force": false
     }
   },
