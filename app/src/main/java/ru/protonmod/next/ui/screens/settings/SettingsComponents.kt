@@ -37,6 +37,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
@@ -196,6 +197,8 @@ fun SettingToggleRow(
 
 @Composable
 fun SentryPoweredBy(modifier: Modifier = Modifier) {
+    if (!BuildConfig.SENTRY_ENABLED) return
+    
     val context = LocalContext.current
     val url = stringResource(R.string.url_sentry)
     val colors = ProtonNextTheme.colors

@@ -1,9 +1,24 @@
+/*
+ * Copyright (C) 2026 SMH01
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ru.protonmod.next.data.repository
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
-import io.sentry.Sentry
-import io.sentry.SentryLevel
 import kotlinx.serialization.json.Json
 import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
@@ -34,8 +49,6 @@ class UpdateRepository @Inject constructor(
     /**
      * Fetches and parses update metadata from the given URL.
      * Validates that the response Content-Type is JSON before attempting deserialization.
-     * If the server returns HTML (e.g. a Telegram channel page from a tampered URL),
-     * a descriptive exception is thrown and the full URL + response preview is sent to Sentry.
      */
     private suspend fun fetchUpdateResponse(url: String): UpdateResponse {
         val response = updateApi.getUpdateMetadata(url)
@@ -44,28 +57,30 @@ class UpdateRepository @Inject constructor(
 
         if (!response.isSuccessful || body == null) {
             val errorBody = response.errorBody()?.string()?.take(200)
-            Sentry.withScope { scope ->
-                scope.setExtra("ota_url", url)
-                scope.setExtra("http_status", response.code().toString())
-                scope.setExtra("error_body_preview", errorBody ?: "(empty)")
-                scope.level = SentryLevel.ERROR
-                Sentry.captureMessage("OTA update fetch failed: HTTP ${response.code()} from $url")
-            }
+            ProtonLogger.crashReporter?.captureMessage(
+                "OTA update fetch failed: HTTP ${response.code()} from $url",
+                "ERROR",
+                mapOf(
+                    "ota_url" to url,
+                    "http_status" to response.code().toString(),
+                    "error_body_preview" to (errorBody ?: "(empty)")
+                )
+            )
             throw HttpException(response)
         }
 
         if (!contentType.contains("application/json", ignoreCase = true)) {
             val bodyPreview = body.string().take(200)
-            Sentry.withScope { scope ->
-                scope.setExtra("ota_url", url)
-                scope.setExtra("content_type", contentType)
-                scope.setExtra("response_body_preview", bodyPreview)
-                scope.level = SentryLevel.ERROR
-                Sentry.captureMessage(
-                    "OTA endpoint returned non-JSON response (Content-Type: '$contentType'). " +
-                    "URL may have been tampered. URL: $url"
+            ProtonLogger.crashReporter?.captureMessage(
+                "OTA endpoint returned non-JSON response (Content-Type: '$contentType'). " +
+                "URL may have been tampered. URL: $url",
+                "ERROR",
+                mapOf(
+                    "ota_url" to url,
+                    "content_type" to contentType,
+                    "response_body_preview" to bodyPreview
                 )
-            }
+            )
             throw IllegalStateException(
                 "OTA update URL '$url' returned non-JSON content (Content-Type: '$contentType'). " +
                 "Expected 'application/json'. Response starts with: ${bodyPreview.take(80)}"

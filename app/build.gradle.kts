@@ -79,6 +79,7 @@ android {
         targetSdk = 37
         versionCode = getDynamicVersionCode(rootDir)
         versionName = getDynamicVersionName(rootDir)
+        buildConfigField("boolean", "SENTRY_ENABLED", "true")
 
         // Support 64-bit architectures only
         // 32-bit devices (armeabi-v7a, armeabi) are not supported as the VPN engine
@@ -144,6 +145,7 @@ android {
         create("privacy") {
             dimension = "channel"
             buildConfigField("String", "UPDATE_CHANNEL", "\"privacy\"")
+            buildConfigField("boolean", "SENTRY_ENABLED", "false")
             externalNativeBuild {
                 cmake {
                     cppFlags("-DPRIVACY_FLAVOR=1")
@@ -153,17 +155,8 @@ android {
     }
 
     sourceSets {
-        getByName("stable") {
-            kotlin.directories.clear()
-            kotlin.directories.add("src/sentrySupport/kotlin")
-        }
-        getByName("nightly") {
-            kotlin.directories.clear()
-            kotlin.directories.add("src/sentrySupport/kotlin")
-        }
-        getByName("privacy") {
-            kotlin.directories.clear()
-            kotlin.directories.add("src/privacy/kotlin")
+        getByName("main") {
+            java.srcDirs("src/main/java", "src/main/kotlin")
         }
     }
 

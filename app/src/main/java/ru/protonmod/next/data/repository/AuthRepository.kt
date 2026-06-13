@@ -19,7 +19,6 @@ package ru.protonmod.next.data.repository
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
-import io.sentry.SentryLevel
 import ru.protonmod.next.utils.ProtonLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext

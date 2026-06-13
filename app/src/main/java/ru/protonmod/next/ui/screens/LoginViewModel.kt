@@ -18,7 +18,6 @@
 package ru.protonmod.next.ui.screens
 
 import androidx.lifecycle.ViewModel
-import io.sentry.Sentry
 import ru.protonmod.next.utils.ProtonLogger
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -198,8 +197,8 @@ class LoginViewModel @Inject constructor(
                     .onSuccess { response ->
                         ProtonLogger.i("Login", "Login successful")
                         val duration = System.currentTimeMillis() - startTime
-                        Sentry.metrics().distribution("login_latency", duration.toDouble())
-                        Sentry.metrics().count("login_success", 1.0)
+                        ProtonLogger.recordDistribution("login_latency", duration.toDouble())
+                        ProtonLogger.recordCount("login_success", 1.0)
 
                         val scopes = response.scopes
                         if (scopes.contains("twofactor")) {
@@ -223,7 +222,7 @@ class LoginViewModel @Inject constructor(
                     .onFailure { exception ->
                         if (exception is CancellationException) return@onFailure
 
-                        Sentry.metrics().count("login_error", 1.0)
+                        ProtonLogger.recordCount("login_error", 1.0)
 
                         if (exception is CaptchaRequiredException) {
                             ProtonLogger.w("Login", "Captcha required")

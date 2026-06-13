@@ -216,6 +216,18 @@ object ProtonLogger {
         e(tag, message, throwable)
     }
 
+    /** Records a distribution metric (latency, size, etc.) */
+    fun recordDistribution(name: String, value: Double) {
+        if (!isAnalyticsEnabled) return
+        crashReporter?.recordDistribution(name, value)
+    }
+
+    /** Records a count metric */
+    fun recordCount(name: String, value: Double) {
+        if (!isAnalyticsEnabled) return
+        crashReporter?.recordCount(name, value)
+    }
+
     @PublishedApi
     internal fun addSentryBreadcrumb(
         tag: String,

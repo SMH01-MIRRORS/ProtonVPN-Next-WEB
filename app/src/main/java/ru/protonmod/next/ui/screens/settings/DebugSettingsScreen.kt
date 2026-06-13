@@ -45,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.NavigationHeader
@@ -236,58 +237,60 @@ fun DebugSettingsScreen(
                     }
 
                     // Sentry Tests
-                    item(contentType = "DebugSection") {
-                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            DebugSection(
-                                title = stringResource(R.string.debug_sentry_header),
-                                titleColor = Color.Magenta
-                            ) {
-                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    DebugActionRow(
-                                        icon = Icons.Rounded.BugReport,
-                                        title = stringResource(R.string.debug_btn_fake_crash),
-                                        onClick = { viewModel.triggerJavaCrash() }
-                                    )
-                                    DebugActionRow(
-                                        icon = Icons.Rounded.BugReport,
-                                        title = stringResource(R.string.debug_btn_crash_java),
-                                        onClick = { viewModel.triggerJavaCrash() }
-                                    )
-                                    DebugActionRow(
-                                        icon = Icons.Rounded.BugReport,
-                                        title = stringResource(R.string.debug_btn_crash_native),
-                                        onClick = { viewModel.triggerNativeCrash() }
-                                    )
-                                    DebugActionRow(
-                                        icon = Icons.Rounded.BugReport,
-                                        title = stringResource(R.string.debug_btn_arithmetic_error),
-                                        onClick = { viewModel.triggerArithmeticException() }
-                                    )
-                                    DebugActionRow(
-                                        icon = Icons.Rounded.BugReport,
-                                        title = stringResource(R.string.debug_btn_null_pointer),
-                                        onClick = { viewModel.triggerNullPointer() }
-                                    )
-                                    DebugActionRow(
-                                        icon = Icons.Rounded.BugReport,
-                                        title = stringResource(R.string.debug_btn_background_crash),
-                                        onClick = { viewModel.triggerBackgroundCrash() }
-                                    )
-                                    DebugActionRow(
-                                        icon = Icons.Rounded.History,
-                                        title = stringResource(R.string.debug_btn_anr),
-                                        onClick = { viewModel.triggerAnr() }
-                                    )
-                                    DebugActionRow(
-                                        icon = Icons.Rounded.CleaningServices,
-                                        title = stringResource(R.string.debug_btn_oom),
-                                        onClick = { viewModel.triggerOom() }
-                                    )
-                                    DebugActionRow(
-                                        icon = Icons.Rounded.Info,
-                                        title = stringResource(R.string.debug_btn_capture_exception),
-                                        onClick = { viewModel.captureNonFatal() }
-                                    )
+                    if (BuildConfig.SENTRY_ENABLED) {
+                        item(contentType = "DebugSection") {
+                            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                DebugSection(
+                                    title = stringResource(R.string.debug_sentry_header),
+                                    titleColor = Color.Magenta
+                                ) {
+                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        DebugActionRow(
+                                            icon = Icons.Rounded.BugReport,
+                                            title = stringResource(R.string.debug_btn_fake_crash),
+                                            onClick = { viewModel.triggerJavaCrash() }
+                                        )
+                                        DebugActionRow(
+                                            icon = Icons.Rounded.BugReport,
+                                            title = stringResource(R.string.debug_btn_crash_java),
+                                            onClick = { viewModel.triggerJavaCrash() }
+                                        )
+                                        DebugActionRow(
+                                            icon = Icons.Rounded.BugReport,
+                                            title = stringResource(R.string.debug_btn_crash_native),
+                                            onClick = { viewModel.triggerNativeCrash() }
+                                        )
+                                        DebugActionRow(
+                                            icon = Icons.Rounded.BugReport,
+                                            title = stringResource(R.string.debug_btn_arithmetic_error),
+                                            onClick = { viewModel.triggerArithmeticException() }
+                                        )
+                                        DebugActionRow(
+                                            icon = Icons.Rounded.BugReport,
+                                            title = stringResource(R.string.debug_btn_null_pointer),
+                                            onClick = { viewModel.triggerNullPointer() }
+                                        )
+                                        DebugActionRow(
+                                            icon = Icons.Rounded.BugReport,
+                                            title = stringResource(R.string.debug_btn_background_crash),
+                                            onClick = { viewModel.triggerBackgroundCrash() }
+                                        )
+                                        DebugActionRow(
+                                            icon = Icons.Rounded.History,
+                                            title = stringResource(R.string.debug_btn_anr),
+                                            onClick = { viewModel.triggerAnr() }
+                                        )
+                                        DebugActionRow(
+                                            icon = Icons.Rounded.CleaningServices,
+                                            title = stringResource(R.string.debug_btn_oom),
+                                            onClick = { viewModel.triggerOom() }
+                                        )
+                                        DebugActionRow(
+                                            icon = Icons.Rounded.Info,
+                                            title = stringResource(R.string.debug_btn_capture_exception),
+                                            onClick = { viewModel.captureNonFatal() }
+                                        )
+                                    }
                                 }
                             }
                         }

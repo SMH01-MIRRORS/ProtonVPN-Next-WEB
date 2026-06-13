@@ -30,6 +30,7 @@ import androidx.compose.material.icons.rounded.ReportProblem
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -38,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -49,6 +51,11 @@ fun ErrorReportingScreen(
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
+    if (!BuildConfig.SENTRY_ENABLED) {
+        LaunchedEffect(Unit) { onBack() }
+        return
+    }
+
     val colors = ProtonNextTheme.colors
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 

@@ -56,7 +56,6 @@ import ru.protonmod.next.vpn.AmneziaVpnManager
 import ru.protonmod.next.vpn.WarpManager
 import ru.protonmod.next.vpn.VpnAutomationManager
 import ru.protonmod.next.utils.system.SystemUtils
-import io.sentry.Sentry
 import java.net.Proxy
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
@@ -416,8 +415,8 @@ class DashboardViewModel @Inject constructor(
 
                                 if (ip.isNotBlank() && countryCode.isNotBlank()) {
                                     val duration = System.currentTimeMillis() - startTime
-                                    Sentry.metrics().distribution("location_fetch_latency", duration.toDouble())
-                                    Sentry.metrics().count("location_fetch_success", 1.0)
+                                    ProtonLogger.recordDistribution("location_fetch_latency", duration.toDouble())
+                                    ProtonLogger.recordCount("location_fetch_success", 1.0)
                                     
                                     return@withContext LocationData(ip.trim(), countryCode.trim())
                                 }
@@ -432,7 +431,7 @@ class DashboardViewModel @Inject constructor(
         }
         
         // Metrics
-        Sentry.metrics().count("location_fetch_error", 1.0)
+        ProtonLogger.recordCount("location_fetch_error", 1.0)
         null
     }
 

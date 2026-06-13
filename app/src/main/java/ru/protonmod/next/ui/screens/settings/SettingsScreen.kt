@@ -614,12 +614,14 @@ private fun PrivacySettingsSection(
             onClick = onNavigateToKillSwitch
         )
 
-        SettingRowWithIcon(
-            icon = Icons.Rounded.BugReport,
-            title = stringResource(R.string.settings_error_reporting),
-            subtitle = stringResource(R.string.settings_error_reporting_desc),
-            onClick = onNavigateToErrorReporting
-        )
+        if (BuildConfig.SENTRY_ENABLED) {
+            SettingRowWithIcon(
+                icon = Icons.Rounded.BugReport,
+                title = stringResource(R.string.settings_error_reporting),
+                subtitle = stringResource(R.string.settings_error_reporting_desc),
+                onClick = onNavigateToErrorReporting
+            )
+        }
 
         SettingToggleRow(
             icon = Icons.Rounded.Notifications,

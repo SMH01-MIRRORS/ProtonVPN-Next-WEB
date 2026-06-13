@@ -37,6 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
 import ru.protonmod.next.data.model.BackupCategory
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -212,12 +213,14 @@ private fun BackupScreenContent(
                         item(contentType = "Categories") {
                             SettingsCategory(title = stringResource(R.string.backup_categories)) {
                                 BackupCategory.entries.forEach { category ->
-                                    SettingToggleRow(
-                                        title = getCategoryName(category),
-                                        icon = getCategoryIcon(category),
-                                        checked = uiState.selectedCategories.contains(category),
-                                        onCheckedChange = { onToggleCategory(category) }
-                                    )
+                                    if (category != BackupCategory.SENTRY_ANALYTICS || BuildConfig.SENTRY_ENABLED) {
+                                        SettingToggleRow(
+                                            title = getCategoryName(category),
+                                            icon = getCategoryIcon(category),
+                                            checked = uiState.selectedCategories.contains(category),
+                                            onCheckedChange = { onToggleCategory(category) }
+                                        )
+                                    }
                                 }
                             }
                         }

@@ -29,7 +29,6 @@ import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.system.Os
-import io.sentry.SentryLevel
 import ru.protonmod.next.utils.ProtonLogger
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
@@ -149,7 +148,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             isCurrentlyConnecting = false
 
             ProtonLogger.d(TAG, "VPN State changed to $newState (wasConnecting=$wasConnecting)")
-            ProtonLogger.addSentryBreadcrumb(TAG, "VPN State Changed: $newState", SentryLevel.INFO, "vpn.state")
+            ProtonLogger.addSentryBreadcrumb(TAG, "VPN State Changed: $newState", "INFO", "vpn.state")
 
             // Broadcast the new state to the rest of the application
             val broadcast = Intent(ACTION_STATE_CHANGED).apply {
@@ -460,7 +459,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         val totalRx = lastRx
         val totalTx = lastTx
         ProtonLogger.i(TAG, "VPN Session ended. Final stats: RX=${formatSpeed(totalRx)}, TX=${formatSpeed(totalTx)}")
-        ProtonLogger.addSentryBreadcrumb(TAG, "VPN Session Ended: RX=$totalRx, TX=$totalTx", SentryLevel.INFO, "vpn.stats")
+        ProtonLogger.addSentryBreadcrumb(TAG, "VPN Session Ended: RX=$totalRx, TX=$totalTx", "INFO", "vpn.stats")
 
         lastSpeedText = null
     }
@@ -543,7 +542,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                         ProtonLogger.addSentryBreadcrumb(
                             "AmneziaWG",
                             cleanLine,
-                            SentryLevel.DEBUG,
+                            "DEBUG",
                             "vpn.awg"
                         )
 

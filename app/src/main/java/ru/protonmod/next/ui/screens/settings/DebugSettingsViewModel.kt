@@ -33,7 +33,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ru.protonmod.next.ProtonNextApp
 import ru.protonmod.next.data.local.AppDatabase
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SessionEntity
@@ -45,7 +44,6 @@ import ru.protonmod.next.data.repository.AuthRepository
 import ru.protonmod.next.utils.ProtonLogger
 import ru.protonmod.next.vpn.AmneziaConfigGenerator
 import ru.protonmod.next.vpn.AmneziaVpnManager
-import io.sentry.Sentry
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -386,7 +384,7 @@ class DebugSettingsViewModel @Inject constructor(
         // Since we don't have a native method exported, we can use Sentry's own test method if available,
         // or just throw a signal-like exception.
         // On Android, Sentry provides a way to test native crashes if the native SDK is linked.
-        Sentry.captureMessage("Debug: Triggering Native Crash manually (if linked)")
+        ProtonLogger.crashReporter?.captureMessage("Debug: Triggering Native Crash manually (if linked)", "INFO")
         // This is a common way to trigger a crash that looks like a native one in some contexts
         // But for true native we'd need JNI. Let's just do a hard crash.
         val x: String? = null
@@ -426,7 +424,7 @@ class DebugSettingsViewModel @Inject constructor(
         try {
             throw Exception("Debug: This is a non-fatal test exception")
         } catch (e: Exception) {
-            Sentry.captureException(e)
+            ProtonLogger.crashReporter?.captureException(e)
             _uiState.value = _uiState.value.copy(message = "Non-fatal exception captured in Sentry")
         }
     }

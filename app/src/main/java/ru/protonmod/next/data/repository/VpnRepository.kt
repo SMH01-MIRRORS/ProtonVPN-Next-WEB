@@ -17,9 +17,7 @@
 
 package ru.protonmod.next.data.repository
 
-import io.sentry.SentryLevel
 import ru.protonmod.next.utils.ProtonLogger
-import io.sentry.Sentry
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -319,7 +317,7 @@ class VpnRepository @Inject constructor(
                     val body = response.body()
                     if (body?.code == 1000) {
                         ProtonLogger.i(TAG, "Proton API: Received ${body.logicalServers.size} logical servers (StatusID: ${body.statusId})")
-                        ProtonLogger.addSentryBreadcrumb(TAG, "VPN Repository: Servers Updated (${body.logicalServers.size})", SentryLevel.INFO, "vpn.repo")
+                        ProtonLogger.addSentryBreadcrumb(TAG, "VPN Repository: Servers Updated (${body.logicalServers.size})", "INFO", "vpn.repo")
                         
                         val isSameStatus = body.statusId != null && body.statusId == cacheInfo?.statusId
                         if (isSameStatus && !forceRefresh) {
@@ -476,16 +474,16 @@ class VpnRepository @Inject constructor(
             cachedServers = logicalServers
             
             // Metrics
-            val duration = System.currentTimeMillis() - startTime
-            Sentry.metrics().distribution("server_fetch_latency", duration.toDouble())
-            Sentry.metrics().count("server_fetch_success", 1.0)
+            val duration = System.currentTimeMillis()            // Metrics
+            ProtonLogger.recordDistribution("server_fetch_latency", duration.toDouble())
+            ProtonLogger.recordCount("server_fetch_success", 1.0)
             
             Result.success(logicalServers)
         } catch (e: Exception) {
             ProtonLogger.e(TAG, "Critical error in performGetServers", e)
             
             // Metrics
-            Sentry.metrics().count("server_fetch_error", 1.0)
+            ProtonLogger.recordCount("server_fetch_error", 1.0)
 
             val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
             if (dbServers.isNotEmpty()) Result.success(dbServers.filter { it.tier <= userTier })

@@ -24,7 +24,11 @@ package ru.protonmod.next.utils
 interface CrashReporter {
     fun addBreadcrumb(tag: String, message: String, level: String, category: String)
     fun addLog(tag: String, message: String, level: String, throwable: Throwable?)
-    fun captureException(throwable: Throwable)
-    fun captureMessage(message: String, level: String)
+    fun captureException(throwable: Throwable, extras: Map<String, String>? = null)
+    fun captureMessage(message: String, level: String, extras: Map<String, String>? = null)
     fun flush(timeout: Long)
+    
+    // Metrics
+    fun recordDistribution(name: String, value: Double)
+    fun recordCount(name: String, value: Double)
 }

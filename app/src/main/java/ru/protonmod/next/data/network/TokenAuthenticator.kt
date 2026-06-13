@@ -17,7 +17,6 @@
 
 package ru.protonmod.next.data.network
 
-import io.sentry.SentryLevel
 import ru.protonmod.next.utils.ProtonLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -57,7 +56,7 @@ class TokenAuthenticator @Inject constructor(
         }
 
         ProtonLogger.i(TAG, "HTTP 401 detected for $requestUrl. Initializing token refresh cycle.")
-        ProtonLogger.addSentryBreadcrumb(TAG, "Auth Step: Token Expired ($requestUrl)", SentryLevel.WARNING, "auth.token")
+        ProtonLogger.addSentryBreadcrumb(TAG, "Auth Step: Token Expired ($requestUrl)", "WARNING", "auth.token")
 
         // Prevent infinite loops if the new token also returns 401 Unauthorized
         if (response.responseCount >= 3) {
@@ -98,7 +97,7 @@ class TokenAuthenticator @Inject constructor(
                 if (refreshResult.isSuccess) {
                     val refreshResponse = refreshResult.getOrNull()!!
                     ProtonLogger.i(TAG, "Successfully acquired new access token.")
-                    ProtonLogger.addSentryBreadcrumb(TAG, "Auth Step: Token Refreshed", SentryLevel.INFO, "auth.token")
+                    ProtonLogger.addSentryBreadcrumb(TAG, "Auth Step: Token Refreshed", "INFO", "auth.token")
 
                     val newAccessToken = refreshResponse.accessToken
                     

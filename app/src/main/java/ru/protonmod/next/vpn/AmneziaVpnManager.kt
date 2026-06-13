@@ -24,7 +24,6 @@ import android.content.IntentFilter
 import android.net.Uri
 import android.util.Log
 import androidx.core.net.toUri
-import io.sentry.SentryLevel
 import ru.protonmod.next.utils.ProtonLogger
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -61,7 +60,6 @@ import ru.protonmod.next.di.ApplicationScope
 import ru.protonmod.next.utils.coroutines.DispatcherProvider
 import ru.protonmod.next.utils.crypto.CryptoWrapper
 import ru.protonmod.next.utils.system.SystemContextWrapper
-import io.sentry.Sentry
 import java.io.ByteArrayInputStream
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
@@ -372,7 +370,7 @@ class AmneziaVpnManager @Inject constructor(
                     ProtonLogger.i(TAG, "Successfully obtained WireGuard certificate")
 
                     // Metrics
-                    Sentry.metrics().count("cert_refresh_success", 1.0)
+                    ProtonLogger.recordCount("cert_refresh_success", 1.0)
 
                     // Persist the NEW private key along with the NEW certificate and expiration times
                     sessionDao.updateVpnKeys(
@@ -395,7 +393,7 @@ class AmneziaVpnManager @Inject constructor(
                 ProtonLogger.e(TAG, "Failed to register WireGuard key with Proton API: $error", result.exceptionOrNull())
 
                 // Metrics
-                Sentry.metrics().count("cert_refresh_error", 1.0)
+                ProtonLogger.recordCount("cert_refresh_error", 1.0)
 
                 val isFullyExpired = previousState is CertificateState.Expired ||
                         (previousState is CertificateState.RefreshFailed && previousState.isFullyExpired)
@@ -544,8 +542,8 @@ class AmneziaVpnManager @Inject constructor(
 
                 connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams, forceFallback)
 
-                // Track connection attempt via Sentry Metrics
-                Sentry.metrics().count("vpn_connection_attempt", 1.0)
+                // Track connection attempt
+                ProtonLogger.recordCount("vpn_connection_attempt", 1.0)
             }
         }
     }
@@ -562,7 +560,7 @@ class AmneziaVpnManager @Inject constructor(
         try {
             val serverLogInfo = "${server.id} (Domain: ${server.domain}, LogicalID: $logicalServerId)"
             ProtonLogger.i(TAG, "Initiating connection to server: $serverLogInfo")
-            ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: Start ($serverLogInfo)", SentryLevel.INFO, "vpn.connect")
+            ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: Start ($serverLogInfo)", "INFO", "vpn.connect")
 
             _isConnecting.value = true
             var currentSession = session
@@ -703,7 +701,7 @@ class AmneziaVpnManager @Inject constructor(
             val activeDns = if (isValidDns) userDns else fallbackDns
             ProtonLogger.i(TAG, "Using DNS Server: $activeDns, Client IP: $localIp")
 
-            ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: Building Config", SentryLevel.DEBUG, "vpn.connect")
+            ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: Building Config", "DEBUG", "vpn.connect")
             val configStr = amneziaConfigGenerator.buildConfig(
                 serverPublicKey = serverPubKey,
                 privateKey = wgPrivateKeyB64,
@@ -721,7 +719,7 @@ class AmneziaVpnManager @Inject constructor(
             Log.d(TAG, "Generated AWG Config:\n$configStr")
             ProtonLogger.v(TAG, "Generated AWG Config Length: ${configStr.length}")
 
-            ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: Starting Service", SentryLevel.INFO, "vpn.connect")
+            ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: Starting Service", "INFO", "vpn.connect")
             systemContextWrapper.startVpnService(
                 configStr = configStr,
                 logicalServerId = logicalServerId,
@@ -734,15 +732,15 @@ class AmneziaVpnManager @Inject constructor(
             ProtonLogger.i(TAG, "VPN start command issued successfully")
             
             // Track connection success
-            Sentry.metrics().count("vpn_connection_success", 1.0)
+            ProtonLogger.recordCount("vpn_connection_success", 1.0)
             
             Result.success(Unit)
         } catch (e: Exception) {
             ProtonLogger.e(TAG, "Failed to connect to VPN", e)
-            ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Failed: ${e.message}", SentryLevel.ERROR, "vpn.error")
+            ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Failed: ${e.message}", "ERROR", "vpn.error")
 
             // Track connection failure
-            Sentry.metrics().count("vpn_connection_failure", 1.0)
+            ProtonLogger.recordCount("vpn_connection_failure", 1.0)
 
             _isConnecting.value = false
             _tunnelState.value = Tunnel.State.DOWN
