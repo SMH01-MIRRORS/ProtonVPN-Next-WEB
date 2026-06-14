@@ -232,12 +232,14 @@ fun SettingsContent(
                             onNotificationsChange = onNotificationsChange
                         )
 
-                        UpdateSettingsSection(
-                            state = state,
-                            onFrequencyChange = onOtaFrequencyChange,
-                            onChannelChange = onOtaChannelChange,
-                            onCheckNow = onCheckForUpdates
-                        )
+                        if (!state.isPrivacyBuild) {
+                            UpdateSettingsSection(
+                                state = state,
+                                onFrequencyChange = onOtaFrequencyChange,
+                                onChannelChange = onOtaChannelChange,
+                                onCheckNow = onCheckForUpdates
+                            )
+                        }
 
                         WidgetSettingsSection()
 
@@ -295,14 +297,16 @@ fun SettingsContent(
                 )
             }
 
-            item(contentType = "UpdateSettings") {
-                UpdateSettingsSection(
-                    state = state,
-                    onFrequencyChange = onOtaFrequencyChange,
-                    onChannelChange = onOtaChannelChange,
-                    onCheckNow = onCheckForUpdates,
-                    modifier = contentModifier
-                )
+            if (!state.isPrivacyBuild) {
+                item(contentType = "UpdateSettings") {
+                    UpdateSettingsSection(
+                        state = state,
+                        onFrequencyChange = onOtaFrequencyChange,
+                        onChannelChange = onOtaChannelChange,
+                        onCheckNow = onCheckForUpdates,
+                        modifier = contentModifier
+                    )
+                }
             }
 
             item(contentType = "WidgetSettings") {

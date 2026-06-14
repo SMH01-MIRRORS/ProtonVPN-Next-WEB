@@ -27,6 +27,10 @@ class OTAUpdateManager @Inject constructor(
     val latestUpdate = _latestUpdate.asStateFlow()
 
     suspend fun scheduleUpdateCheck() {
+        if (ru.protonmod.next.BuildConfig.IS_PRIVACY_BUILD) {
+            WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)
+            return
+        }
         val frequency = settingsManager.otaUpdateFrequency.first()
         if (frequency == "disabled") {
             WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)

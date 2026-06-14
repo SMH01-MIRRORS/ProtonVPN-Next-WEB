@@ -129,7 +129,7 @@ android {
         }
     }
 
-    flavorDimensions.add("channel")
+    flavorDimensions.addAll(listOf("channel", "type"))
     productFlavors {
         create("stable") {
             dimension = "channel"
@@ -142,9 +142,17 @@ android {
             versionNameSuffix = "-nightly"
             buildConfigField("String", "UPDATE_CHANNEL", "\"nightly\"")
         }
+        
+        create("official") {
+            dimension = "type"
+            isDefault = true
+            buildConfigField("boolean", "IS_PRIVACY_BUILD", "false")
+        }
+
         create("privacy") {
-            dimension = "channel"
-            buildConfigField("String", "UPDATE_CHANNEL", "\"privacy\"")
+            dimension = "type"
+            applicationIdSuffix = ".privacy"
+            buildConfigField("boolean", "IS_PRIVACY_BUILD", "true")
             buildConfigField("boolean", "SENTRY_ENABLED", "false")
             externalNativeBuild {
                 cmake {
@@ -496,18 +504,16 @@ dependencies {
     implementation(libs.amneziawg.android)
     implementation(libs.go.vpn.lib)
 
-    // Sentry - only for stable and nightly
+    // Sentry - only for official builds (not for privacy)
     val sentryDeps = listOf(
         libs.sentry.android,
         libs.sentry.compose,
         libs.sentry.okhttp,
         libs.sentry.replay
     )
-    listOf("stable", "nightly").forEach { flavor ->
-        add("${flavor}Implementation", platform(libs.sentry.bom))
-        sentryDeps.forEach { dep ->
-            add("${flavor}Implementation", dep)
-        }
+    add("officialImplementation", platform(libs.sentry.bom))
+    sentryDeps.forEach { dep ->
+        add("officialImplementation", dep)
     }
 
     // Testing

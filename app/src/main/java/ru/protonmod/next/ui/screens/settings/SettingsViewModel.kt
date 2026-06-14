@@ -137,7 +137,9 @@ data class SettingsUiState(
     val isSentrySessionReplayEnabled: Boolean = true,
     val isSentryAnrEnabled: Boolean = true,
     val isSentryMetricsEnabled: Boolean = true,
-    val isSentryLogsEnabled: Boolean = true
+    val isSentryLogsEnabled: Boolean = true,
+
+    val isPrivacyBuild: Boolean = ru.protonmod.next.BuildConfig.IS_PRIVACY_BUILD
 )
 
 @HiltViewModel

@@ -113,6 +113,8 @@ class UpdateRepository @Inject constructor(
     }
 
     suspend fun checkForUpdates(): UpdateInfo? {
+        if (BuildConfig.IS_PRIVACY_BUILD) return null
+        
         val selectedChannel = settingsManager.otaUpdateChannel.first()
         var bestUpdate: UpdateInfo? = null
         for (url in updateUrls) {

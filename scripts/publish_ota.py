@@ -65,7 +65,8 @@ def main():
     channel = "stable" if is_tag else "nightly"
     target_dir = "VPN-Next" if is_tag else "VPN-Next-TEST"
     build_types = ["release"] if is_tag else ["debug", "release"]
-    flavor = "stable" if is_tag else "nightly"
+    # Only publish official builds to OTA
+    flavor = "stableOfficial" if is_tag else "nightlyOfficial"
 
     # 1. Clear target R2 directory
     clear_r2_dir(target_dir)

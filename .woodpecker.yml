@@ -48,9 +48,9 @@ steps:
       # 4. Build APKs and Run Tests based on flavor
       - |
         if [ -n "$CI_COMMIT_TAG" ]; then
-          ./gradlew testStableDebugUnitTest assembleStableRelease assemblePrivacyRelease
+          ./gradlew testStableOfficialDebugUnitTest assembleStableOfficialRelease assembleStablePrivacyRelease
         else
-          ./gradlew testNightlyDebugUnitTest testPrivacyDebugUnitTest assembleNightlyDebug assembleNightlyRelease assemblePrivacyDebug assemblePrivacyRelease
+          ./gradlew testNightlyOfficialDebugUnitTest testNightlyPrivacyDebugUnitTest assembleNightlyOfficialDebug assembleNightlyOfficialRelease assembleNightlyPrivacyDebug assembleNightlyPrivacyRelease
         fi
 
       # 5. Generate SHA256 Checksums
@@ -73,8 +73,10 @@ steps:
       api_key:
         from_secret: CODEBERG_TOKEN
       files:
-        - app/build/outputs/apk/stable/release/*.apk
-        - app/build/outputs/apk/stable/release/*.sha256
+        - app/build/outputs/apk/stableOfficial/release/*.apk
+        - app/build/outputs/apk/stableOfficial/release/*.sha256
+        - app/build/outputs/apk/stablePrivacy/release/*.apk
+        - app/build/outputs/apk/stablePrivacy/release/*.sha256
       note: changelog.txt
       title: "Release ${CI_COMMIT_TAG}"
       prerelease: false
@@ -89,8 +91,10 @@ steps:
       api_key:
         from_secret: CODEBERG_TOKEN
       files:
-        - app/build/outputs/apk/stable/release/*.apk
-        - app/build/outputs/apk/stable/release/*.sha256
+        - app/build/outputs/apk/stableOfficial/release/*.apk
+        - app/build/outputs/apk/stableOfficial/release/*.sha256
+        - app/build/outputs/apk/stablePrivacy/release/*.apk
+        - app/build/outputs/apk/stablePrivacy/release/*.sha256
       note: changelog.txt
       title: "Pre-release ${CI_COMMIT_TAG}"
       prerelease: true
