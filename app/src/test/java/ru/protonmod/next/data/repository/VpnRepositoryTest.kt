@@ -153,7 +153,7 @@ class VpnRepositoryTest {
 
         // Mock DAO to simulate DB behavior
         val dbServers = mutableListOf<ServerEntity>()
-        whenever(serverDao.insertServers(any())).thenAnswer { invocation ->
+        whenever(serverDao.upsertServers(any())).thenAnswer { invocation ->
             val list = invocation.getArgument<List<ServerEntity>>(0)
             dbServers.clear()
             dbServers.addAll(list)
@@ -201,7 +201,7 @@ class VpnRepositoryTest {
         assertEquals(loadValue, servers[0].averageLoad)
         
         // Verify DB interactions
-        verify(serverDao, atLeastOnce()).insertServers(any())
+        verify(serverDao, atLeastOnce()).upsertServers(any())
         verify(serversCacheDao, atLeastOnce()).saveCacheInfo(any())
     }
 }

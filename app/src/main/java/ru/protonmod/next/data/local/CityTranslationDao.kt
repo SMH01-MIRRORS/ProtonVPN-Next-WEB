@@ -18,17 +18,16 @@
 package ru.protonmod.next.data.local
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Upsert
 
 @Dao
 interface CityTranslationDao {
     @Query("SELECT localizedName FROM city_translations WHERE countryCode = :countryCode AND englishName = :englishName AND languageCode = :languageCode LIMIT 1")
     suspend fun getLocalizedName(countryCode: String, englishName: String, languageCode: String): String?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertTranslations(translations: List<CityTranslationEntity>)
 
     @Query("DELETE FROM city_translations WHERE languageCode = :languageCode")
@@ -40,7 +39,7 @@ interface CityTranslationDao {
     @Query("SELECT COUNT(*) FROM city_translations WHERE languageCode = :languageCode")
     suspend fun getCount(languageCode: String): Int
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun saveCacheInfo(cache: CityCacheEntity)
 
     @Query("SELECT lastUpdated FROM city_cache WHERE languageCode = :languageCode")

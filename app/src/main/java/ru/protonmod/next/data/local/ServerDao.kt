@@ -48,8 +48,8 @@ interface ServerDao {
     @Query("SELECT * FROM servers")
     fun getServersFlow(): Flow<List<ServerEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertServers(servers: List<ServerEntity>)
+    @Upsert
+    suspend fun upsertServers(servers: List<ServerEntity>)
 
     @Query("UPDATE servers SET averageLoad = :load WHERE id = :id")
     suspend fun updateServerLoad(id: String, load: Int)
