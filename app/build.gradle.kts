@@ -172,6 +172,9 @@ android {
         getByName("nightly") {
             java.srcDirs("src/nightly/java")
         }
+        getByName("official") {
+            java.srcDirs("src/official/java")
+        }
         getByName("privacy") {
             java.srcDirs("src/privacy/java")
         }
