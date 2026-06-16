@@ -33,8 +33,11 @@ import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.core.view.WindowCompat
+import ru.protonmod.next.R
 
 object ProtonPalette {
     val Haiti = Color(0xFF1B1340)
@@ -449,6 +452,11 @@ class ProtonColors(
             brandDarken20 = Color.White.copy(alpha = 0.8f),
             brandDarken40 = Color.White.copy(alpha = 0.6f),
         ).copy(
+            shade100 = Color.White,
+            shade80 = Color.White,
+            shade60 = Color(0xFFE0E0E0),
+            shade50 = Color(0xFFCCCCCC),
+            shade10 = Color(0xFF111111),
             shade0 = Color.Black,
             backgroundNorm = Color.Black,
             backgroundSecondary = Color(0xFF1A1A1A).copy(alpha = 0.4f),
@@ -671,19 +679,48 @@ fun ProtonNextTheme(
         AppTheme.NOTHING -> ProtonColors.Nothing
     }
 
+    val nothingFontFamily = FontFamily(
+        Font(R.font.nothing_inter_regular, FontWeight.Normal),
+        Font(R.font.nothing_inter_medium, FontWeight.Medium),
+        Font(R.font.nothing_inter_medium, FontWeight.Bold)
+    )
+    val nothingHeadlineFontFamily = FontFamily(
+        Font(R.font.nothing_dot_77_jp, FontWeight.Normal),
+        Font(R.font.nothing_dot_77_jp, FontWeight.Medium),
+        Font(R.font.nothing_dot_77_jp, FontWeight.Bold),
+        Font(R.font.nothing_dot_77_jp, FontWeight.SemiBold)
+    )
+
     val defaultTypography = MaterialTheme.typography
     val typography = if (appTheme == AppTheme.NOTHING) {
         androidx.compose.material3.Typography(
-            displayLarge = defaultTypography.displayLarge.copy(fontFamily = FontFamily.Monospace),
-            displayMedium = defaultTypography.displayMedium.copy(fontFamily = FontFamily.Monospace),
-            displaySmall = defaultTypography.displaySmall.copy(fontFamily = FontFamily.Monospace),
-            headlineLarge = defaultTypography.headlineLarge.copy(fontFamily = FontFamily.Monospace),
-            headlineMedium = defaultTypography.headlineMedium.copy(fontFamily = FontFamily.Monospace),
-            headlineSmall = defaultTypography.headlineSmall.copy(fontFamily = FontFamily.Monospace),
-            titleLarge = defaultTypography.titleLarge.copy(fontFamily = FontFamily.Monospace),
-            titleMedium = defaultTypography.titleMedium.copy(fontFamily = FontFamily.Monospace),
-            titleSmall = defaultTypography.titleSmall.copy(fontFamily = FontFamily.Monospace),
-        )
+            displayLarge = androidx.compose.ui.text.TextStyle(fontFamily = nothingHeadlineFontFamily),
+            displayMedium = androidx.compose.ui.text.TextStyle(fontFamily = nothingHeadlineFontFamily),
+            displaySmall = androidx.compose.ui.text.TextStyle(fontFamily = nothingHeadlineFontFamily),
+            headlineLarge = androidx.compose.ui.text.TextStyle(fontFamily = nothingHeadlineFontFamily),
+            headlineMedium = androidx.compose.ui.text.TextStyle(fontFamily = nothingHeadlineFontFamily),
+            headlineSmall = androidx.compose.ui.text.TextStyle(fontFamily = nothingHeadlineFontFamily),
+            titleLarge = androidx.compose.ui.text.TextStyle(fontFamily = nothingHeadlineFontFamily),
+            titleMedium = androidx.compose.ui.text.TextStyle(fontFamily = nothingHeadlineFontFamily),
+            titleSmall = defaultTypography.titleSmall.copy(fontFamily = nothingFontFamily),
+            bodyLarge = defaultTypography.bodyLarge.copy(fontFamily = nothingFontFamily),
+            bodyMedium = defaultTypography.bodyMedium.copy(fontFamily = nothingFontFamily),
+            bodySmall = defaultTypography.bodySmall.copy(fontFamily = nothingFontFamily),
+            labelLarge = defaultTypography.labelLarge.copy(fontFamily = nothingFontFamily),
+            labelMedium = defaultTypography.labelMedium.copy(fontFamily = nothingFontFamily),
+            labelSmall = defaultTypography.labelSmall.copy(fontFamily = nothingFontFamily),
+        ).let {
+            it.copy(
+                displayLarge = it.displayLarge.copy(fontSize = defaultTypography.displayLarge.fontSize),
+                displayMedium = it.displayMedium.copy(fontSize = defaultTypography.displayMedium.fontSize),
+                displaySmall = it.displaySmall.copy(fontSize = defaultTypography.displaySmall.fontSize),
+                headlineLarge = it.headlineLarge.copy(fontSize = defaultTypography.headlineLarge.fontSize),
+                headlineMedium = it.headlineMedium.copy(fontSize = defaultTypography.headlineMedium.fontSize),
+                headlineSmall = it.headlineSmall.copy(fontSize = defaultTypography.headlineSmall.fontSize),
+                titleLarge = it.titleLarge.copy(fontSize = defaultTypography.titleLarge.fontSize),
+                titleMedium = it.titleMedium.copy(fontSize = defaultTypography.titleMedium.fontSize),
+            )
+        }
     } else {
         defaultTypography
     }
