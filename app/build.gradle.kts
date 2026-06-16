@@ -143,7 +143,7 @@ android {
             buildConfigField("String", "UPDATE_CHANNEL", "\"nightly\"")
         }
         
-        create("official") {
+        create("standard") {
             dimension = "type"
             isDefault = true
             buildConfigField("boolean", "IS_PRIVACY_BUILD", "false")
@@ -172,8 +172,8 @@ android {
         getByName("nightly") {
             java.srcDirs("src/nightly/java")
         }
-        getByName("official") {
-            java.srcDirs("src/official/java")
+        getByName("standard") {
+            java.srcDirs("src/standard/java")
         }
         getByName("privacy") {
             java.srcDirs("src/privacy/java")
@@ -484,9 +484,9 @@ dependencies {
         libs.sentry.okhttp,
         libs.sentry.replay
     )
-    add("officialImplementation", platform(libs.sentry.bom))
+    add("standardImplementation", platform(libs.sentry.bom))
     sentryDeps.forEach { dep ->
-        add("officialImplementation", dep)
+        add("standardImplementation", dep)
     }
 
     // Testing
