@@ -19,7 +19,6 @@ package ru.protonmod.next.di
 
 import android.content.Context
 import androidx.room.Room
-import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import dagger.Module
@@ -193,7 +192,6 @@ object DatabaseModule {
             AppDatabase::class.java,
             "proton_next_db"
         )
-        .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
         .addMigrations(MIGRATION_4_5)
         .addMigrations(MIGRATION_5_6)
         .addMigrations(MIGRATION_6_7)

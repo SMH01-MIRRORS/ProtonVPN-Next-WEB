@@ -19,8 +19,9 @@ package ru.protonmod.next.data.local
 
 import androidx.room.Dao
 import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -32,7 +33,7 @@ interface ProfileDao {
     @Query("SELECT * FROM profiles WHERE id = :id LIMIT 1")
     suspend fun getProfileById(id: String): VpnProfileEntity?
 
-    @Upsert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertProfile(profile: VpnProfileEntity)
 
     @Delete
@@ -41,7 +42,7 @@ interface ProfileDao {
     @Query("DELETE FROM profiles WHERE id = :id")
     suspend fun deleteProfileById(id: String)
 
-    @Upsert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertProfiles(profiles: List<VpnProfileEntity>)
 
     @Query("SELECT * FROM profiles ORDER BY createdAt DESC")

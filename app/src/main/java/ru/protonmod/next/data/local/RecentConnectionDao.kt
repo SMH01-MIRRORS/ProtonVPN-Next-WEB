@@ -18,8 +18,9 @@
 package ru.protonmod.next.data.local
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -27,13 +28,13 @@ interface RecentConnectionDao {
     @Query("SELECT * FROM recent_connections ORDER BY lastConnectedAt DESC LIMIT 5")
     fun getRecentConnections(): Flow<List<RecentConnectionEntity>>
 
-    @Upsert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addRecentConnection(connection: RecentConnectionEntity)
 
     @Query("SELECT * FROM recent_connections ORDER BY lastConnectedAt DESC")
     suspend fun getAllRecentConnections(): List<RecentConnectionEntity>
 
-    @Upsert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRecentConnections(connections: List<RecentConnectionEntity>)
 
     @Query("DELETE FROM recent_connections")

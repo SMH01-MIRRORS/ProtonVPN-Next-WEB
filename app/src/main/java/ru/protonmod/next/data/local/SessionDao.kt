@@ -19,9 +19,10 @@ package ru.protonmod.next.data.local
 
 import androidx.room.Dao
 import androidx.room.Entity
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
-import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 
@@ -66,7 +67,7 @@ interface SessionDao {
     @Query("SELECT * FROM session WHERE id = 1")
     fun getSessionFlow(): Flow<SessionEntity?>
 
-    @Upsert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveSession(session: SessionEntity)
 
     @Query("DELETE FROM session")
@@ -93,7 +94,7 @@ interface ServersCacheDao {
     @Query("SELECT * FROM servers_cache WHERE id = 1")
     suspend fun getCacheInfo(): ServersCacheEntity?
 
-    @Upsert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveCacheInfo(cache: ServersCacheEntity)
 
     @Query("DELETE FROM servers_cache")
