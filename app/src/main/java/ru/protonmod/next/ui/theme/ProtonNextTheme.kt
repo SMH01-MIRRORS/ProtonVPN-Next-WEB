@@ -33,6 +33,7 @@ import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.font.FontFamily
 import androidx.core.view.WindowCompat
 
 object ProtonPalette {
@@ -101,6 +102,9 @@ object ProtonPalette {
     // Windscribe
     val WindscribeBlue = Color(0xFF009FE3)
     val WindscribeDeep = Color(0xFF001A33)
+
+    // Nothing
+    val NothingRed = Color(0xFFFF5252)
 }
 
 @Stable
@@ -440,6 +444,24 @@ class ProtonColors(
             textAccent = Color.White
         )
 
+        val Nothing = baseDark(
+            brandNorm = Color.White,
+            brandDarken20 = Color.White.copy(alpha = 0.8f),
+            brandDarken40 = Color.White.copy(alpha = 0.6f),
+        ).copy(
+            shade0 = Color.Black,
+            backgroundNorm = Color.Black,
+            backgroundSecondary = Color(0xFF1A1A1A).copy(alpha = 0.4f),
+            backgroundDeep = Color.Black,
+            notificationError = ProtonPalette.NothingRed,
+            textAccent = Color.White,
+            sidebarColors = sidebarDark(
+                brandNorm = Color.White,
+                brandDarken20 = Color.White.copy(alpha = 0.8f),
+                brandDarken40 = Color.White.copy(alpha = 0.6f),
+            ).copy(backgroundNorm = Color.Black)
+        )
+
         private fun baseLight(
             brandDarken40: Color = ProtonPalette.Chambray,
             brandDarken20: Color = ProtonPalette.SanMarino,
@@ -646,6 +668,24 @@ fun ProtonNextTheme(
         AppTheme.PUREVPN -> ProtonColors.PureVPN
         AppTheme.MULLVAD -> ProtonColors.Mullvad
         AppTheme.WINDSCRIBE -> ProtonColors.Windscribe
+        AppTheme.NOTHING -> ProtonColors.Nothing
+    }
+
+    val defaultTypography = MaterialTheme.typography
+    val typography = if (appTheme == AppTheme.NOTHING) {
+        androidx.compose.material3.Typography(
+            displayLarge = defaultTypography.displayLarge.copy(fontFamily = FontFamily.Monospace),
+            displayMedium = defaultTypography.displayMedium.copy(fontFamily = FontFamily.Monospace),
+            displaySmall = defaultTypography.displaySmall.copy(fontFamily = FontFamily.Monospace),
+            headlineLarge = defaultTypography.headlineLarge.copy(fontFamily = FontFamily.Monospace),
+            headlineMedium = defaultTypography.headlineMedium.copy(fontFamily = FontFamily.Monospace),
+            headlineSmall = defaultTypography.headlineSmall.copy(fontFamily = FontFamily.Monospace),
+            titleLarge = defaultTypography.titleLarge.copy(fontFamily = FontFamily.Monospace),
+            titleMedium = defaultTypography.titleMedium.copy(fontFamily = FontFamily.Monospace),
+            titleSmall = defaultTypography.titleSmall.copy(fontFamily = FontFamily.Monospace),
+        )
+    } else {
+        defaultTypography
     }
 
     val isDark = protonColors.isDark
@@ -666,6 +706,7 @@ fun ProtonNextTheme(
         CompositionLocalProvider(LocalColors provides protonColors) {
             MaterialTheme(
                 colorScheme = protonColors.toMaterial3ThemeColors(),
+                typography = typography,
                 content = content
             )
         }

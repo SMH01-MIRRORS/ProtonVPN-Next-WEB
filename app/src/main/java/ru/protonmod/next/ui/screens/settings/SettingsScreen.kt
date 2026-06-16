@@ -557,6 +557,7 @@ private fun CustomizationSettingsSection(
             AppTheme.PUREVPN -> stringResource(R.string.theme_purevpn)
             AppTheme.MULLVAD -> stringResource(R.string.theme_mullvad)
             AppTheme.WINDSCRIBE -> stringResource(R.string.theme_windscribe)
+            AppTheme.NOTHING -> stringResource(R.string.theme_nothing)
         }
 
         SettingRowWithIcon(

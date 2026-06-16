@@ -713,7 +713,10 @@ bool AntiTamper::check(JNIEnv* env, jobject context) {
     LOGD("Package name: %s", currentPackageName.c_str());
 
     std::string expectedPkg = getExpectedPackageName();
-    if (currentPackageName != expectedPkg && currentPackageName != expectedPkg + XOR_STR(".nightly")) {
+    if (currentPackageName != expectedPkg &&
+        currentPackageName != expectedPkg + XOR_STR(".nightly") &&
+        currentPackageName != expectedPkg + XOR_STR(".privacy") &&
+        currentPackageName != expectedPkg + XOR_STR(".nightly.privacy")) {
         LOGE("AntiTamper: Package name mismatch! Found: %s", currentPackageName.c_str());
         reportSecurityEvent(env, XOR_STR("Package name mismatch: ") + currentPackageName);
         allGood = false;

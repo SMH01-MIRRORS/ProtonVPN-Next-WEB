@@ -236,34 +236,6 @@ android {
     }
 
     buildTypes {
-        // Default build type for the "Run" button
-        create("debugWithAntitamperAndLogs") {
-            isDefault = true
-            isDebuggable = true
-            isMinifyEnabled = false
-            buildConfigField("boolean", "ALLOW_LOGCAT", "true")
-            signingConfig = signingConfigs.getByName("release")
-            
-            externalNativeBuild {
-                cmake {
-                    cppFlags("-DANTITAMPER_TEST_BUILD=1", "-DALLOW_LOGCAT=1")
-                }
-            }
-        }
-
-        create("debugWithAntitamperWithoutLogs") {
-            isDebuggable = true
-            isMinifyEnabled = false
-            buildConfigField("boolean", "ALLOW_LOGCAT", "false")
-            signingConfig = signingConfigs.getByName("release")
-            
-            externalNativeBuild {
-                cmake {
-                    cppFlags("-DANTITAMPER_TEST_BUILD=1", "-DALLOW_LOGCAT=0")
-                }
-            }
-        }
-
         getByName("debug") {
             isMinifyEnabled = false
             buildConfigField("boolean", "ALLOW_LOGCAT", "true")
@@ -478,10 +450,8 @@ dependencies {
         libs.leakcanary.android
     )
 
-    listOf("debug", "debugWithAntitamperAndLogs", "debugWithAntitamperWithoutLogs").forEach { type ->
-        debugToolsImplementation.forEach { tool ->
-            add("${type}Implementation", tool)
-        }
+    debugToolsImplementation.forEach { tool ->
+        add("debugImplementation", tool)
     }
 
     // Dependency Injection (Hilt)

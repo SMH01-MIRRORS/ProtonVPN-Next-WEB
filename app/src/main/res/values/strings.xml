@@ -226,6 +226,7 @@
     <string name="theme_purevpn">PureVPN</string>
     <string name="theme_mullvad">Mullvad</string>
     <string name="theme_windscribe">Windscribe</string>
+    <string name="theme_nothing" translatable="false">Nothing</string>
 
     <!-- Error Reporting Settings -->
     <string name="settings_error_reporting">Error Reporting</string>

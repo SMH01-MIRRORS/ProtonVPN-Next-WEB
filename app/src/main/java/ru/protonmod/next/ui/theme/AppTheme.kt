@@ -29,5 +29,6 @@ enum class AppTheme {
     IPVANISH,
     PUREVPN,
     MULLVAD,
-    WINDSCRIBE
+    WINDSCRIBE,
+    NOTHING
 }
