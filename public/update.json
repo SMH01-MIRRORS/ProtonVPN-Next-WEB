@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160002,
-      "versionName": "12.0.0-alpha1st4p1-46-g6fbfb65-nightly",
-      "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-debug.apk",
-      "changelog": "feat: integrate Privacy flavor into CI and update upload notifications\n\n- Update `.woodpecker.yml` to include unit tests and assembly tasks for the Privacy flavor in both tagged and nightly build pipelines.\n- Update `upload_telegram.py` to extract the build flavor and type from the directory path.\n- Enhance Telegram notification captions to include the specific build flavor.",
+      "versionCode": 605160010,
+      "versionName": "12.0.0-alpha1st4p1-54-g0840fab-nightly",
+      "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
+      "changelog": "Revert \"perf: optimize database operations and enable Write-Ahead Logging\"\n\nThis reverts commit 4bcc95205c252545123a0e2df6e1da199f9bf385.",
       "force": false
     },
     "release": {
-      "versionCode": 605160002,
-      "versionName": "12.0.0-alpha1st4p1-46-g6fbfb65-nightly",
-      "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-release.apk",
-      "changelog": "feat: integrate Privacy flavor into CI and update upload notifications\n\n- Update `.woodpecker.yml` to include unit tests and assembly tasks for the Privacy flavor in both tagged and nightly build pipelines.\n- Update `upload_telegram.py` to extract the build flavor and type from the directory path.\n- Enhance Telegram notification captions to include the specific build flavor.",
+      "versionCode": 605160010,
+      "versionName": "12.0.0-alpha1st4p1-54-g0840fab-nightly",
+      "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
+      "changelog": "Revert \"perf: optimize database operations and enable Write-Ahead Logging\"\n\nThis reverts commit 4bcc95205c252545123a0e2df6e1da199f9bf385.",
       "force": false
     }
   },
