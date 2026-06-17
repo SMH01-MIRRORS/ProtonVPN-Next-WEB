@@ -1,5 +1,5 @@
 [versions]
-agp = "9.2.1"
+agp = "9.3.0-alpha12"
 kotlin = "2.3.21" # Waiting for ksp update
 ksp = "2.3.9"
 hilt = "2.59.2"
