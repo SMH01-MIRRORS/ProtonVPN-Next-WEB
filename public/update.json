@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160010,
-      "versionName": "12.0.0-alpha1st4p1-54-g0840fab-nightly",
+      "versionCode": 605160011,
+      "versionName": "12.0.0-alpha1st4p1-55-g4f4274d-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "Revert \"perf: optimize database operations and enable Write-Ahead Logging\"\n\nThis reverts commit 4bcc95205c252545123a0e2df6e1da199f9bf385.",
+      "changelog": "chore: update Gradle and AGP versions\n\n- Update Gradle from 9.5.0-milestone-7 to 9.5.0.\n- Update Android Gradle Plugin (AGP) to 9.3.0-alpha12.",
       "force": false
     },
     "release": {
-      "versionCode": 605160010,
-      "versionName": "12.0.0-alpha1st4p1-54-g0840fab-nightly",
+      "versionCode": 605160011,
+      "versionName": "12.0.0-alpha1st4p1-55-g4f4274d-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "Revert \"perf: optimize database operations and enable Write-Ahead Logging\"\n\nThis reverts commit 4bcc95205c252545123a0e2df6e1da199f9bf385.",
+      "changelog": "chore: update Gradle and AGP versions\n\n- Update Gradle from 9.5.0-milestone-7 to 9.5.0.\n- Update Android Gradle Plugin (AGP) to 9.3.0-alpha12.",
       "force": false
     }
   },
