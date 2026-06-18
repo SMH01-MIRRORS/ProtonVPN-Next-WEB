@@ -44,6 +44,10 @@ object SystemUtils {
                 Build.MANUFACTURER.contains("POCO", ignoreCase = true)
     }
 
+    fun isNothingDevice(): Boolean {
+        return Build.MANUFACTURER.contains("Nothing", ignoreCase = true)
+    }
+
     private fun getMiuiBatterySaverLevel(context: Context): Int {
         return try {
             val processManager = Class.forName("miui.process.ProcessManager")

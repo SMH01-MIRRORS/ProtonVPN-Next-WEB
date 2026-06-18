@@ -38,6 +38,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.ui.theme.AppTheme
+import ru.protonmod.next.utils.system.SystemUtils
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -153,16 +154,19 @@ class SettingsManager @Inject constructor(
     val autoConnectEnabled: Flow<Boolean> = context.dataStore.data.map { it[AUTO_CONNECT] ?: false }
     val notificationsEnabled: Flow<Boolean> = context.dataStore.data.map { it[NOTIFICATIONS] ?: true }
 
+    val defaultTheme: AppTheme
+        get() = if (SystemUtils.isNothingDevice()) AppTheme.NOTHING else AppTheme.DARK
+
     val otaUpdateFrequency: Flow<String> = context.dataStore.data.map { it[OTA_UPDATE_FREQUENCY] ?: "daily" }
     val otaLastCheckTime: Flow<Long> = context.dataStore.data.map { it[OTA_LAST_CHECK_TIME] ?: 0L }
     val otaUpdateChannel: Flow<String> = context.dataStore.data.map { it[OTA_UPDATE_CHANNEL] ?: ru.protonmod.next.BuildConfig.UPDATE_CHANNEL }
 
     val appTheme: Flow<ru.protonmod.next.ui.theme.AppTheme> = context.dataStore.data.map { preferences ->
-        val themeString = preferences[APP_THEME] ?: ru.protonmod.next.ui.theme.AppTheme.DARK.name
+        val themeString = preferences[APP_THEME] ?: return@map defaultTheme
         try {
             ru.protonmod.next.ui.theme.AppTheme.valueOf(themeString)
         } catch (e: Exception) {
-            ru.protonmod.next.ui.theme.AppTheme.DARK
+            defaultTheme
         }
     }
 

@@ -94,7 +94,7 @@ class MainViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = AppTheme.DARK
+            initialValue = settingsManager.defaultTheme
         )
 
     init {

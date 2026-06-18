@@ -39,6 +39,7 @@ import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.data.repository.AuthRepository
 import ru.protonmod.next.ota.OTAUpdateManager
 import ru.protonmod.next.ui.theme.AppTheme
+import ru.protonmod.next.utils.system.SystemUtils
 import ru.protonmod.next.utils.crypto.QuicI1Generator
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import ru.protonmod.next.vpn.WarpManager
@@ -90,7 +91,7 @@ data class SettingsUiState(
     val spoofCountryCode: String = "",
 
     // Customization
-    val appTheme: AppTheme = AppTheme.DARK,
+    val appTheme: AppTheme = if (SystemUtils.isNothingDevice()) AppTheme.NOTHING else AppTheme.DARK,
     val serverLoadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
 
     // OTA Update Settings
