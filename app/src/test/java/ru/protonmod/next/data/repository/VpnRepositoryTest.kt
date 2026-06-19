@@ -28,17 +28,23 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.mockito.ArgumentMatchers.anyList
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.*
 import retrofit2.Response
+import ru.protonmod.next.data.local.AppDatabase
 import ru.protonmod.next.data.local.ServerDao
 import ru.protonmod.next.data.local.ServerEntity
 import ru.protonmod.next.data.local.ServersCacheDao
+import ru.protonmod.next.data.local.ServersCacheEntity
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.network.*
 import ru.protonmod.next.utils.coroutines.DispatcherProvider
+import java.util.concurrent.Executor
+
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class VpnRepositoryTest {
@@ -46,6 +52,9 @@ class VpnRepositoryTest {
     @Mock
     private lateinit var vpnApi: ProtonVpnApi
     
+    @Mock
+    private lateinit var database: AppDatabase
+
     @Mock
     private lateinit var serverDao: ServerDao
     
@@ -91,12 +100,15 @@ class VpnRepositoryTest {
     @Before
     fun setup() {
         MockitoAnnotations.openMocks(this)
-        repository = VpnRepository(
-            vpnApi, serverDao, sessionDao, serversCacheDao,
+        
+        repository = object : VpnRepository(
+            vpnApi, database, serverDao, sessionDao, serversCacheDao,
             cityTranslationDao, profileDao, recentConnectionDao,
             cityRepository, settingsManager, { amneziaVpnManager }, { warpManager },
             testDispatcherProvider, testScope
-        )
+        ) {
+            override suspend fun <R> performTransaction(block: suspend () -> R): R = block()
+        }
     }
 
     @Test
@@ -153,7 +165,7 @@ class VpnRepositoryTest {
 
         // Mock DAO to simulate DB behavior
         val dbServers = mutableListOf<ServerEntity>()
-        whenever(serverDao.insertServers(any())).thenAnswer { invocation ->
+        whenever(serverDao.upsertServers(any())).thenAnswer { invocation ->
             val list = invocation.getArgument<List<ServerEntity>>(0)
             dbServers.clear()
             dbServers.addAll(list)
@@ -201,7 +213,7 @@ class VpnRepositoryTest {
         assertEquals(loadValue, servers[0].averageLoad)
         
         // Verify DB interactions
-        verify(serverDao, atLeastOnce()).insertServers(any())
+        verify(serverDao, atLeastOnce()).upsertServers(any())
         verify(serversCacheDao, atLeastOnce()).saveCacheInfo(any())
     }
 }
