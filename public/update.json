@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160011,
-      "versionName": "12.0.0-alpha1st4p1-55-g4f4274d-nightly",
+      "versionCode": 605160014,
+      "versionName": "12.0.0-alpha1st4p1-58-g7f301f0-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "chore: update Gradle and AGP versions\n\n- Update Gradle from 9.5.0-milestone-7 to 9.5.0.\n- Update Android Gradle Plugin (AGP) to 9.3.0-alpha12.",
+      "changelog": "refactor: remove manual OTA update channel selection\n\n- Removed `OTA_UPDATE_CHANNEL` preference and associated logic from `SettingsManager`.\n- Removed the update channel selection UI, including dialogs and list items, from `SettingsScreen`.\n- Updated `SettingsViewModel` and `UpdateRepository` to use the build-time `BuildConfig.UPDATE_CHANNEL` instead of a user-defined preference.\n- Removed `getAvailableChannels` logic and simplified update version comparison in `UpdateRepository`.\n- Added a check in `UpdateRepository` to skip update checks if the frequency is set to \"disabled\".\n- Removed OTA channel-related string resources across all supported languages.",
       "force": false
     },
     "release": {
-      "versionCode": 605160011,
-      "versionName": "12.0.0-alpha1st4p1-55-g4f4274d-nightly",
+      "versionCode": 605160014,
+      "versionName": "12.0.0-alpha1st4p1-58-g7f301f0-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "chore: update Gradle and AGP versions\n\n- Update Gradle from 9.5.0-milestone-7 to 9.5.0.\n- Update Android Gradle Plugin (AGP) to 9.3.0-alpha12.",
+      "changelog": "refactor: remove manual OTA update channel selection\n\n- Removed `OTA_UPDATE_CHANNEL` preference and associated logic from `SettingsManager`.\n- Removed the update channel selection UI, including dialogs and list items, from `SettingsScreen`.\n- Updated `SettingsViewModel` and `UpdateRepository` to use the build-time `BuildConfig.UPDATE_CHANNEL` instead of a user-defined preference.\n- Removed `getAvailableChannels` logic and simplified update version comparison in `UpdateRepository`.\n- Added a check in `UpdateRepository` to skip update checks if the frequency is set to \"disabled\".\n- Removed OTA channel-related string resources across all supported languages.",
       "force": false
     }
   },
