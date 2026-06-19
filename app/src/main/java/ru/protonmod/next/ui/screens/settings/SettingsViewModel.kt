@@ -96,8 +96,6 @@ data class SettingsUiState(
 
     // OTA Update Settings
     val otaUpdateFrequency: String = "daily",
-    val otaUpdateChannel: String = "stable",
-    val availableChannels: Map<String, Boolean> = mapOf("stable" to true, "nightly" to true),
     val isCheckingForUpdates: Boolean = false,
     val isUpdateAvailable: Boolean = false,
 
@@ -163,7 +161,6 @@ class SettingsViewModel @Inject constructor(
     private val _isAnyVpnActive = MutableStateFlow(false)
     private val _isCheckingForUpdates = MutableStateFlow(false)
     private val _isUpdateAvailable = MutableStateFlow(false)
-    private val _availableChannels = MutableStateFlow(mapOf("stable" to true, "nightly" to true))
 
     init {
         viewModelScope.launch {
@@ -171,7 +168,6 @@ class SettingsViewModel @Inject constructor(
                 _isUpdateAvailable.value = update != null
             }
         }
-        checkAvailableChannels()
         // Monitor system networks to automatically detect active VPN connections
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val request = NetworkRequest.Builder()
@@ -254,7 +250,6 @@ class SettingsViewModel @Inject constructor(
         settingsManager.spoofCountryNull,
         settingsManager.spoofCountryCode,
         settingsManager.otaUpdateFrequency,
-        settingsManager.otaUpdateChannel,
         settingsManager.byeDpiFlags,
         settingsManager.byeDpiSni,
         warpManager.isFetching,
@@ -262,7 +257,6 @@ class SettingsViewModel @Inject constructor(
         byeDpiStrategyTester.progress,
         byeDpiStrategyTester.currentStrategy,
         byeDpiStrategyTester.testResults,
-        _availableChannels,
         _isAnyVpnActive,
         _isCheckingForUpdates,
         _isUpdateAvailable
@@ -321,19 +315,17 @@ class SettingsViewModel @Inject constructor(
             spoofCountryNull = args[50] as Boolean,
             spoofCountryCode = args[51] as String,
             otaUpdateFrequency = args[52] as String,
-            otaUpdateChannel = args[53] as String,
-            byeDpiFlags = args[54] as String,
-            byeDpiSni = args[55] as String,
-            isWarpFetching = args[56] as Boolean,
+            byeDpiFlags = args[53] as String,
+            byeDpiSni = args[54] as String,
+            isWarpFetching = args[55] as Boolean,
             warpConfigLoaded = warpManager.isConfigLoaded(),
-            isByeDpiTesting = args[57] as Boolean,
-            byeDpiTestProgress = args[58] as Float,
-            byeDpiCurrentStrategy = args[59] as String,
-            byeDpiResults = args[60] as List<ByeDpiStrategyTester.TestResult>,
-            availableChannels = args[61] as Map<String, Boolean>,
-            isAnyVpnActive = args[62] as Boolean,
-            isCheckingForUpdates = args[63] as Boolean,
-            isUpdateAvailable = args[64] as Boolean
+            isByeDpiTesting = args[56] as Boolean,
+            byeDpiTestProgress = args[57] as Float,
+            byeDpiCurrentStrategy = args[58] as String,
+            byeDpiResults = args[59] as List<ByeDpiStrategyTester.TestResult>,
+            isAnyVpnActive = args[60] as Boolean,
+            isCheckingForUpdates = args[61] as Boolean,
+            isUpdateAvailable = args[62] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -369,20 +361,6 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             settingsManager.setOtaUpdateFrequency(frequency)
             otaUpdateManager.scheduleUpdateCheck()
-        }
-    }
-
-    fun setOtaUpdateChannel(channel: String) {
-        viewModelScope.launch {
-            settingsManager.setOtaUpdateChannel(channel)
-            // Immediately check for updates when channel changes
-            checkForUpdates()
-        }
-    }
-
-    private fun checkAvailableChannels() {
-        viewModelScope.launch {
-            _availableChannels.value = updateRepository.getAvailableChannels()
         }
     }
 

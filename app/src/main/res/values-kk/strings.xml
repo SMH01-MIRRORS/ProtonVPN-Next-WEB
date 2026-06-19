@@ -493,10 +493,6 @@
     <string name="ota_force_title">Жаңарту қажет</string>
     <string name="ota_force_desc">Маңызды жаңарту қолжетімді. Proton VPN-Next қолданбасын пайдалануды жалғастыру үшін қолданбаны жаңартыңыз.</string>
     <string name="ota_check_frequency">Жаңартуларды тексеру</string>
-    <string name="ota_channel">Жаңарту арнасы</string>
-    <string name="ota_channel_stable">Тұрақты</string>
-    <string name="ota_channel_nightly">Nightly</string>
-    <string name="ota_channel_unavailable">Қолжетімсіз</string>
     <string name="ota_freq_hourly">Сағат сайын</string>
     <string name="ota_freq_daily">Күн сайын</string>
     <string name="ota_freq_weekly">Апта сайын</string>

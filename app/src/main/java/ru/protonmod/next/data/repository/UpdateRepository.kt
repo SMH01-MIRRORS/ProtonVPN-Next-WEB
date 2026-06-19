@@ -90,32 +90,14 @@ class UpdateRepository @Inject constructor(
         return json.decodeFromString(UpdateResponse.serializer(), body.string())
     }
 
-    suspend fun getAvailableChannels(): Map<String, Boolean> {
-        val result = mutableMapOf("stable" to false, "nightly" to false)
-        for (url in updateUrls) {
-            try {
-                val urlWithCacheBuster = if (url.contains("?")) {
-                    "$url&t=${System.currentTimeMillis()}"
-                } else {
-                    "$url?t=${System.currentTimeMillis()}"
-                }
-                val response = fetchUpdateResponse(urlWithCacheBuster)
-                if (response.stable != null) result["stable"] = true
-                if (response.nightly != null) result["nightly"] = true
-                if (result["stable"] == true && result["nightly"] == true) break
-            } catch (e: HttpException) {
-                ProtonLogger.e("UpdateRepository", "HTTP ${e.code()} fetching channels from $url", e)
-            } catch (e: Exception) {
-                ProtonLogger.e("UpdateRepository", "Failed to fetch channels from $url", e)
-            }
-        }
-        return result
-    }
 
     suspend fun checkForUpdates(): UpdateInfo? {
         if (BuildConfig.IS_PRIVACY_BUILD) return null
-        
-        val selectedChannel = settingsManager.otaUpdateChannel.first()
+
+        val frequency = settingsManager.otaUpdateFrequency.first()
+        if (frequency == "disabled") return null
+
+        val selectedChannel = BuildConfig.UPDATE_CHANNEL
         var bestUpdate: UpdateInfo? = null
         for (url in updateUrls) {
             try {
@@ -140,13 +122,7 @@ class UpdateRepository @Inject constructor(
                 }
                 
                 if (updateInfo != null) {
-                    val isHigherVersion = updateInfo.versionCode > BuildConfig.VERSION_CODE
-                    
-                    val isSwitchingToStable = selectedChannel == "stable" && 
-                                              BuildConfig.UPDATE_CHANNEL == "nightly" && 
-                                              updateInfo.versionCode == BuildConfig.VERSION_CODE
-
-                    if (isHigherVersion || isSwitchingToStable) {
+                    if (updateInfo.versionCode > BuildConfig.VERSION_CODE) {
                         if (bestUpdate == null || updateInfo.versionCode > bestUpdate.versionCode) {
                             bestUpdate = updateInfo
                         }

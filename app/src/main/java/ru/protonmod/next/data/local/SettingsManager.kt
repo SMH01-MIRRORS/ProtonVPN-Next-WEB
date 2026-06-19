@@ -67,7 +67,6 @@ class SettingsManager @Inject constructor(
 
         private val OTA_UPDATE_FREQUENCY = stringPreferencesKey("ota_update_frequency") // "hourly", "daily", "weekly", "monthly", "disabled"
         private val OTA_LAST_CHECK_TIME = androidx.datastore.preferences.core.longPreferencesKey("ota_last_check_time_v2")
-        private val OTA_UPDATE_CHANNEL = stringPreferencesKey("ota_update_channel") // "stable" or "nightly"
 
         private val APP_THEME = stringPreferencesKey("app_theme")
         private val SERVER_LOAD_DISPLAY_MODE = stringPreferencesKey("server_load_display_mode")
@@ -159,7 +158,6 @@ class SettingsManager @Inject constructor(
 
     val otaUpdateFrequency: Flow<String> = context.dataStore.data.map { it[OTA_UPDATE_FREQUENCY] ?: "daily" }
     val otaLastCheckTime: Flow<Long> = context.dataStore.data.map { it[OTA_LAST_CHECK_TIME] ?: 0L }
-    val otaUpdateChannel: Flow<String> = context.dataStore.data.map { it[OTA_UPDATE_CHANNEL] ?: ru.protonmod.next.BuildConfig.UPDATE_CHANNEL }
 
     val appTheme: Flow<ru.protonmod.next.ui.theme.AppTheme> = context.dataStore.data.map { preferences ->
         val themeString = preferences[APP_THEME] ?: return@map defaultTheme
@@ -343,10 +341,6 @@ class SettingsManager @Inject constructor(
 
     suspend fun setOtaLastCheckTime(time: Long) {
         context.dataStore.edit { it[OTA_LAST_CHECK_TIME] = time }
-    }
-
-    suspend fun setOtaUpdateChannel(channel: String) {
-        context.dataStore.edit { it[OTA_UPDATE_CHANNEL] = channel }
     }
 
     suspend fun setAppTheme(theme: ru.protonmod.next.ui.theme.AppTheme) {
@@ -642,7 +636,7 @@ class SettingsManager @Inject constructor(
                         prefs.edit { putLong(keyName, longValue) }
                     }
                     
-                    OTA_UPDATE_FREQUENCY.name, OTA_UPDATE_CHANNEL.name, APP_THEME.name, 
+                    OTA_UPDATE_FREQUENCY.name, APP_THEME.name, 
                     SERVER_LOAD_DISPLAY_MODE.name, SPLIT_TUNNELING_MODE.name, CUSTOM_DNS.name, 
                     API_BYPASS_STRATEGY.name, BYEDPI_FLAGS.name, BYEDPI_SNI.name, 
                     API_PROXY_HOST.name, API_PROXY_TYPE.name, API_PROXY_USERNAME.name, 
@@ -675,7 +669,6 @@ class SettingsManager @Inject constructor(
             NOTIFICATIONS.name -> NOTIFICATIONS
             OTA_UPDATE_FREQUENCY.name -> OTA_UPDATE_FREQUENCY
             OTA_LAST_CHECK_TIME.name -> OTA_LAST_CHECK_TIME
-            OTA_UPDATE_CHANNEL.name -> OTA_UPDATE_CHANNEL
             APP_THEME.name -> APP_THEME
             SERVER_LOAD_DISPLAY_MODE.name -> SERVER_LOAD_DISPLAY_MODE
             SPLIT_TUNNELING_ENABLED.name -> SPLIT_TUNNELING_ENABLED

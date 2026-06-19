@@ -126,7 +126,6 @@ fun SettingsScreen(
                 onNavigateToCountrySpoofing = onNavigateToCountrySpoofing,
                 onNavigateToPortSelection = onNavigateToPortSelection,
                 onOtaFrequencyChange = viewModel::setOtaUpdateFrequency,
-                onOtaChannelChange = viewModel::setOtaUpdateChannel,
                 onCheckForUpdates = viewModel::checkForUpdates,
                 modifier = Modifier
                     .fillMaxSize()
@@ -143,7 +142,6 @@ fun SettingsContent(
     onNotificationsChange: (Boolean) -> Unit,
     onLogout: () -> Unit,
     onOtaFrequencyChange: (String) -> Unit,
-    onOtaChannelChange: (String) -> Unit,
     onCheckForUpdates: () -> Unit,
     modifier: Modifier = Modifier,
     isTablet: Boolean = false,
@@ -236,7 +234,6 @@ fun SettingsContent(
                             UpdateSettingsSection(
                                 state = state,
                                 onFrequencyChange = onOtaFrequencyChange,
-                                onChannelChange = onOtaChannelChange,
                                 onCheckNow = onCheckForUpdates
                             )
                         }
@@ -300,12 +297,11 @@ fun SettingsContent(
             if (!state.isPrivacyBuild) {
                 item(contentType = "UpdateSettings") {
                     UpdateSettingsSection(
-                        state = state,
-                        onFrequencyChange = onOtaFrequencyChange,
-                        onChannelChange = onOtaChannelChange,
-                        onCheckNow = onCheckForUpdates,
-                        modifier = contentModifier
-                    )
+                    state = state,
+                    onFrequencyChange = onOtaFrequencyChange,
+                    onCheckNow = onCheckForUpdates,
+                    modifier = contentModifier
+                )
                 }
             }
 
@@ -330,12 +326,10 @@ fun SettingsContent(
 private fun UpdateSettingsSection(
     state: SettingsUiState,
     onFrequencyChange: (String) -> Unit,
-    onChannelChange: (String) -> Unit,
     onCheckNow: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showFrequencyDialog by remember { mutableStateOf(false) }
-    var showChannelDialog by remember { mutableStateOf(false) }
 
     SettingsCategory(modifier = modifier, title = stringResource(R.string.ota_title)) {
         val currentFrequencyName = when (state.otaUpdateFrequency) {
@@ -352,19 +346,6 @@ private fun UpdateSettingsSection(
             title = stringResource(R.string.ota_check_frequency),
             subtitle = currentFrequencyName,
             onClick = { showFrequencyDialog = true }
-        )
-
-        val currentChannelName = when (state.otaUpdateChannel) {
-            "stable" -> stringResource(R.string.ota_channel_stable)
-            "nightly" -> stringResource(R.string.ota_channel_nightly)
-            else -> state.otaUpdateChannel
-        }
-
-        SettingRowWithIcon(
-            icon = Icons.AutoMirrored.Rounded.AltRoute,
-            title = stringResource(R.string.ota_channel),
-            subtitle = currentChannelName,
-            onClick = { showChannelDialog = true }
         )
 
         val updateStatus = when {
@@ -415,63 +396,6 @@ private fun UpdateSettingsSection(
                             )
                             Spacer(Modifier.width(12.dp))
                             Text(optionNames[index], color = ProtonNextTheme.colors.textNorm)
-                        }
-                    }
-                }
-            },
-            confirmButton = {},
-            containerColor = ProtonNextTheme.colors.backgroundSecondary
-        )
-    }
-
-    if (showChannelDialog) {
-        val options = listOf("stable", "nightly")
-        val optionNames = listOf(
-            stringResource(R.string.ota_channel_stable),
-            stringResource(R.string.ota_channel_nightly)
-        )
-
-        AlertDialog(
-            onDismissRequest = { showChannelDialog = false },
-            title = { Text(stringResource(R.string.ota_channel)) },
-            text = {
-                Column {
-                    options.forEachIndexed { index, option ->
-                        val isAvailable = state.availableChannels[option] ?: true
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .clickable(enabled = isAvailable) {
-                                    onChannelChange(option)
-                                    showChannelDialog = false
-                                }
-                                .padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = state.otaUpdateChannel == option,
-                                onClick = null,
-                                enabled = isAvailable,
-                                colors = RadioButtonDefaults.colors(
-                                    selectedColor = ProtonNextTheme.colors.brandNorm,
-                                    disabledSelectedColor = ProtonNextTheme.colors.brandNorm.copy(alpha = 0.5f),
-                                    disabledUnselectedColor = ProtonNextTheme.colors.iconWeak.copy(alpha = 0.5f)
-                                )
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = optionNames[index],
-                                    color = if (isAvailable) ProtonNextTheme.colors.textNorm else ProtonNextTheme.colors.textWeak
-                                )
-                                if (!isAvailable) {
-                                    Text(
-                                        text = stringResource(R.string.ota_channel_unavailable),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = ProtonNextTheme.colors.notificationError
-                                    )
-                                }
-                            }
                         }
                     }
                 }
