@@ -241,9 +241,7 @@ class SettingsManager @Inject constructor(
 
     fun isApiBypassEnabledSync(): Boolean = prefs.getBoolean("api_bypass_enabled", false)
     fun getApiBypassStrategySync(): String {
-        val strategy = prefs.getString("api_bypass_strategy", "netlify") ?: "netlify"
-        ProtonLogger.d("SettingsManager", "Sync get strategy: $strategy")
-        return strategy
+        return prefs.getString("api_bypass_strategy", "netlify") ?: "netlify"
     }
 
     fun getByeDpiFlagsSync(): String = prefs.getString("byedpi_flags", "-s1 -d1") ?: "-s1 -d1"

@@ -31,13 +31,20 @@ object PinVerifier {
         return try {
             val certs = session.peerCertificates
             if (certs.isEmpty()) return false
-            val cert = certs[0] as? X509Certificate ?: return false
             
             val digest = MessageDigest.getInstance("SHA-256")
-            val hash = digest.digest(cert.publicKey.encoded)
-            val pin = Base64.encodeToString(hash, Base64.NO_WRAP)
             
-            allowedPins.contains(pin)
+            // Check each certificate in the chain. If any certificate matches an allowed pin,
+            // we trust the connection. This allows pinning leaves, intermediates, or roots.
+            certs.forEach { cert ->
+                if (cert is X509Certificate) {
+                    val hash = digest.digest(cert.publicKey.encoded)
+                    val pin = Base64.encodeToString(hash, Base64.NO_WRAP)
+                    if (allowedPins.contains(pin)) return true
+                }
+            }
+            
+            false
         } catch (e: Exception) {
             false
         }

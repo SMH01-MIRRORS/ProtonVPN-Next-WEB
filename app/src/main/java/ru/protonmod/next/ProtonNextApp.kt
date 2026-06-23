@@ -106,30 +106,44 @@ class ProtonNextApp : Application(), Configuration.Provider {
         ProtonLogger.isAnalyticsEnabled = settings.isAnalyticsEnabledSync()
         ProtonLogger.isSentryLogsEnabled = settings.isLogsEnabledSync()
 
-        // Start background server load updates
-        vpnRepository.startAutoUpdate()
-
-        // Sync servers on network changes.
-        // Debounce by 2 s so rapid connectivity toggles (e.g. WiFi → mobile → WiFi)
-        // collapse into a single refresh, preventing multiple concurrent forced fetches
-        // that would exhaust the heap with large API payloads (OOM in loads deserialization).
-        MainScope().launch {
-            networkMonitor.networkChanged.debounce(2_000).collect { timestamp ->
-                if (timestamp > 0) {
-                    vpnRepository.refreshServersOnNetworkChange()
-                }
-            }
+        val isMainProcess = try {
+            packageName == getProcessName()
+        } catch (e: Exception) {
+            true
         }
 
-        // Schedule OTA update checks
-        MainScope().launch {
-            otaUpdateManager.scheduleUpdateCheck()
+        if (isMainProcess) {
+            // Start background server load updates
+            vpnRepository.startAutoUpdate()
+
+            // Sync servers on network changes.
+            // Debounce by 2 s so rapid connectivity toggles (e.g. WiFi → mobile → WiFi)
+            // collapse into a single refresh, preventing multiple concurrent forced fetches
+            // that would exhaust the heap with large API payloads (OOM in loads deserialization).
+            MainScope().launch {
+                networkMonitor.networkChanged.debounce(2_000).collect { timestamp ->
+                    if (timestamp > 0) {
+                        vpnRepository.refreshServersOnNetworkChange()
+                    }
+                }
+            }
+
+            // Schedule OTA update checks
+            MainScope().launch {
+                otaUpdateManager.scheduleUpdateCheck()
+            }
         }
     }
 
     override fun onTerminate() {
         super.onTerminate()
-        vpnRepository.stopAutoUpdate()
+        try {
+            if (packageName == getProcessName()) {
+                vpnRepository.stopAutoUpdate()
+            }
+        } catch (e: Exception) {
+            // ignore
+        }
     }
 
     companion object {
