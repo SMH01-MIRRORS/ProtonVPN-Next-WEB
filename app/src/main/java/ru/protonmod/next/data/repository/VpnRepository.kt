@@ -213,20 +213,15 @@ open class VpnRepository @Inject constructor(
         forceRefresh: Boolean = false
     ): Result<List<LogicalServer>> {
         val deferred = fetchMutex.withLock {
-            if (activeFetch != null && !forceRefresh) {
-                ProtonLogger.d(TAG, "Joining existing servers fetch request")
-                activeFetch!!
-            } else {
-                // If a fetch is already in-flight, do NOT cancel it. Cancelling a coroutine
-                // that is blocked on an OkHttp HTTP/2 call aborts the call mid-execution and
-                // can violate OkHttp's TaskRunner internal invariants (check() in afterRun),
-                // crashing the app with IllegalStateException: Check failed.
-                // Instead, set a flag so the running fetch triggers a new force-refresh once
-                // it completes cleanly.
-                if (forceRefresh && activeFetch?.isActive == true) {
+            if (activeFetch != null && activeFetch?.isActive == true) {
+                if (forceRefresh) {
                     ProtonLogger.d(TAG, "Force refresh requested while fetch is in-flight; deferring until current fetch completes")
                     pendingForceRefresh.set(true)
+                } else {
+                    ProtonLogger.d(TAG, "Joining existing servers fetch request")
                 }
+                activeFetch!!
+            } else {
                 _isUpdating.value = true
                 val capturedAccessToken = accessToken
                 val capturedSessionId = sessionId
@@ -283,9 +278,6 @@ open class VpnRepository @Inject constructor(
         try {
             val now = System.currentTimeMillis()
 
-            // Ensure city translations are up-to-date at the start of any sync
-            refreshCityTranslations(accessToken, sessionId)
-
             val cacheInfo = serversCacheDao.getCacheInfo()
 
             val shouldCheckApi = forceRefresh || cacheInfo == null || now > cacheInfo.expiresAt
@@ -306,7 +298,7 @@ open class VpnRepository @Inject constructor(
             val bearer = "Bearer $accessToken"
             val ifModifiedSince = if (!forceRefresh) cacheInfo?.lastModified else null
 
-            // Refresh city translations whenever we fetch servers
+            // Ensure city translations are up-to-date at the start of any sync
             refreshCityTranslations(accessToken, sessionId)
 
             ProtonLogger.i(TAG, "Fetching servers from Proton API... (If-Modified-Since: $ifModifiedSince, StatusID: ${cacheInfo?.statusId})")

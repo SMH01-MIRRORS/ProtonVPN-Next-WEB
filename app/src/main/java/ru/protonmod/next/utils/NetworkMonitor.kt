@@ -43,26 +43,45 @@ class NetworkMonitor @Inject constructor(
 
     private val _networkChanged = MutableStateFlow(0L)
     /**
-     * Emits the current timestamp whenever the network changes.
+     * Emits the current timestamp whenever the network connectivity (internet) becomes available
+     * or a significant network transition occurs.
      */
     val networkChanged: StateFlow<Long> = _networkChanged
 
+    private var lastInternetState = false
+
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
-            _isNetworkAvailable.value = true
-            _networkChanged.value = System.currentTimeMillis()
+            val isAvailable = checkNetworkAvailability()
+            _isNetworkAvailable.value = isAvailable
+            if (isAvailable && !lastInternetState) {
+                lastInternetState = true
+                _networkChanged.value = System.currentTimeMillis()
+            }
         }
 
         override fun onLost(network: Network) {
-            _isNetworkAvailable.value = checkNetworkAvailability()
+            val isAvailable = checkNetworkAvailability()
+            _isNetworkAvailable.value = isAvailable
+            if (!isAvailable) {
+                lastInternetState = false
+            }
         }
 
         override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
             val hasInternet = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            
             _isNetworkAvailable.value = hasInternet
             _isVpnActive.value = capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
-            if (hasInternet) {
+            
+            // Only trigger a network change event if we just gained internet access.
+            // This prevents "signal strength" or other capability updates from
+            // triggering infinite server refresh loops.
+            if (hasInternet && !lastInternetState) {
+                lastInternetState = true
                 _networkChanged.value = System.currentTimeMillis()
+            } else if (!hasInternet) {
+                lastInternetState = false
             }
         }
     }
@@ -72,7 +91,11 @@ class NetworkMonitor @Inject constructor(
             .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
             .build()
         connectivityManager.registerNetworkCallback(request, networkCallback)
-        _isNetworkAvailable.value = checkNetworkAvailability()
+        
+        val initialInternet = checkNetworkAvailability()
+        _isNetworkAvailable.value = initialInternet
+        lastInternetState = initialInternet
+        
         _isVpnActive.value = checkVpnAvailability()
     }
 
