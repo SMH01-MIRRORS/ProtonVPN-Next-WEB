@@ -55,9 +55,17 @@ class AmneziaConfigGeneratorImpl @Inject constructor(
         certificate: String?,
         obfuscationParams: AmneziaVpnManager.ObfuscationParams
     ): String {
-        val allowedIpsList = when {
+        val baseAllowedIps = when {
             isIncludeMode -> if (selectedIps.isEmpty()) listOf("0.0.0.0/0") else selectedIps.toList()
             else -> if (selectedIps.isEmpty()) listOf("0.0.0.0/0") else ipSubnetCalculator.complementOfExcluded(selectedIps)
+        }
+
+        // Fix: Explicitly re-include local IP and DNS server in AllowedIPs.
+        // This ensures that even if broad private ranges (like 10.0.0.0/8) are excluded for LAN bypass,
+        // the VPN's internal routing and DNS still function through the tunnel.
+        val finalAllowedIps = baseAllowedIps.toMutableSet().apply {
+            add(ipSubnetCalculator.normalizeIp(localIp))
+            add(ipSubnetCalculator.normalizeIp(dnsServer))
         }
 
         return nextConfigGenerator.get().buildConfig(
@@ -68,7 +76,7 @@ class AmneziaConfigGeneratorImpl @Inject constructor(
             targetIp = targetIp,
             isIncludeMode = isIncludeMode,
             selectedApps = selectedApps,
-            selectedIps = allowedIpsList.toSet(),
+            selectedIps = finalAllowedIps,
             port = port,
             certificate = certificate,
             obfuscationParams = obfuscationParams
