@@ -30,31 +30,26 @@ import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SessionEntity
-import ru.protonmod.next.data.repository.AuthRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TokenAuthenticatorTest {
 
     @Mock
-    private lateinit var sessionDao: SessionDao
-
-    @Mock
-    private lateinit var authRepository: AuthRepository
+    private lateinit var sessionManager: SessionManager
 
     private lateinit var authenticator: TokenAuthenticator
 
     @Before
     fun setup() {
         MockitoAnnotations.openMocks(this)
-        authenticator = TokenAuthenticator(sessionDao, { authRepository })
+        authenticator = TokenAuthenticator(sessionManager)
     }
 
     @Test
     fun `authenticate returns null when no session found`() {
         runBlocking {
-            whenever(sessionDao.getSession()).thenReturn(null)
+            whenever(sessionManager.getSession()).thenReturn(null)
         }
 
         val response = mockResponse("https://vpn-api.proton.me/vpn/v2/logicals")
@@ -72,15 +67,14 @@ class TokenAuthenticatorTest {
             sessionId = "session_id",
             userId = "user_id"
         )
-        val refreshResponse = LoginResponse(
-            code = 1000,
+        val updatedSession = oldSession.copy(
             accessToken = "new_token",
             refreshToken = "new_refresh_token"
         )
 
         runBlocking {
-            whenever(sessionDao.getSession()).thenReturn(oldSession)
-            whenever(authRepository.refreshSession(any(), any())).thenReturn(Result.success(refreshResponse))
+            whenever(sessionManager.getSession()).thenReturn(oldSession)
+            whenever(sessionManager.refreshSession(any())).thenReturn(Result.success(updatedSession))
         }
 
         val response = mockResponse("https://vpn-api.proton.me/vpn/v2/logicals", "Bearer old_token")

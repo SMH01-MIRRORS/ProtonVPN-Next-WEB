@@ -70,6 +70,9 @@ class AuthRepositoryTest {
     @Mock
     private lateinit var amneziaVpnManager: ru.protonmod.next.vpn.AmneziaVpnManager
 
+    @Mock
+    private lateinit var sessionManager: ru.protonmod.next.data.network.SessionManager
+
     private val testDispatcher = StandardTestDispatcher()
     
     private val testDispatcherProvider = object : DispatcherProvider {
@@ -86,7 +89,7 @@ class AuthRepositoryTest {
         repository = AuthRepository(
             context, authApi, vpnRepository, sessionDao, deviceInfoProvider,
             cryptoWrapper, testDispatcherProvider, { amneziaVpnManager },
-            authNativeBridge
+            authNativeBridge, sessionManager
         )
         
         whenever(deviceInfoProvider.getAppLanguage()).thenReturn("en")
@@ -256,52 +259,28 @@ class AuthRepositoryTest {
         // Arrange
         val sessionId = "session_id"
         val refreshToken = "refresh_token"
-        val refreshResponse = LoginResponse(
-            code = 1000,
-            accessToken = "new_access_token",
-            refreshToken = "new_refresh_token",
-            sessionId = sessionId
-        )
         val currentSession = SessionEntity(
             sessionId = sessionId,
             accessToken = "old_access_token",
             refreshToken = refreshToken,
             userId = "user_id"
         )
+        val updatedSession = currentSession.copy(
+            accessToken = "new_access_token",
+            refreshToken = "new_refresh_token"
+        )
 
-        whenever(authApi.refreshSession(any())).thenReturn(refreshResponse)
         whenever(sessionDao.getSession()).thenReturn(currentSession)
+        whenever(sessionManager.refreshSession(currentSession)).thenReturn(Result.success(updatedSession))
 
         // Act
         val result = repository.refreshSession(sessionId, refreshToken)
 
         // Assert
         assertTrue(result.isSuccess)
-        verify(sessionDao).saveSession(argThat {
-            this.accessToken == "new_access_token" && this.refreshToken == "new_refresh_token"
-        })
-    }
-
-    @Test
-    fun `refreshSession debounces calls within 1 minute`() = runTest(testDispatcher) {
-        // Arrange
-        val sessionId = "session_id"
-        val refreshToken = "refresh_token"
-        val refreshResponse = LoginResponse(
-            code = 1000,
-            accessToken = "new_access_token",
-            sessionId = sessionId
-        )
-        whenever(authApi.refreshSession(any())).thenReturn(refreshResponse)
-
-        // Act
-        repository.refreshSession(sessionId, refreshToken) // First call
-        val secondResult = repository.refreshSession(sessionId, refreshToken) // Second call (debounced)
-
-        // Assert
-        assertTrue(secondResult.isFailure)
-        assertEquals("Debounced", secondResult.exceptionOrNull()?.message)
-        verify(authApi, times(1)).refreshSession(any())
+        val value = result.getOrNull()
+        assertEquals("new_access_token", value?.accessToken)
+        assertEquals("new_refresh_token", value?.refreshToken)
     }
 
     @Test
@@ -309,10 +288,16 @@ class AuthRepositoryTest {
         // Arrange
         val sessionId = "session_id"
         val refreshToken = "refresh_token"
-        val response = Response.error<LoginResponse>(401, "Unauthorized".toResponseBody())
-        val exception = HttpException(response)
+        val currentSession = SessionEntity(
+            sessionId = sessionId,
+            accessToken = "old_access_token",
+            refreshToken = refreshToken,
+            userId = "user_id"
+        )
+        val exception = HttpException(retrofit2.Response.error<Any>(401, "Unauthorized".toResponseBody()))
 
-        whenever(authApi.refreshSession(any())).thenThrow(exception)
+        whenever(sessionDao.getSession()).thenReturn(currentSession)
+        whenever(sessionManager.refreshSession(currentSession)).thenReturn(Result.failure(exception))
 
         // Act
         val result = repository.refreshSession(sessionId, refreshToken)
