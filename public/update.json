@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160033,
-      "versionName": "12.0.0-alpha1st4p1-77-gb97147b-nightly",
+      "versionCode": 605160034,
+      "versionName": "12.0.0-alpha1st4p1-78-gd8f25a6-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "refactor: delegate session management to SessionManager\n\n- Updated `AuthRepository` and `TokenAuthenticator` to use `SessionManager` for session retrieval and token refreshing logic.\n- Simplified `AuthRepositoryTest` by mocking `SessionManager` and removing redundant debounce tests now handled by the manager.\n- Refactored `TokenAuthenticatorTest` to remove direct dependencies on `SessionDao` and `AuthRepository`, focusing on the `SessionManager` interface.",
+      "changelog": "feat: implement \"Allow LAN connections\" bypass\n\n- Added `ALLOW_LAN_CONNECTIONS` setting to `SettingsManager` using DataStore to control local network bypass.\n- Updated `AmneziaVpnManager` to automatically add private IPv4 and IPv6 ranges (e.g., 10.0.0.0/8, 192.168.0.0/16, fe80::/10) to split tunneling exclusions when LAN bypass is enabled.\n- Introduced a new toggle in the Privacy settings UI to allow users to bypass the VPN for local network traffic.\n- Updated `SettingsViewModel` and `SettingsUiState` to manage and persist the LAN bypass state.\n- Updated `strings.xml` across multiple locales to include descriptions for the new feature and marked several technical strings as non-translatable.",
       "force": false
     },
     "release": {
-      "versionCode": 605160033,
-      "versionName": "12.0.0-alpha1st4p1-77-gb97147b-nightly",
+      "versionCode": 605160034,
+      "versionName": "12.0.0-alpha1st4p1-78-gd8f25a6-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "refactor: delegate session management to SessionManager\n\n- Updated `AuthRepository` and `TokenAuthenticator` to use `SessionManager` for session retrieval and token refreshing logic.\n- Simplified `AuthRepositoryTest` by mocking `SessionManager` and removing redundant debounce tests now handled by the manager.\n- Refactored `TokenAuthenticatorTest` to remove direct dependencies on `SessionDao` and `AuthRepository`, focusing on the `SessionManager` interface.",
+      "changelog": "feat: implement \"Allow LAN connections\" bypass\n\n- Added `ALLOW_LAN_CONNECTIONS` setting to `SettingsManager` using DataStore to control local network bypass.\n- Updated `AmneziaVpnManager` to automatically add private IPv4 and IPv6 ranges (e.g., 10.0.0.0/8, 192.168.0.0/16, fe80::/10) to split tunneling exclusions when LAN bypass is enabled.\n- Introduced a new toggle in the Privacy settings UI to allow users to bypass the VPN for local network traffic.\n- Updated `SettingsViewModel` and `SettingsUiState` to manage and persist the LAN bypass state.\n- Updated `strings.xml` across multiple locales to include descriptions for the new feature and marked several technical strings as non-translatable.",
       "force": false
     }
   },
