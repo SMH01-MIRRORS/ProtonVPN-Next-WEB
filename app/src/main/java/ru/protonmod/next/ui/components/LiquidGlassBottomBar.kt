@@ -121,7 +121,7 @@ private fun NavigationItem(
     modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
-    val activeColor = colors.brandNorm
+    val activeColor = colors.navigationActive
     val inactiveColor = colors.iconWeak
 
     val iconColor by animateColorAsState(

@@ -178,6 +178,7 @@ class ProtonColors(
     val shadowLifted: Color,
 
     val onInteraction: Color = Color.White,
+    val navigationActive: Color = brandNorm,
 
     val sidebarColors: ProtonColors? = null,
 ) {
@@ -250,6 +251,7 @@ class ProtonColors(
         shadowLifted: Color = this.shadowLifted,
 
         onInteraction: Color = this.onInteraction,
+        navigationActive: Color = this.navigationActive,
 
         sidebarColors: ProtonColors? = this.sidebarColors,
     ) = ProtonColors(
@@ -318,6 +320,7 @@ class ProtonColors(
         shadowLifted = shadowLifted,
 
         onInteraction = onInteraction,
+        navigationActive = navigationActive,
 
         sidebarColors = sidebarColors,
     )
@@ -470,6 +473,7 @@ class ProtonColors(
             notificationError = ProtonPalette.NothingRed,
             textAccent = Color.White,
             onInteraction = Color.Black,
+            navigationActive = ProtonPalette.NothingRed,
             sidebarColors = sidebarDark(
                 brandNorm = Color.White,
                 brandDarken20 = Color.White.copy(alpha = 0.8f),
