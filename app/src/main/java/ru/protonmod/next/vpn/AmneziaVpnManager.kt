@@ -516,7 +516,8 @@ class AmneziaVpnManager @Inject constructor(
         
         applicationScope.launch {
             if (isPaused || settingsManager.pauseEndTime.first() > System.currentTimeMillis()) {
-                ProtonLogger.d(TAG, "Connection blocked: VPN is currently paused.")
+                val persistentEnd = settingsManager.pauseEndTime.first()
+                ProtonLogger.d(TAG, "Connection blocked: VPN is currently paused (Local isPaused: $isPaused, Persistent: $persistentEnd)")
                 return@launch
             }
 
@@ -777,7 +778,8 @@ class AmneziaVpnManager @Inject constructor(
 
         applicationScope.launch {
             if (isPaused || settingsManager.pauseEndTime.first() > System.currentTimeMillis()) {
-                ProtonLogger.d(TAG, "Reconnect blocked: VPN is currently paused.")
+                val persistentEnd = settingsManager.pauseEndTime.first()
+                ProtonLogger.d(TAG, "Reconnect blocked: VPN is currently paused (Local isPaused: $isPaused, Persistent: $persistentEnd)")
                 return@launch
             }
 

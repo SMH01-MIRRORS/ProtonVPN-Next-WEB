@@ -21,11 +21,14 @@ import android.content.Context
 import ru.protonmod.next.utils.ProtonLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.amnezia.awg.backend.Tunnel
 import ru.protonmod.next.data.local.RecentConnectionDao
 import ru.protonmod.next.data.local.SessionDao
@@ -49,29 +52,42 @@ class VpnAutomationManager @Inject constructor(
     init {
         applicationScope.launch {
             // Monitor Pause state with a real timer
-            settingsManager.pauseEndTime.collectLatest { endTime ->
+            var timerJob: Job? = null
+            
+            settingsManager.pauseEndTime.collect { endTime ->
+                timerJob?.cancel()
                 val now = System.currentTimeMillis()
+                
                 if (endTime > now) {
                     val delayMs = endTime - now
                     ProtonLogger.d(TAG, "VPN is paused. Waiting ${delayMs}ms to auto-resume.")
-                    delay(delayMs)
                     
-                    // Final check: did someone manually resume or change the timer?
-                    val currentEndTime = settingsManager.pauseEndTime.first()
-                    if (currentEndTime != 0L && currentEndTime <= System.currentTimeMillis()) {
-                        ProtonLogger.i(TAG, "Pause expired, auto-resuming...")
-                        amneziaVpnManager.resumeVpn()
-                        triggerAutoConnect()
+                    timerJob = applicationScope.launch {
+                        delay(delayMs)
+                        
+                        // Final check: did someone manually resume or change the timer?
+                        val currentEndTime = settingsManager.pauseEndTime.first()
+                        if (currentEndTime != 0L && currentEndTime <= System.currentTimeMillis()) {
+                            withContext(NonCancellable) {
+                                ProtonLogger.i(TAG, "Pause expired, auto-resuming...")
+                                amneziaVpnManager.resumeVpn()
+                                triggerAutoConnect()
+                            }
+                        }
                     }
                 } else if (endTime > 0) {
                     // Already expired but not cleared (e.g. app just started)
                     // Add a small safety delay to avoid race condition on immediate pause calls
-                    delay(500)
-                    val currentEndTime = settingsManager.pauseEndTime.first()
-                    if (currentEndTime > 0 && currentEndTime <= System.currentTimeMillis()) {
-                        ProtonLogger.i(TAG, "Detected expired pause, clearing and resuming...")
-                        amneziaVpnManager.resumeVpn()
-                        triggerAutoConnect()
+                    timerJob = applicationScope.launch {
+                        delay(500)
+                        val currentEndTime = settingsManager.pauseEndTime.first()
+                        if (currentEndTime > 0 && currentEndTime <= System.currentTimeMillis()) {
+                            withContext(NonCancellable) {
+                                ProtonLogger.i(TAG, "Detected expired pause, clearing and resuming...")
+                                amneziaVpnManager.resumeVpn()
+                                triggerAutoConnect()
+                            }
+                        }
                     }
                 }
             }
@@ -79,9 +95,11 @@ class VpnAutomationManager @Inject constructor(
     }
 
     suspend fun resumeVpn() {
-        ProtonLogger.i(TAG, "resumeVpn: Manually requested resumption.")
-        amneziaVpnManager.resumeVpn()
-        triggerAutoConnect()
+        withContext(NonCancellable) {
+            ProtonLogger.i(TAG, "resumeVpn: Manually requested resumption.")
+            amneziaVpnManager.resumeVpn()
+            triggerAutoConnect()
+        }
     }
 
     private suspend fun triggerAutoConnect() {
