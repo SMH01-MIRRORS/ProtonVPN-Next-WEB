@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160024,
-      "versionName": "12.0.0-alpha1st4p1-68-ge68a590-nightly",
+      "versionCode": 605160027,
+      "versionName": "12.0.0-alpha1st4p1-71-gb987605-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "refactor: improve certificate pinning and restrict background tasks to main process\n\n- Migrated `MirrorTrustManager` to `X509ExtendedTrustManager` and implemented additional `checkServerTrusted` overrides for better compatibility.\n- Enhanced `PinVerifier` to validate the entire certificate chain, enabling support for pinning intermediate and root certificates instead of only the leaf.\n- Updated `ProtonNextApp` to ensure background services, network monitoring, and OTA update checks are only initialized within the main application process.\n- Removed a debug log statement from `SettingsManager.getApiBypassStrategySync()`.",
+      "changelog": "feat: introduce navigationActive theme color\n\n- Added `navigationActive` property to `ProtonColors` to allow independent styling of navigation components.\n- Updated `LiquidGlassBottomBar` to use the new `navigationActive` color instead of the generic `brandNorm`.\n- Extended `ProtonColors` copy and update functions to support the new property.\n- Configured specific `navigationActive` overrides in theme palettes, such as using `ProtonPalette.NothingRed`.",
       "force": false
     },
     "release": {
-      "versionCode": 605160024,
-      "versionName": "12.0.0-alpha1st4p1-68-ge68a590-nightly",
+      "versionCode": 605160027,
+      "versionName": "12.0.0-alpha1st4p1-71-gb987605-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "refactor: improve certificate pinning and restrict background tasks to main process\n\n- Migrated `MirrorTrustManager` to `X509ExtendedTrustManager` and implemented additional `checkServerTrusted` overrides for better compatibility.\n- Enhanced `PinVerifier` to validate the entire certificate chain, enabling support for pinning intermediate and root certificates instead of only the leaf.\n- Updated `ProtonNextApp` to ensure background services, network monitoring, and OTA update checks are only initialized within the main application process.\n- Removed a debug log statement from `SettingsManager.getApiBypassStrategySync()`.",
+      "changelog": "feat: introduce navigationActive theme color\n\n- Added `navigationActive` property to `ProtonColors` to allow independent styling of navigation components.\n- Updated `LiquidGlassBottomBar` to use the new `navigationActive` color instead of the generic `brandNorm`.\n- Extended `ProtonColors` copy and update functions to support the new property.\n- Configured specific `navigationActive` overrides in theme palettes, such as using `ProtonPalette.NothingRed`.",
       "force": false
     }
   },
