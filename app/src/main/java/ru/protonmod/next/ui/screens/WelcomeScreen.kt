@@ -814,7 +814,7 @@ private fun StepConfigObfuscation(onNext: (Boolean) -> Unit, onBack: () -> Unit)
                     onCheckedChange = { enabled = it },
                     colors = SwitchDefaults.colors(
                         checkedTrackColor = colors.brandNorm,
-                        checkedThumbColor = Color.White
+                        checkedThumbColor = colors.onInteraction
                     )
                 )
             }

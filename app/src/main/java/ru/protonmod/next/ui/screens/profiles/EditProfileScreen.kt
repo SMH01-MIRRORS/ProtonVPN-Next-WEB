@@ -235,7 +235,7 @@ fun EditProfileScreen(
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier.padding(end = 8.dp)
                             ) {
-                                Text(stringResource(R.string.btn_save), color = Color.White, fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.btn_save), color = colors.onInteraction, fontWeight = FontWeight.Bold)
                             }
                         }
                     )

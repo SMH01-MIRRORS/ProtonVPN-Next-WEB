@@ -115,7 +115,7 @@ fun ProfilesScreen(
                 FloatingActionButton(
                     onClick = onCreateNewProfile,
                     containerColor = colors.brandNorm,
-                    contentColor = Color.White,
+                    contentColor = colors.onInteraction,
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier
                         .windowInsetsPadding(WindowInsets.navigationBars)

@@ -97,7 +97,7 @@ fun Modifier.vpnStatusOverlayBackground(
 ): Modifier {
     val targetColor = when {
         isConnected -> colors.notificationSuccess.copy(alpha = 0.4f)
-        isConnecting -> Color.White.copy(alpha = 0.4f)
+        isConnecting -> colors.brandNorm.copy(alpha = 0.4f)
         else -> colors.notificationError.copy(alpha = 0.4f)
     }
 
@@ -148,7 +148,7 @@ fun VpnStatusTop(
                 }
                 AmneziaVpnManager.VpnState.CONNECTING, AmneziaVpnManager.VpnState.VERIFYING -> {
                     ExpressiveCircularProgressIndicator(
-                        color = colors.iconNorm,
+                        color = colors.brandNorm,
                         modifier = Modifier.size(32.dp)
                     )
                 }

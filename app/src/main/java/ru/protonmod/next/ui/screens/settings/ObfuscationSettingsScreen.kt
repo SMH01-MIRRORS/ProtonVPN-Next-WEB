@@ -188,7 +188,7 @@ fun ObfuscationSettingsScreen(
                                     shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
                                     colors = SegmentedButtonDefaults.colors(
                                         activeContainerColor = colors.brandNorm,
-                                        activeContentColor = Color.White,
+                                        activeContentColor = colors.onInteraction,
                                         inactiveContainerColor = colors.backgroundSecondary.copy(alpha = 0.5f),
                                         inactiveContentColor = colors.textNorm
                                     )
@@ -201,7 +201,7 @@ fun ObfuscationSettingsScreen(
                                     shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
                                     colors = SegmentedButtonDefaults.colors(
                                         activeContainerColor = colors.brandNorm,
-                                        activeContentColor = Color.White,
+                                        activeContentColor = colors.onInteraction,
                                         inactiveContainerColor = colors.backgroundSecondary.copy(alpha = 0.5f),
                                         inactiveContentColor = colors.textNorm
                                     )
