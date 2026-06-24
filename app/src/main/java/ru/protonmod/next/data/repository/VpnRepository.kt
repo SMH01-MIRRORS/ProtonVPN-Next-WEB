@@ -96,9 +96,9 @@ open class VpnRepository @Inject constructor(
     companion object {
         private const val TAG = "VpnRepository"
         private val json = Json { ignoreUnknownKeys = true }
-        private const val CACHE_DURATION_MILLIS = 60 * 60 * 1000L // 1 hour
+        private const val CACHE_DURATION_MILLIS = 2 * 60 * 60 * 1000L // 2 hours
         private const val CITY_CACHE_DURATION_MILLIS = 24 * 60 * 60 * 1000L // 24 hours
-        private const val AUTO_UPDATE_INTERVAL_MINUTES = 20L
+        private const val AUTO_UPDATE_INTERVAL_MINUTES = 120L
         private const val AUTO_UPDATE_STARTUP_DELAY_MILLIS = 5_000L // 5 seconds
     }
 
