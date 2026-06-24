@@ -28,7 +28,6 @@
     <string name="troubleshoot_desc">Мы заўважылі цяжкасці з падключэннем да сэрвісаў Proton. Паспрабуйце выбраць альтэрнатыўную стратэгію маршрутызацыі для абыходу блакіровак.</string>
     <string name="troubleshoot_strategy_none">Без абыходу (паспрабаваць яшчэ раз)</string>
     <string name="troubleshoot_strategy_warp">WARP (рэкамендуецца)</string>
-    <string name="troubleshoot_strategy_byedpi">ByeDPI (Deep Packet Inspection)</string>
     <string name="troubleshoot_btn_next">Далей</string>
     <string name="troubleshoot_btn_skip">Прапусціць і паўтарыць</string>
     <!-- ByeDPI Tester Overhaul -->
@@ -68,10 +67,8 @@
     <string name="hint_2fa_code">6-значны код</string>
     <string name="btn_verify">Спраўдзіць</string>
     <!-- Dashboard Screen -->
-
     <string name="btn_retry">Паўтарыць</string>
     <string name="error_system_appops">Сістэмная памылка: пераўсталюйце праграму.</string>
-
     <string name="title_recent_connections">Нядаўнія падключэнні</string>
     <string name="status_connected">Падключана</string>
     <string name="status_connecting">Падключэнне…</string>
@@ -81,7 +78,6 @@
     <string name="status_not_connected">Не падключана</string>
     <string name="desc_toggle_connection">Пераключыць падключэнне</string>
     <string name="desc_country">Краіна</string>
-
     <string name="label_fastest_server">Найхутчэйшы сервер</string>
     <string name="label_select_location">Выберыце месцазнаходжанне</string>
     <string name="label_server_unavailable">Сервер недаступны</string>
@@ -101,8 +97,6 @@
     <!-- Settings Screen -->
     <string name="settings_title">Налады</string>
     <string name="settings_connection">Налады падключэння</string>
-
-
     <string name="settings_kill_switch_desc">Kill Switch</string>
     <string name="settings_auto_connect">Аўтападключэнне</string>
     <string name="settings_auto_connect_desc">Падключацца да VPN пры запуску</string>
@@ -121,7 +115,6 @@
     <string name="settings_allow_lan_desc">Абыход VPN для трафіку лакальнай сеткі</string>
     <string name="settings_about">Аб праграме</string>
     <string name="settings_version">Версія %1$s</string>
-
     <string name="settings_licenses">Ліцэнзіі адкрытага ПЗ</string>
     <string name="settings_privacy_policy">Палітыка прыватнасці</string>
     <string name="settings_disclaimer">Адмова ад адказнасці</string>
@@ -157,16 +150,12 @@
     <string name="api_proxy_host">Вузел проксі</string>
     <string name="api_proxy_port">Порт проксі</string>
     <string name="api_proxy_type">Тып проксі</string>
-
-
     <string name="api_proxy_username">Імя карыстальніка (неабавязкова)</string>
     <string name="api_proxy_password">Пароль (неабавязкова)</string>
-
     <string name="api_bypass_strategy_byedpi_desc">Абыход блакіровак DPI з выкарыстаннем пашыранай фрагментацыі пакетаў і падману.</string>
     <string name="byedpi_flags_title">BEST STRATEGY FLAGS</string>
     <string name="byedpi_flags_label">ByeDPI Flags</string>
     <string name="byedpi_sni_title">Вузел SNI</string>
-
     <string name="byedpi_flags_none">Пакуль не пратэсціравана</string>
     <string name="byedpi_test_results_title">Вынікі тэсту</string>
     <string name="btn_apply">Прымяніць</string>
@@ -198,16 +187,9 @@
     <string name="load_mode_hidden">Схаваць</string>
     <string name="theme_light">Светлая</string>
     <string name="theme_dark">Цёмная</string>
-
     <string name="theme_gold_light">Светлае золата</string>
     <string name="theme_gold_dark">Цёмнае золата</string>
     <string name="theme_gold_amoled">Золата AMOLED</string>
-
-
-
-
-
-
     <!-- Error Reporting Settings -->
     <string name="settings_error_reporting">Справаздачы аб памылках</string>
     <string name="settings_error_reporting_desc">Кіраванне справаздачамі аб збоях і аналітыкай</string>
@@ -228,9 +210,6 @@
     <string name="settings_sentry_session_replay">Паўторы сеансаў</string>
     <string name="settings_sentry_session_replay_desc">Ананімнае прайграванне ўзаемадзеянняў для адладкі праблем карыстальніцкага інтэрфейсу</string>
     <!-- Kill Switch Screen -->
-
-
-
     <string name="kill_switch_subtitle">Kill Switch</string>
     <string name="kill_switch_desc">Выкарыстоўвайце Kill Switch, які ўжо прысутнічае ў вашай аперацыйнай сістэме. Дадзеная функцыя дазволіць абараніць ваш трафік і прадухіліць уцечку даных пры разрыве падключэння па VPN.</string>
     <string name="kill_switch_step_1">1. Націсніце кнопку ніжэй, каб адкрыць налады VPN.</string>
@@ -267,7 +246,6 @@
     <!-- Settings: Protocol & Obfuscation -->
     <string name="settings_protocol">Пратакол</string>
     <string name="protocol_title">Пратакол</string>
-
     <string name="protocol_amneziawg_desc">Палепшаны пратакол WireGuard з абфускацыяй</string>
     <string name="obfuscation_title">Абфускацыя</string>
     <string name="obfuscation_enable">Уключыць абфускацыю</string>
@@ -284,29 +262,17 @@
     <string name="custom_config">Карыстальніцкая канфігурацыя</string>
     <!-- About App Screen -->
     <string name="about_community">Супольнасць</string>
-
-
-
     <string name="about_crowdin">Дапамагчы з перакладам</string>
     <string name="about_website">Афіцыйны сайт</string>
     <string name="about_sentry">Працуе на базе Sentry</string>
     <!-- Licenses Screen -->
     <string name="licenses_title">Ліцэнзіі</string>
-
-
     <string name="license_androidx_title">Бібліятэкі AndroidX</string>
     <string name="license_apache_2">Apache License 2.0</string>
-
     <string name="license_kotlin_title">Стандартная бібліятэка Kotlin</string>
-
     <string name="license_retrofit_title">Retrofit і OkHttp</string>
     <string name="license_proton_go_vpn_title">Бібліятэка Proton GO VPN</string>
-
-
     <string name="license_room_title">База даных Room</string>
-
-
-
     <!-- Split Tunneling -->
     <string name="settings_st_mode">Рэжым Split Tunneling</string>
     <string name="st_mode_exclude">Рэжым выключэння</string>
@@ -386,9 +352,6 @@
     <string name="profile_feature_connect_go">Connect &amp; Go</string>
     <string name="profile_server_info">Сервер: %1$s</string>
     <string name="profile_city_info">🏙️ %1$s, %2$s</string>
-
-
-
     <!-- Edit Profile Screen -->
     <string name="title_create_profile">Стварыць профіль</string>
     <string name="title_edit_profile">Рэдагаваць профіль</string>

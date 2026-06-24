@@ -28,7 +28,6 @@
     <string name="troubleshoot_desc">ما متوجه دشواری در اتصال به سرویس‌های پروتون شدیم. برای دور زدن محدودیت‌ها، یک استراتژی مسیریابی جایگزین انتخاب کنید.</string>
     <string name="troubleshoot_strategy_none">بدون دور زدن (تلاش مجدد)</string>
     <string name="troubleshoot_strategy_warp">WARP (پیشنهادی)</string>
-    <string name="troubleshoot_strategy_byedpi">ByeDPI (Deep Packet Inspection)</string>
     <string name="troubleshoot_btn_next">بعدی</string>
     <string name="troubleshoot_btn_skip">رد کردن و تلاش مجدد</string>
     <!-- ByeDPI Tester Overhaul -->
@@ -68,10 +67,8 @@
     <string name="hint_2fa_code">کد ۶ رقمی</string>
     <string name="btn_verify">تایید</string>
     <!-- Dashboard Screen -->
-
     <string name="btn_retry">تلاش مجدد</string>
     <string name="error_system_appops">خطای سیستم: لطفاً برنامه را دوباره نصب کنید.</string>
-
     <string name="title_recent_connections">اتصال‌های اخیر</string>
     <string name="status_connected">متصل شد</string>
     <string name="status_connecting">در حال اتصال…</string>
@@ -81,7 +78,6 @@
     <string name="status_not_connected">متصل نیست</string>
     <string name="desc_toggle_connection">تغییر وضعیت اتصال</string>
     <string name="desc_country">کشور</string>
-
     <string name="label_fastest_server">سریع‌ترین سرور</string>
     <string name="label_select_location">انتخاب مکان</string>
     <string name="label_server_unavailable">سرور در دسترس نیست</string>
@@ -101,7 +97,6 @@
     <!-- Settings Screen -->
     <string name="settings_title">تنظیمات</string>
     <string name="settings_connection">تنظیمات اتصال</string>
-
     <string name="settings_kill_switch_desc">کیل سوئیچ</string>
     <string name="settings_auto_connect">اتصال خودکار</string>
     <string name="settings_auto_connect_desc">اتصال به VPN هنگام راه اندازی</string>
@@ -120,7 +115,6 @@
     <string name="settings_allow_lan_desc">دور زدن VPN برای ترافیک شبکه محلی</string>
     <string name="settings_about">درباره</string>
     <string name="settings_version">نسخه %1$s</string>
-
     <string name="settings_licenses">مجوزهای متن باز</string>
     <string name="settings_privacy_policy">سیاست حفظ حریم خصوصی</string>
     <string name="settings_disclaimer">سلب مسئولیت</string>
@@ -156,16 +150,12 @@
     <string name="api_proxy_host">هاست پراکسی</string>
     <string name="api_proxy_port">پورت پراکسی</string>
     <string name="api_proxy_type">نوع پراکسی</string>
-
-
     <string name="api_proxy_username">نام کاربری (اختیاری)</string>
     <string name="api_proxy_password">رمز عبور (اختیاری)</string>
-
     <string name="api_bypass_strategy_byedpi_desc">دور زدن مسدودسازی DPI با استفاده از تکه‌تکه کردن پیشرفته بسته‌ها و فریبکاری.</string>
     <string name="byedpi_flags_title">فلگ‌های بهترین استراتژی</string>
     <string name="byedpi_flags_label">فلگ‌های ByeDPI</string>
     <string name="byedpi_sni_title">هاست SNI</string>
-
     <string name="byedpi_flags_none">هنوز تست نشده است</string>
     <string name="byedpi_test_results_title">نتایج تست</string>
     <string name="btn_apply">اعمال</string>
@@ -197,16 +187,9 @@
     <string name="load_mode_hidden">مخفی</string>
     <string name="theme_light">روشن</string>
     <string name="theme_dark">تیره</string>
-
     <string name="theme_gold_light">طلایی روشن</string>
     <string name="theme_gold_dark">طلایی تیره</string>
     <string name="theme_gold_amoled">طلایی AMOLED</string>
-
-
-
-
-
-
     <!-- Error Reporting Settings -->
     <string name="settings_error_reporting">گزارش خطا</string>
     <string name="settings_error_reporting_desc">مدیریت گزارش‌های خرابی و تجزیه و تحلیل</string>
@@ -227,7 +210,6 @@
     <string name="settings_sentry_session_replay">بازبینی نشست‌ها</string>
     <string name="settings_sentry_session_replay_desc">پخش ناشناس تعاملات برای عیب‌یابی مشکلات رابط کاربری</string>
     <!-- Kill Switch Screen -->
-
     <string name="kill_switch_subtitle">کیل سوئیچ</string>
     <string name="kill_switch_desc">برای اطمینان از اینکه ترافیک شما همیشه محافظت می‌شود، از Kill Switch ارائه شده توسط اندروید استفاده کنید. این کار از نشت داده‌ها در صورت قطع اتصال VPN جلوگیری می‌کند.</string>
     <string name="kill_switch_step_1">۱. برای باز کردن تنظیمات VPN، روی دکمه زیر ضربه بزنید.</string>
@@ -264,7 +246,6 @@
     <!-- Settings: Protocol & Obfuscation -->
     <string name="settings_protocol">پروتکل</string>
     <string name="protocol_title">پروتکل</string>
-
     <string name="protocol_amneziawg_desc">پروتکل پیشرفته WireGuard با مبهم‌سازی</string>
     <string name="obfuscation_title">مبهم‌سازی</string>
     <string name="obfuscation_enable">فعال‌سازی مبهم‌سازی</string>
@@ -281,29 +262,17 @@
     <string name="custom_config">پیکربندی سفارشی</string>
     <!-- About App Screen -->
     <string name="about_community">انجمن</string>
-
-
-
     <string name="about_crowdin">کمک در ترجمه</string>
     <string name="about_website">وب‌سایت رسمی</string>
     <string name="about_sentry">طراحی شده توسط Sentry</string>
     <!-- Licenses Screen -->
     <string name="licenses_title">مجوزها</string>
-
-
     <string name="license_androidx_title">کتابخانه‌های AndroidX</string>
     <string name="license_apache_2">مجوز Apache 2.0</string>
-
     <string name="license_kotlin_title">کتابخانه استاندارد Kotlin</string>
-
     <string name="license_retrofit_title">Retrofit و OkHttp</string>
     <string name="license_proton_go_vpn_title">کتابخانه Proton GO VPN</string>
-
-
     <string name="license_room_title">پایگاه داده Room</string>
-
-
-
     <!-- Split Tunneling -->
     <string name="settings_st_mode">حالت تونل‌زنی تقسیم‌شده</string>
     <string name="st_mode_exclude">حالت حذف (Exclude)</string>
@@ -377,9 +346,6 @@
     <string name="profile_feature_connect_go">اتصال و اجرا</string>
     <string name="profile_server_info">سرور: %1$s</string>
     <string name="profile_city_info">🏙️ %1$s، %2$s</string>
-
-
-
     <!-- Edit Profile Screen -->
     <string name="title_create_profile">ایجاد پروفایل</string>
     <string name="title_edit_profile">ویرایش پروفایل</string>

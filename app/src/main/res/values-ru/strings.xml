@@ -28,7 +28,6 @@
     <string name="troubleshoot_desc">Мы обнаружили трудности с подключением к сервисам Proton. Попробуйте выбрать альтернативную стратегию маршрутизации для обхода блокировок.</string>
     <string name="troubleshoot_strategy_none">Без обхода (попробовать снова)</string>
     <string name="troubleshoot_strategy_warp">WARP (рекомендуется)</string>
-    <string name="troubleshoot_strategy_byedpi">ByeDPI (Deep Packet Inspection)</string>
     <string name="troubleshoot_btn_next">Далее</string>
     <string name="troubleshoot_btn_skip">Пропустить и повторить</string>
     <!-- ByeDPI Tester Overhaul -->
@@ -68,10 +67,8 @@
     <string name="hint_2fa_code">6-значный код</string>
     <string name="btn_verify">Проверить</string>
     <!-- Dashboard Screen -->
-
     <string name="btn_retry">Повторить</string>
     <string name="error_system_appops">Системная ошибка: пожалуйста, переустановите приложение.</string>
-
     <string name="title_recent_connections">Недавние подключения</string>
     <string name="status_connected">Подключено</string>
     <string name="status_connecting">Подключение…</string>
@@ -81,7 +78,6 @@
     <string name="status_not_connected">Не подключено</string>
     <string name="desc_toggle_connection">Переключить соединение</string>
     <string name="desc_country">Страна</string>
-
     <string name="label_fastest_server">Самый быстрый сервер</string>
     <string name="label_select_location">Выберите локацию</string>
     <string name="label_server_unavailable">Сервер недоступен</string>
@@ -101,7 +97,6 @@
     <!-- Settings Screen -->
     <string name="settings_title">Настройки</string>
     <string name="settings_connection">Настройки подключения</string>
-
     <string name="settings_kill_switch_desc">Kill Switch</string>
     <string name="settings_auto_connect">Автоподключение</string>
     <string name="settings_auto_connect_desc">Подключаться к VPN при запуске</string>
@@ -120,7 +115,6 @@
     <string name="settings_allow_lan_desc">Обход VPN для трафика локальной сети</string>
     <string name="settings_about">О приложении</string>
     <string name="settings_version">Версия %1$s</string>
-
     <string name="settings_licenses">Лицензии открытого ПО</string>
     <string name="settings_privacy_policy">Политика конфиденциальности</string>
     <string name="settings_disclaimer">Отказ от ответственности</string>
@@ -156,16 +150,12 @@
     <string name="api_proxy_host">Хост прокси</string>
     <string name="api_proxy_port">Порт прокси</string>
     <string name="api_proxy_type">Тип прокси</string>
-
-
     <string name="api_proxy_username">Имя пользователя (необязательно)</string>
     <string name="api_proxy_password">Пароль (необязательно)</string>
-
     <string name="api_bypass_strategy_byedpi_desc">Обход блокировок DPI с помощью продвинутой фрагментации пакетов и обмана.</string>
     <string name="byedpi_flags_title">ФЛАГИ ЛУЧШЕЙ СТРАТЕГИИ</string>
     <string name="byedpi_flags_label">Флаги ByeDPI</string>
     <string name="byedpi_sni_title">SNI хост</string>
-
     <string name="byedpi_flags_none">Еще не протестировано</string>
     <string name="byedpi_test_results_title">Результаты теста</string>
     <string name="btn_apply">Применить</string>
@@ -197,16 +187,9 @@
     <string name="load_mode_hidden">Скрыть</string>
     <string name="theme_light">Светлая</string>
     <string name="theme_dark">Темная</string>
-
     <string name="theme_gold_light">Золото светлый</string>
     <string name="theme_gold_dark">Золото темный</string>
     <string name="theme_gold_amoled">Золото AMOLED</string>
-
-
-
-
-
-
     <!-- Error Reporting Settings -->
     <string name="settings_error_reporting">Отчеты об ошибках</string>
     <string name="settings_error_reporting_desc">Управление отчетами о сбоях и аналитикой</string>
@@ -227,7 +210,6 @@
     <string name="settings_sentry_session_replay">Повторы сеансов</string>
     <string name="settings_sentry_session_replay_desc">Анонимное воспроизведение взаимодействий для отладки проблем интерфейса</string>
     <!-- Kill Switch Screen -->
-
     <string name="kill_switch_subtitle">Kill Switch</string>
     <string name="kill_switch_desc">Чтобы ваш трафик всегда был защищен, используйте Kill Switch, предоставляемый Android. Это предотвращает утечку данных при разрыве VPN-соединения.</string>
     <string name="kill_switch_step_1">1. Нажмите кнопку ниже, чтобы открыть настройки VPN.</string>
@@ -264,7 +246,6 @@
     <!-- Settings: Protocol & Obfuscation -->
     <string name="settings_protocol">Протокол</string>
     <string name="protocol_title">Протокол</string>
-
     <string name="protocol_amneziawg_desc">Улучшенный протокол WireGuard с обфускацией</string>
     <string name="obfuscation_title">Обфускация</string>
     <string name="obfuscation_enable">Включить обфускацию</string>
@@ -281,29 +262,17 @@
     <string name="custom_config">Пользовательский конфиг</string>
     <!-- About App Screen -->
     <string name="about_community">Сообщество</string>
-
-
-
     <string name="about_crowdin">Помочь с переводом</string>
     <string name="about_website">Официальный сайт</string>
     <string name="about_sentry">На базе Sentry</string>
     <!-- Licenses Screen -->
     <string name="licenses_title">Лицензии</string>
-
-
     <string name="license_androidx_title">Библиотеки AndroidX</string>
     <string name="license_apache_2">Apache License 2.0</string>
-
     <string name="license_kotlin_title">Стандартная библиотека Kotlin</string>
-
     <string name="license_retrofit_title">Retrofit и OkHttp</string>
     <string name="license_proton_go_vpn_title">Proton GO VPN библиотека</string>
-
-
     <string name="license_room_title">База данных Room</string>
-
-
-
     <!-- Split Tunneling -->
     <string name="settings_st_mode">Режим раздельного туннелирования</string>
     <string name="st_mode_exclude">Режим исключения</string>
@@ -383,9 +352,6 @@
     <string name="profile_feature_connect_go">Connect &amp; Go</string>
     <string name="profile_server_info">Сервер: %1$s</string>
     <string name="profile_city_info">🏙️ %1$s, %2$s</string>
-
-
-
     <!-- Edit Profile Screen -->
     <string name="title_create_profile">Создать профиль</string>
     <string name="title_edit_profile">Редактировать профиль</string>
