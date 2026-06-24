@@ -26,7 +26,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -43,6 +42,7 @@ import kotlinx.collections.immutable.ImmutableList
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.VpnProfileEntity
 import ru.protonmod.next.ui.components.FlagIcon
+import ru.protonmod.next.ui.components.ServerCard
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.CountryUtils
 
@@ -62,7 +62,6 @@ fun QuickConnectBottomSheet(
     modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
-    val context = LocalContext.current
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -149,15 +148,10 @@ fun QuickConnectBottomSheet(
                     }
 
                     items(recentServers, key = { it.id }, contentType = { "ServerStrategy" }) { server ->
-                        val countryName = CountryUtils.getCountryName(context, server.exitCountry)
-                        val flagResId = CountryUtils.getFlagResource(context, server.exitCountry)
-                        
-                        StrategyItem(
-                            title = countryName,
-                            description = "${server.localizedCity ?: server.city} • ${server.name}",
-                            icon = if (flagResId != 0) null else Icons.Rounded.Place,
-                            flagResId = flagResId,
-                            isSelected = currentStrategy == "server" && currentTargetId == server.id,
+                        ServerCard(
+                            server = server,
+                            isConnected = currentStrategy == "server" && currentTargetId == server.id,
+                            isConnecting = false,
                             onClick = {
                                 onStrategySelect("server", server.id)
                                 onDismiss()
@@ -187,8 +181,8 @@ private fun StrategyItem(
         modifier = modifier
             .fillMaxWidth()
             .liquidGlass(
-                shape = RoundedCornerShape(20.dp),
-                alpha = if (isSelected) 0.2f else 0.4f,
+                shape = RoundedCornerShape(24.dp),
+                alpha = if (isSelected) 0.3f else 0.4f,
                 shadowElevation = 0.dp
             )
             .clickable(
@@ -200,7 +194,7 @@ private fun StrategyItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -230,13 +224,13 @@ private fun StrategyItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
                     color = colors.textNorm
                 )
                 Text(
                     text = description,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = colors.textWeak
                 )
             }

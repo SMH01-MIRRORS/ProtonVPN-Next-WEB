@@ -40,7 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.data.local.ServerLoadDisplayMode
-import ru.protonmod.next.ui.screens.dashboard.ServerCard
+import ru.protonmod.next.ui.components.ServerCard
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
