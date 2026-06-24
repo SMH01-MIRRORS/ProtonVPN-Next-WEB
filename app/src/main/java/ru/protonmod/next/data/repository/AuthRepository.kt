@@ -54,16 +54,14 @@ class AuthRepository @Inject constructor(
     private val cryptoWrapper: CryptoWrapper,
     private val dispatcherProvider: DispatcherProvider,
     private val amneziaVpnManager: Provider<AmneziaVpnManager>,
-    private val authNativeBridge: AuthNativeBridge
+    private val authNativeBridge: AuthNativeBridge,
+    private val sessionManager: SessionManager
 ) {
     companion object {
         private const val TAG = "AuthRepository"
         private val jsonParser = Json { ignoreUnknownKeys = true }
-        private val REFRESH_DEBOUNCE_MS = 60000L // 1 minute
         private val FORCE_LOGOUT_HTTP_CODES = listOf(400, 401, 422)
     }
-
-    private var lastRefreshTime: Long = 0L
 
     @Volatile
     private var pendingAnonToken: String? = null
@@ -305,35 +303,23 @@ class AuthRepository @Inject constructor(
     }
 
     suspend fun refreshSession(sessionId: String, refreshToken: String): Result<LoginResponse> = withContext(dispatcherProvider.io()) {
-        val currentTime = System.currentTimeMillis()
-        if (currentTime - lastRefreshTime < REFRESH_DEBOUNCE_MS) {
-            return@withContext Result.failure(Exception("Debounced"))
+        val session = sessionDao.getSession()
+        if (session == null || session.sessionId != sessionId) {
+            return@withContext Result.failure(Exception("No matching session found"))
         }
 
-        try {
-            val refreshRequest = RefreshSessionRequest(uid = sessionId, refreshToken = refreshToken)
-            val refreshResponse = authApi.refreshSession(refreshRequest)
-
-            if (refreshResponse.code == 1000 && refreshResponse.accessToken != null) {
-                lastRefreshTime = System.currentTimeMillis()
-
-                val currentSession = sessionDao.getSession()
-                if (currentSession != null && currentSession.sessionId == sessionId) {
-                    val updatedSession = currentSession.copy(
-                        accessToken = refreshResponse.accessToken,
-                        refreshToken = refreshResponse.refreshToken ?: currentSession.refreshToken
-                    )
-                    sessionDao.saveSession(updatedSession)
-                }
-                Result.success(refreshResponse)
-            } else {
-                Result.failure(Exception("Refresh failed with code ${refreshResponse.code}"))
-            }
-        } catch (e: Exception) {
+        sessionManager.refreshSession(session).map { updated ->
+            LoginResponse(
+                code = 1000,
+                accessToken = updated.accessToken,
+                refreshToken = updated.refreshToken,
+                sessionId = updated.sessionId,
+                userId = updated.userId
+            )
+        }.onFailure { e ->
             if (e is HttpException && e.code() in FORCE_LOGOUT_HTTP_CODES) {
                 logout()
             }
-            Result.failure(e)
         }
     }
 

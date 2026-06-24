@@ -89,10 +89,9 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideTokenAuthenticator(
-        sessionDao: SessionDao,
-        authRepositoryProvider: Provider<AuthRepository>
+        sessionManager: SessionManager
     ): TokenAuthenticator {
-        return TokenAuthenticator(sessionDao, authRepositoryProvider)
+        return TokenAuthenticator(sessionManager)
     }
 
     /**

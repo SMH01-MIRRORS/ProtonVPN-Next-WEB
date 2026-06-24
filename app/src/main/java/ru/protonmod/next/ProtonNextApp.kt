@@ -32,6 +32,7 @@ import ru.protonmod.next.data.repository.VpnRepository
 import ru.protonmod.next.ota.OTAUpdateManager
 import ru.protonmod.next.utils.NetworkMonitor
 import ru.protonmod.next.utils.ProtonLogger
+import ru.protonmod.next.data.network.SessionRefreshWorker
 import ru.protonmod.next.vpn.NextVpnManager
 import ru.protonmod.next.vpn.VpnAutomationManager
 import javax.inject.Inject
@@ -115,6 +116,9 @@ class ProtonNextApp : Application(), Configuration.Provider {
         if (isMainProcess) {
             // Start background server load updates
             vpnRepository.startAutoUpdate()
+
+            // Schedule background session maintenance
+            SessionRefreshWorker.schedule(this)
 
             // Sync servers on network changes.
             // Debounce by 2 s so rapid connectivity toggles (e.g. WiFi → mobile → WiFi)
