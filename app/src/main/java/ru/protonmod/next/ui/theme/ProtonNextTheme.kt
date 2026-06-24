@@ -177,6 +177,8 @@ class ProtonColors(
     val shadowRaised: Color,
     val shadowLifted: Color,
 
+    val onInteraction: Color = Color.White,
+
     val sidebarColors: ProtonColors? = null,
 ) {
     var isDark: Boolean by mutableStateOf(isDark, structuralEqualityPolicy())
@@ -247,6 +249,8 @@ class ProtonColors(
         shadowRaised: Color = this.shadowRaised,
         shadowLifted: Color = this.shadowLifted,
 
+        onInteraction: Color = this.onInteraction,
+
         sidebarColors: ProtonColors? = this.sidebarColors,
     ) = ProtonColors(
         isDark = isDark,
@@ -312,6 +316,8 @@ class ProtonColors(
         shadowNorm = shadowNorm,
         shadowRaised = shadowRaised,
         shadowLifted = shadowLifted,
+
+        onInteraction = onInteraction,
 
         sidebarColors = sidebarColors,
     )
@@ -463,6 +469,7 @@ class ProtonColors(
             backgroundDeep = Color.Black,
             notificationError = ProtonPalette.NothingRed,
             textAccent = Color.White,
+            onInteraction = Color.Black,
             sidebarColors = sidebarDark(
                 brandNorm = Color.White,
                 brandDarken20 = Color.White.copy(alpha = 0.8f),
@@ -503,7 +510,11 @@ class ProtonColors(
             iconAccent = brandNorm,
         ).let {
             it.copy(
-                backgroundSecondary = it.shade10.copy(alpha = 0.4f) // More transparent for better glass effect
+                interactionWeakNorm = it.shade15,
+                interactionWeakPressed = it.shade20,
+                interactionWeakDisabled = it.shade10,
+                backgroundSecondary = it.shade15.copy(alpha = 0.4f), // More transparent for better glass effect
+                onInteraction = Color.White,
             )
         }
 
@@ -547,6 +558,7 @@ class ProtonColors(
                 backgroundNorm = it.shade10,
                 backgroundSecondary = it.shade20.copy(alpha = 0.4f), // More transparent for better glass effect
                 backgroundDeep = it.shade0,
+                onInteraction = Color.White,
             )
         }
 
@@ -606,16 +618,16 @@ fun ProtonColors.interactionNorm(enabled: Boolean = true) = if (enabled) interac
 
 internal fun ProtonColors.toMaterial3ThemeColors() = androidx.compose.material3.ColorScheme(
     primary = brandNorm,
-    onPrimary = Color.White,
+    onPrimary = onInteraction,
     primaryContainer = backgroundNorm,
     onPrimaryContainer = textNorm,
-    inversePrimary = Color.White,
+    inversePrimary = onInteraction,
     secondary = brandNorm,
-    onSecondary = Color.White,
+    onSecondary = onInteraction,
     secondaryContainer = backgroundSecondary,
     onSecondaryContainer = textNorm,
     tertiary = brandDarken20,
-    onTertiary = Color.White,
+    onTertiary = onInteraction,
     tertiaryContainer = backgroundNorm,
     onTertiaryContainer = textNorm,
     background = backgroundNorm,
@@ -642,17 +654,17 @@ internal fun ProtonColors.toMaterial3ThemeColors() = androidx.compose.material3.
     surfaceContainerLow = backgroundNorm,
     surfaceContainerLowest = backgroundNorm,
     primaryFixed = brandNorm,
-    onPrimaryFixed = Color.White,
+    onPrimaryFixed = onInteraction,
     primaryFixedDim = brandDarken20,
-    onPrimaryFixedVariant = Color.White,
+    onPrimaryFixedVariant = onInteraction,
     secondaryFixed = brandNorm,
-    onSecondaryFixed = Color.White,
+    onSecondaryFixed = onInteraction,
     secondaryFixedDim = brandDarken20,
-    onSecondaryFixedVariant = Color.White,
+    onSecondaryFixedVariant = onInteraction,
     tertiaryFixed = brandDarken20,
-    onTertiaryFixed = Color.White,
+    onTertiaryFixed = onInteraction,
     tertiaryFixedDim = brandDarken40,
-    onTertiaryFixedVariant = Color.White
+    onTertiaryFixedVariant = onInteraction
 )
 
 val LocalColors = staticCompositionLocalOf { ProtonColors.Light }
