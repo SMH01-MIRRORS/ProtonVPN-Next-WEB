@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160035,
-      "versionName": "12.0.0-alpha1st4p1-79-ge8f5308-nightly",
+      "versionCode": 605160037,
+      "versionName": "12.0.0-alpha1st4p1-81-gdb72c13-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "fix: improve VPN pause and auto-resume reliability\n\n- Enhanced debug logging in `AmneziaVpnManager` to include both local and persistent pause states when a connection or reconnection is blocked.\n- Refactored `VpnAutomationManager` to manage auto-resume timers using explicit `Job` cancellation instead of `collectLatest` for better control over concurrent timers.\n- Wrapped VPN resumption and auto-connect logic in `withContext(NonCancellable)` to ensure these critical operations complete even if the calling scope is cancelled.\n- Improved handling of expired pause states during initialization with a safety delay and validation checks.",
+      "changelog": "fix: ensure local IP and DNS server are included in AllowedIPs\n\n- Explicitly add `localIp` and `dnsServer` to the `AllowedIPs` set in `AmneziaConfigGenerator`.\n- Ensures that internal VPN routing and DNS functionality are maintained even when broad private IP ranges are excluded for LAN bypass.",
       "force": false
     },
     "release": {
-      "versionCode": 605160035,
-      "versionName": "12.0.0-alpha1st4p1-79-ge8f5308-nightly",
+      "versionCode": 605160037,
+      "versionName": "12.0.0-alpha1st4p1-81-gdb72c13-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "fix: improve VPN pause and auto-resume reliability\n\n- Enhanced debug logging in `AmneziaVpnManager` to include both local and persistent pause states when a connection or reconnection is blocked.\n- Refactored `VpnAutomationManager` to manage auto-resume timers using explicit `Job` cancellation instead of `collectLatest` for better control over concurrent timers.\n- Wrapped VPN resumption and auto-connect logic in `withContext(NonCancellable)` to ensure these critical operations complete even if the calling scope is cancelled.\n- Improved handling of expired pause states during initialization with a safety delay and validation checks.",
+      "changelog": "fix: ensure local IP and DNS server are included in AllowedIPs\n\n- Explicitly add `localIp` and `dnsServer` to the `AllowedIPs` set in `AmneziaConfigGenerator`.\n- Ensures that internal VPN routing and DNS functionality are maintained even when broad private IP ranges are excluded for LAN bypass.",
       "force": false
     }
   },
