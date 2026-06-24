@@ -111,7 +111,7 @@ fun CountriesBottomSheet(
                             CountryUtils.getCountryName(context, targetContent.countryCode)
                         }
                         NavigationHeader(
-                            title = "$localizedCountry, ${targetContent.cityName}",
+                            title = "$localizedCountry, ${targetContent.localizedCityName}",
                             onBack = onBack,
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )

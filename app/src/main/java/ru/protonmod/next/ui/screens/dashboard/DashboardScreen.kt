@@ -1165,7 +1165,7 @@ fun ConnectionStatusCard(
                 Column(modifier = Modifier.weight(1f)) {
                     val rawCountry = connectedServer?.let { CountryUtils.getCountryName(context, it.exitCountry) }
                     val safeCountryName = rawCountry?.ifBlank { null } ?: stringResource(R.string.status_vpn)
-                    val safeCityName = connectedServer?.city ?: ""
+                    val safeCityName = connectedServer?.localizedCity ?: connectedServer?.city ?: ""
 
                     val targetServer = if (quickConnectStrategy == "server") {
                         allServers.find { it.id == quickConnectTargetId }
@@ -1184,7 +1184,8 @@ fun ConnectionStatusCard(
                             "profile" -> profiles.find { it.id == quickConnectTargetId }?.name ?: stringResource(R.string.label_fastest_server)
                             "server" -> targetServer?.let {
                                 val cName = CountryUtils.getCountryName(context, it.exitCountry)
-                                if (it.city.isNotBlank()) "$cName, ${it.city}" else cName
+                                val cityName = it.localizedCity ?: it.city
+                                if (cityName.isNotBlank()) "$cName, $cityName" else cName
                             } ?: stringResource(R.string.label_fastest_server)
                             else -> stringResource(R.string.label_fastest_server)
                         }

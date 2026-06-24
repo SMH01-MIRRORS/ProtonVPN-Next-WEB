@@ -72,6 +72,9 @@ class ProfilesViewModel @Inject constructor(
             val matchingServer = servers.find { it.id == entity.targetServerId }
             val serverName = matchingServer?.name
             val localizedCity = matchingServer?.localizedCity
+                ?: if (entity.targetCity != null) {
+                    servers.find { it.exitCountry == entity.targetCountry && it.city == entity.targetCity }?.localizedCity
+                } else null
             VpnProfileUiModel(
                 id = entity.id,
                 name = entity.name,
@@ -143,7 +146,13 @@ class ProfilesViewModel @Inject constructor(
     suspend fun getProfileById(id: String): VpnProfileUiModel? {
         return profileDao.getProfileById(id)?.let { entity ->
             val servers = vpnRepository.getCachedServers()
-            val serverName = servers.find { it.id == entity.targetServerId }?.name
+            val matchingServer = servers.find { it.id == entity.targetServerId }
+            val serverName = matchingServer?.name
+            val localizedCity = matchingServer?.localizedCity
+                ?: if (entity.targetCity != null) {
+                    servers.find { it.exitCountry == entity.targetCountry && it.city == entity.targetCity }?.localizedCity
+                } else null
+
             VpnProfileUiModel(
                 id = entity.id,
                 name = entity.name,
@@ -155,7 +164,8 @@ class ProfilesViewModel @Inject constructor(
                 targetServerId = entity.targetServerId,
                 targetServerName = serverName,
                 targetCountry = entity.targetCountry,
-                targetCity = entity.targetCity
+                targetCity = entity.targetCity,
+                localizedCity = localizedCity
             )
         }
     }

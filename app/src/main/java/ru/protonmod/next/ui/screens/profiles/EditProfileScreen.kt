@@ -78,12 +78,6 @@ import java.util.Locale
 import java.util.UUID
 
 // Helper function to dynamically localize city names based on string resources
-private fun getLocalizedCityName(context: Context, cityName: String): String {
-    if (cityName.isBlank()) return cityName
-    val resourceName = "city_${cityName.lowercase(Locale.ROOT).replace(" ", "_").replace("-", "_")}"
-    val resourceId = context.resources.getIdentifier(resourceName, "string", context.packageName)
-    return if (resourceId != 0) context.getString(resourceId) else cityName
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -256,7 +250,7 @@ fun EditProfileScreen(
                         val locationSubtitle = when {
                             targetServerId != null -> stringResource(R.string.location_server, (targetServerName ?: targetServerId) as Any)
                             targetCity != null -> {
-                                val city = targetCityLocalized ?: getLocalizedCityName(context, targetCity!!)
+                                val city = targetCityLocalized ?: targetCity!!
                                 val country = CountryUtils.getCountryName(context, targetCountry)
                                 stringResource(R.string.location_city_format, country, city)
                             }
@@ -526,7 +520,11 @@ fun LocationSelectionDialog(
                                 text = when (step) {
                                     0 -> stringResource(R.string.title_select_country)
                                     1 -> stringResource(R.string.title_select_city)
-                                    else -> stringResource(R.string.title_select_server)
+                                    else -> {
+                                        val countryName = CountryUtils.getCountryName(context, currentCountry)
+                                        val cityName = currentCityLocalized ?: currentCity ?: ""
+                                        if (cityName.isNotEmpty()) "$countryName, $cityName" else stringResource(R.string.title_select_server)
+                                    }
                                 },
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
@@ -556,7 +554,7 @@ fun LocationSelectionDialog(
                                         title = when (currentStep) {
                                             0 -> stringResource(R.string.location_fastest)
                                             1 -> stringResource(R.string.location_fastest_in_country, CountryUtils.getCountryName(context, currentCountry))
-                                            else -> stringResource(R.string.location_fastest_in_city, getLocalizedCityName(context, currentCity ?: ""))
+                                            else -> stringResource(R.string.location_fastest_in_city, currentCityLocalized ?: currentCity ?: "")
                                         },
                                         displayMode = loadDisplayMode,
                                         icon = {
