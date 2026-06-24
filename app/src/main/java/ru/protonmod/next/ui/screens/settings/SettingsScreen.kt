@@ -112,6 +112,7 @@ fun SettingsScreen(
                 onAutoConnectChange = viewModel::setAutoConnect,
                 onNotificationsChange = viewModel::setNotifications,
                 onLogout = viewModel::logout,
+                onAllowLanChange = viewModel::setAllowLanEnabled,
                 onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
                 onNavigateToProtocol = onNavigateToProtocol,
                 onNavigateToKillSwitch = onNavigateToKillSwitch,
@@ -140,6 +141,7 @@ fun SettingsContent(
     state: SettingsUiState,
     onAutoConnectChange: (Boolean) -> Unit,
     onNotificationsChange: (Boolean) -> Unit,
+    onAllowLanChange: (Boolean) -> Unit,
     onLogout: () -> Unit,
     onOtaFrequencyChange: (String) -> Unit,
     onCheckForUpdates: () -> Unit,
@@ -227,6 +229,7 @@ fun SettingsContent(
                             onNavigateToCountrySpoofing = onNavigateToCountrySpoofing,
                             onNavigateToKillSwitch = onNavigateToKillSwitch,
                             onNavigateToErrorReporting = onNavigateToErrorReporting,
+                            onAllowLanChange = onAllowLanChange,
                             onNotificationsChange = onNotificationsChange
                         )
 
@@ -290,7 +293,8 @@ fun SettingsContent(
                     onNavigateToCustomDns = onNavigateToCustomDns,
                     onNavigateToCountrySpoofing = onNavigateToCountrySpoofing,
                     onNavigateToKillSwitch = onNavigateToKillSwitch,
-                    onNavigateToErrorReporting = onNavigateToErrorReporting
+                    onNavigateToErrorReporting = onNavigateToErrorReporting,
+                    onAllowLanChange = onAllowLanChange
                 )
             }
 
@@ -511,6 +515,7 @@ private fun CustomizationSettingsSection(
 private fun PrivacySettingsSection(
     state: SettingsUiState,
     onNotificationsChange: (Boolean) -> Unit,
+    onAllowLanChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     onNavigateToCustomDns: (() -> Unit)? = null,
     onNavigateToCountrySpoofing: (() -> Unit)? = null,
@@ -558,6 +563,14 @@ private fun PrivacySettingsSection(
             subtitle = stringResource(R.string.settings_notifications_desc),
             checked = state.notificationsEnabled,
             onCheckedChange = onNotificationsChange
+        )
+
+        SettingToggleRow(
+            icon = Icons.Rounded.Lan,
+            title = stringResource(R.string.settings_allow_lan),
+            subtitle = stringResource(R.string.settings_allow_lan_desc),
+            checked = state.allowLanEnabled,
+            onCheckedChange = onAllowLanChange
         )
     }
 }

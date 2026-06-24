@@ -54,6 +54,7 @@ data class SettingsUiState(
     val killSwitchEnabled: Boolean = false,
     val autoConnectEnabled: Boolean = false,
     val notificationsEnabled: Boolean = true,
+    val allowLanEnabled: Boolean = false,
 
     // Connection configs
     val splitTunnelingEnabled: Boolean = false,
@@ -250,6 +251,7 @@ class SettingsViewModel @Inject constructor(
         settingsManager.spoofCountryNull,
         settingsManager.spoofCountryCode,
         settingsManager.otaUpdateFrequency,
+        settingsManager.allowLanEnabled,
         settingsManager.byeDpiFlags,
         settingsManager.byeDpiSni,
         warpManager.isFetching,
@@ -315,17 +317,18 @@ class SettingsViewModel @Inject constructor(
             spoofCountryNull = args[50] as Boolean,
             spoofCountryCode = args[51] as String,
             otaUpdateFrequency = args[52] as String,
-            byeDpiFlags = args[53] as String,
-            byeDpiSni = args[54] as String,
-            isWarpFetching = args[55] as Boolean,
+            allowLanEnabled = args[53] as Boolean,
+            byeDpiFlags = args[54] as String,
+            byeDpiSni = args[55] as String,
+            isWarpFetching = args[56] as Boolean,
             warpConfigLoaded = warpManager.isConfigLoaded(),
-            isByeDpiTesting = args[56] as Boolean,
-            byeDpiTestProgress = args[57] as Float,
-            byeDpiCurrentStrategy = args[58] as String,
-            byeDpiResults = args[59] as List<ByeDpiStrategyTester.TestResult>,
-            isAnyVpnActive = args[60] as Boolean,
-            isCheckingForUpdates = args[61] as Boolean,
-            isUpdateAvailable = args[62] as Boolean
+            isByeDpiTesting = args[57] as Boolean,
+            byeDpiTestProgress = args[58] as Float,
+            byeDpiCurrentStrategy = args[59] as String,
+            byeDpiResults = args[60] as List<ByeDpiStrategyTester.TestResult>,
+            isAnyVpnActive = args[61] as Boolean,
+            isCheckingForUpdates = args[62] as Boolean,
+            isUpdateAvailable = args[63] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -342,6 +345,12 @@ class SettingsViewModel @Inject constructor(
     fun setNotifications(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setNotifications(enabled)
+        }
+    }
+
+    fun setAllowLanEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setAllowLanEnabled(enabled)
         }
     }
 

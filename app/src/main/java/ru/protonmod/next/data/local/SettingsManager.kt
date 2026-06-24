@@ -128,6 +128,8 @@ class SettingsManager @Inject constructor(
 
         private val SETUP_STEP = stringPreferencesKey("setup_step")
         
+        private val ALLOW_LAN_CONNECTIONS = booleanPreferencesKey("allow_lan_connections")
+        
         private val AWG_JC = intPreferencesKey("awg_jc")
         private val AWG_JMIN = intPreferencesKey("awg_jmin")
         private val AWG_JMAX = intPreferencesKey("awg_jmax")
@@ -216,6 +218,8 @@ class SettingsManager @Inject constructor(
             SetupStep.WELCOME
         }
     }
+
+    val allowLanEnabled: Flow<Boolean> = context.dataStore.data.map { it[ALLOW_LAN_CONNECTIONS] ?: false }
 
     val analyticsEnabled: Flow<Boolean> = context.dataStore.data.map { it[ANALYTICS_ENABLED] ?: true }
     val crashReportsEnabled: Flow<Boolean> = context.dataStore.data.map { it[CRASH_REPORTS_ENABLED] ?: true }
@@ -448,6 +452,10 @@ class SettingsManager @Inject constructor(
 
     suspend fun setObfuscationAdvancedMode(enabled: Boolean) {
         context.dataStore.edit { it[OBFUSCATION_ADVANCED_MODE] = enabled }
+    }
+
+    suspend fun setAllowLanEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[ALLOW_LAN_CONNECTIONS] = enabled }
     }
 
     suspend fun setSelectedProfileId(id: String) {

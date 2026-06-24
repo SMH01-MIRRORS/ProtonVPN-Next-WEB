@@ -636,11 +636,21 @@ class AmneziaVpnManager @Inject constructor(
             val splitTunnelingEnabled = settingsManager.splitTunnelingEnabled.first()
             val stMode = settingsManager.splitTunnelingMode.first()
             val isIncludeMode = stMode == "include"
+            val allowLan = settingsManager.allowLanEnabled.first()
+
             val selectedApps = if (splitTunnelingEnabled) settingsManager.excludedApps.first() else emptySet()
             val selectedIps = if (splitTunnelingEnabled) settingsManager.excludedIps.first().toMutableSet() else mutableSetOf()
             val selectedDomains = if (splitTunnelingEnabled) settingsManager.excludedDomains.first() else emptySet()
 
-            ProtonLogger.d(TAG, "Split Tunneling: enabled=$splitTunnelingEnabled, mode=$stMode, apps=${selectedApps.size}, IPs=${selectedIps.size}, domains=${selectedDomains.size}")
+            if (allowLan && !isIncludeMode) {
+                selectedIps.addAll(listOf(
+                    "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16",
+                    "169.254.0.0/16", "224.0.0.0/4",
+                    "fc00::/7", "fe80::/10"
+                ))
+            }
+
+            ProtonLogger.d(TAG, "Split Tunneling: enabled=$splitTunnelingEnabled, mode=$stMode, allowLan=$allowLan, apps=${selectedApps.size}, IPs=${selectedIps.size}, domains=${selectedDomains.size}")
 
             // Resolve split tunneling domains
             if (splitTunnelingEnabled && selectedDomains.isNotEmpty()) {

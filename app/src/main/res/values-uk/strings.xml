@@ -28,7 +28,6 @@
     <string name="troubleshoot_desc">Ми виявили труднощі з підключенням до сервісів Proton. Спробуйте вибрати альтернативну стратегію маршрутизації для обходу блокувань.</string>
     <string name="troubleshoot_strategy_none">Без обходу (спробувати знову)</string>
     <string name="troubleshoot_strategy_warp">WARP (рекомендовано)</string>
-    <string name="troubleshoot_strategy_byedpi">ByeDPI (Deep Packet Inspection)</string>
     <string name="troubleshoot_btn_next">Далі</string>
     <string name="troubleshoot_btn_skip">Пропустити та повторити</string>
     <!-- ByeDPI Tester Overhaul -->
@@ -68,10 +67,8 @@
     <string name="hint_2fa_code">6-значний код</string>
     <string name="btn_verify">Перевірити</string>
     <!-- Dashboard Screen -->
-    <string name="dashboard_title">Proton VPN-Next</string>
     <string name="btn_retry">Повторити</string>
     <string name="error_system_appops">Системна помилка: будь ласка, перевстановіть додаток.</string>
-    <string name="error_vpn_permission_dialog_not_found">VPN permission dialog not available on this device.</string>
     <string name="title_recent_connections">Останні підключення</string>
     <string name="status_connected">Підключено</string>
     <string name="status_connecting">Підключення…</string>
@@ -81,7 +78,6 @@
     <string name="status_not_connected">Не підключено</string>
     <string name="desc_toggle_connection">Перемкнути підключення</string>
     <string name="desc_country">Країна</string>
-    <string name="status_vpn">VPN</string>
     <string name="label_fastest_server">Найшвидший сервер</string>
     <string name="label_select_location">Виберіть локацію</string>
     <string name="label_server_unavailable">Сервер недоступний</string>
@@ -101,7 +97,6 @@
     <!-- Settings Screen -->
     <string name="settings_title">Налаштування</string>
     <string name="settings_connection">Налаштування підключення</string>
-    <string name="settings_kill_switch">Kill Switch</string>
     <string name="settings_kill_switch_desc">Аварійний вимикач</string>
     <string name="settings_auto_connect">Автопідключення</string>
     <string name="settings_auto_connect_desc">Підключатися до VPN при запуску</string>
@@ -116,9 +111,10 @@
     <string name="settings_privacy">Приватність та сповіщення</string>
     <string name="settings_notifications">Сповіщення</string>
     <string name="settings_notifications_desc">Отримувати сповіщення про статус VPN</string>
+    <string name="settings_allow_lan">Дозволити підключення LAN</string>
+    <string name="settings_allow_lan_desc">Обіхід VPN для трафіку локальної мережі</string>
     <string name="settings_about">Про додаток</string>
     <string name="settings_version">Версія %1$s</string>
-    <string name="settings_version_short">v%1$s</string>
     <string name="settings_licenses">Ліцензії відкритого ПЗ</string>
     <string name="settings_privacy_policy">Політика конфіденційності</string>
     <string name="settings_disclaimer">Відмова від відповідальності</string>
@@ -154,16 +150,12 @@
     <string name="api_proxy_host">Хост проксі</string>
     <string name="api_proxy_port">Порт проксі</string>
     <string name="api_proxy_type">Тип проксі</string>
-    <string name="api_proxy_type_http">HTTPS / HTTP</string>
-    <string name="api_proxy_type_socks">SOCKS5</string>
     <string name="api_proxy_username">Ім\'я користувача (необов\'язково)</string>
     <string name="api_proxy_password">Пароль (необов\'язково)</string>
-    <string name="api_bypass_strategy_byedpi">ByeDPI</string>
     <string name="api_bypass_strategy_byedpi_desc">Обіхід блокувань DPI за допомогою просунутої фрагментації пакетів та обману.</string>
     <string name="byedpi_flags_title">ПРАПОРЦІ НАЙКРАЩОЇ СТРАТЕГІЇ</string>
     <string name="byedpi_flags_label">Прапорці ByeDPI</string>
     <string name="byedpi_sni_title">SNI хост</string>
-    <string name="byedpi_sni_hint">google.com</string>
     <string name="byedpi_flags_none">Ще не протестовано</string>
     <string name="byedpi_test_results_title">Результати тесту</string>
     <string name="btn_apply">Застосувати</string>
@@ -195,16 +187,9 @@
     <string name="load_mode_hidden">Приховати</string>
     <string name="theme_light">Світла</string>
     <string name="theme_dark">Темна</string>
-    <string name="theme_amoled">AMOLED</string>
     <string name="theme_gold_light">Золото світла</string>
     <string name="theme_gold_dark">Золото темна</string>
     <string name="theme_gold_amoled">Золото AMOLED</string>
-    <string name="theme_surfshark">Surfshark</string>
-    <string name="theme_nord">NordVPN</string>
-    <string name="theme_ipvanish">IPVanish</string>
-    <string name="theme_purevpn">PureVPN</string>
-    <string name="theme_mullvad">Mullvad</string>
-    <string name="theme_windscribe">Windscribe</string>
     <!-- Error Reporting Settings -->
     <string name="settings_error_reporting">Звіти про помилки</string>
     <string name="settings_error_reporting_desc">Керування звітами про збої та аналітикою</string>
@@ -225,7 +210,6 @@
     <string name="settings_sentry_session_replay">Повтори сесій</string>
     <string name="settings_sentry_session_replay_desc">Анонімне відтворення взаємодій для налагодження проблем інтерфейсу</string>
     <!-- Kill Switch Screen -->
-    <string name="kill_switch_title">Kill Switch</string>
     <string name="kill_switch_subtitle">Аварійний вимикач</string>
     <string name="kill_switch_desc">Щоб ваш трафік завжди був захищений, використовуйте Kill Switch, що надається Android. Це запобігає витоку даних при розриві VPN-з\'єднання.</string>
     <string name="kill_switch_step_1">1. Натисніть кнопку нижче, щоб відкрити налаштування VPN.</string>
@@ -262,7 +246,6 @@
     <!-- Settings: Protocol & Obfuscation -->
     <string name="settings_protocol">Протокол</string>
     <string name="protocol_title">Протокол</string>
-    <string name="protocol_amneziawg">AmneziaWG</string>
     <string name="protocol_amneziawg_desc">Покращений протокол WireGuard з обфускацією</string>
     <string name="obfuscation_title">Обфускація</string>
     <string name="obfuscation_enable">Увімкнути обфускацію</string>
@@ -279,29 +262,17 @@
     <string name="custom_config">Своя конфігурація</string>
     <!-- About App Screen -->
     <string name="about_community">Спільнота</string>
-    <string name="about_github">GitHub</string>
-    <string name="about_telegram">Telegram</string>
-    <string name="about_codeberg">Codeberg</string>
     <string name="about_crowdin">Допомогти з перекладом</string>
     <string name="about_website">Офіційний сайт</string>
     <string name="about_sentry">Працює на базі Sentry</string>
     <!-- Licenses Screen -->
     <string name="licenses_title">Ліцензії</string>
-    <string name="license_app_title">Proton VPN-Next</string>
-    <string name="license_app_desc">GNU General Public License v3.0</string>
     <string name="license_androidx_title">Бібліотеки AndroidX</string>
     <string name="license_apache_2">Apache License 2.0</string>
-    <string name="license_compose_title">Jetpack Compose</string>
     <string name="license_kotlin_title">Стандартна бібліотека Kotlin</string>
-    <string name="license_hilt_title">Dagger Hilt</string>
     <string name="license_retrofit_title">Retrofit та OkHttp</string>
     <string name="license_proton_go_vpn_title">Бібліотека Proton GO VPN</string>
-    <string name="license_amneziawg_title">AmneziaWG Android</string>
-    <string name="license_sentry_title">Sentry SDK</string>
     <string name="license_room_title">База даних Room</string>
-    <string name="license_leakcanary_title">LeakCanary</string>
-    <string name="license_android_svg_title">Android SVG</string>
-    <string name="license_bsl">Business Source License 1.1</string>
     <!-- Split Tunneling -->
     <string name="settings_st_mode">Режим роздільного тунелювання</string>
     <string name="st_mode_exclude">Режим виключення</string>
@@ -381,9 +352,6 @@
     <string name="profile_feature_connect_go">Connect &amp; Go</string>
     <string name="profile_server_info">Сервер: %1$s</string>
     <string name="profile_city_info">🏙️ %1$s, %2$s</string>
-    <string name="profile_country_info">%1$s %2$s</string>
-    <string name="profile_fastest_info">⚡ %1$s</string>
-    <string name="profile_info_format">%1$s • %2$s • %3$s</string>
     <!-- Edit Profile Screen -->
     <string name="title_create_profile">Створити профіль</string>
     <string name="title_edit_profile">Редагувати профіль</string>
@@ -526,7 +494,7 @@
     <string name="battery_optimization_desc">Android може відключати VPN для економії енергії. Будь ласка, вимкніть оптимізацію для цього додатка.</string>
     <string name="btn_fix">Виправити</string>
     <!-- Anti-Tamper / Scary Warning -->
-    <string name="tamper_warning_title">ВИЯВЛЕНО НЕОФІЦІЙНУ ЗБІРКУ!</string>
+    <string name="tamper_warning_title">ВИЯВЛЕНО НЕОФІЦІЙНУ ЗБОРКУ!</string>
     <string name="tamper_warning_desc">Ця версія Proton VPN-Next була модифікована невідомою третьою стороною. Ваша безпека, конфіденційність та дані знаходяться під ВИСОКИМ РИЗИКОМ.</string>
     <string name="tamper_btn_accept_risks">Я усвідомлюю ризик і приймаю наслідки</string>
     <string name="tamper_btn_download_official">Завантажити оригінал</string>

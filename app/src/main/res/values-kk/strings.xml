@@ -68,10 +68,10 @@
     <string name="hint_2fa_code">6 таңбалы код</string>
     <string name="btn_verify">Тексеру</string>
     <!-- Dashboard Screen -->
-    <string name="dashboard_title">Proton VPN-Next</string>
+
     <string name="btn_retry">Қайталау</string>
     <string name="error_system_appops">Жүйелік қате: қолданбаны қайта орнатыңыз.</string>
-    <string name="error_vpn_permission_dialog_not_found">VPN permission dialog not available on this device.</string>
+
     <string name="title_recent_connections">Соңғы қосылымдар</string>
     <string name="status_connected">Қосылды</string>
     <string name="status_connecting">Қосылуда…</string>
@@ -81,7 +81,7 @@
     <string name="status_not_connected">Қосылмаған</string>
     <string name="desc_toggle_connection">Қосылымды ауыстыру</string>
     <string name="desc_country">Ел</string>
-    <string name="status_vpn">VPN</string>
+
     <string name="label_fastest_server">Ең жылдам сервер</string>
     <string name="label_select_location">Орынды таңдаңыз</string>
     <string name="label_server_unavailable">Сервер қолжетімсіз</string>
@@ -101,7 +101,7 @@
     <!-- Settings Screen -->
     <string name="settings_title">Параметрлер</string>
     <string name="settings_connection">Қосылым параметрлері</string>
-    <string name="settings_kill_switch">Kill Switch</string>
+
     <string name="settings_kill_switch_desc">Kill Switch</string>
     <string name="settings_auto_connect">Автоматты қосылу</string>
     <string name="settings_auto_connect_desc">Іске қосылғанда VPN-ге қосылу</string>
@@ -116,9 +116,11 @@
     <string name="settings_privacy">Құпиялылық және хабарландырулар</string>
     <string name="settings_notifications">Хабарландырулар</string>
     <string name="settings_notifications_desc">VPN күйі туралы хабарландыруларды алу</string>
+    <string name="settings_allow_lan">LAN қосылымдарына рұқсат беру</string>
+    <string name="settings_allow_lan_desc">Жергілікті желі трафигі үшін VPN-ді айналып өту</string>
     <string name="settings_about">Туралы</string>
     <string name="settings_version">Нұсқа %1$s</string>
-    <string name="settings_version_short">v%1$s</string>
+
     <string name="settings_licenses">Ашық бастапқы лицензиялар</string>
     <string name="settings_privacy_policy">Құпиялылық саясаты</string>
     <string name="settings_disclaimer">Жауапкершіліктен бас тарту</string>
@@ -154,16 +156,16 @@
     <string name="api_proxy_host">Прокси хосты</string>
     <string name="api_proxy_port">Прокси порты</string>
     <string name="api_proxy_type">Прокси түрі</string>
-    <string name="api_proxy_type_http">HTTPS / HTTP</string>
-    <string name="api_proxy_type_socks">SOCKS5</string>
+
+
     <string name="api_proxy_username">Пайдаланушы аты (міндетті емес)</string>
     <string name="api_proxy_password">Құпия сөз (міндетті емес)</string>
-    <string name="api_bypass_strategy_byedpi">ByeDPI</string>
+
     <string name="api_bypass_strategy_byedpi_desc">Пакеттерді кеңейтілген фрагментациялау және алдау арқылы DPI блоктарын айналып өту.</string>
     <string name="byedpi_flags_title">ҮЗДІК СТРАТЕГИЯ ЖАЛАУШАЛАРЫ</string>
     <string name="byedpi_flags_label">ByeDPI жалаушалары</string>
     <string name="byedpi_sni_title">SNI хосты</string>
-    <string name="byedpi_sni_hint">google.com</string>
+
     <string name="byedpi_flags_none">Әлі тексерілмеген</string>
     <string name="byedpi_test_results_title">Сынақ нәтижелері</string>
     <string name="btn_apply">Қолдану</string>
@@ -195,16 +197,16 @@
     <string name="load_mode_hidden">Жасырын</string>
     <string name="theme_light">Ақшыл</string>
     <string name="theme_dark">Қараңғы</string>
-    <string name="theme_amoled">AMOLED</string>
+
     <string name="theme_gold_light">Алтын ақшыл</string>
     <string name="theme_gold_dark">Алтын қараңғы</string>
     <string name="theme_gold_amoled">Алтын AMOLED</string>
-    <string name="theme_surfshark">Surfshark</string>
-    <string name="theme_nord">NordVPN</string>
-    <string name="theme_ipvanish">IPVanish</string>
-    <string name="theme_purevpn">PureVPN</string>
-    <string name="theme_mullvad">Mullvad</string>
-    <string name="theme_windscribe">Windscribe</string>
+
+
+
+
+
+
     <!-- Error Reporting Settings -->
     <string name="settings_error_reporting">Қателер туралы есеп беру</string>
     <string name="settings_error_reporting_desc">Краш-есептер мен аналитиканы басқару</string>
@@ -225,7 +227,7 @@
     <string name="settings_sentry_session_replay">Сеансты қайта ойнату</string>
     <string name="settings_sentry_session_replay_desc">UI мәселелерін шешу үшін анонимді өзара әрекеттесуді қайта ойнату</string>
     <!-- Kill Switch Screen -->
-    <string name="kill_switch_title">Kill Switch</string>
+
     <string name="kill_switch_subtitle">Kill Switch</string>
     <string name="kill_switch_desc">Трафигіңіздің әрқашан қорғалуын қамтамасыз ету үшін Android ұсынған Kill Switch мүмкіндігін пайдаланыңіз. Бұл VPN қосылымы үзілген жағдайда деректердің ағып кетуін болдырмайды.</string>
     <string name="kill_switch_step_1">1. VPN параметрлерін ашу үшін төмендегі түймені басыңыз.</string>
@@ -262,7 +264,7 @@
     <!-- Settings: Protocol & Obfuscation -->
     <string name="settings_protocol">Хаттама</string>
     <string name="protocol_title">Хаттама</string>
-    <string name="protocol_amneziawg">AmneziaWG</string>
+
     <string name="protocol_amneziawg_desc">Обфускациясы бар кеңейтілген WireGuard хаттамасы</string>
     <string name="obfuscation_title">Обфускация</string>
     <string name="obfuscation_enable">Обфускацияны қосу</string>
@@ -279,29 +281,29 @@
     <string name="custom_config">Таңдамалы конфигурация</string>
     <!-- About App Screen -->
     <string name="about_community">Қоғамдастық</string>
-    <string name="about_github">GitHub</string>
-    <string name="about_telegram">Telegram</string>
-    <string name="about_codeberg">Codeberg</string>
+
+
+
     <string name="about_crowdin">Аударуға көмектесу</string>
     <string name="about_website">Ресми сайт</string>
     <string name="about_sentry">Sentry негізінде жасалған</string>
     <!-- Licenses Screen -->
     <string name="licenses_title">Лицензиялар</string>
-    <string name="license_app_title">Proton VPN-Next</string>
-    <string name="license_app_desc">GNU General Public License v3.0</string>
+
+
     <string name="license_androidx_title">AndroidX кітапханалары</string>
     <string name="license_apache_2">Apache License 2.0</string>
-    <string name="license_compose_title">Jetpack Compose</string>
+
     <string name="license_kotlin_title">Kotlin стандартты кітапханасы</string>
-    <string name="license_hilt_title">Dagger Hilt</string>
+
     <string name="license_retrofit_title">Retrofit және OkHttp</string>
     <string name="license_proton_go_vpn_title">Proton GO VPN кітапханасы</string>
-    <string name="license_amneziawg_title">AmneziaWG Android</string>
-    <string name="license_sentry_title">Sentry SDK</string>
+
+
     <string name="license_room_title">Room дерекқоры</string>
-    <string name="license_leakcanary_title">LeakCanary</string>
-    <string name="license_android_svg_title">Android SVG</string>
-    <string name="license_bsl">Business Source License 1.1</string>
+
+
+
     <!-- Split Tunneling -->
     <string name="settings_st_mode">Бөлек туннельдеу режимі</string>
     <string name="st_mode_exclude">Алып тастау режимі</string>
@@ -375,9 +377,9 @@
     <string name="profile_feature_connect_go">Connect &amp; Go</string>
     <string name="profile_server_info">Сервер: %1$s</string>
     <string name="profile_city_info">🏙️ %1$s, %2$s</string>
-    <string name="profile_country_info">%1$s %2$s</string>
-    <string name="profile_fastest_info">⚡ %1$s</string>
-    <string name="profile_info_format">%1$s • %2$s • %3$s</string>
+
+
+
     <!-- Edit Profile Screen -->
     <string name="title_create_profile">Профиль жасау</string>
     <string name="title_edit_profile">Профильді өңдеу</string>

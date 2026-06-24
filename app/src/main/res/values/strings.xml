@@ -31,7 +31,7 @@
     <string name="troubleshoot_desc">We detected difficulty connecting to Proton services. Try selecting an alternative routing strategy to bypass blocks.</string>
     <string name="troubleshoot_strategy_none">No Bypass (Try Again)</string>
     <string name="troubleshoot_strategy_warp">WARP (Recommended)</string>
-    <string name="troubleshoot_strategy_byedpi">ByeDPI (Deep Packet Inspection)</string>
+    <string name="troubleshoot_strategy_byedpi" translatable="false">ByeDPI (Deep Packet Inspection)</string>
     <string name="troubleshoot_btn_next">Next</string>
     <string name="troubleshoot_btn_skip">Skip &amp; Retry</string>
 
@@ -76,10 +76,10 @@
     <string name="btn_verify">Verify</string>
 
     <!-- Dashboard Screen -->
-    <string name="dashboard_title">Proton VPN-Next</string>
+    <string name="dashboard_title" translatable="false">Proton VPN-Next</string>
     <string name="btn_retry">Retry</string>
     <string name="error_system_appops">System error: please reinstall the app.</string>
-    <string name="error_vpn_permission_dialog_not_found">VPN permission dialog not available on this device.</string>
+    <string name="error_vpn_permission_dialog_not_found" translatable="false">VPN permission dialog not available on this device.</string>
     <string name="title_recent_connections">Recent connections</string>
     <string name="status_connected">Connected</string>
     <string name="status_connecting">Connecting…</string>
@@ -89,7 +89,7 @@
     <string name="status_not_connected">Not connected</string>
     <string name="desc_toggle_connection">Toggle Connection</string>
     <string name="desc_country">Country</string>
-    <string name="status_vpn">VPN</string>
+    <string name="status_vpn" translatable="false">VPN</string>
     <string name="location_format" translatable="false">%1$s • %2$s</string>
     <string name="location_city_format" translatable="false">%1$s, %2$s</string>
     <string name="label_fastest_server">Fastest Server</string>
@@ -117,7 +117,7 @@
     <!-- Settings Screen -->
     <string name="settings_title">Settings</string>
     <string name="settings_connection">Connection Settings</string>
-    <string name="settings_kill_switch">Kill Switch</string>
+    <string name="settings_kill_switch" translatable="false">Kill Switch</string>
     <string name="settings_kill_switch_desc">Kill Switch</string>
     <string name="settings_auto_connect">Auto Connect</string>
     <string name="settings_auto_connect_desc">Connect to VPN on startup</string>
@@ -132,9 +132,11 @@
     <string name="settings_privacy">Privacy &amp; Notifications</string>
     <string name="settings_notifications">Notifications</string>
     <string name="settings_notifications_desc">Receive VPN status notifications</string>
+    <string name="settings_allow_lan">Allow LAN connections</string>
+    <string name="settings_allow_lan_desc">Bypass VPN for local network traffic</string>
     <string name="settings_about">About</string>
     <string name="settings_version">Version %1$s</string>
-    <string name="settings_version_short">v%1$s</string>
+    <string name="settings_version_short" translatable="false">v%1$s</string>
     <string name="settings_licenses">Open Source Licenses</string>
     <string name="settings_privacy_policy">Privacy Policy</string>
     <string name="settings_disclaimer">Disclaimer</string>
@@ -171,17 +173,17 @@
     <string name="api_proxy_host">Proxy Host</string>
     <string name="api_proxy_port">Proxy Port</string>
     <string name="api_proxy_type">Proxy Type</string>
-    <string name="api_proxy_type_http">HTTPS / HTTP</string>
-    <string name="api_proxy_type_socks">SOCKS5</string>
+    <string name="api_proxy_type_http" translatable="false">HTTPS / HTTP</string>
+    <string name="api_proxy_type_socks" translatable="false">SOCKS5</string>
     <string name="api_proxy_username">Username (Optional)</string>
     <string name="api_proxy_password">Password (Optional)</string>
 
-    <string name="api_bypass_strategy_byedpi">ByeDPI</string>
+    <string name="api_bypass_strategy_byedpi" translatable="false">ByeDPI</string>
     <string name="api_bypass_strategy_byedpi_desc">Bypass DPI blocks using advanced packet fragmentation and deception.</string>
     <string name="byedpi_flags_title">BEST STRATEGY FLAGS</string>
     <string name="byedpi_flags_label">ByeDPI Flags</string>
     <string name="byedpi_sni_title">SNI Host</string>
-    <string name="byedpi_sni_hint">google.com</string>
+    <string name="byedpi_sni_hint" translatable="false">google.com</string>
     <string name="byedpi_flags_none">Not tested yet</string>
     <string name="byedpi_test_results_title">Test Results</string>
     <string name="btn_apply">Apply</string>
@@ -216,16 +218,16 @@
     <string name="load_mode_hidden">Hidden</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
-    <string name="theme_amoled">AMOLED</string>
+    <string name="theme_amoled" translatable="false">AMOLED</string>
     <string name="theme_gold_light">Gold Light</string>
     <string name="theme_gold_dark">Gold Dark</string>
     <string name="theme_gold_amoled">Gold AMOLED</string>
-    <string name="theme_surfshark">Surfshark</string>
-    <string name="theme_nord">NordVPN</string>
-    <string name="theme_ipvanish">IPVanish</string>
-    <string name="theme_purevpn">PureVPN</string>
-    <string name="theme_mullvad">Mullvad</string>
-    <string name="theme_windscribe">Windscribe</string>
+    <string name="theme_surfshark" translatable="false">Surfshark</string>
+    <string name="theme_nord" translatable="false">NordVPN</string>
+    <string name="theme_ipvanish" translatable="false">IPVanish</string>
+    <string name="theme_purevpn" translatable="false">PureVPN</string>
+    <string name="theme_mullvad" translatable="false">Mullvad</string>
+    <string name="theme_windscribe" translatable="false">Windscribe</string>
     <string name="theme_nothing" translatable="false">Nothing</string>
 
     <!-- Error Reporting Settings -->
@@ -249,7 +251,7 @@
     <string name="settings_sentry_session_replay_desc">Anonymous interaction playback to debug UI issues</string>
 
     <!-- Kill Switch Screen -->
-    <string name="kill_switch_title">Kill Switch</string>
+    <string name="kill_switch_title" translatable="false">Kill Switch</string>
     <string name="kill_switch_subtitle">Kill Switch</string>
     <string name="kill_switch_desc">To ensure your traffic is always protected, use the Kill Switch provided by Android. This prevents data leaks if the VPN connection drops.</string>
     <string name="kill_switch_step_1">1. Tap the button below to open VPN settings.</string>
@@ -289,7 +291,7 @@
     <!-- Settings: Protocol & Obfuscation -->
     <string name="settings_protocol">Protocol</string>
     <string name="protocol_title">Protocol</string>
-    <string name="protocol_amneziawg">AmneziaWG</string>
+    <string name="protocol_amneziawg" translatable="false">AmneziaWG</string>
     <string name="protocol_amneziawg_desc">Advanced WireGuard protocol with obfuscation</string>
     <string name="obfuscation_title">Obfuscation</string>
     <string name="obfuscation_enable">Enable Obfuscation</string>
@@ -307,9 +309,9 @@
 
     <!-- About App Screen -->
     <string name="about_community">Community</string>
-    <string name="about_github">GitHub</string>
-    <string name="about_telegram">Telegram</string>
-    <string name="about_codeberg">Codeberg</string>
+    <string name="about_github" translatable="false">GitHub</string>
+    <string name="about_telegram" translatable="false">Telegram</string>
+    <string name="about_codeberg" translatable="false">Codeberg</string>
     <string name="about_crowdin">Help with Translation</string>
     <string name="about_website">Official Website</string>
 
@@ -326,21 +328,21 @@
 
     <!-- Licenses Screen -->
     <string name="licenses_title">Licenses</string>
-    <string name="license_app_title">Proton VPN-Next</string>
-    <string name="license_app_desc">GNU General Public License v3.0</string>
+    <string name="license_app_title" translatable="false">Proton VPN-Next</string>
+    <string name="license_app_desc" translatable="false">GNU General Public License v3.0</string>
     <string name="license_androidx_title">AndroidX Libraries</string>
     <string name="license_apache_2">Apache License 2.0</string>
-    <string name="license_compose_title">Jetpack Compose</string>
+    <string name="license_compose_title" translatable="false">Jetpack Compose</string>
     <string name="license_kotlin_title">Kotlin Standard Library</string>
-    <string name="license_hilt_title">Dagger Hilt</string>
+    <string name="license_hilt_title" translatable="false">Dagger Hilt</string>
     <string name="license_retrofit_title">Retrofit &amp; OkHttp</string>
     <string name="license_proton_go_vpn_title">Proton GO VPN lib</string>
-    <string name="license_amneziawg_title">AmneziaWG Android</string>
-    <string name="license_sentry_title">Sentry SDK</string>
+    <string name="license_amneziawg_title" translatable="false">AmneziaWG Android</string>
+    <string name="license_sentry_title" translatable="false">Sentry SDK</string>
     <string name="license_room_title">Room Database</string>
-    <string name="license_leakcanary_title">LeakCanary</string>
-    <string name="license_android_svg_title">Android SVG</string>
-    <string name="license_bsl">Business Source License 1.1</string>
+    <string name="license_leakcanary_title" translatable="false">LeakCanary</string>
+    <string name="license_android_svg_title" translatable="false">Android SVG</string>
+    <string name="license_bsl" translatable="false">Business Source License 1.1</string>
 
     <!-- Split Tunneling -->
     <string name="settings_st_mode">Split Tunneling Mode</string>
@@ -422,9 +424,9 @@
     <string name="profile_feature_connect_go">Connect &amp; Go</string>
     <string name="profile_server_info">Server: %1$s</string>
     <string name="profile_city_info">🏙️ %1$s, %2$s</string>
-    <string name="profile_country_info">%1$s %2$s</string>
-    <string name="profile_fastest_info">⚡ %1$s</string>
-    <string name="profile_info_format">%1$s • %2$s • %3$s</string>
+    <string name="profile_country_info" translatable="false">%1$s %2$s</string>
+    <string name="profile_fastest_info" translatable="false">⚡ %1$s</string>
+    <string name="profile_info_format" translatable="false">%1$s • %2$s • %3$s</string>
 
     <!-- Edit Profile Screen -->
     <string name="title_create_profile">Create Profile</string>

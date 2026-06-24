@@ -68,10 +68,10 @@
     <string name="hint_2fa_code">6 位代码</string>
     <string name="btn_verify">验证</string>
     <!-- Dashboard Screen -->
-    <string name="dashboard_title">Proton VPN-Next</string>
+
     <string name="btn_retry">重试</string>
     <string name="error_system_appops">系统错误：请重新安装应用。</string>
-    <string name="error_vpn_permission_dialog_not_found">VPN permission dialog not available on this device.</string>
+
     <string name="title_recent_connections">最近连接</string>
     <string name="status_connected">已连接</string>
     <string name="status_connecting">正在连接…</string>
@@ -81,7 +81,7 @@
     <string name="status_not_connected">未连接</string>
     <string name="desc_toggle_connection">切换连接</string>
     <string name="desc_country">国家</string>
-    <string name="status_vpn">VPN</string>
+
     <string name="label_fastest_server">最快服务器</string>
     <string name="label_select_location">选择位置</string>
     <string name="label_server_unavailable">服务器不可用</string>
@@ -101,7 +101,7 @@
     <!-- Settings Screen -->
     <string name="settings_title">设置</string>
     <string name="settings_connection">连接设置</string>
-    <string name="settings_kill_switch">Kill Switch</string>
+
     <string name="settings_kill_switch_desc">终止开关</string>
     <string name="settings_auto_connect">自动连接</string>
     <string name="settings_auto_connect_desc">启动时连接到 VPN</string>
@@ -116,9 +116,11 @@
     <string name="settings_privacy">隐私与通知</string>
     <string name="settings_notifications">通知</string>
     <string name="settings_notifications_desc">接收 VPN 状态通知</string>
+    <string name="settings_allow_lan">允许局域网连接</string>
+    <string name="settings_allow_lan_desc">允许本地网络流量绕过 VPN</string>
     <string name="settings_about">关于</string>
     <string name="settings_version">版本 %1$s</string>
-    <string name="settings_version_short">v%1$s</string>
+
     <string name="settings_licenses">开源许可</string>
     <string name="settings_privacy_policy">隐私政策</string>
     <string name="settings_disclaimer">免责声明</string>
@@ -154,16 +156,16 @@
     <string name="api_proxy_host">代理主机</string>
     <string name="api_proxy_port">代理端口</string>
     <string name="api_proxy_type">代理类型</string>
-    <string name="api_proxy_type_http">HTTPS / HTTP</string>
-    <string name="api_proxy_type_socks">SOCKS5</string>
+
+
     <string name="api_proxy_username">用户名 (可选)</string>
     <string name="api_proxy_password">密码 (可选)</string>
-    <string name="api_bypass_strategy_byedpi">ByeDPI</string>
+
     <string name="api_bypass_strategy_byedpi_desc">使用高级数据包分片和欺骗技术绕过 DPI 封锁。</string>
     <string name="byedpi_flags_title">最佳策略标志</string>
     <string name="byedpi_flags_label">ByeDPI 标志</string>
     <string name="byedpi_sni_title">SNI 主机</string>
-    <string name="byedpi_sni_hint">google.com</string>
+
     <string name="byedpi_flags_none">尚未测试</string>
     <string name="byedpi_test_results_title">测试结果</string>
     <string name="btn_apply">应用</string>
@@ -195,16 +197,16 @@
     <string name="load_mode_hidden">隐藏</string>
     <string name="theme_light">浅色</string>
     <string name="theme_dark">深色</string>
-    <string name="theme_amoled">AMOLED</string>
+
     <string name="theme_gold_light">金色浅色</string>
     <string name="theme_gold_dark">金色深色</string>
     <string name="theme_gold_amoled">金色 AMOLED</string>
-    <string name="theme_surfshark">Surfshark</string>
-    <string name="theme_nord">NordVPN</string>
-    <string name="theme_ipvanish">IPVanish</string>
-    <string name="theme_purevpn">PureVPN</string>
-    <string name="theme_mullvad">Mullvad</string>
-    <string name="theme_windscribe">Windscribe</string>
+
+
+
+
+
+
     <!-- Error Reporting Settings -->
     <string name="settings_error_reporting">错误报告</string>
     <string name="settings_error_reporting_desc">管理崩溃报告和分析</string>
@@ -225,7 +227,7 @@
     <string name="settings_sentry_session_replay">会话重放</string>
     <string name="settings_sentry_session_replay_desc">匿名交互回放以调试 UI 问题</string>
     <!-- Kill Switch Screen -->
-    <string name="kill_switch_title">Kill Switch</string>
+
     <string name="kill_switch_subtitle">终止开关</string>
     <string name="kill_switch_desc">为了确保您的流量始终受到保护，请使用 Android 提供的 Kill Switch。这可以防止在 VPN 连接断开时发生数据泄露。</string>
     <string name="kill_switch_step_1">1. 点击下方按钮打开 VPN 设置。</string>
@@ -262,7 +264,7 @@
     <!-- Settings: Protocol & Obfuscation -->
     <string name="settings_protocol">协议</string>
     <string name="protocol_title">协议</string>
-    <string name="protocol_amneziawg">AmneziaWG</string>
+
     <string name="protocol_amneziawg_desc">具有混淆功能的高级 WireGuard 协议</string>
     <string name="obfuscation_title">混淆</string>
     <string name="obfuscation_enable">启用混淆</string>
@@ -279,29 +281,29 @@
     <string name="custom_config">自定义配置</string>
     <!-- About App Screen -->
     <string name="about_community">社区</string>
-    <string name="about_github">GitHub</string>
-    <string name="about_telegram">Telegram</string>
-    <string name="about_codeberg">Codeberg</string>
+
+
+
     <string name="about_crowdin">帮助翻译</string>
     <string name="about_website">官方网站</string>
     <string name="about_sentry">由 Sentry 提供支持</string>
     <!-- Licenses Screen -->
     <string name="licenses_title">许可</string>
-    <string name="license_app_title">Proton VPN-Next</string>
-    <string name="license_app_desc">GNU General Public License v3.0</string>
+
+
     <string name="license_androidx_title">AndroidX 库</string>
     <string name="license_apache_2">Apache License 2.0</string>
-    <string name="license_compose_title">Jetpack Compose</string>
+
     <string name="license_kotlin_title">Kotlin 标准库</string>
-    <string name="license_hilt_title">Dagger Hilt</string>
+
     <string name="license_retrofit_title">Retrofit 和 OkHttp</string>
     <string name="license_proton_go_vpn_title">Proton GO VPN 库</string>
-    <string name="license_amneziawg_title">AmneziaWG Android</string>
-    <string name="license_sentry_title">Sentry SDK</string>
+
+
     <string name="license_room_title">Room 数据库</string>
-    <string name="license_leakcanary_title">LeakCanary</string>
-    <string name="license_android_svg_title">Android SVG</string>
-    <string name="license_bsl">Business Source License 1.1</string>
+
+
+
     <!-- Split Tunneling -->
     <string name="settings_st_mode">拆分隧道模式</string>
     <string name="st_mode_exclude">排除模式</string>
@@ -372,9 +374,9 @@
     <string name="profile_feature_connect_go">连接即启动</string>
     <string name="profile_server_info">服务器：%1$s</string>
     <string name="profile_city_info">🏙️ %1$s, %2$s</string>
-    <string name="profile_country_info">%1$s %2$s</string>
-    <string name="profile_fastest_info">⚡ %1$s</string>
-    <string name="profile_info_format">%1$s • %2$s • %3$s</string>
+
+
+
     <!-- Edit Profile Screen -->
     <string name="title_create_profile">创建配置方案</string>
     <string name="title_edit_profile">编辑配置方案</string>
