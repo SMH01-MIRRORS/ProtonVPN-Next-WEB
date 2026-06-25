@@ -66,12 +66,10 @@ fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val isWarpLoading by viewModel.isWarpLoading.collectAsStateWithLifecycle()
     val isApiBypassEnabled by viewModel.isApiBypassEnabled.collectAsStateWithLifecycle()
     val apiBypassStrategy by viewModel.apiBypassStrategy.collectAsStateWithLifecycle()
     val colors = ProtonNextTheme.colors
     val isTablet = isTablet()
-    val context = LocalContext.current
 
     // Form states
     var username by remember { mutableStateOf("") }
@@ -82,29 +80,8 @@ fun LoginScreen(
     var showTokenLoginDialog by remember { mutableStateOf(false) }
     var sessionJson by remember { mutableStateOf("") }
 
-    val vpnPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            viewModel.login(username, password)
-        }
-    }
-
     val checkVpnAndLogin: () -> Unit = {
-        if (isApiBypassEnabled && apiBypassStrategy == SettingsManager.STRATEGY_WARP) {
-            try {
-                val intent = VpnService.prepare(context)
-                if (intent != null) {
-                    vpnPermissionLauncher.launch(intent)
-                } else {
-                    viewModel.login(username, password)
-                }
-            } catch (_: SecurityException) {
-                viewModel.login(username, password)
-            }
-        } else {
-            viewModel.login(username, password)
-        }
+        viewModel.login(username, password)
     }
 
     Box(modifier = modifier) {
@@ -463,34 +440,6 @@ fun LoginScreen(
                             containerColor = colors.backgroundSecondary,
                             titleContentColor = colors.textNorm,
                             textContentColor = colors.textWeak
-                        )
-                    }
-                }
-            }
-        }
-
-        // WARP Loading Overlay
-        if (isWarpLoading) {
-            Dialog(onDismissRequest = {}) {
-                Surface(
-                    shape = RoundedCornerShape(24.dp),
-                    color = colors.backgroundSecondary,
-                    tonalElevation = 8.dp
-                ) {
-                    Column(
-                        modifier = Modifier.padding(32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        ExpressiveCircularProgressIndicator(
-                            modifier = Modifier.size(64.dp),
-                            color = colors.brandNorm
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Text(
-                            text = stringResource(R.string.warp_fetching_config),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = colors.textNorm,
-                            textAlign = TextAlign.Center
                         )
                     }
                 }

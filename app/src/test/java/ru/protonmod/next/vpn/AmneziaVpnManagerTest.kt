@@ -77,9 +77,6 @@ class AmneziaVpnManagerTest {
     @Mock
     private lateinit var vpnNetworkMonitor: VpnNetworkMonitor
 
-    @Mock
-    private lateinit var warpManager: ru.protonmod.next.vpn.WarpManager
-
     private val testDispatcher = UnconfinedTestDispatcher()
     private val testScope = TestScope(testDispatcher)
     
@@ -121,7 +118,6 @@ class AmneziaVpnManagerTest {
             amneziaConfigGenerator,
             nextVpnManager,
             vpnNetworkMonitor,
-            { warpManager },
             testDispatcherProvider,
             testScope
         )

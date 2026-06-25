@@ -33,7 +33,6 @@ The application stores certain data locally on your device:
 To ensure accessibility in regions where Proton's official APIs are restricted, the application offers several API Bypass strategies.
 - **Proxies (Netlify, Cloudflare, Deno, Custom)**: If enabled, your API requests (containing authentication and server list queries) may be routed through third-party infrastructure. While authentication is encrypted (SRP), these proxies will see your IP address and the fact that you are accessing Proton services.
 - **ByeDPI (DPI Deception)**: Uses advanced packet fragmentation and deception techniques locally on your device. Since this is a local SOCKS5 proxy, your traffic does not pass through any third-party proxy servers, and your IP address is not shared with any external proxy provider. All data is processed locally before reaching Proton's APIs.
-- **WARP (Cloudflare)**: Uses a local Cloudflare tunnel to route API traffic.
   These features are **OPTIONAL** and can be configured in the app settings (Settings -> API Block Bypass).
 
 ### 4. Mandatory Acceptance
@@ -75,7 +74,6 @@ ProtonVPN-Next — это неофициальный клиент с откры�
 Для обеспечения доступности в регионах, где официальные API Proton ограничены, приложение предлагает несколько стратегий обхода блокировок.
 - **Прокси (Netlify, Cloudflare, Deno, Пользовательские)**: Если эта функция включена, ваши запросы к API (содержащие данные аутентификации и запросы списка серверов) могут направляться через стороннюю инфраструктуру. Хотя аутентификация зашифрована (SRP), эти прокси будут видеть ваш IP-адрес и факт обращения к сервисам Proton.
 - **ByeDPI (Обман DPI)**: Использует продвинутую фрагментацию пакетов и методы обмана цензора локально на вашем устройстве. Поскольку это локальный SOCKS5 прокси, ваш трафик не проходит через сторонние прокси-серверы, и ваш IP-адрес не передается внешним провайдерам прокси. Все данные обрабатываются локально перед отправкой к API Proton.
-- **WARP (Cloudflare)**: Использует локальный туннель Cloudflare для маршрутизации трафика API.
   Эти функции являются **ОПЦИОНАЛЬНЫМИ** и могут быть настроены в настройках приложения (Настройки -> Обход блокировок API).
 
 ### 4. Обязательное принятие

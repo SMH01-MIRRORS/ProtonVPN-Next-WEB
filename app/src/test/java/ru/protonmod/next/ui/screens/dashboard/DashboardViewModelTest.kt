@@ -53,7 +53,6 @@ import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.ui.screens.MainDispatcherRule
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import ru.protonmod.next.vpn.VpnAutomationManager
-import ru.protonmod.next.vpn.WarpManager
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DashboardViewModelTest {
@@ -81,9 +80,6 @@ class DashboardViewModelTest {
 
     @Mock
     private lateinit var vpnAutomationManager: VpnAutomationManager
-
-    @Mock
-    private lateinit var warpManager: WarpManager
 
     @Mock
     private lateinit var connectedServerState: ConnectedServerState
@@ -176,7 +172,6 @@ class DashboardViewModelTest {
         whenever(settingsManager.isIpHidden).thenReturn(isIpHiddenFlow)
         whenever(settingsManager.pauseEndTime).thenReturn(pauseEndTimeFlow)
         
-        whenever(warpManager.isTunnelActive).thenReturn(false)
         
         val testSession = SessionEntity(
             accessToken = "token", 
@@ -196,7 +191,6 @@ class DashboardViewModelTest {
             settingsManager,
             amneziaVpnManager,
             vpnAutomationManager,
-            warpManager,
             connectedServerState,
             profileDao,
             recentConnectionDao

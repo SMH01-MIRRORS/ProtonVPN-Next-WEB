@@ -216,11 +216,9 @@ object NetworkModule {
             val strategy = settings.getApiBypassStrategySync()
             
             if (useProxy && (strategy == SettingsManager.STRATEGY_PROTON_MIRRORS || 
-                            strategy == SettingsManager.STRATEGY_WARP || 
                             strategy == SettingsManager.STRATEGY_BYEDPI ||
                             strategy == SettingsManager.STRATEGY_CUSTOM_PROXY)) {
                 // For Proton Mirrors strategy, we rely on DohFallbackInterceptor and dynamicDns
-                // For WARP strategy, we rely on the VPN tunnel being up for specific actions.
                 // For Custom Proxy strategy, we rely on ProxySelector and use original Host.
                 // No URL rewriting needed here, just proceed with original Host.
                 val builder = request.newBuilder()
@@ -431,7 +429,7 @@ object NetworkModule {
             .certificatePinner(certificatePinner)
             .sslSocketFactory(sslContext.socketFactory, trustManager)
             .hostnameVerifier(hostnameVerifier)
-            // Connect timeout increased to 30s to allow WARP tunnel stabilization
+            // Connect timeout increased to 30s to allow tunnel stabilization
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)
@@ -465,8 +463,4 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideUpdateApi(retrofit: Retrofit): UpdateApi = retrofit.create(UpdateApi::class.java)
-
-    @Provides
-    @Singleton
-    fun provideWarpApi(retrofit: Retrofit): WarpApi = retrofit.create(WarpApi::class.java)
 }

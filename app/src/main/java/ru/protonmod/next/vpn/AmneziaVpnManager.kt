@@ -79,7 +79,6 @@ class AmneziaVpnManager @Inject constructor(
     private val amneziaConfigGenerator: AmneziaConfigGenerator,
     private val nextVpnManager: NextVpnManager,
     private val vpnNetworkMonitor: VpnNetworkMonitor,
-    private val warpManager: Provider<WarpManager>,
     private val dispatcherProvider: DispatcherProvider,
     @ApplicationScope private val applicationScope: CoroutineScope
 ) {
@@ -341,18 +340,6 @@ class AmneziaVpnManager @Inject constructor(
         _certState.value = CertificateState.Refreshing
         ProtonLogger.i(TAG, "Starting certificate refresh (force=$force, previous state: $previousState)")
 
-        val useWarp = settingsManager.isApiBypassEnabledSync() &&
-                settingsManager.getApiBypassStrategySync() == SettingsManager.STRATEGY_WARP
-
-        if (useWarp) {
-            val wm = warpManager.get()
-            // Only start WARP if main VPN is NOT active
-            if (_tunnelState.value != Tunnel.State.UP) {
-                if (!wm.isConfigLoaded()) wm.fetchWarpConfig()
-                wm.startWarpTunnel()
-            }
-        }
-
         try {
             val keyPair = cryptoWrapper.generateVpnKeyPair()
             ProtonLogger.v(TAG, "Generated new VPN keypair for registration")
@@ -401,9 +388,6 @@ class AmneziaVpnManager @Inject constructor(
                 Result.failure(result.exceptionOrNull() ?: Exception(error))
             }
         } finally {
-            if (useWarp) {
-                warpManager.get().stopWarpTunnel()
-            }
         }
     }
 
@@ -419,8 +403,6 @@ class AmneziaVpnManager @Inject constructor(
                 val session = sessionDao.getSession() ?: break
                 updateCertificateState(session.wgCertificate)
 
-                val useWarp = settingsManager.isApiBypassEnabledSync() &&
-                        settingsManager.getApiBypassStrategySync() == SettingsManager.STRATEGY_WARP
                 val isConnected = _tunnelState.value == Tunnel.State.UP
 
                 if (_certState.value is CertificateState.Valid) {
@@ -430,10 +412,9 @@ class AmneziaVpnManager @Inject constructor(
                     continue
                 }
 
-                // If using WARP, we only refresh certificate when connecting or already connected.
-                // This avoids periodic WARP tunnel bring-ups in the background.
-                if (useWarp && !isConnected && !_isConnecting.value) {
-                    ProtonLogger.d(TAG, "Proactive refresh: WARP enabled but VPN inactive. Skipping background periodic refresh.")
+                // If VPN is inactive, we only refresh certificate when connecting or already connected.
+                if (!isConnected && !_isConnecting.value) {
+                    ProtonLogger.d(TAG, "Proactive refresh: VPN inactive. Skipping background periodic refresh.")
                     delay(PERIODIC_REFRESH_MS)
                     continue
                 }
@@ -466,22 +447,6 @@ class AmneziaVpnManager @Inject constructor(
 
     suspend fun forceRefreshCertificate(): Result<String> {
         return performCertificateRefresh(force = true)
-    }
-
-    /**
-     * Ensures that WARP bypass is either active or stopped based on the provided parameter.
-     * Starts WARP only if main VPN is not UP.
-     */
-    suspend fun ensureWarpBypass(active: Boolean) {
-        val wm = warpManager.get()
-        if (active) {
-            if (_tunnelState.value != Tunnel.State.UP) {
-                if (!wm.isConfigLoaded()) wm.fetchWarpConfig()
-                wm.startWarpTunnel()
-            }
-        } else {
-            wm.stopWarpTunnel()
-        }
     }
 
     private suspend fun updateServiceSettings() {

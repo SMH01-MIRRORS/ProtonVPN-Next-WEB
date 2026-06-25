@@ -18,7 +18,7 @@ This document provides a comprehensive technical context for AI assistants worki
 - **Build System**: Gradle Kotlin DSL (`.gradle.kts`)
 
 ## Project Structure (Key Packages)
-- `ru.protonmod.next.vpn`: Core VPN logic. Contains `ProtonVpnService` (lifecycle), `NextVpnManager` (native bridge), and protocol-specific managers (`AmneziaVpnManager`, `WarpManager`).
+- `ru.protonmod.next.vpn`: Core VPN logic. Contains `ProtonVpnService` (lifecycle), `NextVpnManager` (native bridge), and protocol-specific managers (`AmneziaVpnManager`).
 - `ru.protonmod.next.ui`: Compose-based UI.
     - `screens/`: Individual features (Dashboard, Countries, Profiles, Settings).
     - `components/`: Reusable UI elements.

@@ -27,7 +27,6 @@
     <string name="troubleshoot_title">连接出现问题？</string>
     <string name="troubleshoot_desc">我们检测到连接 Proton 服务时遇到困难。请尝试选择另一种路由策略来绕过封锁。</string>
     <string name="troubleshoot_strategy_none">不使用绕过（重试）</string>
-    <string name="troubleshoot_strategy_warp">WARP（推荐）</string>
     <string name="troubleshoot_btn_next">下一步</string>
     <string name="troubleshoot_btn_skip">跳过并重试</string>
     <!-- ByeDPI Tester Overhaul -->
@@ -139,11 +138,6 @@
     <string name="api_bypass_strategy_deno_desc">通过安全的 Deno Deploy 镜像路由 API 请求。</string>
     <string name="api_bypass_strategy_mirrors">Proton 镜像 (DoH)</string>
     <string name="api_bypass_strategy_mirrors_desc">通过 DNS-over-HTTPS fallback 发现并使用动态 Proton API 镜像。</string>
-    <string name="api_bypass_strategy_warp">WARP (Cloudflare)</string>
-    <string name="api_bypass_strategy_warp_desc">使用临时 WARP 隧道进行 API 请求。可靠性高。</string>
-    <string name="warp_fetching_config">正在获取 WARP 配置…</string>
-    <string name="warp_permission_title">需要 VPN 权限</string>
-    <string name="warp_permission_desc">WARP 需要权限才能创建用于绕过 API 阻止的本地隧道。没有任何数据会发送到 Cloudflare 之外。</string>
     <string name="btn_allow">允许</string>
     <string name="btn_accept">接受</string>
     <string name="api_bypass_strategy_custom">自定义代理 (SOCKS5/HTTPS)</string>

@@ -2,7 +2,7 @@ Proton VPN-Next is an open-source, unofficial client for Proton VPN services, de
 
 Key features:
 - AmneziaWG Protocol: Advanced WireGuard-based protocol with DPI-resistant obfuscation.
-- API Block Bypass: Multiple routing strategies (Netlify, Cloudflare, WARP, Custom Proxy) to ensure access even when official APIs are blocked.
+- API Block Bypass: Multiple routing strategies (Netlify, Cloudflare, Custom Proxy) to ensure access even when official APIs are blocked.
 - Material You Design: Modern, immersive UI with multiple themes (Amoled, Gold, and various VPN-inspired skins).
 - Split Tunneling: Fine-grained control over which apps or IP addresses use the VPN.
 - Kill Switch: Integrated Android Kill Switch support for leak prevention.

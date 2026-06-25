@@ -36,7 +36,6 @@ import ru.protonmod.next.data.local.SetupStep
 import ru.protonmod.next.data.repository.AuthRepository
 import ru.protonmod.next.data.network.byedpi.ByeDpiStrategyTester
 import ru.protonmod.next.data.network.byedpi.ByeDpiManager
-import ru.protonmod.next.vpn.WarpManager
 import ru.protonmod.next.utils.NetworkMonitor
 import ru.protonmod.next.utils.RegionUtils
 import android.content.Context
@@ -95,7 +94,6 @@ class LoginViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val authRepository: AuthRepository,
     private val settingsManager: SettingsManager,
-    private val warpManager: WarpManager,
     private val networkMonitor: NetworkMonitor,
     private val byeDpiManager: ByeDpiManager,
     val byeDpiStrategyTester: ByeDpiStrategyTester,
@@ -104,9 +102,6 @@ class LoginViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
-
-    private val _isWarpLoading = MutableStateFlow(false)
-    val isWarpLoading = _isWarpLoading.asStateFlow()
 
     private val _isByeDpiAutoTesting = MutableStateFlow(false)
     val isByeDpiAutoTesting = _isByeDpiAutoTesting.asStateFlow()
@@ -179,18 +174,6 @@ class LoginViewModel @Inject constructor(
             val startTime = System.currentTimeMillis()
             _uiState.value = LoginUiState.Loading
 
-            val strategy = apiBypassStrategy.value
-            val useWarp = isApiBypassEnabled.value && strategy == SettingsManager.STRATEGY_WARP
-
-            if (useWarp) {
-                _isWarpLoading.value = true
-                if (!warpManager.isConfigLoaded()) {
-                    warpManager.fetchWarpConfig()
-                }
-                warpManager.startWarpTunnel()
-                _isWarpLoading.value = false
-            }
-
             var isSuccessful = false
             try {
                 authRepository.login(username, passwordRaw, captchaToken)
@@ -249,9 +232,6 @@ class LoginViewModel @Inject constructor(
             } finally {
                 val nextState = _uiState.value
                 val isPending = nextState is LoginUiState.RequiresCaptcha || nextState is LoginUiState.Requires2FA
-                if (useWarp && !isSuccessful && !isPending) {
-                    warpManager.stopWarpTunnel()
-                }
             }
         }
     }
@@ -286,18 +266,6 @@ class LoginViewModel @Inject constructor(
 
         _uiState.value = LoginUiState.Loading
         viewModelScope.launch {
-            val strategy = apiBypassStrategy.value
-            val useWarp = isApiBypassEnabled.value && strategy == SettingsManager.STRATEGY_WARP
-
-            if (useWarp) {
-                _isWarpLoading.value = true
-                if (!warpManager.isConfigLoaded()) {
-                    warpManager.fetchWarpConfig()
-                }
-                warpManager.startWarpTunnel()
-                _isWarpLoading.value = false
-            }
-
             var isSuccessful = false
             try {
                 authRepository.verify2FA(sessionId, tempAccessToken, refreshToken, totpCode)
@@ -316,9 +284,6 @@ class LoginViewModel @Inject constructor(
                         _uiState.value = LoginUiState.Error(exception.localizedMessage ?: "Two-factor verification failed")
                     }
             } finally {
-                if (useWarp && !isSuccessful) {
-                    warpManager.stopWarpTunnel()
-                }
             }
         }
     }
@@ -333,18 +298,6 @@ class LoginViewModel @Inject constructor(
             }
 
             ProtonLogger.action("Login", "User clicked Login Anonymous")
-            val strategy = apiBypassStrategy.value
-            val useWarp = isApiBypassEnabled.value && strategy == SettingsManager.STRATEGY_WARP
-
-            if (useWarp) {
-                _isWarpLoading.value = true
-                if (!warpManager.isConfigLoaded()) {
-                    warpManager.fetchWarpConfig()
-                }
-                warpManager.startWarpTunnel()
-                _isWarpLoading.value = false
-            }
-
             var isSuccessful = false
             try {
                 _uiState.value = LoginUiState.Loading
@@ -386,9 +339,6 @@ class LoginViewModel @Inject constructor(
             } finally {
                 val nextState = _uiState.value
                 val isPending = nextState is LoginUiState.RequiresCaptcha
-                if (useWarp && !isSuccessful && !isPending) {
-                    warpManager.stopWarpTunnel()
-                }
             }
         }
     }
@@ -464,13 +414,6 @@ class LoginViewModel @Inject constructor(
         }
         if (_uiState.value is LoginUiState.Error || _uiState.value is LoginUiState.RequiresCaptcha) {
             _uiState.value = LoginUiState.Idle
-        }
-    }
-
-    fun enableWarpBypass() {
-        viewModelScope.launch {
-            settingsManager.setApiBypassEnabled(true)
-            settingsManager.setApiBypassStrategy(SettingsManager.STRATEGY_WARP)
         }
     }
 

@@ -42,7 +42,6 @@ import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.utils.system.SystemUtils
 import ru.protonmod.next.utils.crypto.QuicI1Generator
 import ru.protonmod.next.vpn.AmneziaVpnManager
-import ru.protonmod.next.vpn.WarpManager
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.network.byedpi.ByeDpiManager
 import ru.protonmod.next.data.network.byedpi.ByeDpiStrategyTester
@@ -73,10 +72,6 @@ data class SettingsUiState(
     val apiProxyUsername: String = "",
     val apiProxyPassword: String = "",
     val isAnyVpnActive: Boolean = false,
-
-    // WARP state
-    val isWarpFetching: Boolean = false,
-    val warpConfigLoaded: Boolean = false,
 
     // ByeDPI state
     val isByeDpiTesting: Boolean = false,
@@ -152,7 +147,6 @@ class SettingsViewModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val authRepository: AuthRepository,
     private val updateRepository: UpdateRepository,
-    private val warpManager: WarpManager,
     private val otaUpdateManager: OTAUpdateManager,
     private val byeDpiManager: ByeDpiManager,
     private val byeDpiStrategyTester: ByeDpiStrategyTester
@@ -254,7 +248,6 @@ class SettingsViewModel @Inject constructor(
         settingsManager.allowLanEnabled,
         settingsManager.byeDpiFlags,
         settingsManager.byeDpiSni,
-        warpManager.isFetching,
         byeDpiStrategyTester.isTesting,
         byeDpiStrategyTester.progress,
         byeDpiStrategyTester.currentStrategy,
@@ -320,15 +313,13 @@ class SettingsViewModel @Inject constructor(
             allowLanEnabled = args[53] as Boolean,
             byeDpiFlags = args[54] as String,
             byeDpiSni = args[55] as String,
-            isWarpFetching = args[56] as Boolean,
-            warpConfigLoaded = warpManager.isConfigLoaded(),
-            isByeDpiTesting = args[57] as Boolean,
-            byeDpiTestProgress = args[58] as Float,
-            byeDpiCurrentStrategy = args[59] as String,
-            byeDpiResults = args[60] as List<ByeDpiStrategyTester.TestResult>,
-            isAnyVpnActive = args[61] as Boolean,
-            isCheckingForUpdates = args[62] as Boolean,
-            isUpdateAvailable = args[63] as Boolean
+            isByeDpiTesting = args[56] as Boolean,
+            byeDpiTestProgress = args[57] as Float,
+            byeDpiCurrentStrategy = args[58] as String,
+            byeDpiResults = args[59] as List<ByeDpiStrategyTester.TestResult>,
+            isAnyVpnActive = args[60] as Boolean,
+            isCheckingForUpdates = args[61] as Boolean,
+            isUpdateAvailable = args[62] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -410,24 +401,12 @@ class SettingsViewModel @Inject constructor(
 
     fun setApiBypassEnabled(enabled: Boolean) {
         viewModelScope.launch {
-            if (!enabled) {
-                amneziaVpnManager.ensureWarpBypass(false)
-            }
             settingsManager.setApiBypassEnabled(enabled)
         }
     }
 
     fun setApiBypassStrategy(strategy: String) {
         viewModelScope.launch {
-            if (strategy == SettingsManager.STRATEGY_WARP && !warpManager.isConfigLoaded()) {
-                warpManager.fetchWarpConfig()
-            } else if (strategy != SettingsManager.STRATEGY_WARP) {
-                amneziaVpnManager.ensureWarpBypass(false)
-            }
-            
-            // Note: ByeDPI management is now handled automatically by ByeDpiManager
-            // based on the selected strategy in settingsManager.
-            
             settingsManager.setApiBypassStrategy(strategy)
         }
     }
@@ -456,12 +435,6 @@ class SettingsViewModel @Inject constructor(
     fun setByeDpiFlags(flags: String) {
         viewModelScope.launch {
             settingsManager.setByeDpiFlags(flags)
-        }
-    }
-
-    fun fetchWarpConfig() {
-        viewModelScope.launch {
-            warpManager.fetchWarpConfig()
         }
     }
 

@@ -38,7 +38,6 @@ import ru.protonmod.next.data.network.byedpi.ByeDpiManager
 import ru.protonmod.next.data.network.byedpi.ByeDpiStrategyTester
 import ru.protonmod.next.data.repository.AuthRepository
 import ru.protonmod.next.utils.NetworkMonitor
-import ru.protonmod.next.vpn.WarpManager
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainDispatcherRule(
@@ -69,9 +68,6 @@ class LoginViewModelTest {
     private lateinit var settingsManager: SettingsManager
 
     @Mock
-    private lateinit var warpManager: WarpManager
-
-    @Mock
     private lateinit var networkMonitor: NetworkMonitor
 
     @Mock
@@ -93,7 +89,6 @@ class LoginViewModelTest {
             context,
             authRepository,
             settingsManager,
-            warpManager,
             networkMonitor,
             byeDpiManager,
             byeDpiStrategyTester,

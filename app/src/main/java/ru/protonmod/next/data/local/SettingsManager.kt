@@ -55,7 +55,6 @@ class SettingsManager @Inject constructor(
         const val STRATEGY_CLOUDFLARE = "cloudflare"
         const val STRATEGY_DENO = "deno"
         const val STRATEGY_PROTON_MIRRORS = "proton_mirrors"
-        const val STRATEGY_WARP = "warp"
         const val STRATEGY_BYEDPI = "byedpi"
         const val STRATEGY_CUSTOM_PROXY = "custom_proxy"
 

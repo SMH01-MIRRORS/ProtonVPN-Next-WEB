@@ -86,7 +86,6 @@ fun WelcomeScreen(
     var isInitialized by remember { mutableStateOf(false) }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val isWarpLoading by viewModel.isWarpLoading.collectAsStateWithLifecycle()
     val isByeDpiAutoTesting by viewModel.isByeDpiAutoTesting.collectAsStateWithLifecycle()
     val byeDpiProgress by viewModel.byeDpiStrategyTester.progress.collectAsStateWithLifecycle()
     val byeDpiCurrentStrategy by viewModel.byeDpiStrategyTester.currentStrategy.collectAsStateWithLifecycle()
@@ -343,10 +342,6 @@ fun WelcomeScreen(
                     onFinish = onNavigateToHome
                 )
             }
-        }
-
-        if (isWarpLoading) {
-            WarpLoadingOverlay()
         }
     }
 }
@@ -1039,31 +1034,3 @@ private fun ShowcaseCard(
     }
 }
 
-@Composable
-private fun WarpLoadingOverlay() {
-    val colors = ProtonNextTheme.colors
-    Dialog(onDismissRequest = {}) {
-        Surface(
-            shape = RoundedCornerShape(24.dp),
-            color = colors.backgroundSecondary,
-            tonalElevation = 8.dp
-        ) {
-            Column(
-                modifier = Modifier.padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                ExpressiveCircularProgressIndicator(
-                    modifier = Modifier.size(64.dp),
-                    color = colors.brandNorm
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                Text(
-                    text = stringResource(R.string.warp_fetching_config),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = colors.textNorm,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-    }
-}

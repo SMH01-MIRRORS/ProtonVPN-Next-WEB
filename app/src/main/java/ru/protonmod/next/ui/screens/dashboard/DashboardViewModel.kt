@@ -53,7 +53,6 @@ import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.ui.utils.CountryUtils
 import ru.protonmod.next.vpn.AmneziaVpnManager
-import ru.protonmod.next.vpn.WarpManager
 import ru.protonmod.next.vpn.VpnAutomationManager
 import ru.protonmod.next.utils.system.SystemUtils
 import java.net.Proxy
@@ -100,7 +99,6 @@ class DashboardViewModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val amneziaVpnManager: AmneziaVpnManager,
     private val vpnAutomationManager: VpnAutomationManager,
-    private val warpManager: WarpManager,
     private val connectedServerState: ConnectedServerState,
     private val profileDao: ProfileDao,
     private val recentConnectionDao: ru.protonmod.next.data.local.RecentConnectionDao
@@ -461,22 +459,6 @@ class DashboardViewModel @Inject constructor(
                 return@launch
             }
 
-            // Proactively ensure WARP is active if configured, before fetching
-            val apiBypassEnabled = settingsManager.apiBypassEnabled.first()
-            val apiBypassStrategy = settingsManager.apiBypassStrategy.first()
-            val isWarpActive = warpManager.isTunnelActive
-            val hasServers = vpnRepository.getCachedServers().isNotEmpty()
-
-            val startedWarp = if (apiBypassEnabled && apiBypassStrategy == SettingsManager.STRATEGY_WARP) {
-                // Only start warp proactively if it's already active (e.g. from login) 
-                // OR if we have NO servers at all (first run).
-                // This prevents redundant "connecting to cf" on every app start.
-                if (isWarpActive || !hasServers) {
-                    amneziaVpnManager.ensureWarpBypass(true)
-                    true
-                } else false
-            } else false
-
             try {
                 vpnRepository.getServers(session.accessToken, session.sessionId, session.userTier)
                     .onFailure { error ->
@@ -486,9 +468,6 @@ class DashboardViewModel @Inject constructor(
                         }
                     }
             } finally {
-                if (startedWarp) {
-                    amneziaVpnManager.ensureWarpBypass(false)
-                }
             }
         }
     }

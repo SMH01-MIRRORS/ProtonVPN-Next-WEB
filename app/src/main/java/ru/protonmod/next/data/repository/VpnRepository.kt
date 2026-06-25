@@ -46,8 +46,6 @@ import ru.protonmod.next.data.local.RecentConnectionDao
 import androidx.room.withTransaction
 import ru.protonmod.next.di.ApplicationScope
 import ru.protonmod.next.utils.coroutines.DispatcherProvider
-import ru.protonmod.next.vpn.AmneziaVpnManager
-import ru.protonmod.next.vpn.WarpManager
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -65,9 +63,6 @@ open class VpnRepository @Inject constructor(
     private val profileDao: ProfileDao,
     private val recentConnectionDao: RecentConnectionDao,
     private val cityRepository: CityRepository,
-    private val settingsManager: SettingsManager,
-    private val amneziaVpnManager: Provider<AmneziaVpnManager>,
-    private val warpManager: Provider<WarpManager>,
     private val dispatcherProvider: DispatcherProvider,
     @ApplicationScope private val managerScope: CoroutineScope
 ) {
@@ -114,24 +109,13 @@ open class VpnRepository @Inject constructor(
             while (isActive) {
                 val session = withContext(dispatcherProvider.io()) { sessionDao.getSession() }
                 if (session != null) {
-                    val apiBypassEnabled = settingsManager.apiBypassEnabled.first()
-                    val strategy = settingsManager.apiBypassStrategy.first()
-                    val isVpnActive = amneziaVpnManager.get().tunnelState.value == org.amnezia.awg.backend.Tunnel.State.UP
-                    val isWarpActive = warpManager.get().isTunnelActive
-
-                    // User requirement: if WARP bypass is enabled, only update servers if VPN is active.
-                    // This prevents unblocked background traffic when WARP is not supposed to be active (it's only for manual/vpn-active use).
-                    if (apiBypassEnabled && strategy == SettingsManager.STRATEGY_WARP && !isVpnActive && !isWarpActive) {
-                        ProtonLogger.d(TAG, "Auto-update: WARP bypass enabled but VPN is inactive. Skipping background refresh.")
-                    } else {
-                        ProtonLogger.d(TAG, "Auto-update: Fetching fresh server data for user tier ${session.userTier}")
-                        getServers(
-                            session.accessToken,
-                            session.sessionId,
-                            session.userTier,
-                            forceRefresh = false
-                        )
-                    }
+                    ProtonLogger.d(TAG, "Auto-update: Fetching fresh server data for user tier ${session.userTier}")
+                    getServers(
+                        session.accessToken,
+                        session.sessionId,
+                        session.userTier,
+                        forceRefresh = false
+                    )
                 } else {
                     ProtonLogger.w(TAG, "Auto-update: No active session, skipping this cycle")
                 }
