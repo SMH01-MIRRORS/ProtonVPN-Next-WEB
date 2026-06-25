@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160047,
-      "versionName": "12.0.0-alpha1st4p1-91-g6c5fd7b-nightly",
+      "versionCode": 605160049,
+      "versionName": "12.0.0-alpha1st4p1-93-gcf67d0e-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "feat: add Deno proxy as an API bypass strategy\n\n- Define `STRATEGY_DENO` in `SettingsManager`.\n- Implement Deno proxy routing, certificate pinning for `*.deno.net`, and host verification in `NetworkModule`.\n- Update `CaptchaScreen` to resolve the base URL correctly when the Deno strategy is selected.\n- Add a strategy selection option for Deno in the `ApiBypassScreen` UI.\n- Add necessary string resources and translations for the new option.",
+      "changelog": "ui: redesign DNS settings screen for improved layout and tablet support\n\n- Replace the scrollable `Column` layout with a `LazyColumn` for smoother content handling.\n- Implement responsive layout adjustments for tablet screens using a maximum width constraint.\n- Introduce radio buttons to allow toggling between Default and Custom DNS modes.\n- Wrap the custom DNS text input field in `AnimatedVisibility` to show it only when the custom mode is selected.\n- Refactor action buttons to place a conditional full-width reset button below the primary save button.",
       "force": false
     },
     "release": {
-      "versionCode": 605160047,
-      "versionName": "12.0.0-alpha1st4p1-91-g6c5fd7b-nightly",
+      "versionCode": 605160049,
+      "versionName": "12.0.0-alpha1st4p1-93-gcf67d0e-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "feat: add Deno proxy as an API bypass strategy\n\n- Define `STRATEGY_DENO` in `SettingsManager`.\n- Implement Deno proxy routing, certificate pinning for `*.deno.net`, and host verification in `NetworkModule`.\n- Update `CaptchaScreen` to resolve the base URL correctly when the Deno strategy is selected.\n- Add a strategy selection option for Deno in the `ApiBypassScreen` UI.\n- Add necessary string resources and translations for the new option.",
+      "changelog": "ui: redesign DNS settings screen for improved layout and tablet support\n\n- Replace the scrollable `Column` layout with a `LazyColumn` for smoother content handling.\n- Implement responsive layout adjustments for tablet screens using a maximum width constraint.\n- Introduce radio buttons to allow toggling between Default and Custom DNS modes.\n- Wrap the custom DNS text input field in `AnimatedVisibility` to show it only when the custom mode is selected.\n- Refactor action buttons to place a conditional full-width reset button below the primary save button.",
       "force": false
     }
   },
