@@ -27,7 +27,6 @@
     <string name="troubleshoot_title">Проблеми з підключенням?</string>
     <string name="troubleshoot_desc">Ми виявили труднощі з підключенням до сервісів Proton. Спробуйте вибрати альтернативну стратегію маршрутизації для обходу блокувань.</string>
     <string name="troubleshoot_strategy_none">Без обходу (спробувати знову)</string>
-    <string name="troubleshoot_strategy_warp">WARP (рекомендовано)</string>
     <string name="troubleshoot_btn_next">Далі</string>
     <string name="troubleshoot_btn_skip">Пропустити та повторити</string>
     <!-- ByeDPI Tester Overhaul -->
@@ -139,11 +138,6 @@
     <string name="api_bypass_strategy_deno_desc">Направляє запити до API через захищене дзеркало Deno Deploy.</string>
     <string name="api_bypass_strategy_mirrors">Дзеркала Proton (DoH)</string>
     <string name="api_bypass_strategy_mirrors_desc">Знаходить і використовує динамічні дзеркала Proton API через DNS-over-HTTPS fallback.</string>
-    <string name="api_bypass_strategy_warp">WARP (Cloudflare)</string>
-    <string name="api_bypass_strategy_warp_desc">Використання тимчасового тунелю WARP для запитів до API. Висока надійність.</string>
-    <string name="warp_fetching_config">Отримання конфігурації WARP…</string>
-    <string name="warp_permission_title">Потрібен дозвіл на VPN</string>
-    <string name="warp_permission_desc">Для WARP потрібен дозвіл на створення локального тунелю для обходу блокувань API. Жодні дані не передаються за межі Cloudflare.</string>
     <string name="btn_allow">Дозволити</string>
     <string name="btn_accept">Прийняти</string>
     <string name="api_bypass_strategy_custom">Свій проксі (SOCKS5/HTTPS)</string>
