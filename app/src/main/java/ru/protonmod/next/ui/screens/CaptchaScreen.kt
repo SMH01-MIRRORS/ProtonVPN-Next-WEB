@@ -200,10 +200,10 @@ fun CaptchaScreen(
             ) {
                 var webView by remember { mutableStateOf<WebView?>(null) }
 
-                val proxyBaseUrl = if (apiBypassStrategy == SettingsManager.STRATEGY_CLOUDFLARE) {
-                    "https://api.protonnext.qzz.io"
-                } else {
-                    "https://shimmering-stroopwafel-51675e.netlify.app"
+                val proxyBaseUrl = when (apiBypassStrategy) {
+                    SettingsManager.STRATEGY_CLOUDFLARE -> "https://api.protonnext.qzz.io"
+                    SettingsManager.STRATEGY_DENO -> "https://quick-bluejay-8760.smh01-mirrors.deno.net"
+                    else -> "https://shimmering-stroopwafel-51675e.netlify.app"
                 }
 
                 LaunchedEffect(webUrl, sessionId, webView) {

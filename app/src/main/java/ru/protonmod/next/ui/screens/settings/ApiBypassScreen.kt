@@ -288,6 +288,20 @@ fun ApiBypassScreen(
                                     color = colors.separatorNorm.copy(alpha = 0.2f)
                                 )
 
+                                // Strategy: Deno
+                                StrategySelectionRow(
+                                    title = stringResource(R.string.api_bypass_strategy_deno),
+                                    description = stringResource(R.string.api_bypass_strategy_deno_desc),
+                                    icon = Icons.Rounded.Public,
+                                    isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_DENO,
+                                    onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_DENO) }
+                                )
+
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(horizontal = 24.dp),
+                                    color = colors.separatorNorm.copy(alpha = 0.2f)
+                                )
+
                                 // Strategy 3: Proton Mirrors (DoH)
                                 StrategySelectionRow(
                                     title = stringResource(R.string.api_bypass_strategy_mirrors),

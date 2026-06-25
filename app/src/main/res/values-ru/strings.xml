@@ -136,6 +136,7 @@
     <string name="api_bypass_strategy_netlify_desc">Направляет запросы API через защищенный прокси-сервер Netlify.</string>
     <string name="api_bypass_strategy_cloudflare">Прокси Cloudflare</string>
     <string name="api_bypass_strategy_cloudflare_desc">Направляет запросы API через высокопроизводительный Cloudflare worker.</string>
+    <string name="api_bypass_strategy_deno_desc">Направляет запросы к API через защищенное зеркало Deno Deploy.</string>
     <string name="api_bypass_strategy_mirrors">Зеркала Proton (doh)</string>
     <string name="api_bypass_strategy_mirrors_desc">Находит и использует динамические зеркала Proton API через DNS-over-HTTPS fallback.</string>
     <string name="api_bypass_strategy_warp">WARP (cloudflare)</string>

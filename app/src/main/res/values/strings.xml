@@ -159,6 +159,8 @@
     <string name="api_bypass_strategy_netlify_desc">Routes API requests through a secure Netlify proxy.</string>
     <string name="api_bypass_strategy_cloudflare">Cloudflare Proxy</string>
     <string name="api_bypass_strategy_cloudflare_desc">Routes API requests through a high-performance Cloudflare worker.</string>
+    <string name="api_bypass_strategy_deno" translatable="false">Deno</string>
+    <string name="api_bypass_strategy_deno_desc">Routes API requests through a secure Deno Deploy mirror.</string>
     <string name="api_bypass_strategy_mirrors">Proton Mirrors (DoH)</string>
     <string name="api_bypass_strategy_mirrors_desc">Discovers and uses dynamic Proton API mirrors via DNS-over-HTTPS fallback.</string>
     <string name="api_bypass_strategy_warp">WARP (Cloudflare)</string>

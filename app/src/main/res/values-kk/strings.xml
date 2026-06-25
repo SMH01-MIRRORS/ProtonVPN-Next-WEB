@@ -136,6 +136,7 @@
     <string name="api_bypass_strategy_netlify_desc">API сұрауларын қауіпсіз Netlify проксиі арқылы бағыттайды.</string>
     <string name="api_bypass_strategy_cloudflare">Cloudflare проксиі</string>
     <string name="api_bypass_strategy_cloudflare_desc">API сұрауларын жоғары өнімді Cloudflare worker арқылы бағыттайды.</string>
+    <string name="api_bypass_strategy_deno_desc">API сұрауларын қауіпсіз Deno Deploy айнасы арқылы бағыттайды.</string>
     <string name="api_bypass_strategy_mirrors">Proton айналары (DoH)</string>
     <string name="api_bypass_strategy_mirrors_desc">DNS-over-HTTPS арқылы динамикалық Proton API айналарын тауып, пайдаланады.</string>
     <string name="api_bypass_strategy_warp">WARP (Cloudflare)</string>

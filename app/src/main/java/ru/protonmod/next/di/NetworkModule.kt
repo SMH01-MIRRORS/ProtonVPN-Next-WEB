@@ -67,6 +67,7 @@ object NetworkModule {
 
     private const val PROTON_PROXY_NETLIFY_URL = "https://shimmering-stroopwafel-51675e.netlify.app/"
     private const val PROTON_PROXY_CLOUDFLARE_URL = "https://api.protonnext.qzz.io/"
+    private const val PROTON_PROXY_DENO_URL = "https://quick-bluejay-8760.smh01-mirrors.deno.net/"
     private const val PROTON_DIRECT_URL = "https://vpn-api.proton.me/"
 
     @Provides
@@ -144,6 +145,7 @@ object NetworkModule {
         val protonDirectHost = PROTON_DIRECT_URL.toHttpUrl().host
         val protonNetlifyHost = PROTON_PROXY_NETLIFY_URL.toHttpUrl().host
         val protonCloudflareHost = PROTON_PROXY_CLOUDFLARE_URL.toHttpUrl().host
+        val protonDenoHost = PROTON_PROXY_DENO_URL.toHttpUrl().host
 
         val certificatePinner = CertificatePinner.Builder()
             .apply {
@@ -160,7 +162,8 @@ object NetworkModule {
                     "*.protonvpn.com",
                     "*.protonmail.com",
                     "*.qzz.io",
-                    "*.netlify.app"
+                    "*.netlify.app",
+                    "*.deno.net"
                 ).forEach { host ->
                     allPins.forEach { pin ->
                         add(host, "sha256/$pin")
@@ -189,7 +192,8 @@ object NetworkModule {
                               host == "protonvpn.com" ||
                               host == "protonmail.com" ||
                               host == protonNetlifyHost ||
-                              host == protonCloudflareHost)
+                              host == protonCloudflareHost ||
+                              host == protonDenoHost)
             
             if (!isProtonApi) {
                 // For non-Proton requests (like OTA mirrors), ensure we still provide a standard User-Agent.
@@ -239,10 +243,10 @@ object NetworkModule {
                 return@Interceptor chain.proceed(builder.build())
             }
 
-            val proxyBaseUrl = if (strategy == SettingsManager.STRATEGY_CLOUDFLARE) {
-                PROTON_PROXY_CLOUDFLARE_URL
-            } else {
-                PROTON_PROXY_NETLIFY_URL
+            val proxyBaseUrl = when (strategy) {
+                SettingsManager.STRATEGY_CLOUDFLARE -> PROTON_PROXY_CLOUDFLARE_URL
+                SettingsManager.STRATEGY_DENO -> PROTON_PROXY_DENO_URL
+                else -> PROTON_PROXY_NETLIFY_URL
             }
 
             val newBaseUrl = if (useProxy) proxyBaseUrl.toHttpUrl() else PROTON_DIRECT_URL.toHttpUrl()
@@ -310,6 +314,7 @@ object NetworkModule {
             val isIp = hostname.matches(Regex("""\d+\.\d+\.\d+\.\d+"""))
             
             if (isIp || hostname.endsWith(".qzz.io") || hostname.endsWith(".netlify.app") || 
+                hostname.endsWith(".deno.net") ||
                 hostname.endsWith(".proton.me") || hostname.endsWith(".protonmail.ch") ||
                 hostname.endsWith(".protonvpn.ch") || hostname.endsWith(".protonvpn.com") ||
                 hostname.endsWith(".protonmail.com")) {
