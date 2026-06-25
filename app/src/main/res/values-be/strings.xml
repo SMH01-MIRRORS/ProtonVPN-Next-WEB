@@ -27,7 +27,6 @@
     <string name="troubleshoot_title">Праблемы з падключэннем?</string>
     <string name="troubleshoot_desc">Мы заўважылі цяжкасці з падключэннем да сэрвісаў Proton. Паспрабуйце выбраць альтэрнатыўную стратэгію маршрутызацыі для абыходу блакіровак.</string>
     <string name="troubleshoot_strategy_none">Без абыходу (паспрабаваць яшчэ раз)</string>
-    <string name="troubleshoot_strategy_warp">WARP (рэкамендуецца)</string>
     <string name="troubleshoot_btn_next">Далей</string>
     <string name="troubleshoot_btn_skip">Прапусціць і паўтарыць</string>
     <!-- ByeDPI Tester Overhaul -->
@@ -139,11 +138,6 @@
     <string name="api_bypass_strategy_deno_desc">Накіроўвае запыты да API праз абароненае люстэрка Deno Deploy.</string>
     <string name="api_bypass_strategy_mirrors">Люстэркі Proton (DoH)</string>
     <string name="api_bypass_strategy_mirrors_desc">Знаходзіць і выкарыстоўвае дынамічныя люстэркі Proton API праз DNS-over-HTTPS fallback.</string>
-    <string name="api_bypass_strategy_warp">WARP (Cloudflare)</string>
-    <string name="api_bypass_strategy_warp_desc">Выкарыстанне часовага тунэлю WARP для запытаў да API. Высокая надзейнасць.</string>
-    <string name="warp_fetching_config">Атрыманне канфігурацыі WARP…</string>
-    <string name="warp_permission_title">Патрабуецца дазвол на VPN</string>
-    <string name="warp_permission_desc">Для WARP патрабуецца дазвол на стварэнне лакальнага тунэлю, каб абысці блакіроўку API. Ніякія даныя не перадаюцца па-за межы Cloudflare.</string>
     <string name="btn_allow">Дазволіць</string>
     <string name="btn_accept">Прыняць</string>
     <string name="api_bypass_strategy_custom">Карыстальніцкі проксі (SOCKS5/HTTPS)</string>
