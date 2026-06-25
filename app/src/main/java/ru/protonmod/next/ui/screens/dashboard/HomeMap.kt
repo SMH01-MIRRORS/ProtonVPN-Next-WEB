@@ -28,9 +28,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import ru.protonmod.next.R
 import ru.protonmod.next.data.network.LogicalServer
@@ -290,11 +292,22 @@ class MapView constructor(
     context: Context
 ) : View(context) {
 
+    private lateinit var scope: CoroutineScope
     // When and what highlight stage started.
     private var renderTimeInfo: Pair<Long, CountryHighlight?>? = null
     private var currentRenderData: RenderData? = null
     private var targetRenderData: RenderData? = null
     private var renderedMap: RenderedMap? = null
+
+    // To handle focus calls that happen before layout
+    private data class PendingFocusRequest(
+        val focusRegion: MapRegion,
+        val newHighlights: List<CountryHighlightInfo>?,
+        val newPins: List<PinInfo>,
+        val highlightStage: CountryHighlight?,
+        val bias: Float
+    )
+    private var pendingFocusRequest: PendingFocusRequest? = null
 
     // Track metadata for pending render requests to ensure they are applied atomically with the bitmap.
     private val pendingRenderData = java.util.concurrent.ConcurrentHashMap<Long, RenderData>()
@@ -327,6 +340,7 @@ class MapView constructor(
         elapsedClockMs: () -> Long,
         scope: CoroutineScope
     ) {
+        this.scope = scope
         this.elapsedClockMs = elapsedClockMs
         this.pinColorPaints = pinColorConfig.mapValues { Paint().apply { color = it.value; isAntiAlias = true } }
         alpha = 0f
@@ -475,11 +489,24 @@ class MapView constructor(
             }
             val newId = mapRenderer.updateSize(w, h)
             if (newId != null) {
-                val renderData = targetRenderData?.copy(id = newId)
-                if (renderData != null) {
-                    pendingRenderData[newId] = renderData
-                    targetRenderData = renderData
-                }
+                // Size changed or initialized, clear old map to avoid stretching
+                renderedMap = null
+
+                // If we have a target render data, update its ID to match the new renderer size
+                targetRenderData = targetRenderData?.copy(id = newId)
+                targetRenderData?.let { pendingRenderData[newId] = it }
+            }
+
+            pendingFocusRequest?.let { request ->
+                pendingFocusRequest = null
+                focusRegionInCenter(
+                    scope,
+                    request.focusRegion,
+                    request.newHighlights,
+                    request.newPins,
+                    request.highlightStage,
+                    request.bias
+                )
             }
         }
     }
@@ -495,7 +522,10 @@ class MapView constructor(
         highlightStage: CountryHighlight?,
         bias: Float,
     ) = mainScope.launch {
-        if (width <= 0 || height <= 0) return@launch
+        if (width <= 0 || height <= 0) {
+            pendingFocusRequest = PendingFocusRequest(focusRegion, newHighlights, newPins, highlightStage, bias)
+            return@launch
+        }
         val viewportNormalH = height / width.toFloat()
         val newRegion = focusRegion.expandToAspectRatio(viewportNormalH, bias)
         val id = mapRenderer.update(
@@ -547,6 +577,7 @@ fun HomeMap(
 ) {
     val colors = ProtonNextTheme.colors
     val scope = rememberCoroutineScope()
+    val orientation = LocalConfiguration.current.orientation
 
     val mapConfig = MapRendererConfig(
         background = Color.TRANSPARENT,
@@ -579,31 +610,33 @@ fun HomeMap(
         targetCode?.let { it to highlight }
     }
 
-    // Track the last state that was actually applied to the native view
-    var lastAppliedState by remember { mutableStateOf<Pair<String, CountryHighlight>?>(null) }
-    var isInitialized by remember { mutableStateOf(false) }
+    key(orientation) {
+        // Track the last state that was actually applied to the native view
+        var lastAppliedState by remember { mutableStateOf<Pair<String, CountryHighlight>?>(null) }
+        var isInitialized by remember { mutableStateOf(false) }
 
-    AndroidView(
-        modifier = modifier.fillMaxSize(),
-        factory = { context ->
-            MapView(context).apply {
-                init(
-                    config = mapConfig,
-                    pinColorConfig = pinColorConfig,
-                    fadeInDurationMs = 250L,
-                    elapsedClockMs = { SystemClock.elapsedRealtime() },
-                    scope = scope
-                )
+        AndroidView(
+            modifier = modifier.fillMaxSize(),
+            factory = { context ->
+                MapView(context).apply {
+                    init(
+                        config = mapConfig,
+                        pinColorConfig = pinColorConfig,
+                        fadeInDurationMs = 250L,
+                        elapsedClockMs = { SystemClock.elapsedRealtime() },
+                        scope = scope
+                    )
+                }
+            },
+            update = { mapView ->
+                if (mapState != lastAppliedState || !isInitialized) {
+                    lastAppliedState = mapState
+                    isInitialized = true
+                    updateMapView(mapView, scope, mapState)
+                }
             }
-        },
-        update = { mapView ->
-            if (mapState != lastAppliedState || !isInitialized) {
-                lastAppliedState = mapState
-                isInitialized = true
-                updateMapView(mapView, scope, mapState)
-            }
-        }
-    )
+        )
+    }
 }
 
 private fun updateMapView(
