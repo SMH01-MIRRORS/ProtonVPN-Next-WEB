@@ -93,6 +93,16 @@ class ProtonNextApp : Application(), Configuration.Provider {
         // Run the honeypot security check synchronously on the main thread.
         FlavorInitializer.initializeOnMainThread(this)
 
+        // Enable Nothing widget on Nothing devices
+        if (ru.protonmod.next.utils.system.SystemUtils.isNothingDevice()) {
+            val componentName = android.content.ComponentName(this, ru.protonmod.next.ui.widget.VpnNothingWidgetProvider::class.java)
+            packageManager.setComponentEnabledSetting(
+                componentName,
+                android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                android.content.pm.PackageManager.DONT_KILL_APP
+            )
+        }
+
         // Initialize Sentry on a background thread to avoid blocking the main thread.
         // SentryAndroid.init() calls initializeIntegrationsAndProcessors which performs
         // blocking I/O and was causing a Background ANR (see ANDROID-1GV).

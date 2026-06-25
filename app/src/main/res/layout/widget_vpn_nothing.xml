@@ -1,26 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/widget_background"
+    android:background="@drawable/widget_nothing_background"
     android:padding="12dp">
 
+    <!-- Top Row: Status and IP/Location Pill -->
     <LinearLayout
-        android:id="@+id/preview_top_row"
+        android:id="@+id/widget_top_row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
         <TextView
+            android:id="@+id/widget_status_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/status_connected"
-            android:textColor="#4CAF50"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            android:text="@string/status_disconnected"
+            android:textAllCaps="true"
+            android:textColor="#80FFFFFF"
+            android:fontFamily="@font/nothing_inter_bold"
+            android:textSize="10sp" />
 
         <LinearLayout
+            android:id="@+id/widget_pill_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
@@ -32,33 +37,37 @@
             android:gravity="center">
 
             <TextView
+                android:id="@+id/widget_location_pill_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/preview_country_name"
+                android:text="@string/status_not_connected"
+                android:fontFamily="@font/nothing_inter_bold"
                 android:textColor="#B3FFFFFF"
-                android:textSize="11sp"
+                android:textSize="10sp"
                 android:maxLines="1"
                 android:ellipsize="end" />
         </LinearLayout>
     </LinearLayout>
 
+    <!-- Middle Row: Flag and Server Info -->
     <LinearLayout
-        android:id="@+id/preview_server_row"
+        android:id="@+id/widget_server_row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/preview_top_row"
+        android:layout_below="@id/widget_top_row"
         android:layout_marginTop="12dp"
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
         <ImageView
+            android:id="@+id/widget_flag"
             android:layout_width="32dp"
             android:layout_height="22dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/flag_us"
+            android:src="@drawable/flag_fastest"
             android:contentDescription="@null" />
 
         <LinearLayout
+            android:id="@+id/widget_text_container"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -66,44 +75,41 @@
             android:layout_marginStart="12dp">
 
             <TextView
+                android:id="@+id/widget_server_country"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/preview_country_name"
+                android:text="@string/qc_strategy_fastest"
+                android:fontFamily="@font/nothing_dot_77_jp"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
-                android:textStyle="bold"
                 android:maxLines="1"
                 android:ellipsize="end" />
 
             <TextView
+                android:id="@+id/widget_server_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/preview_server_name"
+                android:text="@string/label_select_location"
+                android:fontFamily="@font/nothing_inter_bold"
                 android:textColor="#80FFFFFF"
-                android:textSize="11sp"
+                android:textSize="10sp"
                 android:maxLines="1"
                 android:ellipsize="end" />
         </LinearLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/desc_chevron_right"
-            android:textColor="#4DFFFFFF"
-            android:textSize="20sp"
-            android:layout_marginStart="4dp" />
     </LinearLayout>
 
+    <!-- Bottom: Connection Button -->
     <TextView
+        android:id="@+id/widget_button"
         android:layout_width="match_parent"
-        android:layout_height="44dp"
-        android:layout_below="@id/preview_server_row"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/widget_button_background_connected"
+        android:layout_height="40dp"
+        android:layout_below="@id/widget_server_row"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/widget_nothing_button_disconnected"
+        android:fontFamily="@font/nothing_inter_bold"
         android:gravity="center"
-        android:text="@string/btn_disconnect"
+        android:text="ON"
         android:textColor="#FFFFFF"
-        android:textSize="13sp"
-        android:textStyle="bold" />
+        android:textSize="12sp" />
 
 </RelativeLayout>
