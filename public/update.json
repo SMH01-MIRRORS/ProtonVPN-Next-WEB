@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160050,
-      "versionName": "12.0.0-alpha1st4p1-94-gacf4dd5-nightly",
+      "versionCode": 605160051,
+      "versionName": "12.0.0-alpha1st4p1-95-g4f2d104-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "chore: update dependencies in libs.versions.toml\n\n- Update Sentry to 6.12.0 and Sentry Android to 8.44.1.\n- Update Lifecycle to 2.11.0.\n- Update Compose BOM to 2026.06.00 and Material3 to 1.5.0-alpha22.",
+      "changelog": "feat: add dedicated VPN widget for Nothing devices\n\n- Implement `VpnNothingWidgetProvider` to support VPN connection management directly from the home screen.\n- Add logic in `ProtonNextApp` to programmatically enable the Nothing widget component only when a Nothing device is detected.\n- Create Nothing-themed resources, including layouts (`widget_vpn_nothing.xml`) and drawables, utilizing brand-specific aesthetics and fonts.\n- Configure widget metadata in `vpn_widget_nothing_info.xml` and register the receiver in the manifest.\n- Refine `widget_vpn_preview.xml` layout with updated padding and margin constraints for better visual consistency.",
       "force": false
     },
     "release": {
-      "versionCode": 605160050,
-      "versionName": "12.0.0-alpha1st4p1-94-gacf4dd5-nightly",
+      "versionCode": 605160051,
+      "versionName": "12.0.0-alpha1st4p1-95-g4f2d104-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "chore: update dependencies in libs.versions.toml\n\n- Update Sentry to 6.12.0 and Sentry Android to 8.44.1.\n- Update Lifecycle to 2.11.0.\n- Update Compose BOM to 2026.06.00 and Material3 to 1.5.0-alpha22.",
+      "changelog": "feat: add dedicated VPN widget for Nothing devices\n\n- Implement `VpnNothingWidgetProvider` to support VPN connection management directly from the home screen.\n- Add logic in `ProtonNextApp` to programmatically enable the Nothing widget component only when a Nothing device is detected.\n- Create Nothing-themed resources, including layouts (`widget_vpn_nothing.xml`) and drawables, utilizing brand-specific aesthetics and fonts.\n- Configure widget metadata in `vpn_widget_nothing_info.xml` and register the receiver in the manifest.\n- Refine `widget_vpn_preview.xml` layout with updated padding and margin constraints for better visual consistency.",
       "force": false
     }
   },
