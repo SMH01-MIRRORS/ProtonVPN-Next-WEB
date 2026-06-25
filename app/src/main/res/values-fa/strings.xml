@@ -27,7 +27,6 @@
     <string name="troubleshoot_title">مشکل در اتصال؟</string>
     <string name="troubleshoot_desc">ما متوجه دشواری در اتصال به سرویس‌های پروتون شدیم. برای دور زدن محدودیت‌ها، یک استراتژی مسیریابی جایگزین انتخاب کنید.</string>
     <string name="troubleshoot_strategy_none">بدون دور زدن (تلاش مجدد)</string>
-    <string name="troubleshoot_strategy_warp">WARP (پیشنهادی)</string>
     <string name="troubleshoot_btn_next">بعدی</string>
     <string name="troubleshoot_btn_skip">رد کردن و تلاش مجدد</string>
     <!-- ByeDPI Tester Overhaul -->
@@ -139,11 +138,6 @@
     <string name="api_bypass_strategy_deno_desc">درخواست‌های API را از طریق یک آینه امن Deno Deploy هدایت می‌کند.</string>
     <string name="api_bypass_strategy_mirrors">آینه‌های پروتون (DoH)</string>
     <string name="api_bypass_strategy_mirrors_desc">آینه‌های داینامیک API پروتون را از طریق سیستم جایگزین DoH شناسایی و استفاده می‌کند.</string>
-    <string name="api_bypass_strategy_warp">وارپ (کلادفلر)</string>
-    <string name="api_bypass_strategy_warp_desc">استفاده از یک تونل موقت WARP برای درخواست‌های API. قابلیت اطمینان بالا.</string>
-    <string name="warp_fetching_config">در حال دریافت پیکربندی WARP…</string>
-    <string name="warp_permission_title">مجوز VPN لازم است</string>
-    <string name="warp_permission_desc">وارپ برای ایجاد یک تونل محلی جهت دور زدن مسدودسازی API به مجوز نیاز دارد. هیچ داده‌ای به خارج از کلادفلر ارسال نمی‌شود.</string>
     <string name="btn_allow">اجازه دادن</string>
     <string name="btn_accept">پذیرفتن</string>
     <string name="api_bypass_strategy_custom">پراکسی سفارشی (SOCKS5/HTTPS)</string>
