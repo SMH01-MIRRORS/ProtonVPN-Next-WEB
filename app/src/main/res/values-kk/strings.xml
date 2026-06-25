@@ -27,7 +27,6 @@
     <string name="troubleshoot_title">Қосылымда ақаулар бар ма?</string>
     <string name="troubleshoot_desc">Біз Proton қызметтеріне қосылуда қиындықтарды анықтадық. Блоктауды айналып өту үшін баламалы маршруттау стратегиясын таңдап көріңіз.</string>
     <string name="troubleshoot_strategy_none">Айналып өтпеу (қайталау)</string>
-    <string name="troubleshoot_strategy_warp">WARP (ұсынылады)</string>
     <string name="troubleshoot_btn_next">Келесі</string>
     <string name="troubleshoot_btn_skip">Өткізіп жіберу және қайталау</string>
     <!-- ByeDPI Tester Overhaul -->
@@ -139,11 +138,6 @@
     <string name="api_bypass_strategy_deno_desc">API сұрауларын қауіпсіз Deno Deploy айнасы арқылы бағыттайды.</string>
     <string name="api_bypass_strategy_mirrors">Proton айналары (DoH)</string>
     <string name="api_bypass_strategy_mirrors_desc">DNS-over-HTTPS арқылы динамикалық Proton API айналарын тауып, пайдаланады.</string>
-    <string name="api_bypass_strategy_warp">WARP (Cloudflare)</string>
-    <string name="api_bypass_strategy_warp_desc">API сұраулары үшін уақытша WARP туннелін пайдаланады. Жоғары сенімділік.</string>
-    <string name="warp_fetching_config">WARP конфигурациясы алынуда…</string>
-    <string name="warp_permission_title">VPN рұқсаты қажет</string>
-    <string name="warp_permission_desc">WARP-қа API блоктауын айналып өту үшін жергілікті туннель жасауға рұқсат қажет. Cloudflare-ден тыс ешқандай дерек жіберілмейді.</string>
     <string name="btn_allow">Рұқсат ету</string>
     <string name="btn_accept">Қабылдау</string>
     <string name="api_bypass_strategy_custom">Таңдамалы прокси (SOCKS5/HTTPS)</string>
