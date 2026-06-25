@@ -125,7 +125,7 @@ class SettingsManager @Inject constructor(
         private val PAUSE_END_TIME = androidx.datastore.preferences.core.longPreferencesKey("pause_end_time_v2")
 
         private val POLICY_ACCEPTED_VERSION = intPreferencesKey("policy_accepted_version")
-        const val CURRENT_POLICY_VERSION = 20260426
+        const val CURRENT_POLICY_VERSION = 20260625
 
         private val SETUP_STEP = stringPreferencesKey("setup_step")
         

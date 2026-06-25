@@ -185,6 +185,10 @@ object DatabaseModule {
         }
     }
 
+    val MIGRATION_16_17 = object : Migration(16, 17) {
+        override fun migrate(db: SupportSQLiteDatabase) {}
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -206,6 +210,7 @@ object DatabaseModule {
         .addMigrations(MIGRATION_13_14)
         .addMigrations(MIGRATION_14_15)
         .addMigrations(MIGRATION_15_16)
+        .addMigrations(MIGRATION_16_17)
         .build()
     }
 
