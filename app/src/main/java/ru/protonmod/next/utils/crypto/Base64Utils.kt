@@ -15,24 +15,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.protonmod.next.data.network
+package ru.protonmod.next.utils.crypto
 
-import javax.inject.Inject
-import javax.inject.Singleton
+import java.util.Base64
 
-interface AuthNativeBridge {
-    fun login(username: String, passwordRaw: String, captchaToken: String?): NativeLoginResult
-}
-
-@Singleton
-class AuthNativeBridgeImpl @Inject constructor() : AuthNativeBridge {
-    init {
-        System.loadLibrary("next")
+object Base64Utils {
+    fun encode(data: ByteArray): String {
+        return Base64.getEncoder().encodeToString(data)
     }
 
-    override fun login(username: String, passwordRaw: String, captchaToken: String?): NativeLoginResult {
-        return loginNative(username, passwordRaw, captchaToken)
+    fun decode(data: String): ByteArray {
+        // Remove all whitespace including newlines which are common in PGP cleartext blocks
+        return Base64.getDecoder().decode(data.replace("\\s".toRegex(), ""))
     }
-
-    private external fun loginNative(username: String, passwordRaw: String, captchaToken: String?): NativeLoginResult
 }

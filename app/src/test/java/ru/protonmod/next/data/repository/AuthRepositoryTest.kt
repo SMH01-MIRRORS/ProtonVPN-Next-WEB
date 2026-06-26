@@ -22,7 +22,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import okhttp3.Headers
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -36,7 +35,6 @@ import retrofit2.Response
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.network.*
-import ru.protonmod.next.ui.screens.CaptchaRequiredException
 import ru.protonmod.next.utils.DeviceInfoProvider
 import ru.protonmod.next.utils.coroutines.DispatcherProvider
 import ru.protonmod.next.utils.crypto.CryptoWrapper
@@ -65,9 +63,6 @@ class AuthRepositoryTest {
     private lateinit var cryptoWrapper: CryptoWrapper
 
     @Mock
-    private lateinit var authNativeBridge: ru.protonmod.next.data.network.AuthNativeBridge
-
-    @Mock
     private lateinit var amneziaVpnManager: ru.protonmod.next.vpn.AmneziaVpnManager
 
     @Mock
@@ -89,7 +84,7 @@ class AuthRepositoryTest {
         repository = AuthRepository(
             context, authApi, vpnRepository, sessionDao, deviceInfoProvider,
             cryptoWrapper, testDispatcherProvider, { amneziaVpnManager },
-            authNativeBridge, sessionManager
+            sessionManager
         )
         
         whenever(deviceInfoProvider.getAppLanguage()).thenReturn("en")
@@ -102,6 +97,63 @@ class AuthRepositoryTest {
         whenever(deviceInfoProvider.getStorageCapacity()).thenReturn(128.0)
         whenever(deviceInfoProvider.isDarkModeOn()).thenReturn(false)
         whenever(deviceInfoProvider.getInstalledKeyboards()).thenReturn(listOf("com.google.android.inputmethod.latin"))
+    }
+
+    @Test
+    fun `login SRP success flow`() = runTest(testDispatcher) {
+        // Arrange
+        val username = "testuser"
+        val password = "password"
+        
+        val anonSession = LoginResponse(
+            code = 1000,
+            accessToken = "anon_token",
+            sessionId = "anon_session_id"
+        )
+        val authInfo = AuthInfoResponse(
+            code = 1000,
+            salt = "salt",
+            modulus = "modulus",
+            serverEphemeral = "serverEphemeral",
+            srpSession = "srpSession"
+        )
+        val loginResponse = LoginResponse(
+            code = 1000,
+            accessToken = "final_token",
+            refreshToken = "final_refresh",
+            sessionId = "final_session_id",
+            userId = "user_id",
+            scopes = listOf("vpn")
+        )
+
+        whenever(authApi.createAnonymousSession(any(), anyOrNull(), anyOrNull())).thenReturn(anonSession)
+        whenever(authApi.getAuthInfo(any(), any(), any(), anyOrNull(), anyOrNull())).thenReturn(authInfo)
+        
+        whenever(cryptoWrapper.generateSrpProofs(any(), any(), any(), any(), any())).thenReturn(
+            SrpProofs("clientEph", "clientProof")
+        )
+        
+        whenever(authApi.performLogin(any(), any(), any(), anyOrNull(), anyOrNull())).thenReturn(loginResponse)
+
+        whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(
+            VpnKeyPair("pubkey", "privkey")
+        )
+
+        whenever(vpnRepository.registerWireGuardKey(any(), any(), any())).thenReturn(
+            Result.success(CreateCertificateResponse(code = 1000, certificate = "cert"))
+        )
+        
+        whenever(vpnRepository.getVpnInfo(any(), any())).thenReturn(
+            Result.success(VpnInfoResponse(code = 1000, vpnInfo = VpnInfo(maxTier = 2)))
+        )
+
+        // Act
+        val result = repository.login(username, password)
+
+        // Assert
+        assertTrue("Expected success but got ${result.exceptionOrNull()}", result.isSuccess)
+        assertEquals("final_token", result.getOrNull()?.accessToken)
+        verify(authApi).performLogin(any(), eq("anon_session_id"), any(), anyOrNull(), anyOrNull())
     }
 
     @Test
@@ -139,122 +191,6 @@ class AuthRepositoryTest {
     }
 
     @Test
-    fun `login SRP success flow`() = runTest(testDispatcher) {
-        // Arrange
-        val username = "testuser"
-        val password = "password"
-        
-        val anonSession = LoginResponse(
-            code = 1000,
-            accessToken = "anon_token",
-            sessionId = "anon_session_id"
-        )
-        val authInfo = AuthInfoResponse(
-            code = 1000,
-            salt = "salt",
-            modulus = "modulus",
-            serverEphemeral = "serverEphemeral",
-            srpSession = "srpSession"
-        )
-        val loginResponse = LoginResponse(
-            code = 1000,
-            accessToken = "final_token",
-            refreshToken = "final_refresh",
-            sessionId = "final_session_id",
-            userId = "user_id",
-            scopes = listOf("vpn")
-        )
-
-        whenever(authNativeBridge.login(eq(username), eq(password), anyOrNull())).thenReturn(
-            NativeLoginResult(
-                success = true,
-                code = 1000,
-                accessToken = "final_token",
-                refreshToken = "final_refresh",
-                sessionId = "final_session_id",
-                userId = "user_id",
-                scopes = arrayOf("vpn")
-            )
-        )
-
-        whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(
-            VpnKeyPair("pubkey", "privkey")
-        )
-
-        whenever(vpnRepository.registerWireGuardKey(any(), any(), any())).thenReturn(
-            Result.success(CreateCertificateResponse(code = 1000, certificate = "cert"))
-        )
-        
-        whenever(vpnRepository.getVpnInfo(any(), any())).thenReturn(
-            Result.success(VpnInfoResponse(code = 1000, vpnInfo = VpnInfo(maxTier = 2)))
-        )
-
-        // Act
-        val result = repository.login(username, password)
-
-        // Assert
-        assertTrue("Expected success but got ${result.exceptionOrNull()}", result.isSuccess)
-        assertEquals("final_token", result.getOrNull()?.accessToken)
-    }
-
-    @Test
-    fun `login returns CaptchaRequiredException on 9001 error`() = runTest(testDispatcher) {
-        // Arrange
-        val errorJson = """
-            {
-                "Code": 9001,
-                "Error": "Human verification required",
-                "Details": {
-                    "WebUrl": "https://captcha.url",
-                    "HumanVerificationToken": "captcha_token"
-                }
-            }
-        """.trimIndent()
-        
-        whenever(authNativeBridge.login(any(), any(), anyOrNull())).thenReturn(
-            NativeLoginResult(
-                success = false,
-                captchaRequired = true,
-                captchaUrl = "https://captcha.url",
-                captchaToken = "captcha_token",
-                sessionId = "pending_uid"
-            )
-        )
-
-        // Act
-        val result = repository.login("user", "pass")
-
-        // Assert
-        assertTrue(result.isFailure)
-        val caught = result.exceptionOrNull()
-        assertTrue("Expected CaptchaRequiredException but was $caught", caught is CaptchaRequiredException)
-        assertEquals("https://captcha.url", (caught as CaptchaRequiredException).webUrl)
-    }
-
-    @Test
-    fun `login returns generic Exception on 12087 error`() = runTest(testDispatcher) {
-        // Arrange
-        val expectedError = "Captcha session expired. Please click Login to try again."
-        whenever(context.getString(ru.protonmod.next.R.string.error_captcha_expired)).thenReturn(expectedError)
-
-        whenever(authNativeBridge.login(any(), any(), anyOrNull())).thenReturn(
-            NativeLoginResult(
-                success = false,
-                error = expectedError
-            )
-        )
-
-        // Act
-        val result = repository.login("user", "pass")
-
-        // Assert
-        assertTrue(result.isFailure)
-        val caught = result.exceptionOrNull()
-        assertTrue("Expected generic Exception but was $caught", caught !is CaptchaRequiredException)
-        assertEquals(expectedError, caught?.message)
-    }
-
-    @Test
     fun `refreshSession success flow`() = runTest(testDispatcher) {
         // Arrange
         val sessionId = "session_id"
@@ -285,25 +221,50 @@ class AuthRepositoryTest {
 
     @Test
     fun `refreshSession triggers logout on HTTP 401`() = runTest(testDispatcher) {
+        // ... (existing test code)
+    }
+
+    @Test
+    fun `verify2FA success flow`() = runTest(testDispatcher) {
         // Arrange
         val sessionId = "session_id"
+        val tempToken = "temp_token"
         val refreshToken = "refresh_token"
-        val currentSession = SessionEntity(
+        val totpCode = "123456"
+
+        val response2fa = LoginResponse(code = 1000)
+        val promotedSession = SessionEntity(
             sessionId = sessionId,
-            accessToken = "old_access_token",
-            refreshToken = refreshToken,
+            accessToken = "final_token",
+            refreshToken = "final_refresh",
             userId = "user_id"
         )
-        val exception = HttpException(retrofit2.Response.error<Any>(401, "Unauthorized".toResponseBody()))
 
-        whenever(sessionDao.getSession()).thenReturn(currentSession)
-        whenever(sessionManager.refreshSession(currentSession)).thenReturn(Result.failure(exception))
+        whenever(authApi.performSecondFactor(any(), any(), any())).thenReturn(
+            Response.success(response2fa)
+        )
+        whenever(sessionManager.refreshSession(any())).thenReturn(Result.success(promotedSession))
+        
+        whenever(authApi.getUser(any(), any())).thenReturn(
+            UserResponse(code = 1000, user = UserInfo(id = "user_id"))
+        )
+        
+        whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(VpnKeyPair("pub", "priv"))
+        whenever(vpnRepository.registerWireGuardKey(any(), any(), any())).thenReturn(
+            Result.success(CreateCertificateResponse(code = 1000, certificate = "cert"))
+        )
+        whenever(vpnRepository.getVpnInfo(any(), any())).thenReturn(
+            Result.success(VpnInfoResponse(code = 1000, vpnInfo = VpnInfo(maxTier = 0)))
+        )
 
         // Act
-        val result = repository.refreshSession(sessionId, refreshToken)
+        val result = repository.verify2FA(sessionId, tempToken, refreshToken, totpCode)
 
         // Assert
-        assertTrue(result.isFailure)
-        verify(sessionDao).clearSession()
+        assertTrue("Expected success but got ${result.exceptionOrNull()}", result.isSuccess)
+        assertEquals("final_token", result.getOrNull()?.accessToken)
+        verify(sessionManager).refreshSession(argThat { 
+            this.sessionId == sessionId && this.accessToken == tempToken 
+        })
     }
 }

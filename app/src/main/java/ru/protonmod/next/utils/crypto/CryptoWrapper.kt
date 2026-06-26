@@ -17,10 +17,7 @@
 
 package ru.protonmod.next.utils.crypto
 
-import android.util.Base64
 import kotlinx.serialization.Serializable
-import com.proton.gopenpgp.srp.Srp
-import com.proton.gopenpgp.ed25519.KeyPair
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -44,22 +41,24 @@ class CryptoWrapper @Inject constructor() {
         passwordRaw: ByteArray,
         salt: String,
         modulus: String,
-        serverEphemeral: String
+        serverEphemeral: ByteArray // Changed from String to ByteArray to avoid double decoding
     ): SrpProofs {
-        val auth = Srp.newAuth(4L, username, passwordRaw, salt, modulus, serverEphemeral)
-        val proofs = auth.generateProofs(2048L)
-        
-        return SrpProofs(
-            clientEphemeral = Base64.encodeToString(proofs.clientEphemeral, Base64.NO_WRAP),
-            clientProof = Base64.encodeToString(proofs.clientProof, Base64.NO_WRAP)
+        val hashed = SrpHasher.hashPasswordVersion3(
+            password = passwordRaw,
+            salt = Base64Utils.decode(salt),
+            modulus = SrpClient.verifyAndExtractModulus(modulus)
         )
+        
+        val client = SrpClient(
+            modulus = SrpClient.verifyAndExtractModulus(modulus),
+            hashedPassword = hashed,
+            serverEphemeral = serverEphemeral
+        )
+        
+        return client.generateProofs()
     }
 
     fun generateVpnKeyPair(): VpnKeyPair {
-        val keyPair = KeyPair()
-        return VpnKeyPair(
-            publicKeyPem = keyPair.publicKeyPKIXPem(),
-            privateKeyX25519 = keyPair.toX25519Base64()
-        )
+        return Ed25519KeyPairGenerator.generate()
     }
 }

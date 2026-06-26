@@ -21,6 +21,7 @@ import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -139,7 +140,7 @@ interface ProtonAuthApi {
         @Header("Authorization") authorization: String,
         @Header("x-pm-uid") sessionId: String,
         @Body request: SecondFactorRequest
-    ): LoginResponse
+    ): Response<LoginResponse>
 
     @POST("auth/v4/refresh")
     suspend fun refreshSession(

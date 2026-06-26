@@ -327,7 +327,7 @@ tasks.register("generateSecurityMetadata") {
     val officialLibs = listOf(
         "libam-go.so", "libam-quick.so", "libam.so", 
         "libandroidx.graphics.path.so", "libdatastore_shared_counter.so",
-        "libgojni.so", "libhev-socks5-tunnel.so", "libbyedpi.so", "libnext.so"
+        "libhev-socks5-tunnel.so", "libbyedpi.so", "libnext.so"
     )
     val sentryLibs = listOf("libsentry-android.so", "libsentry.so")
     
@@ -475,7 +475,12 @@ dependencies {
 
     // VPN Protocols
     implementation(libs.amneziawg.android)
-    implementation(libs.go.vpn.lib)
+    // implementation(libs.go.vpn.lib)
+
+    // Crypto
+    implementation(libs.bouncycastle.prov)
+    implementation(libs.bouncycastle.pgp)
+    implementation(libs.bcrypt)
 
     // Sentry - only for official builds (not for privacy)
     val sentryDeps = listOf(

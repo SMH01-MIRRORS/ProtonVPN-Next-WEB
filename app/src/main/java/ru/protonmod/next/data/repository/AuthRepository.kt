@@ -32,6 +32,7 @@ import ru.protonmod.next.ui.screens.CaptchaRequiredException
 import ru.protonmod.next.ui.screens.ProtonErrorResponse
 import ru.protonmod.next.utils.DeviceInfoProvider
 import ru.protonmod.next.utils.coroutines.DispatcherProvider
+import ru.protonmod.next.utils.crypto.Base64Utils
 import ru.protonmod.next.utils.crypto.CryptoWrapper
 import ru.protonmod.next.utils.crypto.VpnKeyPair
 import ru.protonmod.next.vpn.AmneziaVpnManager
@@ -54,7 +55,6 @@ class AuthRepository @Inject constructor(
     private val cryptoWrapper: CryptoWrapper,
     private val dispatcherProvider: DispatcherProvider,
     private val amneziaVpnManager: Provider<AmneziaVpnManager>,
-    private val authNativeBridge: AuthNativeBridge,
     private val sessionManager: SessionManager
 ) {
     companion object {
@@ -161,30 +161,63 @@ class AuthRepository @Inject constructor(
     suspend fun login(username: String, passwordRaw: String, captchaToken: String? = null): Result<LoginResponse> = authMutex.withLock {
         withContext(dispatcherProvider.io() + authJob) {
             try {
-                if (ru.protonmod.next.BuildConfig.ALLOW_LOGCAT) {
-                    android.util.Log.d("AuthLogging", "Starting NATIVE SRP Login for: $username")
-                }
-                ProtonLogger.i(TAG, "Starting NATIVE SRP login flow")
+                ProtonLogger.i(TAG, "Starting Kotlin SRP login flow for user: $username (Have Captcha: ${captchaToken != null})")
                 
-                val nativeResult = authNativeBridge.login(username, passwordRaw, captchaToken)
-                
-                if (!nativeResult.success) {
-                    if (nativeResult.captchaRequired) {
-                        return@withContext Result.failure(CaptchaRequiredException(nativeResult.captchaUrl, nativeResult.captchaToken, nativeResult.sessionId))
-                    }
-                    val errorMessage = nativeResult.error.ifEmpty { "Native login failed with code ${nativeResult.code}" }
-                    val finalError = if (errorMessage.contains("Captcha session expired", ignoreCase = true)) {
-                        context.getString(ru.protonmod.next.R.string.error_captcha_expired)
-                    } else errorMessage
-                    return@withContext Result.failure(Exception(finalError))
+                val challengePayload = pendingChallengePayload ?: buildChallengePayload().also { pendingChallengePayload = it }
+                val captchaTokenType = if (captchaToken != null) "captcha" else null
+
+                // Phase 0: Anonymous Session
+                // We pass captchaToken ONLY here to "unblock" the session (UID)
+                if (pendingAnonToken == null || captchaToken != null) {
+                    ProtonLogger.d(TAG, "[Login] Phase 0: Creating/Updating anonymous session")
+                    val anonSession = authApi.createAnonymousSession(challengePayload, captchaToken, captchaTokenType)
+                    pendingAnonToken = anonSession.accessToken
+                    pendingAnonUid = anonSession.sessionId
                 }
 
-                val finalAccessToken = nativeResult.accessToken
-                val finalRefreshToken = nativeResult.refreshToken
-                val finalUid = nativeResult.sessionId
+                val anonToken = pendingAnonToken ?: throw Exception("Failed to get anonymous session")
+                val anonUid = pendingAnonUid ?: throw Exception("Failed to get anonymous UID")
+                val bearer = "Bearer $anonToken"
+
+                // Phase 1: Auth Info
+                ProtonLogger.d(TAG, "[Login] Phase 1: Getting auth info for session: $anonUid")
+                val authInfo = authApi.getAuthInfo(bearer, anonUid, AuthInfoRequest(username), captchaToken, captchaTokenType)
+                if (authInfo.code != 1000) {
+                    throw Exception("Failed to get auth info: ${authInfo.code}")
+                }
+
+                // Phase 2: SRP Proofs
+                ProtonLogger.d(TAG, "[Login] Phase 2: Generating SRP proofs")
+                val proofs = cryptoWrapper.generateSrpProofs(
+                    username = username,
+                    passwordRaw = passwordRaw.toByteArray(),
+                    salt = authInfo.salt ?: "",
+                    modulus = authInfo.modulus ?: "",
+                    serverEphemeral = Base64Utils.decode(authInfo.serverEphemeral ?: "")
+                )
+
+                // Phase 3: Final Login
+                ProtonLogger.d(TAG, "[Login] Phase 3: Performing final login")
+                val loginReq = LoginRequest(
+                    username = username,
+                    clientEphemeral = proofs.clientEphemeral,
+                    clientProof = proofs.clientProof,
+                    srpSession = authInfo.srpSession ?: "",
+                    payload = challengePayload["Payload"]?.jsonObject
+                )
+
+                val response = authApi.performLogin(bearer, anonUid, loginReq, captchaToken, captchaTokenType)
+
+                if (response.code != 1000) {
+                    throw Exception("Login failed: ${response.code}")
+                }
+
+                val finalAccessToken = response.accessToken ?: anonToken
+                val finalRefreshToken = response.refreshToken ?: ""
+                val finalUid = response.sessionId ?: anonUid
 
                 // If 2FA is not required, proceed to complete setup
-                if (!nativeResult.scopes.contains("twofactor")) {
+                if (!response.scopes.contains("twofactor")) {
                     ProtonLogger.d(TAG, "[Login] Completing authentication. Registering VPN cert...")
                     val keys = registerAndGetVpnKeys(finalAccessToken, finalUid)
 
@@ -195,7 +228,7 @@ class AuthRepository @Inject constructor(
                         accessToken = finalAccessToken,
                         refreshToken = finalRefreshToken,
                         sessionId = finalUid,
-                        userId = nativeResult.userId,
+                        userId = response.userId ?: "",
                         userTier = userTier,
                         wgPrivateKey = keys.first.privateKeyX25519,
                         wgPublicKeyPem = keys.first.publicKeyPem,
@@ -208,19 +241,16 @@ class AuthRepository @Inject constructor(
                     vpnRepository.getServers(finalAccessToken, finalUid, userTier)
                 }
 
-                ProtonLogger.d(TAG, "[Login] Success. Scopes: ${nativeResult.scopes.joinToString()}")
-                Result.success(LoginResponse(
-                    code = 1000,
+                ProtonLogger.d(TAG, "[Login] Success. Scopes: ${response.scopes.joinToString()}")
+                Result.success(response.copy(
                     accessToken = finalAccessToken,
                     refreshToken = finalRefreshToken,
-                    sessionId = finalUid,
-                    userId = nativeResult.userId,
-                    scopes = nativeResult.scopes.toList()
+                    sessionId = finalUid
                 ))
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 ProtonLogger.e(TAG, "[Login] Exception thrown", e)
-                Result.failure(e)
+                handleHttpError(e)
             }
         }
     }
@@ -331,27 +361,61 @@ class AuthRepository @Inject constructor(
     ): Result<LoginResponse> = authMutex.withLock {
         withContext(dispatcherProvider.io() + authJob) {
             try {
+                ProtonLogger.i(TAG, "Verifying 2FA for session: $sessionId")
                 val bearer = "Bearer $tempAccessToken"
-                val response2fa = authApi.performSecondFactor(bearer, sessionId, SecondFactorRequest(totpCode))
+                val response = authApi.performSecondFactor(bearer, sessionId, SecondFactorRequest(totpCode))
 
-                if (response2fa.code != 1000) {
-                    return@withContext Result.failure(Exception("2FA rejected: ${response2fa.code}"))
+                if (!response.isSuccessful || response.body()?.code != 1000) {
+                    val code = response.body()?.code ?: response.code()
+                    return@withContext Result.failure(Exception("2FA rejected: $code"))
                 }
 
-                val fullToken = response2fa.accessToken ?: tempAccessToken
-                val fullBearer = "Bearer $fullToken"
+                val response2fa = response.body()!!
+                
+                // Check if session ID changed in headers
+                val newSessionId = response.headers()["X-PM-Session-ID"]
+                    ?: response.headers()["x-pm-session-id"]
+                    ?: response2fa.sessionId
+                    ?: sessionId
+                
+                if (newSessionId != sessionId) {
+                    ProtonLogger.i(TAG, "Session ID changed during 2FA: $sessionId -> $newSessionId")
+                }
 
-                val userResponse = authApi.getUser(fullBearer, sessionId)
+                // AFTER successful 2FA, we MUST refresh the session to get a token with full scopes.
+                // The tempAccessToken only had 'twofactor' scope.
+                ProtonLogger.i(TAG, "2FA successful, refreshing session to promote token")
+                
+                val tempSession = SessionEntity(
+                    sessionId = newSessionId,
+                    accessToken = response2fa.accessToken ?: tempAccessToken,
+                    refreshToken = response2fa.refreshToken ?: refreshToken,
+                    userId = ""
+                )
+
+                val refreshResult = sessionManager.refreshSession(tempSession)
+                if (refreshResult.isFailure) {
+                    ProtonLogger.e(TAG, "Failed to refresh session after 2FA", refreshResult.exceptionOrNull())
+                    return@withContext Result.failure(Exception("Session promotion failed after 2FA"))
+                }
+
+                val promotedSession = refreshResult.getOrNull()!!
+                val fullToken = promotedSession.accessToken
+                val fullBearer = "Bearer $fullToken"
+                val finalSessionId = promotedSession.sessionId
+
+                ProtonLogger.d(TAG, "Session promoted. Fetching user info...")
+                val userResponse = authApi.getUser(fullBearer, finalSessionId)
                 val finalUserId = userResponse.user?.id ?: ""
 
-                val keys = registerAndGetVpnKeys(fullToken, sessionId)
-                val vpnInfoResult = vpnRepository.getVpnInfo(fullToken, sessionId)
+                val keys = registerAndGetVpnKeys(fullToken, finalSessionId)
+                val vpnInfoResult = vpnRepository.getVpnInfo(fullToken, finalSessionId)
                 val userTier = vpnInfoResult.getOrNull()?.vpnInfo?.maxTier ?: 0
 
                 saveSessionLocally(
                     accessToken = fullToken,
-                    refreshToken = refreshToken,
-                    sessionId = sessionId,
+                    refreshToken = promotedSession.refreshToken,
+                    sessionId = finalSessionId,
                     userId = finalUserId,
                     userTier = userTier,
                     wgPrivateKey = keys.first.privateKeyX25519,
@@ -362,8 +426,15 @@ class AuthRepository @Inject constructor(
                     vpnDns = keys.second.dns?.joinToString(",")
                 )
 
-                vpnRepository.getServers(fullToken, sessionId, userTier)
-                Result.success(response2fa.copy(userId = finalUserId))
+                vpnRepository.getServers(fullToken, finalSessionId, userTier)
+                
+                Result.success(LoginResponse(
+                    code = 1000,
+                    accessToken = fullToken,
+                    refreshToken = promotedSession.refreshToken,
+                    sessionId = finalSessionId,
+                    userId = finalUserId
+                ))
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 if (e !is HttpException) ProtonLogger.e(TAG, "[verify2FA] Exception thrown", e)

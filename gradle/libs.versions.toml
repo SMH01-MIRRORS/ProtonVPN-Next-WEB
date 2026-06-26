@@ -25,6 +25,8 @@ retrofitSerialization = "1.0.0"
 serializationJson = "1.11.0"
 amneziawg = "2.3.7"
 leakcanary = "2.14"
+bouncycastle = "1.78.1"
+bcrypt = "0.10.2"
 junit = "4.13.2"
 mockito = "5.23.0"
 mockitoKotlin = "6.3.0"
@@ -83,7 +85,12 @@ kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotli
 
 # VPN Protocols
 amneziawg-android = { group = "com.zaneschepke", name = "amneziawg-android", version.ref = "amneziawg" }
-go-vpn-lib = { module = "me.proton.vpn:go-vpn-lib", version.ref = "goVpnLib" }
+# go-vpn-lib = { module = "me.proton.vpn:go-vpn-lib", version.ref = "goVpnLib" }
+
+# Crypto
+bouncycastle-prov = { group = "org.bouncycastle", name = "bcprov-jdk18on", version.ref = "bouncycastle" }
+bouncycastle-pgp = { group = "org.bouncycastle", name = "bcpg-jdk18on", version.ref = "bouncycastle" }
+bcrypt = { group = "at.favre.lib", name = "bcrypt", version.ref = "bcrypt" }
 
 # Sentry
 sentry-bom = { group = "io.sentry", name = "sentry-bom", version.ref = "sentryAndroid" }

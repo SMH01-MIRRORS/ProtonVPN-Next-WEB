@@ -206,64 +206,6 @@ static jstring getSentryDsn(JNIEnv* env, jobject /* thiz */) {
     return env->NewStringUTF(next::SentryManager::getSentryDsn().c_str());
 }
 
-static jobject loginNative(JNIEnv* env, jobject /* thiz */, jstring username, jstring password, jstring captchaToken) {
-    if (!AntiTamper::g_initialized) {
-        AntiTamper::reportSecurityEvent(env, XOR_STR("Login attempt without AntiTamper initialization!"));
-        abort();
-    }
-    const char* userChars = env->GetStringUTFChars(username, nullptr);
-    const char* passChars = env->GetStringUTFChars(password, nullptr);
-    const char* captchaChars = captchaToken ? env->GetStringUTFChars(captchaToken, nullptr) : "";
-
-    LoginResult res = AuthManager::login(env, userChars, passChars, captchaChars ? captchaChars : "");
-
-    env->ReleaseStringUTFChars(username, userChars);
-    env->ReleaseStringUTFChars(password, passChars);
-    if (captchaToken) env->ReleaseStringUTFChars(captchaToken, captchaChars);
-
-    jclass resultClass = env->FindClass(XOR_STR("ru/protonmod/next/data/network/NativeLoginResult").c_str());
-    jmethodID resultInit = env->GetMethodID(resultClass, "<init>", "()V");
-    jobject jResult = env->NewObject(resultClass, resultInit);
-
-    auto setStringField = [&](const char* name, const std::string& value) {
-        jfieldID fieldId = env->GetFieldID(resultClass, name, "Ljava/lang/String;");
-        jstring jVal = env->NewStringUTF(value.c_str());
-        env->SetObjectField(jResult, fieldId, jVal);
-        env->DeleteLocalRef(jVal);
-    };
-
-    auto setBoolField = [&](const char* name, bool value) {
-        jfieldID fieldId = env->GetFieldID(resultClass, name, "Z");
-        env->SetBooleanField(jResult, fieldId, value);
-    };
-
-    auto setIntField = [&](const char* name, int value) {
-        jfieldID fieldId = env->GetFieldID(resultClass, name, "I");
-        env->SetIntField(jResult, fieldId, value);
-    };
-
-    setBoolField("success", res.success);
-    setIntField("code", res.code);
-    setStringField("accessToken", res.accessToken);
-    setStringField("refreshToken", res.refreshToken);
-    setStringField("sessionId", res.sessionId);
-    setStringField("userId", res.userId);
-    setStringField("error", res.error);
-    setBoolField("captchaRequired", res.captchaRequired);
-    setStringField("captchaUrl", res.captchaUrl);
-    setStringField("captchaToken", res.captchaToken);
-
-    // Set scopes as string array
-    jclass stringClass = env->FindClass("java/lang/String");
-    jobjectArray scopesArray = env->NewObjectArray(res.scopes.size(), stringClass, nullptr);
-    for (size_t i = 0; i < res.scopes.size(); ++i) {
-        env->SetObjectArrayElement(scopesArray, i, env->NewStringUTF(res.scopes[i].c_str()));
-    }
-    jfieldID scopesField = env->GetFieldID(resultClass, "scopes", "[Ljava/lang/String;");
-    env->SetObjectField(jResult, scopesField, scopesArray);
-
-    return jResult;
-}
 
 extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
     JNIEnv* env;
@@ -341,16 +283,6 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
         }
     }
 
-    // Register AuthRepository native methods
-    {
-        jclass authClass = env->FindClass(XOR_STR("ru/protonmod/next/data/network/AuthNativeBridgeImpl").c_str());
-        if (authClass) {
-            std::string n_login = XOR_STR("loginNative");
-            std::string s_login = XOR_STR("(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lru/protonmod/next/data/network/NativeLoginResult;");
-            JNINativeMethod m[] = {{(char*)n_login.c_str(), (char*)s_login.c_str(), (void*)loginNative}};
-            env->RegisterNatives(authClass, m, 1);
-        }
-    }
 
     // Register AntiTamperBridge methods
     {
