@@ -48,9 +48,11 @@ steps:
       # 4. Build APKs and Run Tests based on flavor
       - |
         if [ -n "$CI_COMMIT_TAG" ]; then
-          ./gradlew testStableStandardDebugUnitTest assembleStableStandardRelease assembleStablePrivacyRelease
+          ./gradlew testStableStandardDebugUnitTest assembleStableStandardRelease
+          ./gradlew assembleStablePrivacyRelease
         else
-          ./gradlew testNightlyStandardDebugUnitTest testNightlyPrivacyDebugUnitTest assembleNightlyStandardDebug assembleNightlyStandardRelease assembleNightlyPrivacyDebug assembleNightlyPrivacyRelease
+          ./gradlew testNightlyStandardDebugUnitTest assembleNightlyStandardDebug assembleNightlyStandardRelease
+          ./gradlew testNightlyPrivacyDebugUnitTest assembleNightlyPrivacyDebug assembleNightlyPrivacyRelease
         fi
 
       # 5. Generate SHA256 Checksums
