@@ -27,7 +27,7 @@ std::string SentryManager::getSentryDsn() {
 #ifdef PRIVACY_FLAVOR
     return "";
 #else
-    return XOR_STR("https://c9a1c0cf35e7706fca405af8ee26e147@o4511097624199168.ingest.de.sentry.io/4510986956374096");
+    return XOR_STR("https://45480dc521a24d1e6dc87c6ebb7380bd@o4511097624199168.ingest.de.sentry.io/4510986956374096");
 #endif
 }
 
