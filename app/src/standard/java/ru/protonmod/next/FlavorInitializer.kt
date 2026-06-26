@@ -18,12 +18,20 @@
 package ru.protonmod.next
 
 import android.content.Context
+import io.sentry.Hint
+import io.sentry.SentryEvent
 import io.sentry.android.core.SentryAndroid
+import retrofit2.HttpException
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.utils.PiiScrubber
 import ru.protonmod.next.utils.ProtonLogger
 import ru.protonmod.next.utils.SentryCrashReporter
 import ru.protonmod.next.vpn.SentryBridge
+import java.io.EOFException
+import java.io.IOException
+import java.net.SocketException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 /**
  * Common initializer for the application (Sentry-enabled).
@@ -54,13 +62,16 @@ object FlavorInitializer {
             options.isEnableScopeSync = false
             options.isSendDefaultPii = false
 
-            options.setBeforeSend { event, _ ->
+            options.setBeforeSend { event, hint ->
                 val currentCrashEnabled = settingsManager.isCrashReportsEnabledSync()
                 val currentNonFatalEnabled = settingsManager.isNonFatalEnabledSync()
                 val currentAnalyticsEnabled = settingsManager.isAnalyticsEnabledSync()
                 
                 if (event.isCrashed && !currentCrashEnabled) return@setBeforeSend null
                 if (!event.isCrashed && (!currentNonFatalEnabled || !currentAnalyticsEnabled)) return@setBeforeSend null
+
+                // Filter out common network noise that is not actionable
+                if (shouldFilterNetworkNoise(event, hint)) return@setBeforeSend null
 
                 event.message?.let { it.message = PiiScrubber.scrub(it.message) }
                 event.exceptions?.forEach { ex -> ex.value = PiiScrubber.scrub(ex.value) }
@@ -101,6 +112,28 @@ object FlavorInitializer {
 
         // Set the Sentry reporter in ProtonLogger
         ProtonLogger.crashReporter = SentryCrashReporter()
+    }
+
+    @JvmStatic
+    private fun shouldFilterNetworkNoise(event: SentryEvent, hint: Hint): Boolean {
+        val throwable = event.throwable ?: hint.throwable ?: return false
+
+        return when (throwable) {
+            is HttpException -> {
+                // 401 Unauthorized and 403 Forbidden are usually session expiry or restricted access,
+                // handled by the app logic, not a bug to report.
+                throwable.code() == 401 || throwable.code() == 403
+            }
+            is SocketTimeoutException,
+            is SocketException,
+            is UnknownHostException,
+            is EOFException -> true
+            is IOException -> {
+                val msg = throwable.message?.lowercase() ?: ""
+                msg.contains("socket") || msg.contains("connection") || msg.contains("reset")
+            }
+            else -> false
+        }
     }
 
     @JvmStatic
