@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160052,
-      "versionName": "12.0.0-alpha1st4p1-96-g9c2a160-nightly",
+      "versionCode": 605160057,
+      "versionName": "12.0.0-alpha1st4p1-101-gdd4b464-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "feat: remove WARP API bypass strategy\n\n- Deleted `WarpManager`, `WarpApi`, and `WarpResponse` components.\n- Removed WARP-specific logic and dependencies from `AmneziaVpnManager`, `VpnRepository`, and associated ViewModels.\n- Cleaned up UI screens (`ApiBypassScreen`, `LoginScreen`, `WelcomeScreen`) by removing WARP strategy selection, permission handling, and loading overlays.\n- Removed WARP-related strings and translations across all supported languages.\n- Updated documentation (`GEMINI.md`, `PRIVACY_POLICY.md`) and store metadata to reflect the removal of the WARP routing strategy.\n- Refactored `NetworkModule` and unit tests to eliminate `WarpManager` mocks and providers.",
+      "changelog": "fix: simplify throwable check in Sentry network noise filter\n\n- Remove the fallback to `hint.throwable` in `shouldFilterNetworkNoise`.\n- Rely exclusively on `event.throwable` to determine if a network error should be filtered.",
       "force": false
     },
     "release": {
-      "versionCode": 605160052,
-      "versionName": "12.0.0-alpha1st4p1-96-g9c2a160-nightly",
+      "versionCode": 605160057,
+      "versionName": "12.0.0-alpha1st4p1-101-gdd4b464-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "feat: remove WARP API bypass strategy\n\n- Deleted `WarpManager`, `WarpApi`, and `WarpResponse` components.\n- Removed WARP-specific logic and dependencies from `AmneziaVpnManager`, `VpnRepository`, and associated ViewModels.\n- Cleaned up UI screens (`ApiBypassScreen`, `LoginScreen`, `WelcomeScreen`) by removing WARP strategy selection, permission handling, and loading overlays.\n- Removed WARP-related strings and translations across all supported languages.\n- Updated documentation (`GEMINI.md`, `PRIVACY_POLICY.md`) and store metadata to reflect the removal of the WARP routing strategy.\n- Refactored `NetworkModule` and unit tests to eliminate `WarpManager` mocks and providers.",
+      "changelog": "fix: simplify throwable check in Sentry network noise filter\n\n- Remove the fallback to `hint.throwable` in `shouldFilterNetworkNoise`.\n- Rely exclusively on `event.throwable` to determine if a network error should be filtered.",
       "force": false
     }
   },
