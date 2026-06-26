@@ -116,7 +116,7 @@ object FlavorInitializer {
 
     @JvmStatic
     private fun shouldFilterNetworkNoise(event: SentryEvent, hint: Hint): Boolean {
-        val throwable = event.throwable ?: hint.throwable ?: return false
+        val throwable = event.throwable ?: return false
 
         return when (throwable) {
             is HttpException -> {
