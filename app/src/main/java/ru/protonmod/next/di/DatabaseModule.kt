@@ -189,6 +189,18 @@ object DatabaseModule {
         override fun migrate(db: SupportSQLiteDatabase) {}
     }
 
+    val MIGRATION_17_18 = object : Migration(17, 18) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Force logout and clear sensitive data on update due to major auth refactor.
+            // General settings (DataStore), profiles, and connection history are preserved.
+            db.execSQL("DELETE FROM session")
+            db.execSQL("DELETE FROM servers")
+            db.execSQL("DELETE FROM servers_cache")
+            db.execSQL("DELETE FROM city_translations")
+            db.execSQL("DELETE FROM city_cache")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -211,6 +223,7 @@ object DatabaseModule {
         .addMigrations(MIGRATION_14_15)
         .addMigrations(MIGRATION_15_16)
         .addMigrations(MIGRATION_16_17)
+        .addMigrations(MIGRATION_17_18)
         .build()
     }
 
