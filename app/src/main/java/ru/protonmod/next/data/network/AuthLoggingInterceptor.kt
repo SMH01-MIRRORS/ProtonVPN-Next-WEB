@@ -22,6 +22,7 @@ import okhttp3.Interceptor
 import okhttp3.Response
 import okio.Buffer
 import ru.protonmod.next.BuildConfig
+import ru.protonmod.next.utils.PiiScrubber
 
 /**
  * Interceptor for logging authentication-related network traffic.
@@ -42,7 +43,8 @@ class AuthLoggingInterceptor : Interceptor {
                 try {
                     val buffer = Buffer()
                     body.writeTo(buffer)
-                    Log.d("AuthLogging", "[DEBUG] Request Body: ${buffer.readUtf8()}")
+                    val rawBody = buffer.readUtf8()
+                    Log.d("AuthLogging", "[DEBUG] Request Body: ${PiiScrubber.scrub(rawBody)}")
                 } catch (e: Exception) {
                     Log.d("AuthLogging", "[DEBUG] Could not log request body: ${e.message}")
                 }
@@ -65,7 +67,8 @@ class AuthLoggingInterceptor : Interceptor {
                     val source = body.source()
                     source.request(Long.MAX_VALUE)
                     val buffer = source.buffer
-                    Log.d("AuthLogging", "[DEBUG] Response Body: ${buffer.clone().readUtf8()}")
+                    val rawBody = buffer.clone().readUtf8()
+                    Log.d("AuthLogging", "[DEBUG] Response Body: ${PiiScrubber.scrub(rawBody)}")
                 } catch (e: Exception) {
                     Log.d("AuthLogging", "[DEBUG] Could not log response body: ${e.message}")
                 }

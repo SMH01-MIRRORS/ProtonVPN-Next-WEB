@@ -35,9 +35,9 @@ object PiiScrubber {
         "\\b:(?::[A-Fa-f0-9]{1,4}){1,7}\\b"
     )
     
-    // Sensitive key-value pairs in logs (e.g., "accessToken=...", "sessionId: ...")
+    // Sensitive key-value pairs in logs (e.g., "accessToken=...", "sessionId: ...", "session: ...", "user: ...")
     private val SENSITIVE_KV_REGEX = Regex(
-        "(?i)[\"']?\\b(accessToken|refreshToken|sessionId|captchaToken|token|privateKey|presharedKey|pass|secret|auth|nonce|wgPrivateKey|wgCertificate)\\b[\"']?\\s*[:=]\\s*[\"']?([a-zA-Z0-9._\\-+=/]{10,})[\"']?"
+        "(?i)[\"']?\\b(accessToken|refreshToken|sessionId|session|captchaToken|token|privateKey|presharedKey|pass|password|secret|auth|nonce|wgPrivateKey|wgCertificate|username|user|email|UserID|UID|AccessToken|RefreshToken|SRPSession|ServerEphemeral|ClientEphemeral|ClientProof|TwoFactorCode)\\b[\"']?\\s*[:=->]+\\s*[\"']?([a-zA-Z0-9._\\-+=/]{4,})[\"']?"
     )
     
     // URL query parameters that might contain tokens

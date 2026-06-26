@@ -161,7 +161,7 @@ class AuthRepository @Inject constructor(
     suspend fun login(username: String, passwordRaw: String, captchaToken: String? = null): Result<LoginResponse> = authMutex.withLock {
         withContext(dispatcherProvider.io() + authJob) {
             try {
-                ProtonLogger.i(TAG, "Starting Kotlin SRP login flow for user: $username (Have Captcha: ${captchaToken != null})")
+                ProtonLogger.i(TAG, "Starting Kotlin SRP login flow (Have Captcha: ${captchaToken != null})")
                 
                 val challengePayload = pendingChallengePayload ?: buildChallengePayload().also { pendingChallengePayload = it }
                 val captchaTokenType = if (captchaToken != null) "captcha" else null
@@ -180,7 +180,7 @@ class AuthRepository @Inject constructor(
                 val bearer = "Bearer $anonToken"
 
                 // Phase 1: Auth Info
-                ProtonLogger.d(TAG, "[Login] Phase 1: Getting auth info for session: $anonUid")
+                ProtonLogger.d(TAG, "[Login] Phase 1: Getting auth info")
                 val authInfo = authApi.getAuthInfo(bearer, anonUid, AuthInfoRequest(username), captchaToken, captchaTokenType)
                 if (authInfo.code != 1000) {
                     throw Exception("Failed to get auth info: ${authInfo.code}")
@@ -361,7 +361,7 @@ class AuthRepository @Inject constructor(
     ): Result<LoginResponse> = authMutex.withLock {
         withContext(dispatcherProvider.io() + authJob) {
             try {
-                ProtonLogger.i(TAG, "Verifying 2FA for session: $sessionId")
+                ProtonLogger.i(TAG, "Verifying 2FA")
                 val bearer = "Bearer $tempAccessToken"
                 val response = authApi.performSecondFactor(bearer, sessionId, SecondFactorRequest(totpCode))
 
@@ -379,7 +379,7 @@ class AuthRepository @Inject constructor(
                     ?: sessionId
                 
                 if (newSessionId != sessionId) {
-                    ProtonLogger.i(TAG, "Session ID changed during 2FA: $sessionId -> $newSessionId")
+                    ProtonLogger.i(TAG, "Session ID changed during 2FA")
                 }
 
                 // AFTER successful 2FA, we MUST refresh the session to get a token with full scopes.

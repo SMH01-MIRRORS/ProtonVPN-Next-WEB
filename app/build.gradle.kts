@@ -269,7 +269,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("boolean", "ALLOW_LOGCAT", "true")
+            buildConfigField("boolean", "ALLOW_LOGCAT", "false")
             signingConfig = signingConfigs.getByName("release")
         }
     }

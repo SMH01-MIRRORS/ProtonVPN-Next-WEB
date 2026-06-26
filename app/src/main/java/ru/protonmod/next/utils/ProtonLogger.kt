@@ -60,88 +60,95 @@ object ProtonLogger {
 
     /** Log at VERBOSE level */
     fun v(tag: String? = null, message: String, throwable: Throwable? = null) {
+        val scrubbed = PiiScrubber.scrub(message)
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
-        val decoratedMsg = "[$threadName] $message"
+        val decoratedMsg = "[$threadName] $scrubbed"
         if (isLogcatEnabled) {
             Log.v(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, message, "DEBUG")
+        addSentryBreadcrumb(finalTag, scrubbed, "DEBUG")
         addSentryLog(finalTag, decoratedMsg, "DEBUG", throwable)
     }
 
     /** Log at VERBOSE level with a lazy message lambda */
     inline fun v(tag: String? = null, throwable: Throwable? = null, crossinline message: () -> String) {
+        val msg = message()
+        val scrubbed = PiiScrubber.scrub(msg)
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
-        val msg = message()
-        val decoratedMsg = "[$threadName] $msg"
+        val decoratedMsg = "[$threadName] $scrubbed"
         if (isLogcatEnabled) {
             Log.v(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, msg, "DEBUG")
+        addSentryBreadcrumb(finalTag, scrubbed, "DEBUG")
         addSentryLog(finalTag, decoratedMsg, "DEBUG", throwable)
     }
 
     /** Log at DEBUG level */
     fun d(tag: String? = null, message: String, throwable: Throwable? = null) {
+        val scrubbed = PiiScrubber.scrub(message)
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
-        val decoratedMsg = "[$threadName] $message"
+        val decoratedMsg = "[$threadName] $scrubbed"
         if (isLogcatEnabled) {
             Log.d(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, message, "DEBUG")
+        addSentryBreadcrumb(finalTag, scrubbed, "DEBUG")
         addSentryLog(finalTag, decoratedMsg, "DEBUG", throwable)
     }
 
     /** Log at DEBUG level with a lazy message lambda */
     inline fun d(tag: String? = null, throwable: Throwable? = null, crossinline message: () -> String) {
+        val msg = message()
+        val scrubbed = PiiScrubber.scrub(msg)
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
-        val msg = message()
-        val decoratedMsg = "[$threadName] $msg"
+        val decoratedMsg = "[$threadName] $scrubbed"
         if (isLogcatEnabled) {
             Log.d(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, msg, "DEBUG")
+        addSentryBreadcrumb(finalTag, scrubbed, "DEBUG")
         addSentryLog(finalTag, decoratedMsg, "DEBUG", throwable)
     }
 
     /** Log at INFO level */
     fun i(tag: String? = null, message: String, throwable: Throwable? = null) {
+        val scrubbed = PiiScrubber.scrub(message)
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
-        val decoratedMsg = "[$threadName] $message"
+        val decoratedMsg = "[$threadName] $scrubbed"
         if (isLogcatEnabled) {
             Log.i(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, message, "INFO")
+        addSentryBreadcrumb(finalTag, scrubbed, "INFO")
         addSentryLog(finalTag, decoratedMsg, "INFO", throwable)
     }
 
     /** Log at INFO level with a lazy message lambda */
     inline fun i(tag: String? = null, throwable: Throwable? = null, crossinline message: () -> String) {
+        val msg = message()
+        val scrubbed = PiiScrubber.scrub(msg)
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
-        val msg = message()
-        val decoratedMsg = "[$threadName] $msg"
+        val decoratedMsg = "[$threadName] $scrubbed"
         if (isLogcatEnabled) {
             Log.i(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, msg, "INFO")
+        addSentryBreadcrumb(finalTag, scrubbed, "INFO")
         addSentryLog(finalTag, decoratedMsg, "INFO", throwable)
     }
 
     /** Log at WARN level */
     fun w(tag: String? = null, message: String, throwable: Throwable? = null) {
+        val scrubbed = PiiScrubber.scrub(message)
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
-        val decoratedMsg = "[$threadName] $message"
+        val decoratedMsg = "[$threadName] $scrubbed"
         if (isLogcatEnabled) {
             Log.w(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, message, "WARNING")
+        addSentryBreadcrumb(finalTag, scrubbed, "WARNING")
         addSentryLog(finalTag, decoratedMsg, "WARNING", throwable)
         if (throwable != null && isNonFatalEnabled) {
             crashReporter?.captureException(throwable)
@@ -150,14 +157,15 @@ object ProtonLogger {
 
     /** Log at WARN level with a lazy message lambda */
     inline fun w(tag: String? = null, throwable: Throwable? = null, crossinline message: () -> String) {
+        val msg = message()
+        val scrubbed = PiiScrubber.scrub(msg)
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
-        val msg = message()
-        val decoratedMsg = "[$threadName] $msg"
+        val decoratedMsg = "[$threadName] $scrubbed"
         if (isLogcatEnabled) {
             Log.w(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, msg, "WARNING")
+        addSentryBreadcrumb(finalTag, scrubbed, "WARNING")
         addSentryLog(finalTag, decoratedMsg, "WARNING", throwable)
         if (throwable != null && isNonFatalEnabled) {
             crashReporter?.captureException(throwable)
@@ -166,39 +174,41 @@ object ProtonLogger {
 
     /** Log at ERROR level */
     fun e(tag: String? = null, message: String, throwable: Throwable? = null) {
+        val scrubbed = PiiScrubber.scrub(message)
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
-        val decoratedMsg = "[$threadName] $message"
+        val decoratedMsg = "[$threadName] $scrubbed"
         if (isLogcatEnabled) {
             Log.e(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, message, "ERROR")
+        addSentryBreadcrumb(finalTag, scrubbed, "ERROR")
         addSentryLog(finalTag, decoratedMsg, "ERROR", throwable)
         if (isNonFatalEnabled) {
             if (throwable != null) {
                 crashReporter?.captureException(throwable)
             } else {
-                crashReporter?.captureMessage(PiiScrubber.scrub(message), "ERROR")
+                crashReporter?.captureMessage(scrubbed, "ERROR")
             }
         }
     }
 
     /** Log at ERROR level with a lazy message lambda */
     inline fun e(tag: String? = null, throwable: Throwable? = null, crossinline message: () -> String) {
+        val msg = message()
+        val scrubbed = PiiScrubber.scrub(msg)
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
-        val msg = message()
-        val decoratedMsg = "[$threadName] $msg"
+        val decoratedMsg = "[$threadName] $scrubbed"
         if (isLogcatEnabled) {
             Log.e(finalTag, decoratedMsg, throwable)
         }
-        addSentryBreadcrumb(finalTag, msg, "ERROR")
+        addSentryBreadcrumb(finalTag, scrubbed, "ERROR")
         addSentryLog(finalTag, decoratedMsg, "ERROR", throwable)
         if (isNonFatalEnabled) {
             if (throwable != null) {
                 crashReporter?.captureException(throwable)
             } else {
-                crashReporter?.captureMessage(PiiScrubber.scrub(msg), "ERROR")
+                crashReporter?.captureMessage(scrubbed, "ERROR")
             }
         }
     }
@@ -237,8 +247,7 @@ object ProtonLogger {
     ) {
         if (!isAnalyticsEnabled) return
 
-        val scrubbedMessage = PiiScrubber.scrub(message)
-        val dedupKey = "$category:${scrubbedMessage.take(60)}"
+        val dedupKey = "$category:${message.take(60)}"
         val now = System.currentTimeMillis()
         val last = breadcrumbLastEmitted[dedupKey]
         if (last != null && now - last < BREADCRUMB_RATE_LIMIT_MS) {
@@ -246,15 +255,14 @@ object ProtonLogger {
         }
         breadcrumbLastEmitted[dedupKey] = now
 
-        crashReporter?.addBreadcrumb(tag, scrubbedMessage, level, category)
+        crashReporter?.addBreadcrumb(tag, message, level, category)
     }
 
     @PublishedApi
     internal fun addSentryLog(tag: String, message: String, level: String, throwable: Throwable? = null) {
         if (!isAnalyticsEnabled || !isSentryLogsEnabled) return
 
-        val scrubbedMessage = PiiScrubber.scrub(message)
-        val dedupKey = "$tag:${scrubbedMessage.take(60)}"
+        val dedupKey = "$tag:${message.take(60)}"
         val now = System.currentTimeMillis()
         val last = sentryLogLastEmitted[dedupKey]
         if (last != null && now - last < BREADCRUMB_RATE_LIMIT_MS) {
@@ -263,7 +271,7 @@ object ProtonLogger {
         sentryLogLastEmitted[dedupKey] = now
 
         logScope.launch {
-            crashReporter?.addLog(tag, scrubbedMessage, level, throwable)
+            crashReporter?.addLog(tag, message, level, throwable)
         }
     }
 
