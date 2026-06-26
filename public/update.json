@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160057,
-      "versionName": "12.0.0-alpha1st4p1-101-gdd4b464-nightly",
+      "versionCode": 605160061,
+      "versionName": "12.0.0-alpha1st4p1-105-g66a48cb-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "fix: simplify throwable check in Sentry network noise filter\n\n- Remove the fallback to `hint.throwable` in `shouldFilterNetworkNoise`.\n- Rely exclusively on `event.throwable` to determine if a network error should be filtered.",
+      "changelog": "chore: migrate database to version 18 for auth refactor\n\n- Incremented `AppDatabase` version to 18.\n- Added `MIGRATION_17_18` in `DatabaseModule` to handle a major authentication refactor.\n- Implemented logic to clear `session`, `servers`, `servers_cache`, `city_translations`, and `city_cache` tables.\n- Forces logout and clears sensitive cached data while preserving general settings and connection history.",
       "force": false
     },
     "release": {
-      "versionCode": 605160057,
-      "versionName": "12.0.0-alpha1st4p1-101-gdd4b464-nightly",
+      "versionCode": 605160061,
+      "versionName": "12.0.0-alpha1st4p1-105-g66a48cb-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "fix: simplify throwable check in Sentry network noise filter\n\n- Remove the fallback to `hint.throwable` in `shouldFilterNetworkNoise`.\n- Rely exclusively on `event.throwable` to determine if a network error should be filtered.",
+      "changelog": "chore: migrate database to version 18 for auth refactor\n\n- Incremented `AppDatabase` version to 18.\n- Added `MIGRATION_17_18` in `DatabaseModule` to handle a major authentication refactor.\n- Implemented logic to clear `session`, `servers`, `servers_cache`, `city_translations`, and `city_cache` tables.\n- Forces logout and clears sensitive cached data while preserving general settings and connection history.",
       "force": false
     }
   },
