@@ -344,7 +344,10 @@ class LoginViewModel @Inject constructor(
     }
 
     private fun shouldRunAutoByeDpiTest(): Boolean {
-        return RegionUtils.isRussianTimezone() && !networkMonitor.isVpnActive.value && !hasRunAutoByeDpiTest
+        return RegionUtils.isRussianTimezone() && 
+               !networkMonitor.isVpnActive.value && 
+               !hasRunAutoByeDpiTest &&
+               !settingsManager.isApiBypassEnabledSync()
     }
 
     private fun runAutoByeDpiTest(onComplete: () -> Unit) {
