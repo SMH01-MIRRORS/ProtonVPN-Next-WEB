@@ -85,6 +85,7 @@ Ensure you have the Android SDK and JDK 17 installed.
 - **[Cloudflare](https://www.cloudflare.com/):** High-performance infrastructure using **Cloudflare Pages** (hosting) and **R2 Storage** (asset storage).
 - **[DigitalPlat FreeDomain](https://freedomain.digiplat.org/):**
   This project uses DigitalPlat FreeDomain, an open domain infrastructure maintained by Edward Hsing. Built on DigitalPlat FreeDomain for domain provisioning, with credit to the platform and its maintainer.
+- This project is tested with BrowserStack'
 
 ---
 
