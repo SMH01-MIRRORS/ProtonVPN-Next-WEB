@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160061,
-      "versionName": "12.0.0-alpha1st4p1-105-g66a48cb-nightly",
+      "versionCode": 605160062,
+      "versionName": "12.0.0-alpha1st4p1-106-g998bfde-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "chore: migrate database to version 18 for auth refactor\n\n- Incremented `AppDatabase` version to 18.\n- Added `MIGRATION_17_18` in `DatabaseModule` to handle a major authentication refactor.\n- Implemented logic to clear `session`, `servers`, `servers_cache`, `city_translations`, and `city_cache` tables.\n- Forces logout and clears sensitive cached data while preserving general settings and connection history.",
+      "changelog": "chore: update core dependencies and remove unused library references\n\n- Updated Android Gradle Plugin (AGP) to 9.4.0-alpha01.\n- Updated Kotlin to 2.4.0 and Hilt to 2.60.\n- Updated Sentry to 6.13.0 and Sentry Android to 8.46.0.\n- Removed unused, commented-out references to `goVpnLib` and `go-vpn-lib`.",
       "force": false
     },
     "release": {
-      "versionCode": 605160061,
-      "versionName": "12.0.0-alpha1st4p1-105-g66a48cb-nightly",
+      "versionCode": 605160062,
+      "versionName": "12.0.0-alpha1st4p1-106-g998bfde-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "chore: migrate database to version 18 for auth refactor\n\n- Incremented `AppDatabase` version to 18.\n- Added `MIGRATION_17_18` in `DatabaseModule` to handle a major authentication refactor.\n- Implemented logic to clear `session`, `servers`, `servers_cache`, `city_translations`, and `city_cache` tables.\n- Forces logout and clears sensitive cached data while preserving general settings and connection history.",
+      "changelog": "chore: update core dependencies and remove unused library references\n\n- Updated Android Gradle Plugin (AGP) to 9.4.0-alpha01.\n- Updated Kotlin to 2.4.0 and Hilt to 2.60.\n- Updated Sentry to 6.13.0 and Sentry Android to 8.46.0.\n- Removed unused, commented-out references to `goVpnLib` and `go-vpn-lib`.",
       "force": false
     }
   },
