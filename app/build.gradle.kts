@@ -85,7 +85,7 @@ android {
         // 32-bit devices (armeabi-v7a, armeabi) are not supported as the VPN engine
         // (AmneziaWG via go-vpn-lib) and its native libraries are compiled for 64-bit only
         ndk {
-            abiFilters.addAll(listOf("arm64-v8a", "x86_64"))
+            abiFilters.addAll(listOf("arm64-v8a"))
         }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -110,7 +110,7 @@ android {
         versionName = finalVersionName
 
         ndk {
-            abiFilters.addAll(listOf("arm64-v8a", "x86_64"))
+            abiFilters.addAll(listOf("arm64-v8a"))
         }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
