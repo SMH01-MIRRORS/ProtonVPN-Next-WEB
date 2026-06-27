@@ -1,12 +1,12 @@
 [versions]
-agp = "9.3.0-alpha12"
-kotlin = "2.3.21" # Waiting for ksp update
+agp = "9.4.0-alpha01"
+kotlin = "2.4.0"
 ksp = "2.3.9"
-hilt = "2.59.2"
+hilt = "2.60"
 room = "2.8.4"
 roomKsp = "2.8.4"
-sentry = "6.12.0"
-sentryAndroid = "8.44.1"
+sentry = "6.13.0"
+sentryAndroid = "8.46.0"
 coreKtx = "1.19.0"
 lifecycle = "2.11.0"
 collectionsImmutable = "0.5.0"
@@ -35,7 +35,6 @@ mockwebserver = "5.4.0"
 androidxJunit = "1.3.0"
 espressoCore = "3.7.0"
 material = "1.14.0"
-# goVpnLib = "0.1.87"
 composeMaterial3 = "1.5.0-alpha22"
 graphicsShapes = "1.1.0"
 graphicsPath = "1.1.0"
@@ -85,8 +84,6 @@ kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotli
 
 # VPN Protocols
 amneziawg-android = { group = "com.zaneschepke", name = "amneziawg-android", version.ref = "amneziawg" }
-# go-vpn-lib = { module = "me.proton.vpn:go-vpn-lib", version.ref = "goVpnLib" }
-
 # Crypto
 bouncycastle-prov = { group = "org.bouncycastle", name = "bcprov-jdk18on", version.ref = "bouncycastle" }
 bouncycastle-pgp = { group = "org.bouncycastle", name = "bcpg-jdk18on", version.ref = "bouncycastle" }
