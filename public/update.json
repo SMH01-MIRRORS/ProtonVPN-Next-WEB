@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160062,
-      "versionName": "12.0.0-alpha1st4p1-106-g998bfde-nightly",
+      "versionCode": 605160063,
+      "versionName": "12.0.0-alpha1st4p1-107-g7b60c29-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "chore: update core dependencies and remove unused library references\n\n- Updated Android Gradle Plugin (AGP) to 9.4.0-alpha01.\n- Updated Kotlin to 2.4.0 and Hilt to 2.60.\n- Updated Sentry to 6.13.0 and Sentry Android to 8.46.0.\n- Removed unused, commented-out references to `goVpnLib` and `go-vpn-lib`.",
+      "changelog": "chore: remove x86_64 support from ABI filters\n\n- Updated `abiFilters` in `app/build.gradle.kts` to remove `x86_64`.\n- Restricted supported architectures to `arm64-v8a` only.",
       "force": false
     },
     "release": {
-      "versionCode": 605160062,
-      "versionName": "12.0.0-alpha1st4p1-106-g998bfde-nightly",
+      "versionCode": 605160063,
+      "versionName": "12.0.0-alpha1st4p1-107-g7b60c29-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "chore: update core dependencies and remove unused library references\n\n- Updated Android Gradle Plugin (AGP) to 9.4.0-alpha01.\n- Updated Kotlin to 2.4.0 and Hilt to 2.60.\n- Updated Sentry to 6.13.0 and Sentry Android to 8.46.0.\n- Removed unused, commented-out references to `goVpnLib` and `go-vpn-lib`.",
+      "changelog": "chore: remove x86_64 support from ABI filters\n\n- Updated `abiFilters` in `app/build.gradle.kts` to remove `x86_64`.\n- Restricted supported architectures to `arm64-v8a` only.",
       "force": false
     }
   },
