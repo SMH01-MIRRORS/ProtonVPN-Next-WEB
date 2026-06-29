@@ -1,18 +1,38 @@
+# IDE / Editor files
+.idea/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
+*.ipr
+*.iws
+.navigation/
 
-# Sentry Config File
+# Gradle files & caches
+.gradle/
+/local.properties
 sentry.properties
+
+# Build & compiled outputs
+build/
+**/build/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Kotlin / Compiler daemon caches
+.kotlin/
+
+# Android & Desktop build outputs (APKs, bundles, libraries)
+*.apk
+*.aar
+*.aab
+app/stable/
+desktop/libs/
+
+# Generated security metadata
+**/security_metadata.h
+
+# External / nested repos or builds (e.g. Go-based VPN cores)
+vpn-core/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
