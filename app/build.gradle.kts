@@ -475,7 +475,6 @@ dependencies {
 
     // VPN Protocols
     implementation(libs.amneziawg.android)
-    // implementation(libs.go.vpn.lib)
 
     // Crypto
     implementation(libs.bouncycastle.prov)
@@ -503,6 +502,5 @@ dependencies {
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(composeBom)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
 }
