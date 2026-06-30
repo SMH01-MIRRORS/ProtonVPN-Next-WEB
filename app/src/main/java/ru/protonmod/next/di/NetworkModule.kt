@@ -333,7 +333,21 @@ object NetworkModule {
                 result.addAll(fallbackIps)
             } else {
                 val useProxy = shouldUseApiBypass(context, vpnManagerProvider, settingsManagerProvider)
-                
+                val settings = settingsManagerProvider.get()
+                val strategy = settings.getApiBypassStrategySync()
+
+                if (useProxy && strategy == SettingsManager.STRATEGY_CUSTOM_PROXY &&
+                    settings.getApiProxyTypeSync() == SettingsManager.PROXY_TYPE_SOCKS) {
+                    val proxyHost = settings.getApiProxyHostSync()
+                    if (hostname != proxyHost) {
+                        // Return a dummy IP address for target hosts. The custom Socks5Socket
+                        // will perform remote DNS resolution on the SOCKS5 proxy server.
+                        // We must resolve the proxy host itself normally.
+                        ProtonLogger.i("NetworkManager", "Using dummy IP for target host: $hostname (custom SOCKS5 proxy active)")
+                        return@Dns listOf(InetAddress.getByAddress(hostname, byteArrayOf(127, 0, 0, 1)))
+                    }
+                }
+
                 if (useProxy) {
                     try {
                         result.addAll(doh.lookup(hostname))
@@ -373,19 +387,32 @@ object NetworkModule {
                 val settings = settingsManagerProvider.get()
                 val strategy = settings.getApiBypassStrategySync()
 
-                if (useProxy && (strategy == SettingsManager.STRATEGY_CUSTOM_PROXY || 
-                                strategy == SettingsManager.STRATEGY_BYEDPI)) {
-                    val host = if (strategy == SettingsManager.STRATEGY_BYEDPI) "127.0.0.1" else settings.getApiProxyHostSync()
-                    val port = if (strategy == SettingsManager.STRATEGY_BYEDPI) settings.getApiProxyPortSync() else settings.getApiProxyPortSync()
-                    val type = if (strategy == SettingsManager.STRATEGY_BYEDPI) SettingsManager.PROXY_TYPE_SOCKS else settings.getApiProxyTypeSync()
-
-                    if (host.isNotEmpty()) {
-                        val proxyType = if (type == SettingsManager.PROXY_TYPE_HTTP) Proxy.Type.HTTP else Proxy.Type.SOCKS
+                if (useProxy) {
+                    if (strategy == SettingsManager.STRATEGY_BYEDPI) {
+                        val host = "127.0.0.1"
+                        val port = settings.getApiProxyPortSync()
                         try {
                             val address = InetSocketAddress.createUnresolved(host, port)
-                            return mutableListOf(Proxy(proxyType, address))
+                            return mutableListOf(Proxy(Proxy.Type.SOCKS, address))
                         } catch (e: Exception) {
                             ProtonLogger.e("NetworkModule", "Failed to create proxy address: $host:$port", e)
+                        }
+                    } else if (strategy == SettingsManager.STRATEGY_CUSTOM_PROXY) {
+                        val type = settings.getApiProxyTypeSync()
+                        if (type == SettingsManager.PROXY_TYPE_HTTP) {
+                            val host = settings.getApiProxyHostSync()
+                            val port = settings.getApiProxyPortSync()
+                            if (host.isNotEmpty()) {
+                                try {
+                                    val address = InetSocketAddress.createUnresolved(host, port)
+                                    return mutableListOf(Proxy(Proxy.Type.HTTP, address))
+                                } catch (e: Exception) {
+                                    ProtonLogger.e("NetworkModule", "Failed to create proxy address: $host:$port", e)
+                                }
+                            }
+                        } else {
+                            // SOCKS custom proxy is handled via custom SocketFactory, not ProxySelector
+                            return mutableListOf(Proxy.NO_PROXY)
                         }
                     }
                 }
@@ -418,6 +445,13 @@ object NetworkModule {
             }
         }
 
+        val apiBypassSocketFactory = ApiBypassSocketFactory(
+            context,
+            vpnManagerProvider,
+            settingsManagerProvider,
+            ::shouldUseApiBypass
+        )
+
         return OkHttpClient.Builder()
             .addInterceptor(dynamicBaseUrlInterceptor)
             .addInterceptor(dohFallbackInterceptor)
@@ -426,6 +460,7 @@ object NetworkModule {
             .proxyAuthenticator(proxyAuthenticator)
             .dns(dynamicDns)
             .proxySelector(proxySelector)
+            .socketFactory(apiBypassSocketFactory)
             .certificatePinner(certificatePinner)
             .sslSocketFactory(sslContext.socketFactory, trustManager)
             .hostnameVerifier(hostnameVerifier)
