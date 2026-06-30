@@ -103,7 +103,7 @@ class AmneziaVpnManagerTest {
         whenever(settingsManager.customDns).thenReturn(flowOf(""))
         
         whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(VpnKeyPair("pub", "priv"))
-        whenever(amneziaConfigGenerator.buildConfig(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+        whenever(amneziaConfigGenerator.buildConfig(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
             .thenReturn("mock_config")
         whenever(vpnNetworkMonitor.isValidated).thenReturn(MutableStateFlow(false))
 
