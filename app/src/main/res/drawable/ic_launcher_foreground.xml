@@ -29,12 +29,12 @@
                     android:endX="400"
                     android:endY="450"
                     android:type="linear">
-                    <!-- Light Sky Blue -->
-                    <item android:offset="0" android:color="#FFB3E5FC"/>
-                    <!-- Light Purple transition -->
-                    <item android:offset="0.5" android:color="#FFE1BEE7"/>
-                    <!-- Light Red/Pink -->
-                    <item android:offset="1" android:color="#FFFFCDD2"/>
+                    <!-- Light Blue -->
+                    <item android:offset="0" android:color="#FFAED6F1"/>
+                    <!-- Light Green -->
+                    <item android:offset="0.5" android:color="#FFA9DFBF"/>
+                    <!-- Light Yellow -->
+                    <item android:offset="1" android:color="#FFF9E79F"/>
                 </gradient>
             </aapt:attr>
         </path>
