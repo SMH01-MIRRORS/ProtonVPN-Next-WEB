@@ -29,6 +29,7 @@ interface AmneziaConfigGenerator {
         dnsServer: String,
         targetIp: String,
         isIncludeMode: Boolean = false,
+        allowLan: Boolean = false,
         selectedApps: Set<String> = emptySet(),
         selectedIps: Set<String> = emptySet(),
         port: Int = 1194,
@@ -49,6 +50,7 @@ class AmneziaConfigGeneratorImpl @Inject constructor(
         dnsServer: String,
         targetIp: String,
         isIncludeMode: Boolean,
+        allowLan: Boolean,
         selectedApps: Set<String>,
         selectedIps: Set<String>,
         port: Int,
@@ -57,6 +59,13 @@ class AmneziaConfigGeneratorImpl @Inject constructor(
     ): String {
         val baseAllowedIps = when {
             isIncludeMode -> if (selectedIps.isEmpty()) listOf("0.0.0.0/0") else selectedIps.toList()
+            allowLan -> {
+                if (selectedIps.isEmpty()) {
+                    LanExclusionUtils.REFINED_ALLOWED_IPS
+                } else {
+                    ipSubnetCalculator.complementOfExcluded(selectedIps + LanExclusionUtils.EXCLUDED_RANGES)
+                }
+            }
             else -> if (selectedIps.isEmpty()) listOf("0.0.0.0/0") else ipSubnetCalculator.complementOfExcluded(selectedIps)
         }
 
