@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160074,
-      "versionName": "12.0.0-alpha1st4p1-118-ge1b16d8-nightly",
+      "versionCode": 605160081,
+      "versionName": "12.0.0-alpha1st4p1-125-g8f0b737-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "test: enhance AmneziaVpnManager unit tests and configuration mocking\n\n- Refactored `AmneziaVpnManagerTest` setup to use `runBlocking` and integrated static mocks for `InetAddress` and `CertificateFactory`.\n- Expanded `settingsManager` mocks to include a comprehensive set of parameters, including AWG-specific settings (`awgJc`, `awgH1-4`, `awgI1-5`), LAN bypass, and split-tunneling configurations.\n- Added a `tearDown` method to ensure static mocks are properly closed after each test.\n- Added a new test case to verify that the `allowLan` setting is correctly propagated to the `amneziaConfigGenerator`.\n- Updated existing connection tests to explicitly verify `startVpnService` calls with expected configuration parameters.\n- Mocked additional dependencies like `connectedServerState` and `vpnRepository.getCachedServers()` to provide a more complete test environment.",
+      "changelog": "feat: integrate AI-driven changelog generation into CI/CD\n\n- Replaced the basic git-based changelog generation in `.woodpecker.yml` with a custom Python-based AI solution.\n- Updated the `generate-changelog` CI step to use a Python 3.11 environment and install `google-generativeai`.\n- Introduced `scripts/generate_ai_changelog.py` which utilizes the Gemini API to summarize commit history between tags.\n- Added support for configurable AI models and custom prompts via `GEMINI_MODEL` and `CHANGELOG_PROMPT` environment variables.\n- Implemented logic within the script to automatically identify the previous release tag and fetch relevant commit logs.\n- Included an implementation plan and walkthrough documentation for the new integration.",
       "force": false
     },
     "release": {
-      "versionCode": 605160074,
-      "versionName": "12.0.0-alpha1st4p1-118-ge1b16d8-nightly",
+      "versionCode": 605160081,
+      "versionName": "12.0.0-alpha1st4p1-125-g8f0b737-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "test: enhance AmneziaVpnManager unit tests and configuration mocking\n\n- Refactored `AmneziaVpnManagerTest` setup to use `runBlocking` and integrated static mocks for `InetAddress` and `CertificateFactory`.\n- Expanded `settingsManager` mocks to include a comprehensive set of parameters, including AWG-specific settings (`awgJc`, `awgH1-4`, `awgI1-5`), LAN bypass, and split-tunneling configurations.\n- Added a `tearDown` method to ensure static mocks are properly closed after each test.\n- Added a new test case to verify that the `allowLan` setting is correctly propagated to the `amneziaConfigGenerator`.\n- Updated existing connection tests to explicitly verify `startVpnService` calls with expected configuration parameters.\n- Mocked additional dependencies like `connectedServerState` and `vpnRepository.getCachedServers()` to provide a more complete test environment.",
+      "changelog": "feat: integrate AI-driven changelog generation into CI/CD\n\n- Replaced the basic git-based changelog generation in `.woodpecker.yml` with a custom Python-based AI solution.\n- Updated the `generate-changelog` CI step to use a Python 3.11 environment and install `google-generativeai`.\n- Introduced `scripts/generate_ai_changelog.py` which utilizes the Gemini API to summarize commit history between tags.\n- Added support for configurable AI models and custom prompts via `GEMINI_MODEL` and `CHANGELOG_PROMPT` environment variables.\n- Implemented logic within the script to automatically identify the previous release tag and fetch relevant commit logs.\n- Included an implementation plan and walkthrough documentation for the new integration.",
       "force": false
     }
   },
