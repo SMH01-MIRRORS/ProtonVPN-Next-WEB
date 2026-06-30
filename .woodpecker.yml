@@ -59,12 +59,21 @@ steps:
       - find app/build/outputs/apk/ -name "*.apk" -exec sh -c 'sha256sum "$1" > "$1.sha256"' _ {} \;
 
   generate-changelog:
-    image: alpine/git
+    image: python:3.11-slim
     when:
       event: tag
+    environment:
+      GEMINI_API_KEY:
+        from_secret: GEMINI_API_KEY
+      CHANGELOG_PROMPT:
+        from_secret: CHANGELOG_PROMPT
+      GEMINI_MODEL:
+        from_secret: GEMINI_MODEL
     commands:
+      - apt-get update && apt-get install -y git
       - git fetch --tags
-      - "git log -1 --pretty=format:\"%s%n%n🏷️ Tag: ${CI_COMMIT_TAG}%n🔢 Commit: %h\" > changelog.txt"
+      - pip install google-generativeai
+      - python scripts/generate_ai_changelog.py
 
   publish-release:
     image: woodpeckerci/plugin-release
