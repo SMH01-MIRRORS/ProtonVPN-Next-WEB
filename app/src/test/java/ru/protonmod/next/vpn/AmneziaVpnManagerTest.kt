@@ -22,8 +22,10 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.*
 import org.junit.Before
+import org.junit.After
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
@@ -43,6 +45,10 @@ import java.net.InetAddress
 import org.mockito.Mockito
 import org.amnezia.awg.backend.Tunnel
 import org.junit.Assert.assertEquals
+import org.mockito.MockedStatic
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
+import java.util.Date
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AmneziaVpnManagerTest {
@@ -87,40 +93,91 @@ class AmneziaVpnManagerTest {
     }
 
     private lateinit var manager: AmneziaVpnManager
+    private lateinit var mockedInetAddress: MockedStatic<InetAddress>
+    private lateinit var mockedCertFactory: MockedStatic<CertificateFactory>
 
     @Before
     fun setup() {
-        MockitoAnnotations.openMocks(this)
-        
-        whenever(context.applicationContext).thenReturn(context)
-        whenever(context.packageName).thenReturn("ru.protonmod.next")
-        
-        whenever(settingsManager.notificationsEnabled).thenReturn(flowOf(true))
-        whenever(settingsManager.killSwitchEnabled).thenReturn(flowOf(false))
-        whenever(settingsManager.splitTunnelingEnabled).thenReturn(flowOf(false))
-        whenever(settingsManager.vpnPort).thenReturn(flowOf(1194))
-        whenever(settingsManager.obfuscationEnabled).thenReturn(flowOf(false))
-        whenever(settingsManager.customDns).thenReturn(flowOf(""))
-        
-        whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(VpnKeyPair("pub", "priv"))
-        whenever(amneziaConfigGenerator.buildConfig(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
-            .thenReturn("mock_config")
-        whenever(vpnNetworkMonitor.isValidated).thenReturn(MutableStateFlow(false))
+        runBlocking {
+            MockitoAnnotations.openMocks(this@AmneziaVpnManagerTest)
+            
+            mockedInetAddress = Mockito.mockStatic(InetAddress::class.java)
+            mockedCertFactory = Mockito.mockStatic(CertificateFactory::class.java)
+            
+            val mockAddress = Mockito.mock(InetAddress::class.java)
+            whenever(mockAddress.hostAddress).thenReturn("1.2.3.4")
+            mockedInetAddress.`when`<InetAddress> { InetAddress.getByName(any()) }.thenReturn(mockAddress)
+            
+            val mockCf = Mockito.mock(CertificateFactory::class.java)
+            val mockCert = Mockito.mock(X509Certificate::class.java)
+            whenever(mockCert.notAfter).thenReturn(Date(System.currentTimeMillis() + 10000000))
+            whenever(mockCf.generateCertificate(any())).thenReturn(mockCert)
+            mockedCertFactory.`when`<CertificateFactory> { CertificateFactory.getInstance(any()) }.thenReturn(mockCf)
 
-        manager = AmneziaVpnManager(
-            context,
-            settingsManager,
-            { vpnRepository },
-            sessionDao,
-            connectedServerState,
-            systemContextWrapper,
-            cryptoWrapper,
-            amneziaConfigGenerator,
-            nextVpnManager,
-            vpnNetworkMonitor,
-            testDispatcherProvider,
-            testScope
-        )
+            whenever(context.applicationContext).thenReturn(context)
+            whenever(context.packageName).thenReturn("ru.protonmod.next")
+            
+            whenever(settingsManager.notificationsEnabled).thenReturn(flowOf(true))
+            whenever(settingsManager.killSwitchEnabled).thenReturn(flowOf(false))
+            whenever(settingsManager.splitTunnelingEnabled).thenReturn(flowOf(false))
+            whenever(settingsManager.vpnPort).thenReturn(flowOf(1194))
+            whenever(settingsManager.obfuscationEnabled).thenReturn(flowOf(false))
+            whenever(settingsManager.customDns).thenReturn(flowOf(""))
+            whenever(settingsManager.pauseEndTime).thenReturn(flowOf(0L))
+            whenever(settingsManager.allowLanEnabled).thenReturn(flowOf(false))
+            whenever(settingsManager.splitTunnelingMode).thenReturn(flowOf("exclude"))
+            whenever(settingsManager.excludedApps).thenReturn(flowOf(emptySet()))
+            whenever(settingsManager.excludedIps).thenReturn(flowOf(emptySet()))
+            whenever(settingsManager.excludedDomains).thenReturn(flowOf(emptySet()))
+            whenever(settingsManager.sentryNonFatalEnabled).thenReturn(flowOf(true))
+            whenever(settingsManager.analyticsEnabled).thenReturn(flowOf(true))
+            
+            whenever(settingsManager.awgJc).thenReturn(flowOf(3))
+            whenever(settingsManager.awgJmin).thenReturn(flowOf(1))
+            whenever(settingsManager.awgJmax).thenReturn(flowOf(3))
+            whenever(settingsManager.awgS1).thenReturn(flowOf(0))
+            whenever(settingsManager.awgS2).thenReturn(flowOf(0))
+            whenever(settingsManager.awgS3).thenReturn(flowOf(0))
+            whenever(settingsManager.awgS4).thenReturn(flowOf(0))
+            whenever(settingsManager.awgH1).thenReturn(flowOf("1"))
+            whenever(settingsManager.awgH2).thenReturn(flowOf("2"))
+            whenever(settingsManager.awgH3).thenReturn(flowOf("3"))
+            whenever(settingsManager.awgH4).thenReturn(flowOf("4"))
+            whenever(settingsManager.awgI1).thenReturn(flowOf("i1"))
+            whenever(settingsManager.awgI2).thenReturn(flowOf(""))
+            whenever(settingsManager.awgI3).thenReturn(flowOf(""))
+            whenever(settingsManager.awgI4).thenReturn(flowOf(""))
+            whenever(settingsManager.awgI5).thenReturn(flowOf(""))
+
+            whenever(connectedServerState.connectedServer).thenReturn(MutableStateFlow(null))
+            whenever(vpnRepository.getCachedServers()).thenReturn(emptyList())
+            
+            whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(VpnKeyPair("pub", "priv"))
+            whenever(amneziaConfigGenerator.buildConfig(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn("mock_config")
+            whenever(vpnNetworkMonitor.isValidated).thenReturn(MutableStateFlow(false))
+
+            manager = AmneziaVpnManager(
+                context,
+                settingsManager,
+                { vpnRepository },
+                sessionDao,
+                connectedServerState,
+                systemContextWrapper,
+                cryptoWrapper,
+                amneziaConfigGenerator,
+                nextVpnManager,
+                vpnNetworkMonitor,
+                testDispatcherProvider,
+                testScope
+            )
+        }
+    }
+
+    @After
+    fun tearDown() {
+        mockedInetAddress.close()
+        mockedCertFactory.close()
     }
 
     @Test
@@ -163,48 +220,39 @@ class AmneziaVpnManagerTest {
 
     @Test
     fun `connect calls startVpnService with correct config`() = runTest(testDispatcher) {
-        val mockedInetAddress = Mockito.mockStatic(InetAddress::class.java)
-        try {
-            val server = PhysicalServer(
-                id = "server_1",
-                domain = "node.protonvpn.com",
-                status = 1,
-                wgPublicKey = "pubkey"
-            )
-            val session = SessionEntity(
-                accessToken = "at",
-                refreshToken = "rt",
-                sessionId = "sid",
-                userId = "uid",
-                wgPrivateKey = "privkey",
-                wgPublicKeyPem = "pubkeypem",
-                wgCertificate = "cert"
-            )
+        val server = PhysicalServer(
+            id = "server_1",
+            domain = "node.protonvpn.com",
+            status = 1,
+            wgPublicKey = "pubkey"
+        )
+        val session = SessionEntity(
+            accessToken = "at",
+            refreshToken = "rt",
+            sessionId = "sid",
+            userId = "uid",
+            wgPrivateKey = "privkey",
+            wgPublicKeyPem = "pubkeypem",
+            wgCertificate = "cert"
+        )
 
-            val mockAddress = Mockito.mock(InetAddress::class.java)
-            whenever(mockAddress.hostAddress).thenReturn("1.2.3.4")
-            mockedInetAddress.`when`<InetAddress> { InetAddress.getByName(any()) }.thenReturn(mockAddress)
+        whenever(sessionDao.getSession()).thenReturn(session)
+        whenever(vpnRepository.registerWireGuardKey(any(), any(), any())).thenReturn(
+            Result.success(CreateCertificateResponse(code = 1000, certificate = "new_cert", expirationTime = 0L, refreshTime = 0L))
+        )
 
-            whenever(sessionDao.getSession()).thenReturn(session)
-            whenever(vpnRepository.registerWireGuardKey(any(), any(), any())).thenReturn(
-                Result.success(CreateCertificateResponse(code = 1000, certificate = "new_cert", expirationTime = 0L, refreshTime = 0L))
-            )
+        manager.connect("logical_1", server, session)
+        
+        advanceUntilIdle()
 
-            // We mock it to avoid internal refresh during test if possible
-            // but the library will try to parse "cert" which is invalid.
-            // Since we can't easily avoid it, we just accept any interaction for now
-            // as this test is mainly for verifying startVpnService call flow.
-            
-            manager.connect("logical_1", server, session)
-            
-            advanceUntilIdle()
-
-            // We use atLeast(0) because the background launch might be tricky in this environment
-            // but the primary goal is the fix verification which is in the other test.
-            // This test is here to ensure no regression in general flow.
-        } finally {
-            mockedInetAddress.close()
-        }
+        verify(systemContextWrapper).startVpnService(
+            configStr = eq("mock_config"),
+            logicalServerId = eq("logical_1"),
+            notificationsEnabled = any(),
+            killSwitchEnabled = any(),
+            excludedApps = any(),
+            excludedIps = any()
+        )
     }
 
     @Test
@@ -227,5 +275,30 @@ class AmneziaVpnManagerTest {
         // Should transition to CONNECTED
         assertEquals("Should be in CONNECTED state", AmneziaVpnManager.VpnState.CONNECTED, manager.vpnState.value)
         verify(systemContextWrapper).setVpnVerified()
+    }
+
+    @Test
+    fun `connect passes allowLan setting to config generator`() = runTest(testDispatcher) {
+        val server = PhysicalServer(id = "s1", domain = "d1", status = 1, wgPublicKey = "pk")
+        val session = SessionEntity(
+            accessToken = "at",
+            refreshToken = "rt",
+            sessionId = "sid",
+            userId = "uid",
+            wgPrivateKey = "priv",
+            wgCertificate = "cert"
+        )
+        
+        whenever(sessionDao.getSession()).thenReturn(session)
+        whenever(settingsManager.allowLanEnabled).thenReturn(flowOf(true))
+        
+        manager.connect("l1", server, session)
+        advanceUntilIdle()
+        
+        verify(amneziaConfigGenerator).buildConfig(
+            any(), any(), any(), any(), any(), any(), 
+            eq(true), // allowLan should be true
+            any(), any(), any(), any(), any()
+        )
     }
 }
