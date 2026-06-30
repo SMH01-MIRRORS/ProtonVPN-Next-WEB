@@ -17,10 +17,10 @@
   },
   "stable": {
     "release": {
-      "versionCode": 605159956,
-      "versionName": "12.0.0-alpha1st4p1",
-      "url": "https://r2.protonnext.qzz.io/VPN-Next/app-stable-release.apk",
-      "changelog": "Update launcher icon visuals\n\nRefines the app launcher icon by updating foreground and background gradients to a new blue-purple-red color scheme. Adjusts the foreground shadow, reduces body stroke width, and adds a subtle inner highlight rim for improved depth.",
+      "versionCode": 605160081,
+      "versionName": "12.0.0-alpha2",
+      "url": "https://r2.protonnext.qzz.io/VPN-Next/app-stable-standard-release.apk",
+      "changelog": "feat: integrate AI-driven changelog generation into CI/CD\n\n- Replaced the basic git-based changelog generation in `.woodpecker.yml` with a custom Python-based AI solution.\n- Updated the `generate-changelog` CI step to use a Python 3.11 environment and install `google-generativeai`.\n- Introduced `scripts/generate_ai_changelog.py` which utilizes the Gemini API to summarize commit history between tags.\n- Added support for configurable AI models and custom prompts via `GEMINI_MODEL` and `CHANGELOG_PROMPT` environment variables.\n- Implemented logic within the script to automatically identify the previous release tag and fetch relevant commit logs.\n- Included an implementation plan and walkthrough documentation for the new integration.",
       "force": false
     }
   }
