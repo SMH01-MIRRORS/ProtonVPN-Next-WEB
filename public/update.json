@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160064,
-      "versionName": "12.0.0-alpha1st4p1-108-g8c2c36c-nightly",
+      "versionCode": 605160074,
+      "versionName": "12.0.0-alpha1st4p1-118-ge1b16d8-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "chore: update .gitignore",
+      "changelog": "test: enhance AmneziaVpnManager unit tests and configuration mocking\n\n- Refactored `AmneziaVpnManagerTest` setup to use `runBlocking` and integrated static mocks for `InetAddress` and `CertificateFactory`.\n- Expanded `settingsManager` mocks to include a comprehensive set of parameters, including AWG-specific settings (`awgJc`, `awgH1-4`, `awgI1-5`), LAN bypass, and split-tunneling configurations.\n- Added a `tearDown` method to ensure static mocks are properly closed after each test.\n- Added a new test case to verify that the `allowLan` setting is correctly propagated to the `amneziaConfigGenerator`.\n- Updated existing connection tests to explicitly verify `startVpnService` calls with expected configuration parameters.\n- Mocked additional dependencies like `connectedServerState` and `vpnRepository.getCachedServers()` to provide a more complete test environment.",
       "force": false
     },
     "release": {
-      "versionCode": 605160064,
-      "versionName": "12.0.0-alpha1st4p1-108-g8c2c36c-nightly",
+      "versionCode": 605160074,
+      "versionName": "12.0.0-alpha1st4p1-118-ge1b16d8-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "chore: update .gitignore",
+      "changelog": "test: enhance AmneziaVpnManager unit tests and configuration mocking\n\n- Refactored `AmneziaVpnManagerTest` setup to use `runBlocking` and integrated static mocks for `InetAddress` and `CertificateFactory`.\n- Expanded `settingsManager` mocks to include a comprehensive set of parameters, including AWG-specific settings (`awgJc`, `awgH1-4`, `awgI1-5`), LAN bypass, and split-tunneling configurations.\n- Added a `tearDown` method to ensure static mocks are properly closed after each test.\n- Added a new test case to verify that the `allowLan` setting is correctly propagated to the `amneziaConfigGenerator`.\n- Updated existing connection tests to explicitly verify `startVpnService` calls with expected configuration parameters.\n- Mocked additional dependencies like `connectedServerState` and `vpnRepository.getCachedServers()` to provide a more complete test environment.",
       "force": false
     }
   },
