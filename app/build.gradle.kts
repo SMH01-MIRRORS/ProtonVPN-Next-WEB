@@ -15,11 +15,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import java.io.File
 import java.util.Properties
 import java.util.concurrent.TimeUnit
 
 // Helper function to execute Git commands in the terminal
-fun getGitOutput(command: String, workingDir: java.io.File): String {
+fun getGitOutput(command: String, workingDir: File): String {
     return try {
         val process = ProcessBuilder(command.split(" "))
             .directory(workingDir)
@@ -28,13 +29,13 @@ fun getGitOutput(command: String, workingDir: java.io.File): String {
             .start()
         process.waitFor(10, TimeUnit.SECONDS)
         process.inputStream.bufferedReader().readText().trim()
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         ""
     }
 }
 
 // Dynamically generate version name based on the latest Git tag
-fun getDynamicVersionName(workingDir: java.io.File): String {
+fun getDynamicVersionName(workingDir: File): String {
     val gitVersion = getGitOutput("git describe --tags --always", workingDir)
     // Fallback to "12.0.0" if Git is not available (e.g., downloaded as a ZIP)
     return gitVersion.ifEmpty { "12.0.0" }
@@ -42,7 +43,7 @@ fun getDynamicVersionName(workingDir: java.io.File): String {
 
 // Dynamically generate version code using total commit count to ensure it strictly increases.
 // Using total count instead of "since last tag" prevents resets when a new tag is created.
-fun getDynamicVersionCode(workingDir: java.io.File): Int {
+fun getDynamicVersionCode(workingDir: File): Int {
     // We use 'HEAD' to count all commits in the current branch's history.
     // In CI, ensure a full clone (depth: 0) is performed for this to work.
     val commitCount = getGitOutput("git rev-list --count HEAD", workingDir).toIntOrNull() ?: 0
@@ -63,9 +64,10 @@ plugins {
 
 // Only apply Sentry for non-privacy builds to ensure zero dependencies in privacy flavor
 if (!project.gradle.startParameter.taskNames.any { it.contains("privacy", ignoreCase = true) }) {
-    apply(plugin = "io.sentry.android.gradle")
+    pluginManager.apply("io.sentry.android.gradle")
 }
 
+@Suppress("UnstableApiUsage")
 android {
     namespace = "ru.protonmod.next"
     compileSdk = 37
@@ -164,19 +166,19 @@ android {
 
     sourceSets {
         getByName("main") {
-            java.srcDirs("src/main/java", "src/main/kotlin")
+            java.directories.addAll(listOf("src/main/java", "src/main/kotlin"))
         }
         getByName("stable") {
-            java.srcDirs("src/stable/java")
+            java.directories.add("src/stable/java")
         }
         getByName("nightly") {
-            java.srcDirs("src/nightly/java")
+            java.directories.add("src/nightly/java")
         }
         getByName("standard") {
-            java.srcDirs("src/standard/java")
+            java.directories.add("src/standard/java")
         }
         getByName("privacy") {
-            java.srcDirs("src/privacy/java")
+            java.directories.add("src/privacy/java")
         }
     }
 
@@ -312,6 +314,7 @@ android {
 }
 
 tasks.register("generateSecurityMetadata") {
+    description = "Generates C++ security metadata header containing version info and official library lists"
     val outputDir = file("src/main/cpp")
     val outputFile = file("${outputDir}/security_metadata.h")
     
