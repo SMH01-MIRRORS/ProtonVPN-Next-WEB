@@ -32,6 +32,8 @@ import java.io.IOException
 import java.net.SocketException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
+import javax.net.ssl.SSLHandshakeException
+import kotlinx.coroutines.CancellationException
 
 /**
  * Common initializer for the application (Sentry-enabled).
@@ -127,6 +129,8 @@ object FlavorInitializer {
             is SocketTimeoutException,
             is SocketException,
             is UnknownHostException,
+            is SSLHandshakeException,
+            is CancellationException,
             is EOFException -> true
             is IOException -> {
                 val msg = throwable.message?.lowercase() ?: ""
