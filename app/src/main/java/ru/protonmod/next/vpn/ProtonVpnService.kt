@@ -84,6 +84,8 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     private var isManualDisconnect: Boolean = false
     private var isVerified: Boolean = false
     private var lastLogicalServerId: String? = null
+    private var lastConnectIntent: Intent? = null
+    private var verificationJob: Job? = null
 
     // Cached PendingIntent objects to reduce IPC calls to system service
     // These are reused across notification updates to avoid DeadSystemException
@@ -161,6 +163,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             // Handle traffic updates based on the current state
             if (newState == Tunnel.State.DOWN) {
                 lastLogicalServerId = null
+                verificationJob?.cancel()
                 stopTrafficUpdates()
                 stopLogcatCollection()
             }
@@ -172,6 +175,10 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 // Log collection is already started in ACTION_CONNECT,
                 // but we ensure it's active here just in case of unexpected state transitions.
                 startLogcatCollection()
+
+                if (!isVerified) {
+                    runVerification()
+                }
             }
         }
 
@@ -276,6 +283,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             ACTION_CONNECT -> {
                 isManualDisconnect = false
                 isVerified = false
+                lastConnectIntent = intent
                 val configStr = intent.getStringExtra(EXTRA_CONFIG)
                 lastLogicalServerId = intent.getStringExtra(EXTRA_LOGICAL_SERVER_ID)
                 notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, true)
@@ -754,12 +762,87 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
      * Helper to correctly stop the foreground service.
      */
     private fun stopForegroundOrService(stopSelf: Boolean = true) {
+        ProtonLogger.d(TAG, "Stopping foreground service (stopSelf=$stopSelf)")
+        verificationJob?.cancel()
         stopForeground(STOP_FOREGROUND_REMOVE)
 
         isForegroundServiceStarted = false
+        isCurrentlyConnecting = false
+        stopTrafficUpdates()
+        stopLogcatCollection()
 
         if (stopSelf) {
             stopSelf()
+        }
+    }
+
+    private fun runVerification() {
+        verificationJob?.cancel()
+        verificationJob = serviceScope.launch(Dispatchers.IO) {
+            val startRx = backend.getStatistics(tunnel).totalRx()
+            val threshold = 50 * 1024 // 50 KB
+            val timeout = 5000L // 5 seconds
+            val startTime = System.currentTimeMillis()
+
+            ProtonLogger.i(TAG, "Connectivity verification started (Target: 50KB, Timeout: 5s)")
+
+            // Launch a background "pinger" to generate some traffic
+            val pinger = launch {
+                while (isActive) {
+                    try {
+                        // Use a public reliable endpoint to ensure we can reach out
+                        val url = java.net.URL("https://api.protonvpn.ch/ping")
+                        val connection = url.openConnection() as java.net.HttpURLConnection
+                        connection.requestMethod = "GET"
+                        connection.connectTimeout = 2000
+                        connection.readTimeout = 2000
+                        connection.inputStream.use { it.readBytes() }
+                        ProtonLogger.v(TAG, "Verification ping success")
+                    } catch (e: Exception) {
+                        ProtonLogger.v(TAG, "Verification ping failed: ${e.message}")
+                    }
+                    delay(1000)
+                }
+            }
+
+            try {
+                while (isActive && System.currentTimeMillis() - startTime < timeout) {
+                    val currentRx = backend.getStatistics(tunnel).totalRx()
+                    val downloaded = currentRx - startRx
+                    
+                    if (downloaded >= threshold) {
+                        ProtonLogger.i(TAG, "Verification successful: $downloaded bytes downloaded")
+                        isVerified = true
+                        updateNotification(Tunnel.State.UP.name)
+                        pinger.cancel()
+                        return@launch
+                    }
+                    delay(500)
+                }
+
+                if (!isVerified) {
+                    ProtonLogger.w(TAG, "Verification failed: threshold not reached in ${timeout}ms. Reconnecting...")
+                    reconnect()
+                }
+            } finally {
+                pinger.cancel()
+            }
+        }
+    }
+
+    private fun reconnect() {
+        val intent = lastConnectIntent ?: return
+        serviceScope.launch(Dispatchers.IO) {
+            try {
+                ProtonLogger.i(TAG, "Initiating automatic reconnection...")
+                // Stop current tunnel
+                backend.setState(tunnel, Tunnel.State.DOWN, null)
+                delay(1000) // Small grace period
+                // Restart with same intent
+                onStartCommand(intent, 0, 0)
+            } catch (e: Exception) {
+                ProtonLogger.e(TAG, "Failed to perform automatic reconnection", e)
+            }
         }
     }
 

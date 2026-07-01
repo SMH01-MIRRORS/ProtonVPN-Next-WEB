@@ -4,6 +4,7 @@
 *.ipr
 *.iws
 .navigation/
+.artifacts/
 
 # Gradle files & caches
 .gradle/
