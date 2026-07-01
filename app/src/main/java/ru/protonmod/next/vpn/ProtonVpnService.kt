@@ -18,6 +18,11 @@
 package ru.protonmod.next.vpn
 
 import android.annotation.SuppressLint
+
+
+
+
+
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -38,6 +43,10 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.AndroidEntryPoint
+import java.net.InetSocketAddress
+import java.net.Socket
+import javax.net.ssl.HttpsURLConnection
+import javax.net.ssl.HostnameVerifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -156,14 +165,15 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             if (currentTunnelState == newState && !wasConnecting) return
             
             currentTunnelState = newState
-            // Keep isCurrentlyConnecting true if we are in UP state but not yet verified
-            if (newState != Tunnel.State.UP || isVerified) {
-                isCurrentlyConnecting = false
-            } else {
-                isCurrentlyConnecting = true
+            // Keep isCurrentlyConnecting true if we are in UP state but not yet verified,
+            // OR if we are performing an internal reconnection.
+            isCurrentlyConnecting = when {
+                newState == Tunnel.State.UP && !isVerified -> true
+                isInternalReconnecting -> true
+                else -> false
             }
 
-            ProtonLogger.d(TAG, "VPN State changed to $newState (isCurrentlyConnecting=$isCurrentlyConnecting)")
+            ProtonLogger.d(TAG, "VPN State changed to $newState (isCurrentlyConnecting=$isCurrentlyConnecting, isInternalReconnecting=$isInternalReconnecting)")
             ProtonLogger.addSentryBreadcrumb(TAG, "VPN State Changed: $newState", "INFO", "vpn.state")
 
             // Broadcast the new state to the rest of the application.
@@ -303,7 +313,12 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 reconnectionJob?.cancel()
                 isManualDisconnect = false
                 isVerified = false
-                isInternalReconnecting = false
+                
+                // Only reset internal reconnecting if this is NOT a self-triggered intent
+                if (!isInternalReconnecting) {
+                    isInternalReconnecting = false
+                }
+                
                 lastConnectIntent = intent
                 val configStr = intent.getStringExtra(EXTRA_CONFIG)
                 lastLogicalServerId = intent.getStringExtra(EXTRA_LOGICAL_SERVER_ID)
@@ -320,7 +335,8 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 updateNotification(STATE_CONNECTING)
 
                 if (configStr != null) {
-                    ProtonLogger.v(TAG, "Connection config received (Length: ${configStr.length})")
+                    val hasAwg = configStr.contains("Jc =") || configStr.contains("H1 =")
+                    ProtonLogger.v(TAG, "Connection config received (Length: ${configStr.length}, HasAWG: $hasAwg)")
                     serviceScope.launch(Dispatchers.IO) {
                         try {
                             val configStream = ByteArrayInputStream(configStr.toByteArray())
@@ -803,35 +819,86 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     private fun runVerification() {
         verificationJob?.cancel()
         verificationJob = serviceScope.launch(Dispatchers.IO) {
-            val startRx = backend.getStatistics(tunnel).totalRx()
             val threshold = 20 * 1024 // 20 KB
             val timeout = 10000L // 10 seconds
             val startTime = System.currentTimeMillis()
 
+            ProtonLogger.i(TAG, "Connectivity verification: Waiting for tunnel handshake...")
+            
+            // 1. Wait for handshake response (up to 5 seconds)
+            var handshakeDetected = false
+            try {
+                kotlinx.coroutines.withTimeoutOrNull(5000) {
+                    while (isActive) {
+                        val stats = backend.getStatistics(tunnel)
+                        val hasHandshake = stats.peers().any { key ->
+                            (stats.peer(key)?.latestHandshakeEpochMillis ?: 0L) > 0L
+                        }
+                        if (hasHandshake) {
+                            handshakeDetected = true
+                            ProtonLogger.i(TAG, "Handshake response detected. Starting download test...")
+                            break
+                        }
+                        delay(500)
+                    }
+                }
+            } catch (e: Exception) {
+                ProtonLogger.v(TAG, "Handshake detection failed: ${e.message}")
+            }
+
+            if (!handshakeDetected) {
+                ProtonLogger.w(TAG, "Handshake not detected within 5s. Proceeding with verification anyway.")
+            }
+
+            // 2. Capture initial RX AFTER handshake or timeout
+            val startRx = backend.getStatistics(tunnel).totalRx()
             ProtonLogger.i(TAG, "Connectivity verification started (Target: 20KB, Timeout: 10s, InitialRx: $startRx)")
 
-            // Find the VPN network to ensure traffic goes through the tunnel
             val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            val vpnNetwork = cm.allNetworks.find { network ->
-                cm.getNetworkCapabilities(network)?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
-            }
 
-            if (vpnNetwork == null) {
-                ProtonLogger.w(TAG, "Verification delayed: VPN network not yet found in ConnectivityManager")
-            }
+            try {
+                while (isActive && !isVerified && System.currentTimeMillis() - startTime < timeout) {
+                    // Re-scan for VPN network in each attempt
+                    val vpnNetwork = cm.allNetworks.find { network ->
+                        cm.getNetworkCapabilities(network)?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
+                    }
 
-            // Launch a background "pinger" to generate some traffic.
-            // We'll download a larger resource to reach the threshold faster.
-            val pinger = launch {
-                while (isActive && !isVerified) {
+                    if (vpnNetwork == null) {
+                        ProtonLogger.v(TAG, "Verification: VPN network not found, retrying...")
+                        delay(500)
+                        continue
+                    }
+
                     try {
-                        // Downloading the logical server list which is usually large (>100KB)
-                        val url = java.net.URL("https://api.protonvpn.ch/vpn/logical")
-                        val connection = if (vpnNetwork != null) {
-                            vpnNetwork.openConnection(url)
-                        } else {
-                            url.openConnection()
-                        } as java.net.HttpURLConnection
+                        // PRIMARY CHECK: TCP-based to bypass TLS/Hostname and Cleartext issues
+                        // We check if we can establish a TCP connection to common DNS ports (443 or 53)
+                        val checkIps = listOf("1.1.1.1", "8.8.8.8", "9.9.9.9")
+                        var tcpSuccess = false
+                        
+                        for (ip in checkIps) {
+                            if (isVerified || !isActive) break
+                            
+                            try {
+                                val socket = vpnNetwork.socketFactory.createSocket()
+                                // Establish a TCP connection to port 443 (HTTPS)
+                                socket.connect(InetSocketAddress(ip, 443), 2000)
+                                socket.close()
+                                
+                                ProtonLogger.i(TAG, "Verification (TCP-based) successful: $ip:443 is reachable")
+                                isVerified = true
+                                tcpSuccess = true
+                                finalizeVerification()
+                                break
+                            } catch (e: Exception) {
+                                ProtonLogger.v(TAG, "TCP-based verification attempt failed for $ip: ${e.message}")
+                            }
+                        }
+                        
+                        if (tcpSuccess) return@launch
+
+                        // SECONDARY CHECK: DNS-based (original download test)
+                        val url = java.net.URL("https://www.google.com")
+                        val connection = vpnNetwork.openConnection(url) as java.net.HttpURLConnection
                         
                         connection.requestMethod = "GET"
                         connection.connectTimeout = 3000
@@ -839,58 +906,57 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                         
                         connection.inputStream.use { input ->
                             val buffer = ByteArray(8192)
-                            var totalRead = 0
-                            while (isActive && !isVerified) {
+                            var lastProgressLog = 0L
+                            while (isActive && !isVerified && System.currentTimeMillis() - startTime < timeout) {
                                 val read = input.read(buffer)
                                 if (read == -1) break
-                                totalRead += read
-                                // We don't need the actual data
+                                
+                                val currentRx = backend.getStatistics(tunnel).totalRx()
+                                val downloaded = currentRx - startRx
+                                
+                                if (downloaded >= threshold) {
+                                    ProtonLogger.i(TAG, "Verification successful: $downloaded bytes downloaded")
+                                    isVerified = true
+                                    finalizeVerification()
+                                    return@launch
+                                }
+                                
+                                if (downloaded - lastProgressLog >= 10240) {
+                                    ProtonLogger.v(TAG, "Verification progress: $downloaded / $threshold bytes")
+                                    lastProgressLog = downloaded
+                                }
                             }
-                            ProtonLogger.v(TAG, "Verification fetch: read $totalRead bytes from API")
                         }
                     } catch (e: Exception) {
-                        ProtonLogger.v(TAG, "Verification fetch failed: ${e.message}")
+                        ProtonLogger.v(TAG, "Verification attempt failed: ${e.message} (Type: ${e.javaClass.simpleName})")
                     }
-                    if (!isVerified) delay(500)
-                }
-            }
-
-            try {
-                while (isActive && System.currentTimeMillis() - startTime < timeout) {
-                    val currentRx = backend.getStatistics(tunnel).totalRx()
-                    val downloaded = currentRx - startRx
-                    
-                    if (downloaded >= threshold) {
-                        ProtonLogger.i(TAG, "Verification successful: $downloaded bytes downloaded")
-                        isVerified = true
-                        isCurrentlyConnecting = false
-                        isInternalReconnecting = false
-                        
-                        // Transition UI from CONNECTING to UP
-                        val broadcast = Intent(ACTION_STATE_CHANGED).apply {
-                            putExtra(EXTRA_STATE, Tunnel.State.UP.name)
-                            putExtra(EXTRA_LOGICAL_SERVER_ID, lastLogicalServerId)
-                            putExtra(EXTRA_IS_RECONNECTING, false)
-                            setPackage(packageName)
-                        }
-                        sendBroadcast(broadcast)
-
-                        updateNotification(Tunnel.State.UP.name)
-                        pinger.cancel()
-                        return@launch
-                    }
-                    ProtonLogger.v(TAG, "Verification progress: $downloaded / $threshold bytes")
-                    delay(500)
+                    if (!isVerified) delay(1000) // Increased delay between attempts
                 }
 
                 if (!isVerified && isActive) {
                     ProtonLogger.w(TAG, "Verification failed: threshold not reached in ${timeout}ms. Reconnecting...")
                     reconnect()
                 }
-            } finally {
-                pinger.cancel()
+            } catch (e: Exception) {
+                ProtonLogger.e(TAG, "Verification error", e)
             }
         }
+    }
+
+    private fun finalizeVerification() {
+        isCurrentlyConnecting = false
+        isInternalReconnecting = false
+        
+        // Transition UI from CONNECTING to UP
+        val broadcast = Intent(ACTION_STATE_CHANGED).apply {
+            putExtra(EXTRA_STATE, Tunnel.State.UP.name)
+            putExtra(EXTRA_LOGICAL_SERVER_ID, lastLogicalServerId)
+            putExtra(EXTRA_IS_RECONNECTING, false)
+            setPackage(packageName)
+        }
+        sendBroadcast(broadcast)
+
+        updateNotification(Tunnel.State.UP.name)
     }
 
     private fun reconnect() {
@@ -912,22 +978,35 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 // Stop current tunnel cleanly
                 backend.setState(tunnel, Tunnel.State.DOWN, null)
                 
-                // Wait for the state to actually become DOWN to avoid race conditions in the backend
+                // Wait for the state to actually become DOWN to avoid race conditions in the backend.
+                // We use a shorter timeout and more frequent checks.
                 var attempts = 0
-                while (currentTunnelState != Tunnel.State.DOWN && attempts < 20 && isActive) {
-                    if (lastSessionId != sessionToReconnect) return@launch
+                while (currentTunnelState != Tunnel.State.DOWN && attempts < 50 && isActive) {
+                    if (lastSessionId != sessionToReconnect) {
+                        isInternalReconnecting = false
+                        return@launch
+                    }
                     delay(100)
                     attempts++
                 }
 
-                if (!isActive || lastSessionId != sessionToReconnect) return@launch
+                if (!isActive || lastSessionId != sessionToReconnect) {
+                    isInternalReconnecting = false
+                    return@launch
+                }
 
-                ProtonLogger.d(TAG, "Backend state is DOWN. Restarting service with original intent.")
-                // Restart with same intent via standard startService to ensure proper lifecycle
+                ProtonLogger.i(TAG, "Backend state is DOWN. Restarting service with original intent for session $sessionToReconnect")
+                
+                // Re-verify that AWG params are in the intent we are about to reuse
+                val originalConfig = intent.getStringExtra(EXTRA_CONFIG)
+                val hasAwg = originalConfig?.contains("Jc =") == true
+                ProtonLogger.d(TAG, "Reusing original intent (Config length: ${originalConfig?.length}, HasAWG: $hasAwg)")
+                
                 startService(intent)
             } catch (e: Exception) {
                 if (isActive && lastSessionId == sessionToReconnect) {
                     ProtonLogger.e(TAG, "Failed to perform automatic reconnection", e)
+                    isInternalReconnecting = false
                     stopForegroundOrService()
                 }
             }
@@ -936,28 +1015,34 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
 
     override fun onDestroy() {
         ProtonLogger.d(TAG, "VPN Service destroyed")
+        
+        // Cancel all jobs except the shutdown logic
+        verificationJob?.cancel()
+        reconnectionJob?.cancel()
+        statsJob?.cancel()
+        logcatJob?.cancel()
+
         try {
             unregisterReceiver(settingsReceiver)
         } catch (e: Exception) {
             ProtonLogger.w(TAG, "Receiver already unregistered", e)
         }
 
-        // Ensure the tunnel is cleanly shut down on an IO thread BEFORE cancelling the scope,
-        // so we don't block the main thread and trigger a Background ANR (awgTurnOff is a
-        // long-running JNI/Go call).
-        serviceScope.launch(Dispatchers.IO) {
-            try {
-                withTimeout(5_000) {
+        // Use runBlocking to ensure the tunnel is shut down before the service process is potentially killed.
+        // We limit it to 2 seconds to avoid blocking the system for too long.
+        // This is safer than using serviceScope which we are about to cancel.
+        try {
+            kotlinx.coroutines.runBlocking(Dispatchers.IO) {
+                kotlinx.coroutines.withTimeoutOrNull(2000) {
+                    ProtonLogger.i(TAG, "Stopping VPN tunnel on service destroy...")
                     backend.setState(tunnel, Tunnel.State.DOWN, null)
                 }
-            } catch (e: Exception) {
-                ProtonLogger.e(TAG, "Error stopping VPN on service destroy", e)
             }
+        } catch (e: Exception) {
+            ProtonLogger.e(TAG, "Error during synchronous shutdown in onDestroy", e)
         }
 
-        // Cancel all ongoing coroutines (like stats job) after the shutdown is launched
         serviceScope.cancel()
-
         super.onDestroy()
     }
 }
