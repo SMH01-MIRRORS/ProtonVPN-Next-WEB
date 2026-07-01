@@ -248,6 +248,7 @@ class AmneziaVpnManagerTest {
         verify(systemContextWrapper).startVpnService(
             configStr = eq("mock_config"),
             logicalServerId = eq("logical_1"),
+            sessionId = any(),
             notificationsEnabled = any(),
             killSwitchEnabled = any(),
             excludedApps = any(),
