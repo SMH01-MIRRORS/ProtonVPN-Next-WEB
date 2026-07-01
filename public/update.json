@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160084,
-      "versionName": "12.0.0-alpha2-3-gb2d67b6-nightly",
+      "versionCode": 605160088,
+      "versionName": "12.0.0-alpha2-7-g1ab5d86-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "fix: improve VPN connection verification and reconnection reliability\n\n- Updated `ProtonVpnService` to maintain the connecting state in the UI until the tunnel is both `UP` and verified.\n- Modified `onStateChange` to broadcast `STATE_CONNECTING` if the tunnel reaches `UP` but has not yet passed the data verification threshold.\n- Added a broadcast trigger in `verifyConnection` to transition the UI to `UP` only after successful data flow is confirmed.\n- Refactored the `reconnect` logic to poll for the `DOWN` state before attempting a restart, preventing race conditions in the wireguard-go backend.\n- Replaced direct `onStartCommand` calls with `startService(intent)` during reconnection to ensure proper service lifecycle handling.\n- Introduced `stopForegroundOrService()` in the reconnection failure path to prevent orphaned service states.",
+      "changelog": "test: update AmneziaVpnManagerTest for startVpnService signature change\n\n- Updated the `verify` call for `startVpnService` in `AmneziaVpnManagerTest` to include the `sessionId` parameter.",
       "force": false
     },
     "release": {
-      "versionCode": 605160084,
-      "versionName": "12.0.0-alpha2-3-gb2d67b6-nightly",
+      "versionCode": 605160088,
+      "versionName": "12.0.0-alpha2-7-g1ab5d86-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "fix: improve VPN connection verification and reconnection reliability\n\n- Updated `ProtonVpnService` to maintain the connecting state in the UI until the tunnel is both `UP` and verified.\n- Modified `onStateChange` to broadcast `STATE_CONNECTING` if the tunnel reaches `UP` but has not yet passed the data verification threshold.\n- Added a broadcast trigger in `verifyConnection` to transition the UI to `UP` only after successful data flow is confirmed.\n- Refactored the `reconnect` logic to poll for the `DOWN` state before attempting a restart, preventing race conditions in the wireguard-go backend.\n- Replaced direct `onStartCommand` calls with `startService(intent)` during reconnection to ensure proper service lifecycle handling.\n- Introduced `stopForegroundOrService()` in the reconnection failure path to prevent orphaned service states.",
+      "changelog": "test: update AmneziaVpnManagerTest for startVpnService signature change\n\n- Updated the `verify` call for `startVpnService` in `AmneziaVpnManagerTest` to include the `sessionId` parameter.",
       "force": false
     }
   },
