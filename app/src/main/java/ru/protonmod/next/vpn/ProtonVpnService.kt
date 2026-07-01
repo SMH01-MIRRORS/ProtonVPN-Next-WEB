@@ -147,14 +147,21 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             if (currentTunnelState == newState && !wasConnecting) return
             
             currentTunnelState = newState
-            isCurrentlyConnecting = false
+            // Keep isCurrentlyConnecting true if we are in UP state but not yet verified
+            if (newState != Tunnel.State.UP || isVerified) {
+                isCurrentlyConnecting = false
+            } else {
+                isCurrentlyConnecting = true
+            }
 
-            ProtonLogger.d(TAG, "VPN State changed to $newState (wasConnecting=$wasConnecting)")
+            ProtonLogger.d(TAG, "VPN State changed to $newState (isCurrentlyConnecting=$isCurrentlyConnecting)")
             ProtonLogger.addSentryBreadcrumb(TAG, "VPN State Changed: $newState", "INFO", "vpn.state")
 
-            // Broadcast the new state to the rest of the application
+            // Broadcast the new state to the rest of the application.
+            // If the tunnel is UP but not yet verified, we still report it as CONNECTING to the UI.
             val broadcast = Intent(ACTION_STATE_CHANGED).apply {
-                putExtra(EXTRA_STATE, newState.name)
+                val stateLabel = if (newState == Tunnel.State.UP && !isVerified) STATE_CONNECTING else newState.name
+                putExtra(EXTRA_STATE, stateLabel)
                 putExtra(EXTRA_LOGICAL_SERVER_ID, lastLogicalServerId)
                 setPackage(packageName)
             }
@@ -813,6 +820,16 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                     if (downloaded >= threshold) {
                         ProtonLogger.i(TAG, "Verification successful: $downloaded bytes downloaded")
                         isVerified = true
+                        isCurrentlyConnecting = false
+                        
+                        // Transition UI from CONNECTING to UP
+                        val broadcast = Intent(ACTION_STATE_CHANGED).apply {
+                            putExtra(EXTRA_STATE, Tunnel.State.UP.name)
+                            putExtra(EXTRA_LOGICAL_SERVER_ID, lastLogicalServerId)
+                            setPackage(packageName)
+                        }
+                        sendBroadcast(broadcast)
+
                         updateNotification(Tunnel.State.UP.name)
                         pinger.cancel()
                         return@launch
@@ -835,13 +852,22 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         serviceScope.launch(Dispatchers.IO) {
             try {
                 ProtonLogger.i(TAG, "Initiating automatic reconnection...")
-                // Stop current tunnel
+                // Stop current tunnel cleanly
                 backend.setState(tunnel, Tunnel.State.DOWN, null)
-                delay(1000) // Small grace period
-                // Restart with same intent
-                onStartCommand(intent, 0, 0)
+                
+                // Wait for the state to actually become DOWN to avoid race conditions in the backend
+                var attempts = 0
+                while (currentTunnelState != Tunnel.State.DOWN && attempts < 20) {
+                    delay(100)
+                    attempts++
+                }
+
+                ProtonLogger.d(TAG, "Backend state is DOWN. Restarting service with original intent.")
+                // Restart with same intent via standard startService to ensure proper lifecycle
+                startService(intent)
             } catch (e: Exception) {
                 ProtonLogger.e(TAG, "Failed to perform automatic reconnection", e)
+                stopForegroundOrService()
             }
         }
     }
