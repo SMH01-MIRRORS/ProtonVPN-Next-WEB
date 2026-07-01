@@ -166,6 +166,7 @@ class AmneziaVpnManager @Inject constructor(
                     ProtonVpnService.ACTION_STATE_CHANGED -> {
                         val stateStr = intent.getStringExtra(ProtonVpnService.EXTRA_STATE)
                         val serverId = intent.getStringExtra(ProtonVpnService.EXTRA_LOGICAL_SERVER_ID)
+                        val isServiceReconnecting = intent.getBooleanExtra(ProtonVpnService.EXTRA_IS_RECONNECTING, false)
                         
                         if (serverId != null && serverId != currentServerId && stateStr != Tunnel.State.DOWN.name) {
                             currentServerId = serverId
@@ -189,7 +190,12 @@ class AmneziaVpnManager @Inject constructor(
 
                                     _tunnelState.value = newState
                                     
-                                    handleTunnelStateChange(newState)
+                                    // If service is reconnecting, we don't clear the server state even if it's DOWN
+                                    if (newState == Tunnel.State.DOWN && (isReconnecting || isServiceReconnecting)) {
+                                        ProtonLogger.d(TAG, "Tunnel DOWN during reconnection, preserving server state")
+                                    } else {
+                                        handleTunnelStateChange(newState)
+                                    }
                                     
                                 } catch (e: Exception) {
                                     ProtonLogger.e(TAG, "Failed to parse tunnel state: $it")
@@ -688,10 +694,12 @@ class AmneziaVpnManager @Inject constructor(
             Log.d(TAG, "Generated AWG Config:\n$configStr")
             ProtonLogger.v(TAG, "Generated AWG Config Length: ${configStr.length}")
 
-            ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: Starting Service", "INFO", "vpn.connect")
+            val sessionId = System.currentTimeMillis()
+            ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: Starting Service (Session: $sessionId)", "INFO", "vpn.connect")
             systemContextWrapper.startVpnService(
                 configStr = configStr,
                 logicalServerId = logicalServerId,
+                sessionId = sessionId,
                 notificationsEnabled = settingsManager.notificationsEnabled.first(),
                 killSwitchEnabled = settingsManager.killSwitchEnabled.first(),
                 excludedApps = selectedApps,
