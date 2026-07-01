@@ -804,11 +804,11 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         verificationJob?.cancel()
         verificationJob = serviceScope.launch(Dispatchers.IO) {
             val startRx = backend.getStatistics(tunnel).totalRx()
-            val threshold = 50 * 1024 // 50 KB
+            val threshold = 20 * 1024 // 20 KB
             val timeout = 10000L // 10 seconds
             val startTime = System.currentTimeMillis()
 
-            ProtonLogger.i(TAG, "Connectivity verification started (Target: 50KB, Timeout: 5s, InitialRx: $startRx)")
+            ProtonLogger.i(TAG, "Connectivity verification started (Target: 20KB, Timeout: 10s, InitialRx: $startRx)")
 
             // Find the VPN network to ensure traffic goes through the tunnel
             val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
