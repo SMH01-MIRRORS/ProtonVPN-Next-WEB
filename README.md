@@ -44,6 +44,9 @@
 - **🛡️ Kill Switch:** Robust protection against traffic leaks.
 - **⚙️ Split Tunneling:** Exclude specific apps (including system apps) from the VPN tunnel.
 
+### 🛠 Development
+Detailed build instructions for both Terminal and Android Studio are available in **[BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md)**.
+
 ---
 
 ## Русский
@@ -78,6 +81,9 @@
 - **🔐 Privacy Flavor:** Сборка без телеметрии (Sentry) и без OTA-обновлений.
 - **📦 Бэкап и восстановление:** Экспорт и импорт сессий и настроек приложения.
 - **🎨 Material 3:** Современный интерфейс на Jetpack Compose (Мастер настройки, Динамические цвета).
+
+### 🛠 Сборка
+Подробные инструкции по сборке через терминал и Android Studio доступны в файле **[BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md)**.
 
 ---
 
