@@ -85,7 +85,6 @@ android {
 
         // Support 64-bit architectures only
         // 32-bit devices (armeabi-v7a, armeabi) are not supported as the VPN engine
-        // (AmneziaWG via go-vpn-lib) and its native libraries are compiled for 64-bit only
         ndk {
             abiFilters.addAll(listOf("arm64-v8a"))
         }
@@ -427,7 +426,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.datastore.preferences)
-    implementation(libs.androidx.datastore.preferences.multiprocess)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.android.svg)
     implementation(libs.kotlinx.collections.immutable)

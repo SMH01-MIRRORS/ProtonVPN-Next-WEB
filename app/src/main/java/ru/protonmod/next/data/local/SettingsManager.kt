@@ -20,7 +20,7 @@ package ru.protonmod.next.data.local
 import android.content.Context
 import androidx.core.content.edit
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.PreferencesSerializer
+import androidx.datastore.preferences.core.PreferencesFileSerializer
 import androidx.datastore.preferences.core.Preferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +31,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
-import androidx.datastore.preferences.multiprocess.MultiProcessDataStoreFactory
+import androidx.datastore.core.MultiProcessDataStoreFactory
 import java.io.File
 import ru.protonmod.next.utils.ProtonLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -63,7 +63,7 @@ class SettingsManager @Inject constructor(
         private fun getOrCreateDataStore(context: Context): DataStore<Preferences> =
             dataStoreInstance ?: synchronized(this) {
                 dataStoreInstance ?: MultiProcessDataStoreFactory.create(
-                    serializer = PreferencesSerializer,
+                    serializer = PreferencesFileSerializer,
                     scope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
                     produceFile = {
                         File(context.applicationContext.filesDir, "datastore/settings.preferences_pb")
