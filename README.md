@@ -2,173 +2,177 @@
 
 [![Crowdin](https://badges.crowdin.net/protonvpn-next/localized.svg)](https://crowdin.com/project/protonvpn-next)
 
-[English](#english) | [Русский](#русский)
+[English](#english) | [Русский](#русский) | [Беларуская](#беларуская) | [فارسی](#فارسی) | [Қазақша](#қазақша) | [Українська](#українська) | [中文](#中文)
 
 ---
 
 ## English
 
-**Proton VPN-Next** is a modern, high-performance **unofficial** Android client for Proton VPN. Built with a focus on privacy, speed, and a sleek Material 3 interface, it leverages AmneziaWG to ensure stable connectivity even in restrictive environments.
+**Proton VPN-Next** is a modern, high-performance **unofficial** Android client for Proton VPN. Built with a focus on privacy, speed, and a sleek Material 3 interface, it leverages AmneziaWG and advanced bypass strategies to ensure stable connectivity in restrictive environments.
 
 ### ⚠️ IMPORTANT DISCLAIMER
-- **UNOFFICIAL CLIENT:** This application is **NOT** an official product of Proton AG and is in no way affiliated with or endorsed by Proton AG.
-- **USE AT YOUR OWN RISK:** This software is provided "as is" without any warranties. The developer assumes **no responsibility** for your accounts, data, or any potential consequences (such as account restrictions) resulting from the use of this unofficial client.
-- **SUPPORT PROTON:** If you value privacy and enjoy Proton's services, we highly recommend subscribing to an official **Proton VPN paid plan**. Supporting the original creators ensures the continued development of the secure infrastructure we all rely on.
+- **UNOFFICIAL CLIENT:** This application is **NOT** an official product of Proton AG.
+- **USE AT YOUR OWN RISK:** This software is provided "as is". The developer assumes **no responsibility** for your accounts or data.
+- **SUPPORT PROTON:** We highly recommend subscribing to an official **Proton VPN paid plan** to support the original creators.
 
-### 🚨 About Fakes & Counterfeit APKs
-> **Warning:** Counterfeit versions of this app have been found in the wild. These fake APKs are **dangerous** — they may contain malware, steal your credentials, or silently redirect update checks to attacker-controlled servers.
+### 🚨 Security Warning: Fakes & Counterfeits
+> **Warning:** Counterfeit versions of this app are dangerous. See the **[Wall of Shame](WALL_OF_SHAME.md)** for a list of known malicious distribution channels.
 
-**See the [Wall of Shame](WALL_OF_SHAME.md) for a list of known malicious distribution channels.**
+**Official Application IDs:**
+- 🟢 **Stable:** `ru.protonmod.next`
+- 🟡 **Nightly:** `ru.protonmod.next.nightly`
+- 🔐 **Privacy:** `ru.protonmod.next.privacy` (No telemetry/Sentry, no OTA)
 
-**The ONLY official sources for Proton VPN-Next are:**
-- ✅ GitHub repository: [SMH01-MIRRORS/ProtonVPN-Next-MIRROR](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR)
-- ✅ Codeberg repository: [SMH01/ProtonVPN-Next](https://codeberg.org/SMH01/ProtonVPN-Next)
-- ✅ Official releases on Codeberg: [Releases page](https://codeberg.org/SMH01/ProtonVPN-Next/releases)
-- ✅ Official Telegram channel: [@ProtonVPN_MOD](https://t.me/ProtonVPN_MOD)
-
-**Known fake/counterfeit distribution channels (DO NOT use):**
-- ❌ See the [Wall of Shame](WALL_OF_SHAME.md) for the full list of dangerous channels.
-
-**How to verify you have the real app:**
-1. Check the package name must be `ru.protonmod.next` (NOT `ch.protonvpn.android` or any other name).
-2. Verify the APK signature matches the one published in this repository.
-3. Only install from the official Codeberg Releases page linked above.
-4. **Never install APKs shared via Telegram, random websites, or third-party app stores.**
-
-If you encounter a fake version, please open an issue on this repository so we can track and warn other users.
+**Official Sources:**
+- ✅ [GitHub Mirror](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR)
+- ✅ [Codeberg Repo](https://codeberg.org/SMH01/ProtonVPN-Next)
+- ✅ [Telegram Channel](https://t.me/ProtonVPN_MOD)
 
 ### 📱 System Requirements
-- **Operating System:** Android 10+ (API level 29 or higher)
-- **Device Architecture:** **64-bit only** (arm64-v8a or x86_64)
-  - ⚠️ **32-bit devices are NOT supported.** The VPN engine (AmneziaWG) is compiled exclusively for 64-bit architectures. Attempting to install on 32-bit devices will result in a native library error.
-  - Most modern Android devices are 64-bit. Check your device's CPU architecture to verify compatibility.
-
-### 🛠 Build Instructions
-
-#### Using Android Studio (Recommended)
-1. **Open Android Studio** (Android Studio Panda 4 | 2025.3.4 Patch 1 or newer recommended).
-2. Select **Open** and navigate to the project root directory.
-3. Wait for the **Gradle Sync** to complete.
-4. Ensure you have **JDK 17** configured in `Settings > Build, Execution, Deployment > Build Tools > Gradle`.
-5. Connect your device or start an emulator.
-6. Click the **Run** button (green play icon).
-
-#### Using Terminal
-Ensure you have the Android SDK and JDK 17 installed.
-1. Navigate to the project root.
-2. Build the Debug APK:
-   ```bash
-   ./gradlew assembleDebug
-   ```
-3. The generated APK will be located at:
-   `app/build/outputs/apk/debug/app-debug.apk`
+| Requirement | Specification |
+| :--- | :--- |
+| **OS** | Android 10+ (API 29+) |
+| **Architecture** | **ARM64-v8a ONLY** |
+| **Support** | ⚠️ x86_64 and 32-bit (ARMv7) are **NOT supported** |
 
 ### ✨ Key Features
-- **🚀 AmneziaWG Core:** Advanced protocol integration to bypass censorship and maintain high speeds.
-- **🎨 Material 3 & Compose:** Fully modern UI built with Jetpack Compose and dynamic color support.
-- **🔐 Privacy Suite:**
-    - **Kill Switch:** System-level and internal protection.
-    - **Split Tunneling:** Exclude specific apps or IP addresses from the VPN tunnel.
-- **🌍 Global Network:** Easy server selection with load indicators.
-- **📱 Multi-language:** Support for English, Russian, Ukrainian, Belarusian, Farsi, and Chinese.
-
-### 🛠 Tech Stack
-- **Language:** Kotlin
-- **UI:** Jetpack Compose (Material 3)
-- **Architecture:** MVVM + Clean Architecture
-- **DI:** Hilt (Dagger 2)
-- **Persistence:** Room Database
-- **VPN Engine:** AmneziaWG (via Maven dependency)
-### 💎 Infrastructure & Sponsors
-- **[1Password](https://1password.com/):** Password management and security (Teams subscription provided for open source development).
-- **[Sentry](https://sentry.io/):** Error monitoring and performance tracking (Business Plan provided for the project).
-- **[Cloudflare](https://www.cloudflare.com/):** High-performance infrastructure using **Cloudflare Pages** (hosting) and **R2 Storage** (asset storage).
-- **[DigitalPlat FreeDomain](https://freedomain.digiplat.org/):**
-  This project uses DigitalPlat FreeDomain, an open domain infrastructure maintained by Edward Hsing. Built on DigitalPlat FreeDomain for domain provisioning, with credit to the platform and its maintainer.
-- This project is tested with BrowserStack'
+- **🚀 ByeDPI Integration:** Advanced strategies to circumvent Deep Packet Inspection (DPI).
+- **🌐 API Bypass Suite:** Access Proton API via SOCKS5, Deno proxy, or Remote DNS fallback.
+- **🔐 Privacy Flavor:** Zero telemetry (no Sentry) and no OTA updates.
+- **📦 Backup & Restore:** Easily export and import your sessions and app configuration.
+- **🎨 Modern UI:** Fully built with Jetpack Compose and Material 3 (Setup Wizard, Dynamic Colors).
+- **🛡️ Kill Switch:** Robust protection against traffic leaks.
+- **⚙️ Split Tunneling:** Exclude specific apps (including system apps) from the VPN tunnel.
 
 ---
 
 ## Русский
 
-**Proton VPN-Next** — это современный высокопроизводительный **неофициальный** Android-клиент для Proton VPN. Разработан с упором на приватность, скорость и современный интерфейс Material 3. Использует технологию AmneziaWG для обеспечения стабильного соединения даже в условиях жесткой цензуры.
+**Proton VPN-Next** — это современный высокопроизводительный **неофициальный** Android-клиент для Proton VPN. Создан с упором на приватность и скорость, использует AmneziaWG и продвинутые стратегии обхода блокировок.
 
 ### ⚠️ ВАЖНЫЙ ОТКАЗ ОТ ОТВЕТСТВЕННОСТИ
-- **НЕОФИЦИАЛЬНЫЙ КЛИЕНТ:** Данное приложение **НЕ ЯВЛЯЕТСЯ** официальным продуктом Proton AG и никак не связано с официальной командой разработчиков Proton.
-- **ИСПОЛЬЗУЙТЕ НА СВОЙ СТРАХ И РИСК:** Программное обеспечение предоставляется по принципу «как есть». Разработчик **не несет ответственности** за ваши аккаунты, сохранность данных или любые возможные последствия (включая блокировки аккаунтов), возникшие в результате использования этого клиента.
-- **ПОДДЕРЖИТЕ PROTON:** Если вы цените приватность и вам нравятся продукты Proton, мы настоятельно рекомендуем **оформить платную подписку** на официальном сайте. Поддержка оригинальных создателей гарантирует развитие защищенной инфраструктуры, которой мы все пользуемся.
+- **НЕОФИЦИАЛЬНЫЙ КЛИЕНТ:** Приложение **НЕ ЯВЛЯЕТСЯ** официальным продуктом Proton AG.
+- **ИСПОЛЬЗУЙТЕ НА СВОЙ СТРАХ И РИСК:** Разработчик **не несет ответственности** за ваши аккаунты или данные.
 
-### 🚨 О фейках и поддельных APK
-> **Внимание:** В сети обнаружены поддельные версии этого приложения. Такие APK **опасны** — они могут содержать вредоносное ПО, красть ваши данные или перенаправлять проверки обновлений на серверы злоумышленников.
+### 🚨 Безопасность: Фейки и подделки
+> **Внимание:** Поддельные версии приложения опасны. Список вредоносных каналов доступен на **[Доске позора (Wall of Shame)](WALL_OF_SHAME.md)**.
 
-**Смотрите [Доску позора (Wall of Shame)](WALL_OF_SHAME.md) для списка известных вредоносных каналов распространения.**
+**Официальные Package Name:**
+- 🟢 **Stable:** `ru.protonmod.next`
+- 🟡 **Nightly:** `ru.protonmod.next.nightly`
+- 🔐 **Privacy:** `ru.protonmod.next.privacy` (Без телеметрии/Sentry, без OTA)
 
-**ЕДИНСТВЕННЫЕ официальные источники Proton VPN-Next:**
-- ✅ Репозиторий GitHub: [SMH01-MIRRORS/ProtonVPN-Next-MIRROR](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR)
-- ✅ Репозиторий Codeberg: [SMH01/ProtonVPN-Next](https://codeberg.org/SMH01/ProtonVPN-Next)
-- ✅ Официальные релизы на Codeberg: [страница Releases](https://codeberg.org/SMH01/ProtonVPN-Next/releases)
-- ✅ Официальный Telegram-канал: [@ProtonVPN_MOD](https://t.me/ProtonVPN_MOD)
-
-**Известные поддельные каналы распространения (НЕ использовать):**
-- ❌ Полный список опасных каналов доступен на [Доске позора (Wall of Shame)](WALL_OF_SHAME.md).
-
-**Как убедиться, что у вас настоящее приложение:**
-1. Имя пакета должно быть `ru.protonmod.next` (НЕ `ch.protonvpn.android` и никакое другое).
-2. Проверьте подпись APK — она должна совпадать с опубликованной в этом репозитории.
-3. Устанавливайте приложение только со страницы официальных релизов GitHub.
-4. **Никогда не устанавливайте APK из Telegram, сторонних сайтов или магазинов приложений.**
-
-Если вы столкнулись с поддельной версией, пожалуйста, создайте issue в этом репозитории.
+**Официальные источники:**
+- ✅ [Зеркало GitHub](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR)
+- ✅ [Репозиторий Codeberg](https://codeberg.org/SMH01/ProtonVPN-Next)
+- ✅ [Telegram-канал](https://t.me/ProtonVPN_MOD)
 
 ### 📱 Системные требования
-- **Операционная система:** Android 10+ (API 29 и выше)
-- **Архитектура устройства:** **Только 64-бит** (arm64-v8a или x86_64)
-  - ⚠️ **32-бит устройства НЕ поддерживаются.** VPN-движок (AmneziaWG) скомпилирован исключительно под 64-битные архитектуры. Попытка установки на 32-бит устройства приведет к ошибке загрузки нативной библиотеки.
-  - Большинство современных Android-устройств - это 64-бит. Проверьте архитектуру процессора вашего устройства для подтверждения совместимости.
+- **ОС:** Android 10+
+- **Архитектура:** **Только ARM64-v8a**
+- **Внимание:** ⚠️ Поддержка x86_64 и 32-битных систем (ARMv7) **прекращена**.
 
-### 🛠 Инструкции по сборке
+### ✨ Основные возможности
+- **🚀 ByeDPI:** Встроенные инструменты для обхода систем глубокого анализа трафика (DPI).
+- **🌐 API Bypass:** Доступ к API через SOCKS5, Deno-прокси или Remote DNS.
+- **🔐 Privacy Flavor:** Сборка без телеметрии (Sentry) и без OTA-обновлений.
+- **📦 Бэкап и восстановление:** Экспорт и импорт сессий и настроек приложения.
+- **🎨 Material 3:** Современный интерфейс на Jetpack Compose (Мастер настройки, Динамические цвета).
 
-#### Через Android Studio (Рекомендуется)
-1. **Откройте Android Studio** (рекомендуется версия Android Studio Panda 4 | 2025.3.4 Patch 1 или новее).
-2. Выберите **Open** и укажите путь к корневой папке проекта.
-3. Дождитесь завершения синхронизации **Gradle**.
-4. Убедитесь, что в настройках (`Settings > Build, Execution, Deployment > Build Tools > Gradle`) выбран **JDK 17**.
-5. Подключите устройство или запустите эмулятор.
-6. Нажмите кнопку **Run** (зеленый треугольник).
+---
 
-#### Через терминал
-Убедитесь, что установлены Android SDK и JDK 17.
-1. Перейдите в корневую папку проекта.
-2. Соберите Debug APK:
-   ```bash
-   ./gradlew assembleDebug
-   ```
-3. Готовый APK файл будет находиться по пути:
-   `app/build/outputs/apk/debug/app-debug.apk`
+## Беларуская
 
-### ✨ Ключевые особенности
-- **🚀 Ядро AmneziaWG:** Продвинутый протокол для обхода блокировок и высокой скорости работы.
-- **🎨 Material 3 & Compose:** Полностью современный интерфейс на Jetpack Compose с поддержкой динамических цветов.
-- **🔐 Инструменты приватности:**
-    - **Kill Switch:** Системная и внутренняя защита при обрыве соединения.
-    - **Раздельное туннелирование:** Возможность исключать приложения или конкретные IP-адреса из VPN.
-- **🌍 Глобальная сеть:** Удобный выбор стран и серверов с индикацией нагрузки.
-- **📱 Мультиязычность:** Поддержка русского, английского, украинского, белорусского, фарси и китайского языков.
+**Proton VPN-Next** — гэта сучасны высокапрадукцыйны **неафіцыйны** Android-кліент для Proton VPN. Распрацаваны з упорам на прыватнасць і хуткасць, выкарыстоўвае AmneziaWG і прасунутыя стратэгіі абыходу блакіровак.
 
-### 🛠 Технологический стек
-- **Язык:** Kotlin
-- **UI:** Jetpack Compose (Material 3)
-- **Архитектура:** MVVM + Clean Architecture
-- **DI:** Hilt (Dagger 2)
-- **База данных:** Room
-- **VPN Engine:** AmneziaWG (через Maven-зависимость)
+### 🚨 Бяспека
+> **Увага:** Падробленыя версіі небяспечныя. Глядзіце **[Дошку ганьбы](WALL_OF_SHAME.md)**.
 
-### 💎 Инфраструктура и Спонсоры
-- **[1Password](https://1password.com/):** Менеджер паролей и безопасность (предоставлена подписка Teams для разработки Open Source проектов).
-- **[Sentry](https://sentry.io/):** Мониторинг ошибок и отслеживание производительности (предоставлен Business Plan для проекта).
-- **[Cloudflare](https://www.cloudflare.com/):** Высокопроизводительная инфраструктура с использованием **Cloudflare Pages** (хостинг) и **R2 Storage** (хранилище объектов).
-- **[DigitalPlat FreeDomain](https://freedomain.digiplat.org/):**
-  This project uses DigitalPlat FreeDomain, an open domain infrastructure maintained by Edward Hsing. Built on DigitalPlat FreeDomain for domain provisioning, with credit to the platform and its maintainer.
+### 📱 Сістэмныя патрабаванні
+- **АС:** Android 10+
+- **Архітэктура:** **Толькі ARM64-v8a** (падтрымка x86_64 і 32-біт спынена).
+
+### ✨ Асноўныя магчымасці
+- **🚀 ByeDPI:** Інструменты для абыходу DPI.
+- **🌐 API Bypass:** Доступ да API праз SOCKS5 і Deno-проксі.
+- **🔐 Privacy Flavor:** Зборка без тэлеметрыі (Sentry) і OTA-абнаўленняў.
+- **📦 Бэкап і аднаўленне:** Экспарт і імпарт сесій.
+
+---
+
+## فارسی
+
+**Proton VPN-Next** یک کلاینت **غیررسمی**، مدرن و با کارایی بالا برای اندروید است.
+
+### 🚨 هشدار امنیتی
+> **هشدار:** نسخه‌های جعلی خطرناک هستند. لیست کانال‌های مخرب را در **[دیوار شرم](WALL_OF_SHAME.md)** مشاهده کنید.
+
+### 📱 نیازمندی‌های سیستم
+- **سیستم‌عامل:** اندروید ۱۰ به بالا
+- **معماری پردازنده:** **فقط ARM64-v8a** (پشتیبانی از x86_64 و ۳۲ بیت متوقف شده است).
+
+### ✨ ویژگی‌های کلیدی
+- **🚀 دور زدن DPI (ByeDPI):** ابزارهای داخلی برای عبور از فیلترینг.
+- **🌐 میانبر API:** دسترسی از طریق SOCKS5 و پروکسی Deno.
+- **🔐 نسخه حریم خصوصی:** بدون ابزارهای ردیابی (Sentry) و بدون قابلیت به‌روزرسانی OTA.
+- **📦 پشتیبان‌گیری:** امکان استخراج و وارد کردن نشست‌ها.
+
+---
+
+## Қазақша
+
+**Proton VPN-Next** — Proton VPN үшін заманауи, жоғары өнімді **бейресми** Android клиенті.
+
+### 🚨 Қауіпсіздік
+> **Ескерту:** Жалған нұсқалар қауіпті. Тізімді **[Wall of Shame](WALL_OF_SHAME.md)** бетінен көріңіз.
+
+### 📱 Жүйелік талаптар
+- **Жүйе:** Android 10+
+- **Архитектура:** **Тек ARM64-v8a** (x86_64 және 32-биттік жүйелерді қолдау тоқтатылды).
+
+### ✨ Негізгі мүмкіндіктер
+- **🚀 ByeDPI:** DPI жүйелерін айналып өту құралдары.
+- **🌐 API Bypass:** SOCKS5 және Deno-прокси арқылы API-ге қол жеткізу.
+- **🔐 Privacy Flavor:** Телеметриясыз (Sentry) және OTA-жаңартуларсыз нұсқа.
+- **📦 Сақтау және қалпына келтіру:** Сессиялар мен параметрлерді экспорттау/импорттау.
+
+---
+
+## Українська
+
+**Proton VPN-Next** — це сучасний високопродуктивний **неофіційний** Android-клієнт для Proton VPN.
+
+### 🚨 Безпека
+> **Увага:** Підроблені версії додатка небезпечні. Список шкідливих каналів доступний у **[Wall of Shame](WALL_OF_SHAME.md)**.
+
+### 📱 Системні вимоги
+- **ОС:** Android 10+
+- **Архітектура:** **Тільки ARM64-v8a** (підтримку x86_64 та 32-біт припинено).
+
+### ✨ Основні можливості
+- **🚀 ByeDPI:** Вбудовані інструменти для обходу DPI.
+- **🌐 API Bypass:** Доступ до API через SOCKS5 та Deno-проксі.
+- **🔐 Privacy Flavor:** Збірка без телеметрії (Sentry) та без OTA-оновлень.
+- **📦 Бекап та відновлення:** Експорт та імпорт сесій.
+
+---
+
+## 中文
+
+**Proton VPN-Next** 是一款现代、高性能的 **非官方** Android 客户端。
+
+### 🚨 安全警告
+> **警告：** 仿冒版本非常危险。请在 **[Wall of Shame](WALL_OF_SHAME.md)** 查看已知恶意渠道列表。
+
+### 📱 系统要求
+- **操作系统：** Android 10+
+- **处理器架构：** **仅限 ARM64-v8a** (已停止对 x86_64 和 32 位架构的支持)。
+
+### ✨ 核心功能
+- **🚀 DPI 绕过 (ByeDPI)：** 内置多种绕过深度包检测的策略。
+- **🌐 API 绕过：** 支持通过 SOCKS5 或 Deno 代理访问 API。
+- **🔐 隐私版 (Privacy Flavor)：** 无遥测数据 (Sentry) 且不支持 OTA 更新。
+- **📦 备份与恢复：** 支持导出和导入会话及设置。
 
 ---
 
