@@ -17,16 +17,19 @@
 
 package ru.protonmod.next.ui.screens.settings
 
-import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Policy
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
@@ -36,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.utils.isTablet
 
 @Composable
 fun PolicyAcceptanceScreen(
@@ -45,6 +49,7 @@ fun PolicyAcceptanceScreen(
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
     val resources = LocalResources.current
+    val isTablet = isTablet()
     val policyText = remember {
         try {
             resources.openRawResource(R.raw.privacy_policy)
@@ -70,7 +75,7 @@ fun PolicyAcceptanceScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     OutlinedButton(
-                        onClick = { (context as? Activity)?.finishAffinity() },
+                        onClick = { (context as? android.app.Activity)?.finishAffinity() },
                         modifier = Modifier.weight(1f).height(56.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.textNorm)
@@ -108,25 +113,56 @@ fun PolicyAcceptanceScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .statusBarsPadding()
+                    .statusBarsPadding(),
+                horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start
             ) {
-                Text(
-                    text = stringResource(R.string.settings_privacy_policy),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = colors.textNorm,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
+                val contentModifier = if (isTablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
 
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
+                    modifier = contentModifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    item(contentType = "Header") {
+                        // Header Icon
+                        Box(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(120.dp)
+                                    .clip(CircleShape)
+                                    .background(colors.brandNorm.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Policy,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(64.dp),
+                                    tint = colors.brandNorm
+                                )
+                            }
+                        }
+
+                        // Title
+                        Text(
+                            text = stringResource(R.string.settings_privacy_policy),
+                            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                            color = colors.textNorm,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+
                     val lines = policyText.split("\n")
                     items(lines) { line ->
-                        MarkdownLine(line)
+                        MarkdownLine(
+                            line = line,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
                     }
                 }
             }
@@ -135,7 +171,10 @@ fun PolicyAcceptanceScreen(
 }
 
 @Composable
-private fun MarkdownLine(line: String) {
+private fun MarkdownLine(
+    line: String,
+    modifier: Modifier = Modifier
+) {
     val colors = ProtonNextTheme.colors
     when {
         line.startsWith("# ") -> {
@@ -144,7 +183,7 @@ private fun MarkdownLine(line: String) {
                 style = MaterialTheme.typography.headlineMedium,
                 color = colors.textNorm,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(vertical = 12.dp)
+                modifier = modifier.padding(vertical = 12.dp)
             )
         }
         line.startsWith("## ") -> {
@@ -153,7 +192,7 @@ private fun MarkdownLine(line: String) {
                 style = MaterialTheme.typography.titleLarge,
                 color = colors.textNorm,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(vertical = 8.dp)
+                modifier = modifier.padding(vertical = 8.dp)
             )
         }
         line.startsWith("### ") -> {
@@ -162,7 +201,7 @@ private fun MarkdownLine(line: String) {
                 style = MaterialTheme.typography.titleMedium,
                 color = colors.textNorm,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(vertical = 4.dp)
+                modifier = modifier.padding(vertical = 4.dp)
             )
         }
         line.startsWith("#### ") -> {
@@ -170,7 +209,8 @@ private fun MarkdownLine(line: String) {
                 text = line.substring(5),
                 style = MaterialTheme.typography.bodyLarge,
                 color = colors.textNorm,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = modifier
             )
         }
         line.trim().isEmpty() -> {
@@ -180,7 +220,8 @@ private fun MarkdownLine(line: String) {
             Text(
                 text = line,
                 style = MaterialTheme.typography.bodyMedium,
-                color = colors.textWeak
+                color = colors.textWeak,
+                modifier = modifier
             )
         }
     }

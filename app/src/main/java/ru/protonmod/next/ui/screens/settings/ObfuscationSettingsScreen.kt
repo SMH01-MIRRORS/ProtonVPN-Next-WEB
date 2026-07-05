@@ -23,6 +23,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -37,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -120,6 +122,49 @@ fun ObfuscationSettingsScreen(
                             }
                         }
                     )
+
+                    // Header Icon
+                    Box(
+                        modifier = contentModifier.padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape)
+                                .background(colors.brandNorm.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.VisibilityOff,
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp),
+                                tint = colors.brandNorm
+                            )
+                        }
+                    }
+
+                    // Title
+                    Text(
+                        text = stringResource(R.string.obfuscation_title),
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                        color = colors.textNorm,
+                        textAlign = TextAlign.Center,
+                        modifier = contentModifier.padding(horizontal = 16.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Description
+                    Text(
+                        text = stringResource(R.string.obfuscation_enable_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.textWeak,
+                        textAlign = TextAlign.Center,
+                        modifier = contentModifier.padding(horizontal = 32.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
 
                 // Master Toggle
@@ -145,12 +190,6 @@ fun ObfuscationSettingsScreen(
                                     text = stringResource(R.string.obfuscation_enable),
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                     color = colors.textNorm
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = stringResource(R.string.obfuscation_enable_desc),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = colors.textWeak
                                 )
                             }
                             Switch(
@@ -638,11 +677,11 @@ fun InfoCard(
     modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .liquidGlass(shape = RoundedCornerShape(16.dp), alpha = 0.3f, shadowElevation = 0.dp)
-    ) {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.3f, shadowElevation = 0.dp)
+        ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically

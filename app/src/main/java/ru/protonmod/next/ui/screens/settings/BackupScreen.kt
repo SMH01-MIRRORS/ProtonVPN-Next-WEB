@@ -21,7 +21,14 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import ru.protonmod.next.ui.theme.liquidGlass
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Upload
@@ -186,45 +193,86 @@ private fun BackupScreenContent(
                 )
 
                 Column(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                        .verticalScroll(rememberScrollState())
+                        .padding(bottom = 16.dp)
                 ) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                        contentPadding = PaddingValues(
-                            start = 16.dp,
-                            end = 16.dp,
-                            top = 0.dp,
-                            bottom = 140.dp
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        item(contentType = "Header") {
-                            Column {
-                                Spacer(modifier = Modifier.statusBarsPadding())
-                                NavigationHeader(
-                                    title = stringResource(R.string.backup_title),
-                                    onBack = onNavigateBack
-                                )
-                            }
-                        }
+                    NavigationHeader(
+                        title = stringResource(R.string.backup_title),
+                        onBack = onNavigateBack
+                    )
 
-                        item(contentType = "Categories") {
-                            SettingsCategory(title = stringResource(R.string.backup_categories)) {
-                                BackupCategory.entries.forEach { category ->
-                                    if (category != BackupCategory.SENTRY_ANALYTICS || BuildConfig.SENTRY_ENABLED) {
-                                        SettingToggleRow(
-                                            title = getCategoryName(category),
-                                            icon = getCategoryIcon(category),
-                                            checked = uiState.selectedCategories.contains(category),
-                                            onCheckedChange = { onToggleCategory(category) }
-                                        )
-                                    }
+                    // Header Image
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape)
+                                .background(colors.brandNorm.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Backup,
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp),
+                                tint = colors.brandNorm
+                            )
+                        }
+                    }
+
+                    // Title
+                    Text(
+                        text = stringResource(R.string.backup_title),
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                        color = colors.textNorm,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Description
+                    Text(
+                        text = stringResource(R.string.backup_export_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.textWeak,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 32.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        SettingsCategory(title = stringResource(R.string.backup_categories)) {
+                            BackupCategory.entries.forEach { category ->
+                                if (category != BackupCategory.SENTRY_ANALYTICS || BuildConfig.SENTRY_ENABLED) {
+                                    SettingToggleRow(
+                                        title = getCategoryName(category),
+                                        icon = getCategoryIcon(category),
+                                        checked = uiState.selectedCategories.contains(category),
+                                        onCheckedChange = { onToggleCategory(category) }
+                                    )
                                 }
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(140.dp))
                 }
             }
         }

@@ -175,11 +175,13 @@
     <!-- Customization -->
     <string name="settings_customization">Кастомізація</string>
     <string name="settings_app_theme">Тема додатка</string>
+    <string name="settings_app_theme_desc">Виберіть, як Proton VPN-Next виглядатиме на вашому пристрої.</string>
     <string name="settings_load_display_mode">Відображення навантаження</string>
     <string name="load_mode_all">Лінія та відсотки</string>
     <string name="load_mode_line">Тільки лінія</string>
     <string name="load_mode_percent">Тільки відсотки</string>
     <string name="load_mode_hidden">Приховати</string>
+    <string name="theme_system">Системна / Dynamic</string>
     <string name="theme_light">Світла</string>
     <string name="theme_dark">Темна</string>
     <string name="theme_gold_light">Золото світла</string>
@@ -387,6 +389,10 @@
     <!-- Debug Tools -->
     <string name="settings_debug">Інструменти налагодження</string>
     <string name="debug_title">Панель налагодження</string>
+    <string name="debug_desc">Просунуті внутрішні інструменти для розробників та досвідчених користувачів. Використовуйте з обережністю.</string>
+    <string name="debug_no_session">Немає активної сесії</string>
+    <string name="debug_user_id">ID користувача</string>
+    <string name="debug_tier">Рівень</string>
     <string name="debug_session_header">VPN Сесія та Сертифікат</string>
     <string name="debug_cert_id">ID серт.: %1$s</string>
     <string name="debug_cert_issued">Видано: %1$s</string>

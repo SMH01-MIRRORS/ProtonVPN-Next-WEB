@@ -20,6 +20,7 @@ package ru.protonmod.next.ota
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -28,9 +29,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ru.protonmod.next.R
 import ru.protonmod.next.data.model.ota.UpdateInfo
@@ -58,7 +61,8 @@ fun OTAUpdateScreen(
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                colors.brandNorm.copy(alpha = 0.2f),
+                                colors.brandNorm.copy(alpha = 0.25f),
+                                colors.backgroundNorm.copy(alpha = 0.1f),
                                 colors.backgroundNorm
                             )
                         )
@@ -73,60 +77,72 @@ fun OTAUpdateScreen(
                         .widthIn(max = 400.dp)
                         .statusBarsPadding()
                 ) {
-                    Icon(
-                        imageVector = Icons.Rounded.SystemUpdate,
-                        contentDescription = null,
-                        tint = colors.brandNorm,
-                        modifier = Modifier.size(64.dp)
-                    )
-                    Spacer(Modifier.height(24.dp))
+                    // Header Icon
+                    Box(
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
+                            .background(colors.brandNorm.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.SystemUpdate,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = colors.brandNorm
+                        )
+                    }
+
+                    Spacer(Modifier.height(32.dp))
+
                     Text(
                         text = stringResource(R.string.ota_force_title),
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                         color = colors.textNorm,
-                        fontWeight = FontWeight.Bold
+                        textAlign = TextAlign.Center
                     )
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(12.dp))
                     Text(
                         text = stringResource(R.string.ota_force_desc),
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = colors.textWeak,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     )
                     
                     if (uiState.isDownloading) {
-                        Spacer(Modifier.height(32.dp))
+                        Spacer(Modifier.height(48.dp))
                         ExpressiveLinearProgressIndicator(
                             progress = { uiState.downloadProgress },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
                             color = colors.brandNorm,
                             trackColor = colors.backgroundSecondary
                         )
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(12.dp))
                         Text(
                             text = stringResource(R.string.ota_downloading, (uiState.downloadProgress * 100).toInt()),
                             style = MaterialTheme.typography.bodySmall,
                             color = colors.textWeak
                         )
                     } else if (uiState.downloadedFile != null) {
-                        Spacer(Modifier.height(32.dp))
+                        Spacer(Modifier.height(48.dp))
                         Button(
                             onClick = onInstall,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(16.dp)
                         ) {
-                            Text(stringResource(R.string.ota_btn_install))
+                            Text(stringResource(R.string.ota_btn_install), fontWeight = FontWeight.Bold)
                         }
                     } else {
-                        Spacer(Modifier.height(32.dp))
+                        Spacer(Modifier.height(48.dp))
                         Button(
                             onClick = { onDownload(updateInfo) },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(16.dp)
                         ) {
-                            Text(stringResource(R.string.ota_btn_update))
+                            Text(stringResource(R.string.ota_btn_update), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -183,6 +199,7 @@ fun OTAUpdateScreen(
                     }
                 },
                 containerColor = colors.backgroundSecondary,
+                shape = RoundedCornerShape(24.dp),
                 titleContentColor = colors.textNorm,
                 textContentColor = colors.textWeak
             )

@@ -99,52 +99,62 @@ fun AboutAppScreen(
                         onBack = onBack
                     )
 
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                    // Header Image (App Logo)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(96.dp)
-                                .clip(RoundedCornerShape(24.dp))
+                                .size(120.dp)
+                                .clip(CircleShape)
+                                .background(colors.brandNorm.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.ic_launcher_background),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                            Image(
-                                painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize()
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_launcher_background),
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
                         }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // App name
-                        Text(
-                            text = stringResource(id = R.string.app_name),
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = colors.textNorm
-                        )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        // Version
-                        Text(
-                            text = stringResource(R.string.settings_version_short, appVersion),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = colors.textWeak
-                        )
                     }
 
-                    Spacer(modifier = Modifier.height(48.dp))
+                    // App name
+                    Text(
+                        text = stringResource(id = R.string.app_name),
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                        color = colors.textNorm,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Version
+                    Text(
+                        text = stringResource(R.string.settings_version_short, appVersion),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.textWeak,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 32.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
 
                 item(contentType = "Community") {
@@ -189,13 +199,13 @@ fun AboutAppScreen(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(IntrinsicSize.Max),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             AboutLinkCard(
                                 title = stringResource(id = R.string.about_telegram),
@@ -222,7 +232,7 @@ fun AboutAppScreen(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(32.dp))
                     }
                 }
 
@@ -241,7 +251,7 @@ fun AboutAppScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .liquidGlass(
-                                    shape = RoundedCornerShape(16.dp),
+                                    shape = RoundedCornerShape(20.dp),
                                     alpha = 0.4f,
                                     shadowElevation = 0.dp
                                 )
@@ -287,7 +297,7 @@ fun AboutLinkCard(
     val colors = ProtonNextTheme.colors
     Box(
         modifier = modifier
-            .liquidGlass(shape = RoundedCornerShape(16.dp), alpha = 0.4f, shadowElevation = 0.dp)
+            .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.4f, shadowElevation = 0.dp)
             .clickable(onClick = onClick)
     ) {
         Column(

@@ -103,9 +103,41 @@ fun ByeDpiTestScreen(
 
                 val contentModifier = if (isTablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
 
+                // Header Icon
+                Box(
+                    modifier = contentModifier.padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
+                            .background(colors.brandNorm.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.BugReport,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = colors.brandNorm
+                        )
+                    }
+                }
+
+                // Title
+                Text(
+                    text = stringResource(R.string.byedpi_test_title),
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = colors.textNorm,
+                    textAlign = TextAlign.Center,
+                    modifier = contentModifier.padding(horizontal = 16.dp)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
                 LazyColumn(
                     modifier = contentModifier.weight(1f),
-                    contentPadding = PaddingValues(16.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     item(contentType = "Description") {
@@ -176,7 +208,7 @@ fun ModeSelectorCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .liquidGlass(shape = RoundedCornerShape(16.dp), alpha = 0.4f, shadowElevation = 0.dp)
+            .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.4f, shadowElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -258,7 +290,7 @@ fun TestingProgressCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .liquidGlass(shape = RoundedCornerShape(16.dp), alpha = 0.4f, shadowElevation = 0.dp)
+            .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.4f, shadowElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -318,7 +350,7 @@ fun ResultItem(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(colors.backgroundSecondary.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+            .background(colors.backgroundSecondary.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
             .padding(16.dp)
     ) {
         Column {

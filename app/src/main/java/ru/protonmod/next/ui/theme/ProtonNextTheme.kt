@@ -18,8 +18,13 @@
 package ru.protonmod.next.ui.theme
 
 import android.app.Activity
+import android.os.Build
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
@@ -32,6 +37,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -613,6 +619,33 @@ class ProtonColors(
             iconWeak = ProtonPalette.CadetBlue,
             interactionPressed = ProtonPalette.SanMarino,
         )
+
+        fun fromMaterial3(scheme: ColorScheme, isDark: Boolean): ProtonColors {
+            val base = if (isDark) baseDark(
+                brandNorm = scheme.primary,
+                brandDarken20 = scheme.primary.copy(alpha = 0.8f),
+                brandDarken40 = scheme.primary.copy(alpha = 0.6f)
+            ) else baseLight(
+                brandNorm = scheme.primary,
+                brandDarken20 = scheme.primary.copy(alpha = 0.8f),
+                brandDarken40 = scheme.primary.copy(alpha = 0.6f)
+            )
+
+            return base.copy(
+                brandNorm = scheme.primary,
+                brandDarken20 = scheme.primaryContainer,
+                brandDarken40 = scheme.onPrimaryContainer,
+                backgroundNorm = scheme.background,
+                backgroundSecondary = scheme.surfaceVariant.copy(alpha = 0.4f),
+                backgroundDeep = scheme.surfaceContainer,
+                textNorm = scheme.onBackground,
+                textWeak = scheme.onSurfaceVariant,
+                iconNorm = scheme.onBackground,
+                iconWeak = scheme.onSurfaceVariant,
+                interactionNorm = scheme.primary,
+                interactionPressed = scheme.primary.copy(alpha = 0.8f)
+            )
+        }
     }
 }
 
@@ -679,7 +712,19 @@ fun ProtonNextTheme(
     appTheme: AppTheme = AppTheme.DARK,
     content: @Composable () -> Unit
 ) {
+    val context = LocalContext.current
+    val isSystemDark = isSystemInDarkTheme()
+    val dynamicColor = appTheme == AppTheme.SYSTEM && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
     val protonColors = when (appTheme) {
+        AppTheme.SYSTEM -> {
+            if (dynamicColor) {
+                val scheme = if (isSystemDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+                ProtonColors.fromMaterial3(scheme, isSystemDark)
+            } else {
+                if (isSystemDark) ProtonColors.Dark else ProtonColors.Light
+            }
+        }
         AppTheme.LIGHT -> ProtonColors.Light
         AppTheme.DARK -> ProtonColors.Dark
         AppTheme.AMOLED -> ProtonColors.Amoled

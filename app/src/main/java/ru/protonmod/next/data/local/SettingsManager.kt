@@ -176,7 +176,7 @@ class SettingsManager @Inject constructor(
     val notificationsEnabled: Flow<Boolean> = dataStore.data.map { it[NOTIFICATIONS] ?: true }
 
     val defaultTheme: AppTheme
-        get() = if (SystemUtils.isNothingDevice()) AppTheme.NOTHING else AppTheme.DARK
+        get() = if (SystemUtils.isNothingDevice()) AppTheme.NOTHING else AppTheme.SYSTEM
 
     val otaUpdateFrequency: Flow<String> = dataStore.data.map { it[OTA_UPDATE_FREQUENCY] ?: "daily" }
     val otaLastCheckTime: Flow<Long> = dataStore.data.map { it[OTA_LAST_CHECK_TIME] ?: 0L }

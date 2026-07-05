@@ -175,11 +175,13 @@
     <!-- Customization -->
     <string name="settings_customization">个性化</string>
     <string name="settings_app_theme">应用主题</string>
+    <string name="settings_app_theme_desc">选择 Proton VPN-Next 在您设备上的外观。</string>
     <string name="settings_load_display_mode">负载显示方式</string>
     <string name="load_mode_all">进度条和百分比</string>
     <string name="load_mode_line">仅进度条</string>
     <string name="load_mode_percent">仅百分比</string>
     <string name="load_mode_hidden">隐藏</string>
+    <string name="theme_system">系统 / 动态 (Dynamic)</string>
     <string name="theme_light">浅色</string>
     <string name="theme_dark">深色</string>
     <string name="theme_gold_light">金色浅色</string>
@@ -378,6 +380,10 @@
     <!-- Debug Tools -->
     <string name="settings_debug">调试工具</string>
     <string name="debug_title">调试面板</string>
+    <string name="debug_desc">面向开发者和高级用户的高级内部工具。请谨慎使用。</string>
+    <string name="debug_no_session">无活动会话</string>
+    <string name="debug_user_id">用户 ID</string>
+    <string name="debug_tier">等级</string>
     <string name="debug_session_header">VPN 会话与证书</string>
     <string name="debug_cert_id">证书 ID：%1$s</string>
     <string name="debug_cert_issued">签发时间：%1$s</string>

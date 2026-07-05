@@ -175,11 +175,13 @@
     <!-- Customization -->
     <string name="settings_customization">شخصی‌سازی</string>
     <string name="settings_app_theme">تم برنامه</string>
+    <string name="settings_app_theme_desc">نحوه نمایش Proton VPN-Next را در دستگاه خود انتخاب کنید.</string>
     <string name="settings_load_display_mode">نحوه نمایش بار سرور</string>
     <string name="load_mode_all">خط و درصد</string>
     <string name="load_mode_line">فقط خط</string>
     <string name="load_mode_percent">فقط درصد</string>
     <string name="load_mode_hidden">مخفی</string>
+    <string name="theme_system">سیستمی / داینامیک</string>
     <string name="theme_light">روشن</string>
     <string name="theme_dark">تیره</string>
     <string name="theme_gold_light">طلایی روشن</string>
@@ -381,6 +383,10 @@
     <!-- Debug Tools -->
     <string name="settings_debug">ابزارهای عیب‌یابی</string>
     <string name="debug_title">داشبورد عیب‌یابی</string>
+    <string name="debug_desc">ابزارهای داخلی پیشرفته برای توسعه‌دهندگان و کاربران حرفه‌ای. با احتیاط استفاده کنید.</string>
+    <string name="debug_no_session">نشست فعالی وجود ندارد</string>
+    <string name="debug_user_id">شناسه کاربر</string>
+    <string name="debug_tier">سطح</string>
     <string name="debug_session_header">نشست و گواهی VPN</string>
     <string name="debug_cert_id">شناسه گواهی: %1$s</string>
     <string name="debug_cert_issued">صادر شده: %1$s</string>

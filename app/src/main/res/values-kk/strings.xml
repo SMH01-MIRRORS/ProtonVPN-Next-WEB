@@ -175,11 +175,13 @@
     <!-- Customization -->
     <string name="settings_customization">Баптау</string>
     <string name="settings_app_theme">Қолданба тақырыбы</string>
+    <string name="settings_app_theme_desc">Proton VPN-Next құрылғыңызда қалай көрінетінін таңдаңыз.</string>
     <string name="settings_load_display_mode">Сервер жүктемесін көрсету</string>
     <string name="load_mode_all">Сызық және пайыздар</string>
     <string name="load_mode_line">Тек сызық</string>
     <string name="load_mode_percent">Тек пайыздар</string>
     <string name="load_mode_hidden">Жасырын</string>
+    <string name="theme_system">Жүйелік / Dynamic</string>
     <string name="theme_light">Ақшыл</string>
     <string name="theme_dark">Қараңғы</string>
     <string name="theme_gold_light">Алтын ақшыл</string>
@@ -381,6 +383,10 @@
     <!-- Debug Tools -->
     <string name="settings_debug">Реттеу құралдары</string>
     <string name="debug_title">Реттеу панелі</string>
+    <string name="debug_desc">Әзірлеушілер мен тәжірибелі пайдаланушыларға арналған кеңейтілген ішкі құралдар. Сақтықпен пайдаланыңыз.</string>
+    <string name="debug_no_session">Белсенді сеанс жоқ</string>
+    <string name="debug_user_id">Пайдаланушы идентификаторы</string>
+    <string name="debug_tier">Деңгей</string>
     <string name="debug_session_header">VPN сеансы және сертификаты</string>
     <string name="debug_cert_id">Серт. ID: %1$s</string>
     <string name="debug_cert_issued">Берілді: %1$s</string>

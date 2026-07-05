@@ -22,6 +22,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
@@ -29,10 +30,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,6 +43,7 @@ import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.components.SmoothOutlinedTextField
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -97,96 +101,147 @@ fun DnsSettingsScreen(
                         title = stringResource(R.string.settings_custom_dns),
                         onBack = onBack
                     )
-                }
 
-                item(contentType = "Info") {
-                    Box(modifier = contentModifier.padding(horizontal = 16.dp)) {
-                        InfoCard(text = stringResource(R.string.settings_custom_dns_desc))
+                    // Header Icon
+                    Box(
+                        modifier = contentModifier.padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape)
+                                .background(colors.brandNorm.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Dns,
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp),
+                                tint = colors.brandNorm
+                            )
+                        }
                     }
+
+                    // Title
+                    Text(
+                        text = stringResource(R.string.settings_custom_dns),
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                        color = colors.textNorm,
+                        textAlign = TextAlign.Center,
+                        modifier = contentModifier.padding(horizontal = 16.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Description
+                    Text(
+                        text = stringResource(R.string.settings_custom_dns_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.textWeak,
+                        textAlign = TextAlign.Center,
+                        modifier = contentModifier.padding(horizontal = 32.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
 
                 item(contentType = "ModeSelection") {
-                    SettingsCategory(
-                        modifier = contentModifier.padding(horizontal = 16.dp),
-                        title = stringResource(R.string.settings_custom_dns_title)
+                    Box(
+                        modifier = contentModifier
+                            .padding(horizontal = 16.dp)
+                            .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.4f, shadowElevation = 0.dp)
                     ) {
-                        // Default Mode
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { useDefaultDns = true }
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = useDefaultDns,
-                                onClick = { useDefaultDns = true },
-                                colors = RadioButtonDefaults.colors(selectedColor = colors.brandNorm)
+                        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                            // Section Title
+                            Text(
+                                text = stringResource(R.string.settings_custom_dns_title).uppercase(),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = colors.textWeak,
+                                modifier = Modifier.padding(start = 24.dp, top = 16.dp, bottom = 8.dp)
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = stringResource(R.string.settings_custom_dns_default),
-                                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                                    color = colors.textNorm
+
+                            // Default Mode
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { useDefaultDns = true }
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.settings_custom_dns_default),
+                                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                                        color = colors.textNorm
+                                    )
+                                }
+                                RadioButton(
+                                    selected = useDefaultDns,
+                                    onClick = null,
+                                    colors = RadioButtonDefaults.colors(selectedColor = colors.brandNorm)
                                 )
                             }
-                        }
 
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            color = colors.shade20.copy(alpha = 0.5f)
-                        )
-
-                        // Custom Mode
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { useDefaultDns = false }
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = !useDefaultDns,
-                                onClick = { useDefaultDns = false },
-                                colors = RadioButtonDefaults.colors(selectedColor = colors.brandNorm)
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = colors.separatorNorm.copy(alpha = 0.5f)
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = stringResource(R.string.settings_custom_dns),
-                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                                color = colors.textNorm
-                            )
-                        }
 
-                        // Animated Custom Input
-                        AnimatedVisibility(
-                            visible = !useDefaultDns,
-                            enter = fadeIn() + expandVertically(),
-                            exit = fadeOut() + shrinkVertically()
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                SmoothOutlinedTextField(
-                                    value = inputText,
-                                    onValueChange = { inputText = it },
-                                    placeholder = {
-                                        Text(
-                                            stringResource(R.string.settings_custom_dns_placeholder),
-                                            color = colors.textWeak.copy(alpha = 0.5f)
-                                        )
-                                    },
-                                    singleLine = true,
-                                    shape = RoundedCornerShape(16.dp),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = colors.brandNorm,
-                                        unfocusedBorderColor = colors.shade20,
-                                        focusedTextColor = colors.textNorm,
-                                        unfocusedTextColor = colors.textNorm,
-                                        focusedContainerColor = colors.backgroundSecondary.copy(alpha = 0.5f),
-                                        unfocusedContainerColor = colors.backgroundSecondary.copy(alpha = 0.5f)
-                                    ),
-                                    modifier = Modifier.fillMaxWidth()
+                            // Custom Mode
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { useDefaultDns = false }
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.settings_custom_dns),
+                                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                                    color = colors.textNorm,
+                                    modifier = Modifier.weight(1f)
                                 )
+                                RadioButton(
+                                    selected = !useDefaultDns,
+                                    onClick = null,
+                                    colors = RadioButtonDefaults.colors(selectedColor = colors.brandNorm)
+                                )
+                            }
+
+                            // Animated Custom Input
+                            AnimatedVisibility(
+                                visible = !useDefaultDns,
+                                enter = fadeIn() + expandVertically(),
+                                exit = fadeOut() + shrinkVertically()
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .padding(horizontal = 24.dp, vertical = 8.dp)
+                                        .background(colors.backgroundSecondary.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                                        .padding(12.dp)
+                                ) {
+                                    SmoothOutlinedTextField(
+                                        value = inputText,
+                                        onValueChange = { inputText = it },
+                                        placeholder = {
+                                            Text(
+                                                stringResource(R.string.settings_custom_dns_placeholder),
+                                                color = colors.textWeak.copy(alpha = 0.5f)
+                                            )
+                                        },
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = colors.brandNorm,
+                                            unfocusedBorderColor = colors.separatorNorm,
+                                            focusedTextColor = colors.textNorm,
+                                            unfocusedTextColor = colors.textNorm,
+                                            cursorColor = colors.brandNorm
+                                        ),
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
                             }
                         }
                     }

@@ -28,11 +28,19 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import android.os.Build
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,34 +74,111 @@ fun ThemeSelectionScreen(
         modifier = modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
-    ) { padding ->
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .statusBarsPadding(),
-            contentPadding = PaddingValues(bottom = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }, contentType = "Header") {
+    ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            // Background gradient
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                colors.brandNorm.copy(alpha = 0.25f),
+                                colors.backgroundNorm.copy(alpha = 0.1f),
+                                colors.backgroundNorm
+                            )
+                        )
+                    )
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+            ) {
                 NavigationHeader(
                     title = stringResource(R.string.settings_app_theme),
                     onBack = onBack
                 )
-            }
 
-            items(AppTheme.entries, key = { it.name }, contentType = { "Theme" }) { theme ->
-                ThemePreviewCard(
-                    theme = theme,
-                    isSelected = uiState.appTheme == theme,
-                    onClick = { viewModel.setAppTheme(theme) },
-                    modifier = Modifier.padding(
-                        start = if (AppTheme.entries.indexOf(theme) % 2 == 0) 16.dp else 0.dp,
-                        end = if (AppTheme.entries.indexOf(theme) % 2 == 1) 16.dp else 0.dp
-                    )
-                )
+                val themes = remember {
+                    AppTheme.entries.filter { theme ->
+                        when (theme) {
+                            AppTheme.SYSTEM -> Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                            AppTheme.NOTHING -> ru.protonmod.next.utils.system.SystemUtils.isNothingDevice()
+                            else -> true
+                        }
+                    }
+                }
+
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 32.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            // Header Icon
+                            Box(
+                                modifier = Modifier.padding(vertical = 32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(120.dp)
+                                        .clip(CircleShape)
+                                        .background(colors.brandNorm.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Palette,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(64.dp),
+                                        tint = colors.brandNorm
+                                    )
+                                }
+                            }
+
+                            // Title
+                            Text(
+                                text = stringResource(R.string.settings_app_theme),
+                                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                                color = colors.textNorm,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Description
+                            Text(
+                                text = stringResource(R.string.settings_app_theme_desc),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = colors.textWeak,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 32.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(32.dp))
+                        }
+                    }
+
+                    items(themes, key = { it.name }, contentType = { "Theme" }) { theme ->
+                        ThemePreviewCard(
+                            theme = theme,
+                            isSelected = uiState.appTheme == theme,
+                            onClick = { viewModel.setAppTheme(theme) },
+                            modifier = Modifier.padding(
+                                start = if (themes.indexOf(theme) % 2 == 0) 16.dp else 0.dp,
+                                end = if (themes.indexOf(theme) % 2 == 1) 16.dp else 0.dp
+                            )
+                        )
+                    }
+                }
             }
         }
     }
@@ -108,6 +193,7 @@ fun ThemePreviewCard(
 ) {
     val colors = ProtonNextTheme.colors
     val themeName = when (theme) {
+        AppTheme.SYSTEM -> stringResource(R.string.theme_system)
         AppTheme.LIGHT -> stringResource(R.string.theme_light)
         AppTheme.DARK -> stringResource(R.string.theme_dark)
         AppTheme.AMOLED -> stringResource(R.string.theme_amoled)
@@ -182,7 +268,19 @@ fun MiniDashboardPreview(
     theme: AppTheme,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val isSystemDark = isSystemInDarkTheme()
+    val dynamicColorSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
     val themeColors = when (theme) {
+        AppTheme.SYSTEM -> {
+            if (dynamicColorSupported) {
+                val scheme = if (isSystemDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+                ProtonColors.fromMaterial3(scheme, isSystemDark)
+            } else {
+                if (isSystemDark) ProtonColors.Dark else ProtonColors.Light
+            }
+        }
         AppTheme.LIGHT -> ProtonColors.Light
         AppTheme.DARK -> ProtonColors.Dark
         AppTheme.AMOLED -> ProtonColors.Amoled

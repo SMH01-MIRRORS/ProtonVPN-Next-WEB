@@ -20,8 +20,15 @@ package ru.protonmod.next.ui.screens.settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.MenuBook
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -87,25 +94,75 @@ fun LicensesScreen(
                     )
             )
 
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .statusBarsPadding(),
-                contentPadding = PaddingValues(bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .statusBarsPadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = 16.dp)
             ) {
-                item(contentType = "Header") {
-                    NavigationHeader(
-                        title = stringResource(R.string.licenses_title),
-                        onBack = onBack
-                    )
+                NavigationHeader(
+                    title = stringResource(R.string.licenses_title),
+                    onBack = onBack
+                )
+
+                // Header Image
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
+                            .background(colors.brandNorm.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.MenuBook,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = colors.brandNorm
+                        )
+                    }
                 }
 
-                items(licenses, key = { it.titleRes }, contentType = { "License" }) { item ->
-                    LicenseCard(
-                        item = item,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
+                // Title
+                Text(
+                    text = stringResource(R.string.licenses_title),
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = colors.textNorm,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Description
+                Text(
+                    text = stringResource(R.string.settings_licenses_desc),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.textWeak,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp)
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    licenses.forEach { item ->
+                        LicenseCard(
+                            item = item,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
             }
         }

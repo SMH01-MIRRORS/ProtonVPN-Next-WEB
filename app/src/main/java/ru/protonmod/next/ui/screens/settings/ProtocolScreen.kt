@@ -20,24 +20,30 @@ package ru.protonmod.next.ui.screens.settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
+import ru.protonmod.next.ui.utils.isTablet
 
 /**
  * Screen for selecting the VPN Protocol.
@@ -53,6 +59,8 @@ fun ProtocolScreen(
 ) {
     val colors = ProtonNextTheme.colors
 
+    val isTablet = isTablet()
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
@@ -66,53 +74,94 @@ fun ProtocolScreen(
             // Background gradient
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.4f)
+                    .fillMaxSize()
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                colors.brandNorm.copy(alpha = 0.2f),
+                                colors.brandNorm.copy(alpha = 0.25f),
+                                colors.backgroundNorm.copy(alpha = 0.1f),
                                 colors.backgroundNorm
                             )
                         )
                     )
             )
 
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .statusBarsPadding(),
-                contentPadding = PaddingValues(bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .statusBarsPadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = 16.dp),
+                horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start
             ) {
-                item(contentType = "Header") {
-                    NavigationHeader(
-                        title = stringResource(R.string.protocol_title),
-                        onBack = onBack
-                    )
-                }
+                NavigationHeader(
+                    title = stringResource(R.string.protocol_title),
+                    onBack = onBack
+                )
 
-                item(contentType = "ProtocolList") {
+                val contentModifier = if (isTablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
+
+                // Header Icon
+                Box(
+                    modifier = contentModifier.padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .liquidGlass(
-                                shape = RoundedCornerShape(20.dp),
-                                alpha = 0.4f,
-                                shadowElevation = 0.dp
-                            )
+                            .size(120.dp)
+                            .clip(CircleShape)
+                            .background(colors.brandNorm.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Column {
-                            // Protocol Item: AmneziaWG
-                            ProtocolItemRow(
-                                title = stringResource(R.string.protocol_amneziawg),
-                                description = stringResource(R.string.protocol_amneziawg_desc),
-                                isSelected = true, // Hardcoded as selected for now
-                                onSelect = { /* TODO: Update selected protocol in VM */ },
-                                onSettingsClick = onNavigateToObfuscation
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Rounded.Security,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = colors.brandNorm
+                        )
+                    }
+                }
+
+                // Title
+                Text(
+                    text = stringResource(R.string.protocol_title),
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = colors.textNorm,
+                    textAlign = TextAlign.Center,
+                    modifier = contentModifier.padding(horizontal = 16.dp)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Description
+                Text(
+                    text = stringResource(R.string.protocol_amneziawg_desc),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.textWeak,
+                    textAlign = TextAlign.Center,
+                    modifier = contentModifier.padding(horizontal = 32.dp)
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Box(
+                    modifier = contentModifier
+                        .padding(horizontal = 16.dp)
+                        .liquidGlass(
+                            shape = RoundedCornerShape(20.dp),
+                            alpha = 0.4f,
+                            shadowElevation = 0.dp
+                        )
+                ) {
+                    Column {
+                        // Protocol Item: AmneziaWG
+                        ProtocolItemRow(
+                            title = stringResource(R.string.protocol_amneziawg),
+                            description = stringResource(R.string.protocol_amneziawg_desc),
+                            isSelected = true, // Hardcoded as selected for now
+                            onSelect = { /* TODO: Update selected protocol in VM */ },
+                            onSettingsClick = onNavigateToObfuscation
+                        )
                     }
                 }
             }

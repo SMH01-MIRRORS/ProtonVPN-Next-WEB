@@ -473,6 +473,7 @@ private fun CustomizationSettingsSection(
 ) {
     SettingsCategory(modifier = modifier, title = stringResource(R.string.settings_customization)) {
         val currentThemeName = when (state.appTheme) {
+            AppTheme.SYSTEM -> stringResource(R.string.theme_system)
             AppTheme.LIGHT -> stringResource(R.string.theme_light)
             AppTheme.DARK -> stringResource(R.string.theme_dark)
             AppTheme.AMOLED -> stringResource(R.string.theme_amoled)

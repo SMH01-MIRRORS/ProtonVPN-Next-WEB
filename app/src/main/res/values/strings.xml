@@ -207,11 +207,13 @@
     <!-- Customization -->
     <string name="settings_customization">Customization</string>
     <string name="settings_app_theme">App Theme</string>
+    <string name="settings_app_theme_desc">Choose how Proton VPN-Next looks on your device.</string>
     <string name="settings_load_display_mode">Server Load Display</string>
     <string name="load_mode_all">Line and Percentages</string>
     <string name="load_mode_line">Line only</string>
     <string name="load_mode_percent">Percentages only</string>
     <string name="load_mode_hidden">Hidden</string>
+    <string name="theme_system">System / Dynamic</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_amoled" translatable="false">AMOLED</string>
@@ -466,6 +468,13 @@
     <!-- Debug Tools -->
     <string name="settings_debug">Debug Tools</string>
     <string name="debug_title">Debug Dashboard</string>
+    <string name="debug_desc">Advanced internal tools for developers and power users. Use with caution.</string>
+    <string name="debug_no_session">No active session</string>
+    <string name="debug_user_id">User ID</string>
+    <string name="debug_tier">Tier</string>
+    <string name="debug_tier_basic" translatable="false">Basic</string>
+    <string name="debug_tier_plus" translatable="false">Plus</string>
+    <string name="debug_tier_free" translatable="false">Free</string>
     <string name="debug_session_header">VPN Session &amp; Certificate</string>
     <string name="debug_cert_id">Cert ID: %1$s</string>
     <string name="debug_cert_issued">Issued: %1$s</string>

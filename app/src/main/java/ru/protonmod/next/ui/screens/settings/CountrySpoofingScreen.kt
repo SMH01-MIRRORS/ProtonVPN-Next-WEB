@@ -147,7 +147,7 @@ fun CountrySpoofingScreen(
                 Box(
                     modifier = contentModifier
                         .padding(horizontal = 16.dp)
-                        .liquidGlass(shape = RoundedCornerShape(16.dp), alpha = 0.4f, shadowElevation = 0.dp)
+                        .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.4f, shadowElevation = 0.dp)
                 ) {
                     Column(modifier = Modifier.padding(vertical = 4.dp)) {
                         // Master Toggle

@@ -19,63 +19,24 @@ package ru.protonmod.next.ui.screens.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Input
-import androidx.compose.material.icons.rounded.BugReport
-import androidx.compose.material.icons.rounded.CleaningServices
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.FileDownload
-import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Public
-import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomSheetDefaults
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -86,6 +47,7 @@ import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.components.SmoothOutlinedTextField
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
+import ru.protonmod.next.ui.utils.isTablet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -96,6 +58,7 @@ fun DebugSettingsScreen(
 ) {
     val colors = ProtonNextTheme.colors
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isTablet = isTablet()
     var showNukeConfirm by remember { mutableStateOf(false) }
     var showServerSelect by remember { mutableStateOf(false) }
     var showExportConfirm by remember { mutableStateOf(false) }
@@ -138,26 +101,72 @@ fun DebugSettingsScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .statusBarsPadding(),
+                    horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start,
                     contentPadding = PaddingValues(bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    val contentModifier = if (isTablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
+
                     item(contentType = "Header") {
                         NavigationHeader(
                             title = stringResource(R.string.debug_title),
                             onBack = onBack
                         )
+
+                        // Header Icon
+                        Box(
+                            modifier = contentModifier.padding(vertical = 32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(120.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.Red.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.BugReport,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(64.dp),
+                                    tint = Color.Red
+                                )
+                            }
+                        }
+
+                        // Title
+                        Text(
+                            text = stringResource(R.string.debug_title),
+                            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                            color = colors.textNorm,
+                            textAlign = TextAlign.Center,
+                            modifier = contentModifier.padding(horizontal = 16.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Description
+                        Text(
+                            text = stringResource(R.string.debug_desc),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.textWeak,
+                            textAlign = TextAlign.Center,
+                            modifier = contentModifier.padding(horizontal = 32.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(32.dp))
                     }
 
                     // Session & Certificate Info
                     item(contentType = "DebugSection") {
-                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        Column(modifier = contentModifier.padding(horizontal = 16.dp)) {
                             DebugSection(title = stringResource(R.string.debug_session_header)) {
                                 uiState.session?.let { session ->
-                                    DebugInfoRow("User ID", session.userId)
-                                    DebugInfoRow("Tier", when (session.userTier) {
-                                        1 -> "Basic"
-                                        2 -> "Plus"
-                                        else -> "Free"
+                                    DebugInfoRow(stringResource(R.string.debug_user_id), session.userId)
+                                    DebugInfoRow(stringResource(R.string.debug_tier), when (session.userTier) {
+                                        1 -> stringResource(R.string.debug_tier_basic)
+                                        2 -> stringResource(R.string.debug_tier_plus)
+                                        else -> stringResource(R.string.debug_tier_free)
                                     })
                                     HorizontalDivider(
                                         modifier = Modifier.padding(vertical = 8.dp),
@@ -178,7 +187,7 @@ fun DebugSettingsScreen(
 
                                     Button(
                                         onClick = { viewModel.forceRefreshCertificate() },
-                                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                                         colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
                                         shape = RoundedCornerShape(12.dp),
                                         enabled = !uiState.isLoading
@@ -190,7 +199,7 @@ fun DebugSettingsScreen(
 
                                     Button(
                                         onClick = { viewModel.forceRefreshSession() },
-                                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
                                         colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm.copy(alpha = 0.8f)),
                                         shape = RoundedCornerShape(12.dp),
                                         enabled = !uiState.isLoading
@@ -202,7 +211,7 @@ fun DebugSettingsScreen(
 
                                     Button(
                                         onClick = { viewModel.simulateExpiredCertificate() },
-                                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
                                         colors = ButtonDefaults.buttonColors(containerColor = colors.notificationError.copy(alpha = 0.8f)),
                                         shape = RoundedCornerShape(12.dp),
                                         enabled = !uiState.isLoading
@@ -212,7 +221,7 @@ fun DebugSettingsScreen(
                                         Text(stringResource(R.string.debug_btn_simulate_expired_cert))
                                     }
                                 } ?: Text(
-                                    "No active session",
+                                    stringResource(R.string.debug_no_session),
                                     color = colors.textWeak,
                                     modifier = Modifier.padding(16.dp)
                                 )
@@ -222,9 +231,9 @@ fun DebugSettingsScreen(
 
                     // Exports
                     item(contentType = "DebugSection") {
-                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        Column(modifier = contentModifier.padding(horizontal = 16.dp)) {
                             DebugSection(title = stringResource(R.string.debug_exports_header)) {
-                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                     DebugActionRow(
                                         icon = Icons.Rounded.History,
                                         title = stringResource(R.string.debug_btn_export_logs),
@@ -257,7 +266,7 @@ fun DebugSettingsScreen(
 
                     // Device Info
                     item(contentType = "DebugSection") {
-                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        Column(modifier = contentModifier.padding(horizontal = 16.dp)) {
                             DebugSection(title = stringResource(R.string.debug_device_header)) {
                                 Text(
                                     text = viewModel.getDeviceInfo(),
@@ -272,12 +281,12 @@ fun DebugSettingsScreen(
                     // Sentry Tests
                     if (BuildConfig.SENTRY_ENABLED) {
                         item(contentType = "DebugSection") {
-                            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            Column(modifier = contentModifier.padding(horizontal = 16.dp)) {
                                 DebugSection(
                                     title = stringResource(R.string.debug_sentry_header),
                                     titleColor = Color.Magenta
                                 ) {
-                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                         DebugActionRow(
                                             icon = Icons.Rounded.BugReport,
                                             title = stringResource(R.string.debug_btn_fake_crash),
@@ -331,7 +340,7 @@ fun DebugSettingsScreen(
 
                     // Danger Zone
                     item(contentType = "DebugSection") {
-                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        Column(modifier = contentModifier.padding(horizontal = 16.dp)) {
                             DebugSection(
                                 title = stringResource(R.string.debug_danger_header),
                                 titleColor = colors.notificationError
@@ -513,7 +522,7 @@ private fun DebugSection(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .liquidGlass(shape = RoundedCornerShape(16.dp), alpha = 0.3f)
+                .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.3f, shadowElevation = 0.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 content()

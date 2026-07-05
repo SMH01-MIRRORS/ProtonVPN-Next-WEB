@@ -65,13 +65,13 @@ fun KillSwitchScreen(
             // Background gradient decoration
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(280.dp)
+                    .fillMaxSize()
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                colors.brandNorm.copy(alpha = 0.2f),
-                                Color.Transparent
+                                colors.brandNorm.copy(alpha = 0.25f),
+                                colors.backgroundNorm.copy(alpha = 0.1f),
+                                colors.backgroundNorm
                             )
                         )
                     )
@@ -90,41 +90,49 @@ fun KillSwitchScreen(
                     onBack = onBack
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
-
+                // Header Image
                 Box(
                     modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .background(colors.brandNorm.copy(alpha = 0.12f)),
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Rounded.GppMaybe,
-                        contentDescription = null,
-                        tint = colors.brandNorm,
-                        modifier = Modifier.size(40.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
+                            .background(colors.brandNorm.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.GppMaybe,
+                            contentDescription = null,
+                            tint = colors.brandNorm,
+                            modifier = Modifier.size(64.dp)
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
+                // Title
                 Text(
-                    text = stringResource(R.string.kill_switch_subtitle),
+                    text = stringResource(R.string.kill_switch_title),
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                     color = colors.textNorm,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 24.dp)
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
+                // Description
                 Text(
                     text = stringResource(R.string.kill_switch_desc),
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = colors.textWeak,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 24.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp)
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
