@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160096,
-      "versionName": "12.0.0-alpha2-15-g3a1e206-nightly",
+      "versionCode": 605160099,
+      "versionName": "12.0.0-alpha2-18-g31f1f46-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "refactor: improve QuickConnectBottomSheet layout and placement\n\n- Moved `QuickConnectBottomSheet` outside of `AnimatedContent` in `DashboardScreen` to prevent gesture conflicts and clipping during screen transitions.\n- Replaced `LazyColumn` with a `Column` using `verticalScroll` in `QuickConnectBottomSheet` to simplify the list structure.\n- Explicitly passed `sheetState` to `ModalBottomSheet` and configured it to support partial expansion.\n- Refactored `StrategyItem` to simplify icon rendering logic and removed custom `MutableInteractionSource` from the clickable modifier.\n- Updated profile and recent server lists to use standard `forEach` loops instead of lazy list items.\n- Adjusted padding and layout constraints for better visual consistency.",
+      "changelog": "chore: fix unused variable and parameter warnings in native code\n\n- Commented out unused `g_LogTag` in `imgui_impl_android.cpp`.\n- Marked the `proxy` parameter as unused in the `AntiTamperBridge_invokeNative` JNI function.\n- Annotated unused parameters in `SentryManager::init` to suppress compiler warnings, as the implementation was previously removed.",
       "force": false
     },
     "release": {
-      "versionCode": 605160096,
-      "versionName": "12.0.0-alpha2-15-g3a1e206-nightly",
+      "versionCode": 605160099,
+      "versionName": "12.0.0-alpha2-18-g31f1f46-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "refactor: improve QuickConnectBottomSheet layout and placement\n\n- Moved `QuickConnectBottomSheet` outside of `AnimatedContent` in `DashboardScreen` to prevent gesture conflicts and clipping during screen transitions.\n- Replaced `LazyColumn` with a `Column` using `verticalScroll` in `QuickConnectBottomSheet` to simplify the list structure.\n- Explicitly passed `sheetState` to `ModalBottomSheet` and configured it to support partial expansion.\n- Refactored `StrategyItem` to simplify icon rendering logic and removed custom `MutableInteractionSource` from the clickable modifier.\n- Updated profile and recent server lists to use standard `forEach` loops instead of lazy list items.\n- Adjusted padding and layout constraints for better visual consistency.",
+      "changelog": "chore: fix unused variable and parameter warnings in native code\n\n- Commented out unused `g_LogTag` in `imgui_impl_android.cpp`.\n- Marked the `proxy` parameter as unused in the `AntiTamperBridge_invokeNative` JNI function.\n- Annotated unused parameters in `SentryManager::init` to suppress compiler warnings, as the implementation was previously removed.",
       "force": false
     }
   },
