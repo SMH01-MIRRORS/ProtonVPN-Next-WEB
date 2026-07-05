@@ -389,7 +389,11 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                             sendBroadcast(broadcast)
 
                             // Bring the tunnel up
-                            backend.setState(tunnel, Tunnel.State.UP, config)
+                            val state = backend.setState(tunnel, Tunnel.State.UP, config)
+                            if (state == Tunnel.State.UP) {
+                                // Ensure onStateChange is triggered in case backend skips it on in-place updates
+                                tunnel.onStateChange(Tunnel.State.UP)
+                            }
                         } catch (e: Exception) {
                             ProtonLogger.e(TAG, "Critical failure during tunnel startup", e)
                             isInternalReconnecting = false
@@ -1010,25 +1014,28 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         ProtonLogger.i(TAG, "reconnect() initiated for session $sessionToReconnect")
         isInternalReconnecting = true
         
-        // 1. Fire the intent immediately in the main thread.
-        // This ensures the system receives the restart/update request before this instance is destroyed.
-        try {
-            ProtonLogger.d(TAG, "Reconnection: Sending startService intent")
-            startForegroundService(intent)
-        } catch (e: Exception) {
-            ProtonLogger.e(TAG, "Failed to start service for reconnect", e)
-        }
-
-        // 2. Perform cleanup of the old tunnel asynchronously and SILENTLY.
-        reconnectionJob = serviceScope.launch(Dispatchers.IO) {
+        // Launch in GlobalScope because backend.setState(DOWN) will call Context.stopService(),
+        // which destroys this service instance and cancels its serviceScope.
+        // We need the coroutine to survive the destruction to call startForegroundService.
+        @OptIn(kotlinx.coroutines.DelicateCoroutinesApi::class)
+        kotlinx.coroutines.GlobalScope.launch(Dispatchers.IO) {
             try {
                 if (currentTunnelState != Tunnel.State.DOWN) {
+                    ProtonLogger.i(TAG, "Reconnection: Bringing tunnel DOWN first...")
                     backend.setState(tunnel, Tunnel.State.DOWN, null)
                 }
-            } catch (_: kotlinx.coroutines.CancellationException) {
-                // Expected when the service instance is being stopped/restarted
             } catch (e: Exception) {
-                ProtonLogger.v(TAG, "Minor cleanup error during reconnect: ${e.message}")
+                ProtonLogger.v(TAG, "Reconnection: Cleanup error: ${e.message}")
+            }
+            
+            // Give the system time to process the service destruction and onDestroy()
+            delay(500)
+
+            try {
+                ProtonLogger.d(TAG, "Reconnection: Sending startService intent for new instance")
+                startForegroundService(intent)
+            } catch (e: Exception) {
+                ProtonLogger.e(TAG, "Failed to start service for reconnect", e)
             }
         }
     }
@@ -1048,18 +1055,17 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             ProtonLogger.w(TAG, "Receiver already unregistered", e)
         }
 
-        // Use runBlocking to ensure the tunnel is shut down before the service process is potentially killed.
-        // We limit it to 2 seconds to avoid blocking the system for too long.
-        // This is safer than using serviceScope which we are about to cancel.
-        try {
-            kotlinx.coroutines.runBlocking(Dispatchers.IO) {
-                kotlinx.coroutines.withTimeoutOrNull(2000.milliseconds) {
-                    ProtonLogger.i(TAG, "Stopping VPN tunnel on service destroy...")
-                    backend.setState(tunnel, Tunnel.State.DOWN, null)
-                }
+        // Use GlobalScope to avoid blocking the Main Thread. 
+        // GoBackend.setState is synchronized and could be held by other threads,
+        // so runBlocking here could cause a deadlock resulting in ANR or TimeoutExceptions.
+        @OptIn(kotlinx.coroutines.DelicateCoroutinesApi::class)
+        kotlinx.coroutines.GlobalScope.launch(Dispatchers.IO) {
+            try {
+                ProtonLogger.i(TAG, "Stopping VPN tunnel on service destroy...")
+                backend.setState(tunnel, Tunnel.State.DOWN, null)
+            } catch (e: Exception) {
+                ProtonLogger.e(TAG, "Error during async shutdown in onDestroy", e)
             }
-        } catch (e: Exception) {
-            ProtonLogger.e(TAG, "Error during synchronous shutdown in onDestroy", e)
         }
 
         serviceScope.cancel()
