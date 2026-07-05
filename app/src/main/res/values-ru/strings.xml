@@ -268,7 +268,6 @@
     <string name="license_apache_2">Apache License 2.0</string>
     <string name="license_kotlin_title">Стандартная библиотека Kotlin</string>
     <string name="license_retrofit_title">Retrofit и OkHttp</string>
-    <string name="license_proton_go_vpn_title">Proton GO VPN библиотека</string>
     <string name="license_room_title">База данных Room</string>
     <!-- Split Tunneling -->
     <string name="settings_st_mode">Режим раздельного туннелирования</string>
