@@ -35,7 +35,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -49,10 +48,10 @@ import ru.protonmod.next.ui.theme.ProtonNextTheme
 fun ErrorReportingScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: SettingsViewModel = hiltViewModel()
+    viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     if (!BuildConfig.SENTRY_ENABLED) {
-        LaunchedEffect(Unit) { onBack() }
+        LaunchedEffect(onBack) { onBack() }
         return
     }
 
