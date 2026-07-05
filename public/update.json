@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160110,
-      "versionName": "12.0.0-alpha2-29-g7ab38ed-nightly",
+      "versionCode": 605160117,
+      "versionName": "12.0.0-alpha2-36-ge985392-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "fix: improve VPN tunnel lifecycle and prevent shutdown deadlocks\n\n- Explicitly trigger `tunnel.onStateChange(UP)` when bringing the tunnel up to handle cases where the backend might skip the callback during in-place updates.\n- Migrated `reconnect()` logic from `serviceScope` to `GlobalScope` to ensure the restart intent is sent even if the current service instance is destroyed by the backend.\n- Updated the reconnection flow to bring the tunnel `DOWN` first and introduced a 500ms delay to allow the system to process service destruction before starting a new instance.\n- Replaced `runBlocking` in `onDestroy` with an asynchronous `GlobalScope.launch` to prevent blocking the Main Thread, avoiding potential ANRs or deadlocks during service shutdown.",
+      "changelog": "Crowdin updates\n\nNew Crowdin updates",
       "force": false
     },
     "release": {
-      "versionCode": 605160110,
-      "versionName": "12.0.0-alpha2-29-g7ab38ed-nightly",
+      "versionCode": 605160117,
+      "versionName": "12.0.0-alpha2-36-ge985392-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "fix: improve VPN tunnel lifecycle and prevent shutdown deadlocks\n\n- Explicitly trigger `tunnel.onStateChange(UP)` when bringing the tunnel up to handle cases where the backend might skip the callback during in-place updates.\n- Migrated `reconnect()` logic from `serviceScope` to `GlobalScope` to ensure the restart intent is sent even if the current service instance is destroyed by the backend.\n- Updated the reconnection flow to bring the tunnel `DOWN` first and introduced a 500ms delay to allow the system to process service destruction before starting a new instance.\n- Replaced `runBlocking` in `onDestroy` with an asynchronous `GlobalScope.launch` to prevent blocking the Main Thread, avoiding potential ANRs or deadlocks during service shutdown.",
+      "changelog": "Crowdin updates\n\nNew Crowdin updates",
       "force": false
     }
   },
