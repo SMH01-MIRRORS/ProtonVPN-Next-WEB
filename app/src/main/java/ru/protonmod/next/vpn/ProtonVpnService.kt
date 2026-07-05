@@ -91,14 +91,18 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     private var lastSpeedText: String? = null
 
     private var notificationsEnabled: Boolean = true
+    @Volatile
     private var killSwitchEnabled: Boolean = false
+    @Volatile
     private var isManualDisconnect: Boolean = false
+    @Volatile
     private var isVerified: Boolean = false
     private var lastLogicalServerId: String? = null
     private var lastSessionId: Long = 0L
     private var lastConnectIntent: Intent? = null
     private var verificationJob: Job? = null
     private var reconnectionJob: Job? = null
+    @Volatile
     private var isInternalReconnecting: Boolean = false
 
     // Cached PendingIntent objects to reduce IPC calls to system service
@@ -162,7 +166,17 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             val wasConnecting = isCurrentlyConnecting
             if (currentTunnelState == newState && !wasConnecting) return
             
+            // Log the transition for debugging
+            ProtonLogger.d(TAG, "onStateChange: $newState (isInternalReconnecting=$isInternalReconnecting, isVerified=$isVerified)")
+
             currentTunnelState = newState
+            
+            // If we transitioned out of DOWN (e.g. to UP or TOGGLE), 
+            // we are no longer in the "waiting for DOWN" phase of reconnection.
+            if (newState != Tunnel.State.DOWN) {
+                isInternalReconnecting = false
+            }
+
             // Keep isCurrentlyConnecting true if we are in UP state but not yet verified,
             // OR if we are performing an internal reconnection.
             isCurrentlyConnecting = when {
@@ -171,7 +185,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 else -> false
             }
 
-            ProtonLogger.d(TAG, "VPN State changed to $newState (isCurrentlyConnecting=$isCurrentlyConnecting, isInternalReconnecting=$isInternalReconnecting)")
+            ProtonLogger.v(TAG, "VPN State updated internal: isCurrentlyConnecting=$isCurrentlyConnecting")
             ProtonLogger.addSentryBreadcrumb(TAG, "VPN State Changed: $newState", "INFO", "vpn.state")
 
             // Broadcast the new state to the rest of the application.
@@ -191,6 +205,15 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 verificationJob?.cancel()
                 stopTrafficUpdates()
                 stopLogcatCollection()
+
+                // If the tunnel went DOWN unexpectedly (not a manual disconnect),
+                // we should trigger a reconnect.
+                if (!isManualDisconnect && !isInternalReconnecting && lastConnectIntent != null) {
+                    ProtonLogger.w(TAG, "Tunnel went DOWN unexpectedly. Triggering reconnect from onStateChange...")
+                    reconnect()
+                } else {
+                    ProtonLogger.d(TAG, "Tunnel went DOWN (isManualDisconnect=$isManualDisconnect, isInternalReconnecting=$isInternalReconnecting)")
+                }
             }
 
             updateNotification(newState.name)
@@ -299,14 +322,18 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             ACTION_CONNECT -> {
                 // Cancel any pending verification or reconnection from a previous server
                 verificationJob?.cancel()
-                reconnectionJob?.cancel()
+                
+                // Only cancel reconnectionJob if this is a fresh manual connection attempt.
+                // If it's a reconnection triggered internally, we let it finish gracefully.
+                if (!isInternalReconnecting) {
+                    reconnectionJob?.cancel()
+                }
+
                 isManualDisconnect = false
                 isVerified = false
                 
-                // Only reset internal reconnecting if this is NOT a self-triggered intent
-                if (!isInternalReconnecting) {
-                    isInternalReconnecting = false
-                }
+                // Note: isInternalReconnecting is NOT reset here. 
+                // It will be reset in onStateChange when the state transitions away from DOWN.
                 
                 lastConnectIntent = intent
                 val configStr = intent.getStringExtra(EXTRA_CONFIG)
@@ -345,6 +372,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                             backend.setState(tunnel, Tunnel.State.UP, config)
                         } catch (e: Exception) {
                             ProtonLogger.e(TAG, "Critical failure during tunnel startup", e)
+                            isInternalReconnecting = false
                             tunnel.onStateChange(Tunnel.State.DOWN)
                         }
                     }
@@ -791,7 +819,8 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
      * Helper to correctly stop the foreground service.
      */
     private fun stopForegroundOrService(stopSelf: Boolean = true) {
-        ProtonLogger.d(TAG, "Stopping foreground service (stopSelf=$stopSelf)")
+        val caller = Thread.currentThread().stackTrace.getOrNull(3)?.methodName ?: "unknown"
+        ProtonLogger.d(TAG, "stopForegroundOrService(stopSelf=$stopSelf) called from $caller. isInternalReconnecting=$isInternalReconnecting")
         verificationJob?.cancel()
         stopForeground(STOP_FOREGROUND_REMOVE)
 
@@ -953,52 +982,33 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         val intent = lastConnectIntent ?: return
         val sessionToReconnect = lastSessionId
         
-        reconnectionJob?.cancel()
+        if (isInternalReconnecting) {
+            ProtonLogger.d(TAG, "reconnect() ignored: already reconnecting")
+            return
+        }
+        
+        ProtonLogger.i(TAG, "reconnect() initiated for session $sessionToReconnect")
+        isInternalReconnecting = true
+        
+        // 1. Fire the intent immediately in the main thread.
+        // This ensures the system receives the restart/update request before this instance is destroyed.
+        try {
+            ProtonLogger.d(TAG, "Reconnection: Sending startService intent")
+            startForegroundService(intent)
+        } catch (e: Exception) {
+            ProtonLogger.e(TAG, "Failed to start service for reconnect", e)
+        }
+
+        // 2. Perform cleanup of the old tunnel asynchronously and SILENTLY.
         reconnectionJob = serviceScope.launch(Dispatchers.IO) {
             try {
-                // Atomic check: Ensure we are still working on the same session
-                if (lastSessionId != sessionToReconnect) {
-                    ProtonLogger.d(TAG, "Reconnection aborted: Session mismatch ($lastSessionId != $sessionToReconnect)")
-                    return@launch
+                if (currentTunnelState != Tunnel.State.DOWN) {
+                    backend.setState(tunnel, Tunnel.State.DOWN, null)
                 }
-
-                ProtonLogger.i(TAG, "Initiating automatic reconnection (Session: $sessionToReconnect)...")
-                isInternalReconnecting = true
-                
-                // Stop current tunnel cleanly
-                backend.setState(tunnel, Tunnel.State.DOWN, null)
-                
-                // Wait for the state to actually become DOWN to avoid race conditions in the backend.
-                // We use a shorter timeout and more frequent checks.
-                var attempts = 0
-                while (currentTunnelState != Tunnel.State.DOWN && attempts < 50 && isActive) {
-                    if (lastSessionId != sessionToReconnect) {
-                        isInternalReconnecting = false
-                        return@launch
-                    }
-                    delay(100)
-                    attempts++
-                }
-
-                if (!isActive || lastSessionId != sessionToReconnect) {
-                    isInternalReconnecting = false
-                    return@launch
-                }
-
-                ProtonLogger.i(TAG, "Backend state is DOWN. Restarting service with original intent for session $sessionToReconnect")
-                
-                // Re-verify that AWG params are in the intent we are about to reuse
-                val originalConfig = intent.getStringExtra(EXTRA_CONFIG)
-                val hasAwg = originalConfig?.contains("Jc =") == true
-                ProtonLogger.d(TAG, "Reusing original intent (Config length: ${originalConfig?.length}, HasAWG: $hasAwg)")
-                
-                startService(intent)
+            } catch (_: kotlinx.coroutines.CancellationException) {
+                // Expected when the service instance is being stopped/restarted
             } catch (e: Exception) {
-                if (isActive && lastSessionId == sessionToReconnect) {
-                    ProtonLogger.e(TAG, "Failed to perform automatic reconnection", e)
-                    isInternalReconnecting = false
-                    stopForegroundOrService()
-                }
+                ProtonLogger.v(TAG, "Minor cleanup error during reconnect: ${e.message}")
             }
         }
     }
