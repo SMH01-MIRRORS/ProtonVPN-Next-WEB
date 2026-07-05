@@ -20,9 +20,9 @@ package ru.protonmod.next.ui.screens.dashboard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.History
@@ -33,7 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpSize
@@ -44,11 +43,8 @@ import ru.protonmod.next.data.local.VpnProfileEntity
 import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.ServerCard
 import ru.protonmod.next.ui.theme.ProtonNextTheme
-import ru.protonmod.next.ui.utils.CountryUtils
-
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.runtime.remember
 import ru.protonmod.next.ui.theme.liquidGlass
+import ru.protonmod.next.ui.utils.CountryUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,105 +55,96 @@ fun QuickConnectBottomSheet(
     profiles: ImmutableList<VpnProfileEntity>,
     recentServers: ImmutableList<ru.protonmod.next.data.network.LogicalServer>,
     onStrategySelect: (String, String?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val colors = ProtonNextTheme.colors
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        sheetState = sheetState,
         modifier = modifier,
         containerColor = colors.backgroundNorm,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = colors.iconWeak) }
+        dragHandle = { BottomSheetDefaults.DragHandle(color = colors.iconWeak) },
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(bottom = 32.dp)
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
                 text = stringResource(R.string.title_quick_connect_config),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = colors.textNorm,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
+                modifier = Modifier.padding(vertical = 16.dp),
             )
 
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                item(contentType = "Strategy") {
+            StrategyItem(
+                title = stringResource(R.string.qc_strategy_fastest),
+                description = stringResource(R.string.qc_strategy_fastest_desc),
+                flagResId = R.drawable.flag_fastest,
+                isSelected = currentStrategy == "fastest",
+                onClick = {
+                    onStrategySelect("fastest", null)
+                    onDismiss()
+                },
+            )
+
+            StrategyItem(
+                title = stringResource(R.string.qc_strategy_recent),
+                description = stringResource(R.string.qc_strategy_recent_desc),
+                icon = Icons.Rounded.History,
+                isSelected = currentStrategy == "recent",
+                onClick = {
+                    onStrategySelect("recent", null)
+                    onDismiss()
+                },
+            )
+
+            if (profiles.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.qc_header_profiles),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = colors.brandNorm,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+
+                profiles.forEach { profile ->
                     StrategyItem(
-                        title = stringResource(R.string.qc_strategy_fastest),
-                        description = stringResource(R.string.qc_strategy_fastest_desc),
-                        flagResId = R.drawable.flag_fastest,
-                        isSelected = currentStrategy == "fastest",
+                        title = profile.name,
+                        description = stringResource(R.string.qc_strategy_profile_desc),
+                        icon = Icons.Rounded.Star,
+                        isSelected = (currentStrategy == "profile" && currentTargetId == profile.id),
                         onClick = {
-                            onStrategySelect("fastest", null)
+                            onStrategySelect("profile", profile.id)
                             onDismiss()
-                        }
+                        },
                     )
                 }
+            }
 
-                item(contentType = "Strategy") {
-                    StrategyItem(
-                        title = stringResource(R.string.qc_strategy_recent),
-                        description = stringResource(R.string.qc_strategy_recent_desc),
-                        icon = Icons.Rounded.History,
-                        isSelected = currentStrategy == "recent",
+            if (recentServers.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.qc_header_recent),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = colors.brandNorm,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+
+                recentServers.forEach { server ->
+                    ServerCard(
+                        server = server,
+                        isConnected = (currentStrategy == "server" && currentTargetId == server.id),
+                        isConnecting = false,
                         onClick = {
-                            onStrategySelect("recent", null)
+                            onStrategySelect("server", server.id)
                             onDismiss()
-                        }
+                        },
                     )
-                }
-
-                if (profiles.isNotEmpty()) {
-                    item(contentType = "Header") {
-                        Text(
-                            text = stringResource(R.string.qc_header_profiles),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = colors.brandNorm,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
-                        )
-                    }
-
-                    items(profiles, key = { it.id }, contentType = { "ProfileStrategy" }) { profile ->
-                        StrategyItem(
-                            title = profile.name,
-                            description = stringResource(R.string.qc_strategy_profile_desc),
-                            icon = Icons.Rounded.Star,
-                            isSelected = currentStrategy == "profile" && currentTargetId == profile.id,
-                            onClick = {
-                                onStrategySelect("profile", profile.id)
-                                onDismiss()
-                            }
-                        )
-                    }
-                }
-
-                if (recentServers.isNotEmpty()) {
-                    item(contentType = "Header") {
-                        Text(
-                            text = stringResource(R.string.qc_header_recent),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = colors.brandNorm,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
-                        )
-                    }
-
-                    items(recentServers, key = { it.id }, contentType = { "ServerStrategy" }) { server ->
-                        ServerCard(
-                            server = server,
-                            isConnected = currentStrategy == "server" && currentTargetId == server.id,
-                            isConnecting = false,
-                            onClick = {
-                                onStrategySelect("server", server.id)
-                                onDismiss()
-                            }
-                        )
-                    }
                 }
             }
         }
@@ -172,10 +159,9 @@ private fun StrategyItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
-    flagResId: Int = 0
+    flagResId: Int = 0,
 ) {
     val colors = ProtonNextTheme.colors
-    val interactionSource = remember { MutableInteractionSource() }
 
     Box(
         modifier = modifier
@@ -183,39 +169,37 @@ private fun StrategyItem(
             .liquidGlass(
                 shape = RoundedCornerShape(24.dp),
                 alpha = if (isSelected) 0.3f else 0.4f,
-                shadowElevation = 0.dp
+                shadowElevation = 0.dp,
             )
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick
-            )
+            .clickable(onClick = onClick),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(if (isSelected) colors.brandNorm.copy(alpha = 0.1f) else colors.backgroundNorm),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 if (flagResId != 0) {
                     FlagIcon(
                         countryFlag = flagResId,
-                        size = DpSize(28.dp, 20.dp)
+                        size = DpSize(28.dp, 20.dp),
                     )
-                } else if (icon != null) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = if (isSelected) colors.brandNorm else colors.iconNorm,
-                        modifier = Modifier.size(24.dp)
-                    )
+                } else {
+                    icon?.let {
+                        Icon(
+                            imageVector = it,
+                            contentDescription = null,
+                            tint = if (isSelected) colors.brandNorm else colors.iconNorm,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
                 }
             }
 
@@ -226,12 +210,12 @@ private fun StrategyItem(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = colors.textNorm
+                    color = colors.textNorm,
                 )
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = colors.textWeak
+                    color = colors.textWeak,
                 )
             }
 
@@ -240,7 +224,7 @@ private fun StrategyItem(
                     imageVector = Icons.Rounded.Check,
                     contentDescription = null,
                     tint = colors.brandNorm,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
                 )
             }
         }

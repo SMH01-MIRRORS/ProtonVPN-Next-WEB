@@ -550,23 +550,25 @@ fun DashboardScreen(
                                         }
                                     )
                                 }
-
-                                if (showQuickConnectConfig) {
-                                    QuickConnectBottomSheet(
-                                        onDismiss = { showQuickConnectConfig = false },
-                                        currentStrategy = state.quickConnectStrategy,
-                                        currentTargetId = state.quickConnectTargetId,
-                                        profiles = state.profiles.toImmutableList(),
-                                        recentServers = state.recentConnections.toImmutableList(),
-                                        onStrategySelect = { strategy, targetId ->
-                                            viewModel.setQuickConnectStrategy(strategy, targetId)
-                                        }
-                                    )
-                                }
                             }
                         }
                     }
                 }
+            }
+
+            // Move Quick Connect Config outside of AnimatedContent to avoid gesture conflicts
+            // and ensure it's not clipped by screen transitions
+            if (showQuickConnectConfig && successState != null) {
+                QuickConnectBottomSheet(
+                    onDismiss = { showQuickConnectConfig = false },
+                    currentStrategy = successState.quickConnectStrategy,
+                    currentTargetId = successState.quickConnectTargetId,
+                    profiles = successState.profiles.toImmutableList(),
+                    recentServers = successState.recentConnections.toImmutableList(),
+                    onStrategySelect = { strategy, targetId ->
+                        viewModel.setQuickConnectStrategy(strategy, targetId)
+                    }
+                )
             }
         }
     }
