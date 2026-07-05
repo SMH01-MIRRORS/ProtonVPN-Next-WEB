@@ -277,6 +277,9 @@ class AmneziaVpnManager @Inject constructor(
                     updateVpnState(VpnState.CONNECTING)
                 }
             }
+            else -> {
+                // Ignore TOGGLE or other new states
+            }
         }
     }
 

@@ -252,9 +252,9 @@ android {
             packaging {
                 jniLibs {
                     keepDebugSymbols.addAll(listOf(
-                        "**/libam-go.so",
-                        "**/libam-quick.so",
-                        "**/libam.so",
+                        "**/libwg-go.so",
+                        "**/libwg-quick.so",
+                        "**/libwg.so",
                         "**/libandroidx.graphics.path.so",
                         "**/libdatastore_shared_counter.so",
                         "**/libgojni.so",
@@ -326,9 +326,9 @@ tasks.register("generateSecurityMetadata") {
     
     // List of known official libraries (including the ones we build)
     val officialLibs = listOf(
-        "libam-go.so", "libam-quick.so", "libam.so", 
+        "libwg-go.so", "libwg-quick.so", "libwg.so",
         "libandroidx.graphics.path.so", "libdatastore_shared_counter.so",
-        "libhev-socks5-tunnel.so", "libbyedpi.so", "libnext.so"
+        "libbyedpi.so", "libnext.so"
     )
     val sentryLibs = listOf("libsentry-android.so", "libsentry.so")
     

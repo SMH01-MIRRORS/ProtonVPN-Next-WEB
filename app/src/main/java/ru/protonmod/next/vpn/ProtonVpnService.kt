@@ -56,10 +56,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
-import org.amnezia.awg.backend.AbstractBackend
 import org.amnezia.awg.backend.GoBackend
 import org.amnezia.awg.backend.Tunnel
-import org.amnezia.awg.backend.TunnelActionHandler
 import org.amnezia.awg.config.Config
 import ru.protonmod.next.R
 import ru.protonmod.next.data.state.ConnectedServerState
@@ -71,7 +69,7 @@ import javax.inject.Inject
  * Intermediate base class to help Hilt/KSP resolve the Service inheritance
  * from the library's nested class.
  */
-open class AmneziaVpnServiceBase : AbstractBackend.VpnService()
+open class AmneziaVpnServiceBase : GoBackend.VpnService()
 
 /**
  * Service implementation for AmneziaWG tunnel used in Proton VPN-Next.
@@ -208,10 +206,6 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 }
             }
         }
-
-        override fun isIpv4ResolutionPreferred(): Boolean = true
-
-        override fun isMetered(): Boolean = false
     }
 
     /**
@@ -294,12 +288,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         ContextCompat.registerReceiver(this, settingsReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
 
         // Initialize the Go backend
-        backend = GoBackend(this, object : TunnelActionHandler {
-            override fun runPreUp(scripts: Collection<String>) {}
-            override fun runPostUp(scripts: Collection<String>) {}
-            override fun runPreDown(scripts: Collection<String>) {}
-            override fun runPostDown(scripts: Collection<String>) {}
-        })
+        backend = GoBackend(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

@@ -23,7 +23,7 @@ okhttp = "5.4.0"
 retrofit = "3.0.0"
 retrofitSerialization = "1.0.0"
 serializationJson = "1.11.0"
-amneziawg = "2.3.7"
+amneziawg = "2.0.1-kvnext9"
 leakcanary = "2.14"
 bouncycastle = "1.84"
 bcrypt = "0.10.2"
@@ -83,7 +83,8 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "collectionsImmutable" }
 
 # VPN Protocols
-amneziawg-android = { group = "com.zaneschepke", name = "amneziawg-android", version.ref = "amneziawg" }
+amneziawg-android = { group = "com.github.SMH01-MIRRORS", name = "amneziawg-android", version.ref = "amneziawg" }
+
 # Crypto
 bouncycastle-prov = { group = "org.bouncycastle", name = "bcprov-jdk18on", version.ref = "bouncycastle" }
 bouncycastle-pgp = { group = "org.bouncycastle", name = "bcpg-jdk18on", version.ref = "bouncycastle" }
