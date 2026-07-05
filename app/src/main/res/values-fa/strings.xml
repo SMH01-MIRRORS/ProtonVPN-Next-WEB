@@ -268,7 +268,6 @@
     <string name="license_apache_2">مجوز Apache 2.0</string>
     <string name="license_kotlin_title">کتابخانه استاندارد Kotlin</string>
     <string name="license_retrofit_title">Retrofit و OkHttp</string>
-    <string name="license_proton_go_vpn_title">کتابخانه Proton GO VPN</string>
     <string name="license_room_title">پایگاه داده Room</string>
     <!-- Split Tunneling -->
     <string name="settings_st_mode">حالت تونل‌زنی تقسیم‌شده</string>

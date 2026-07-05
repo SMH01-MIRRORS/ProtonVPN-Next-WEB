@@ -268,7 +268,6 @@
     <string name="license_apache_2">Apache License 2.0</string>
     <string name="license_kotlin_title">Kotlin 标准库</string>
     <string name="license_retrofit_title">Retrofit 和 OkHttp</string>
-    <string name="license_proton_go_vpn_title">Proton GO VPN 库</string>
     <string name="license_room_title">Room 数据库</string>
     <!-- Split Tunneling -->
     <string name="settings_st_mode">拆分隧道模式</string>
