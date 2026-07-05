@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160104,
-      "versionName": "12.0.0-alpha2-23-g69f7b9f-nightly",
+      "versionCode": 605160105,
+      "versionName": "12.0.0-alpha2-24-ga7befe2-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "chore: update and expand open-source license information\n\n- Added `Kotlinx`, `Bouncy Castle`, and `BCrypt` libraries to the `LicensesScreen`.\n- Updated Sentry's license designation from BSL to FSL-1.1-Apache-2.0.\n- Added new string resources for MIT and FSL license types, along with corresponding library titles.",
+      "changelog": "chore: update license screen entries and localized strings\n\n- Removed the \"Proton GO VPN\" library entry from `LicensesScreen` and all localized `strings.xml` files.\n- Added missing Russian translations for Bouncy Castle, BCrypt, and Kotlinx library titles.\n- Introduced `license_fsl_apache` and `license_mit` string resources to the Russian locale.",
       "force": false
     },
     "release": {
-      "versionCode": 605160104,
-      "versionName": "12.0.0-alpha2-23-g69f7b9f-nightly",
+      "versionCode": 605160105,
+      "versionName": "12.0.0-alpha2-24-ga7befe2-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "chore: update and expand open-source license information\n\n- Added `Kotlinx`, `Bouncy Castle`, and `BCrypt` libraries to the `LicensesScreen`.\n- Updated Sentry's license designation from BSL to FSL-1.1-Apache-2.0.\n- Added new string resources for MIT and FSL license types, along with corresponding library titles.",
+      "changelog": "chore: update license screen entries and localized strings\n\n- Removed the \"Proton GO VPN\" library entry from `LicensesScreen` and all localized `strings.xml` files.\n- Added missing Russian translations for Bouncy Castle, BCrypt, and Kotlinx library titles.\n- Introduced `license_fsl_apache` and `license_mit` string resources to the Russian locale.",
       "force": false
     }
   },
