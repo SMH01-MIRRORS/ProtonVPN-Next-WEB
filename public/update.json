@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160103,
-      "versionName": "12.0.0-alpha2-22-gecf01d2-nightly",
+      "versionCode": 605160104,
+      "versionName": "12.0.0-alpha2-23-g69f7b9f-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "fix: manage VpnTileService lifecycle to prevent memory leaks\n\n- Introduced `serviceScope` using `SupervisorJob` to handle coroutines tied specifically to the service instance lifecycle.\n- Migrated state observation in `onStartListening` from `applicationScope` to `serviceScope`.\n- Implemented `onDestroy` to cancel `serviceScope`, ensuring the service instance is not retained by the system's IPC binder after destruction.\n- Retained the use of `applicationScope` for `performQuickConnect` in `onClick` to ensure VPN connection operations persist even if the tile service is destroyed mid-process.",
+      "changelog": "chore: update and expand open-source license information\n\n- Added `Kotlinx`, `Bouncy Castle`, and `BCrypt` libraries to the `LicensesScreen`.\n- Updated Sentry's license designation from BSL to FSL-1.1-Apache-2.0.\n- Added new string resources for MIT and FSL license types, along with corresponding library titles.",
       "force": false
     },
     "release": {
-      "versionCode": 605160103,
-      "versionName": "12.0.0-alpha2-22-gecf01d2-nightly",
+      "versionCode": 605160104,
+      "versionName": "12.0.0-alpha2-23-g69f7b9f-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "fix: manage VpnTileService lifecycle to prevent memory leaks\n\n- Introduced `serviceScope` using `SupervisorJob` to handle coroutines tied specifically to the service instance lifecycle.\n- Migrated state observation in `onStartListening` from `applicationScope` to `serviceScope`.\n- Implemented `onDestroy` to cancel `serviceScope`, ensuring the service instance is not retained by the system's IPC binder after destruction.\n- Retained the use of `applicationScope` for `performQuickConnect` in `onClick` to ensure VPN connection operations persist even if the tile service is destroyed mid-process.",
+      "changelog": "chore: update and expand open-source license information\n\n- Added `Kotlinx`, `Bouncy Castle`, and `BCrypt` libraries to the `LicensesScreen`.\n- Updated Sentry's license designation from BSL to FSL-1.1-Apache-2.0.\n- Added new string resources for MIT and FSL license types, along with corresponding library titles.",
       "force": false
     }
   },
