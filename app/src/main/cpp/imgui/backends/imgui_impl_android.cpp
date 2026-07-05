@@ -41,7 +41,7 @@
 // Android data
 static double                                   g_Time = 0.0;
 static ANativeWindow*                           g_Window;
-static char                                     g_LogTag[] = "ImGuiExample";
+// static char                                     g_LogTag[] = "ImGuiExample";
 
 static ImGuiKey ImGui_ImplAndroid_KeyCodeToImGuiKey(int32_t key_code)
 {

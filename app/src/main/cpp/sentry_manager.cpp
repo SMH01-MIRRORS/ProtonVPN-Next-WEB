@@ -31,7 +31,7 @@ std::string SentryManager::getSentryDsn() {
 #endif
 }
 
-void SentryManager::init(const char*, bool, const char*, int, const char*) {
+void SentryManager::init(const char* /* dsn */, bool /* isDebug */, const char* /* env */, int /* sampleRate */, const char* /* proxy */) {
     // Sentry Native removed to save APK size
 }
 

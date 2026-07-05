@@ -133,7 +133,7 @@ static jboolean isTamperDetected(JNIEnv* /* env */, jobject /* thiz */) {
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-Java_ru_protonmod_next_vpn_AntiTamperBridge_invokeNative(JNIEnv* env, jobject /* thiz */, jlong handlerAddr, jobject proxy, jstring methodName, jobjectArray args) {
+Java_ru_protonmod_next_vpn_AntiTamperBridge_invokeNative(JNIEnv* env, jobject /* thiz */, jlong handlerAddr, jobject /* proxy */, jstring methodName, jobjectArray args) {
     const char* methodChars = env->GetStringUTFChars(methodName, nullptr);
     std::string method(methodChars);
     env->ReleaseStringUTFChars(methodName, methodChars);
