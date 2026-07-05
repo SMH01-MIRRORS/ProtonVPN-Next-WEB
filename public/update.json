@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160099,
-      "versionName": "12.0.0-alpha2-18-g31f1f46-nightly",
+      "versionCode": 605160103,
+      "versionName": "12.0.0-alpha2-22-gecf01d2-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "chore: fix unused variable and parameter warnings in native code\n\n- Commented out unused `g_LogTag` in `imgui_impl_android.cpp`.\n- Marked the `proxy` parameter as unused in the `AntiTamperBridge_invokeNative` JNI function.\n- Annotated unused parameters in `SentryManager::init` to suppress compiler warnings, as the implementation was previously removed.",
+      "changelog": "fix: manage VpnTileService lifecycle to prevent memory leaks\n\n- Introduced `serviceScope` using `SupervisorJob` to handle coroutines tied specifically to the service instance lifecycle.\n- Migrated state observation in `onStartListening` from `applicationScope` to `serviceScope`.\n- Implemented `onDestroy` to cancel `serviceScope`, ensuring the service instance is not retained by the system's IPC binder after destruction.\n- Retained the use of `applicationScope` for `performQuickConnect` in `onClick` to ensure VPN connection operations persist even if the tile service is destroyed mid-process.",
       "force": false
     },
     "release": {
-      "versionCode": 605160099,
-      "versionName": "12.0.0-alpha2-18-g31f1f46-nightly",
+      "versionCode": 605160103,
+      "versionName": "12.0.0-alpha2-22-gecf01d2-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "chore: fix unused variable and parameter warnings in native code\n\n- Commented out unused `g_LogTag` in `imgui_impl_android.cpp`.\n- Marked the `proxy` parameter as unused in the `AntiTamperBridge_invokeNative` JNI function.\n- Annotated unused parameters in `SentryManager::init` to suppress compiler warnings, as the implementation was previously removed.",
+      "changelog": "fix: manage VpnTileService lifecycle to prevent memory leaks\n\n- Introduced `serviceScope` using `SupervisorJob` to handle coroutines tied specifically to the service instance lifecycle.\n- Migrated state observation in `onStartListening` from `applicationScope` to `serviceScope`.\n- Implemented `onDestroy` to cancel `serviceScope`, ensuring the service instance is not retained by the system's IPC binder after destruction.\n- Retained the use of `applicationScope` for `performQuickConnect` in `onClick` to ensure VPN connection operations persist even if the tile service is destroyed mid-process.",
       "force": false
     }
   },
