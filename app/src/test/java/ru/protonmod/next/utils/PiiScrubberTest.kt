@@ -58,4 +58,11 @@ class PiiScrubberTest {
         val input = "User clicked Login button"
         assertEquals(input, PiiScrubber.scrub(input))
     }
+
+    @Test
+    fun testScrubSessionRefreshWorkerLog() {
+        val input = "[SessionRefreshWorker] Starting background session keep-alive for lJ0eTa_CGsnneVR-2grzilAwAxmjAfC6MHzk-2JmOXstP5_QzCPXjPa7jnrhflctBcAlCTJ5XZxpqZcj5Gc9eg=="
+        val expected = "[SessionRefreshWorker] Starting background session keep-alive for [REDACTED]"
+        assertEquals(expected, PiiScrubber.scrub(input))
+    }
 }

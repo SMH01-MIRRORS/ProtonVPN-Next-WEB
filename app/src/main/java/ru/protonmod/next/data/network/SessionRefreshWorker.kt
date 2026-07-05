@@ -65,7 +65,7 @@ class SessionRefreshWorker @AssistedInject constructor(
             return@withContext Result.success()
         }
 
-        ProtonLogger.i(TAG, "Starting background session keep-alive for ${session.userId}")
+        ProtonLogger.i(TAG, "Starting background session keep-alive")
 
         try {
             // Making a simple authenticated request to trigger TokenAuthenticator if needed

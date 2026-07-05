@@ -44,6 +44,12 @@ object PiiScrubber {
     private val URL_QUERY_TOKEN_REGEX = Regex(
         "(?i)\\b(token|sessionId|access_token|refresh_token|captchaToken)=([^&\\s]+)"
     )
+
+    // Standalone long tokens (likely session tokens, keys or identifiers)
+    // Catches strings that look like Base64/Hex/Tokens with 32+ characters
+    private val STANDALONE_TOKEN_REGEX = Regex(
+        "\\b[a-zA-Z0-9._\\-+=/]{32,}(?:={1,2})?(?=\\s|$)"
+    )
     
     // Config markers to detect VPN configuration blocks
     private val CONFIG_MARKERS = listOf(
@@ -87,6 +93,16 @@ object PiiScrubber {
             val prefix = match.value.substring(0, startInMatch)
             val suffix = match.value.substring(endInMatch)
             prefix + "[REDACTED]" + suffix
+        }
+
+        // 5. Redact Standalone long tokens
+        result = STANDALONE_TOKEN_REGEX.replace(result) { match ->
+            // Skip if it's already redacted or an IP tag
+            if (match.value.startsWith("[") && match.value.endsWith("]")) return@replace match.value
+            
+            // Check if it's not a common non-sensitive long string (like a URL)
+            // But usually 32+ chars of random-looking text IS sensitive in this context
+            "[REDACTED]"
         }
 
         return result
