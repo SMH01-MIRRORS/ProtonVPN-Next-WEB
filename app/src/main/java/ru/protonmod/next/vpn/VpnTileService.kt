@@ -27,6 +27,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -70,12 +72,20 @@ class VpnTileService : TileService() {
     @ApplicationScope
     lateinit var applicationScope: CoroutineScope
 
+    /**
+     * Service-scoped coroutine scope. Cancelled in [onDestroy] to prevent the
+     * destroyed service instance from being retained by running coroutines
+     * (the framework's internal IPC binder holds `this` as a JNI global ref
+     * and won't release it until all work referencing the service is done).
+     */
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
     private var observationJob: Job? = null
 
     override fun onStartListening() {
         super.onStartListening()
         observationJob?.cancel()
-        observationJob = applicationScope.launch(Dispatchers.Main) {
+        observationJob = serviceScope.launch {
             combine(
                 amneziaVpnManager.tunnelState,
                 settingsManager.quickConnectStrategy,
@@ -102,6 +112,12 @@ class VpnTileService : TileService() {
         observationJob = null
     }
 
+    override fun onDestroy() {
+        serviceScope.cancel()
+        observationJob = null
+        super.onDestroy()
+    }
+
     override fun onClick() {
         super.onClick()
         val currentState = amneziaVpnManager.tunnelState.value
@@ -124,6 +140,8 @@ class VpnTileService : TileService() {
                 )
                 TileServiceCompat.startActivityAndCollapse(this, wrapper)
             } else {
+                // Launch on applicationScope: the VPN connection must proceed
+                // even if this TileService instance is destroyed mid-connect.
                 applicationScope.launch {
                     performQuickConnect()
                 }
