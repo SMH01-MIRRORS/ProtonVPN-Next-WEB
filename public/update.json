@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160105,
-      "versionName": "12.0.0-alpha2-24-ga7befe2-nightly",
+      "versionCode": 605160107,
+      "versionName": "12.0.0-alpha2-26-g3496dcb-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "chore: update license screen entries and localized strings\n\n- Removed the \"Proton GO VPN\" library entry from `LicensesScreen` and all localized `strings.xml` files.\n- Added missing Russian translations for Bouncy Castle, BCrypt, and Kotlinx library titles.\n- Introduced `license_fsl_apache` and `license_mit` string resources to the Russian locale.",
+      "changelog": "chore: update AmneziaWG license URL\n\n- Updated the repository link for AmneziaWG in `LicensesScreen` from GitHub to Codeberg.",
       "force": false
     },
     "release": {
-      "versionCode": 605160105,
-      "versionName": "12.0.0-alpha2-24-ga7befe2-nightly",
+      "versionCode": 605160107,
+      "versionName": "12.0.0-alpha2-26-g3496dcb-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "chore: update license screen entries and localized strings\n\n- Removed the \"Proton GO VPN\" library entry from `LicensesScreen` and all localized `strings.xml` files.\n- Added missing Russian translations for Bouncy Castle, BCrypt, and Kotlinx library titles.\n- Introduced `license_fsl_apache` and `license_mit` string resources to the Russian locale.",
+      "changelog": "chore: update AmneziaWG license URL\n\n- Updated the repository link for AmneziaWG in `LicensesScreen` from GitHub to Codeberg.",
       "force": false
     }
   },
