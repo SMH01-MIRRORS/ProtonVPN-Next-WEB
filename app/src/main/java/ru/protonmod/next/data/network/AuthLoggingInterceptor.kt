@@ -62,7 +62,7 @@ class AuthLoggingInterceptor : Interceptor {
 
         if (isAuth && BuildConfig.ALLOW_LOGCAT) {
             Log.d("AuthLogging", "[DEBUG] Response Code: ${response.code}")
-            response.body?.let { body ->
+            response.body.let { body ->
                 try {
                     val source = body.source()
                     source.request(Long.MAX_VALUE)

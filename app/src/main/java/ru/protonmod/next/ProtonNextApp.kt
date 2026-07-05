@@ -28,14 +28,14 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import okhttp3.OkHttp
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.data.network.SessionRefreshWorker
 import ru.protonmod.next.data.repository.VpnRepository
 import ru.protonmod.next.ota.OTAUpdateManager
 import ru.protonmod.next.utils.NetworkMonitor
 import ru.protonmod.next.utils.ProtonLogger
-import ru.protonmod.next.data.network.SessionRefreshWorker
-import ru.protonmod.next.vpn.NextVpnManager
 import ru.protonmod.next.vpn.VpnAutomationManager
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Main Application class for Proton VPN-Next.
@@ -131,11 +131,12 @@ class ProtonNextApp : Application(), Configuration.Provider {
             SessionRefreshWorker.schedule(this)
 
             // Sync servers on network changes.
-            // Debounce by 2 s so rapid connectivity toggles (e.g. WiFi → mobile → WiFi)
+            // Debounce by 2 s so rapid connectivity toggles (e.g. Wi-Fi → mobile → Wi-Fi)
             // collapse into a single refresh, preventing multiple concurrent forced fetches
             // that would exhaust the heap with large API payloads (OOM in loads deserialization).
+            @OptIn(kotlinx.coroutines.FlowPreview::class)
             MainScope().launch {
-                networkMonitor.networkChanged.debounce(2_000).collect { timestamp ->
+                networkMonitor.networkChanged.debounce(2_000.milliseconds).collect { timestamp ->
                     if (timestamp > 0) {
                         vpnRepository.refreshServersOnNetworkChange()
                     }

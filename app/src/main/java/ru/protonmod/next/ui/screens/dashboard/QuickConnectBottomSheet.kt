@@ -58,7 +58,7 @@ fun QuickConnectBottomSheet(
     modifier: Modifier = Modifier,
 ) {
     val colors = ProtonNextTheme.colors
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val sheetState = rememberModalBottomSheetState()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,

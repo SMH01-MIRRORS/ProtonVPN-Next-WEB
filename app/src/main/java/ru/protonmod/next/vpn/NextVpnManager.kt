@@ -119,7 +119,7 @@ class NextVpnManager @Inject constructor(
             
             return try {
                 client.newCall(requestBuilder.build()).execute().use { response ->
-                    val responseBody = response.body?.string() ?: ""
+                    val responseBody = response.body.string()
                     ProtonLogger.v("NextVpnManager", "Native Response [$url]: ${response.code}")
                     NativeResponse(response.code, responseBody)
                 }

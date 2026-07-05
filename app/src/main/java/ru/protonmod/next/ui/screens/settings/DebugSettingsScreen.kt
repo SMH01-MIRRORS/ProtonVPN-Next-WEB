@@ -362,11 +362,11 @@ fun DebugSettingsScreen(
                                     ListItem(
                                         headlineContent = { Text(server.name, color = colors.textNorm) },
                                         supportingContent = { Text(server.exitCountry, color = colors.textWeak) },
+                                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                                         modifier = Modifier.clickable {
                                             viewModel.exportConfig(server)
                                             showServerSelect = false
-                                        },
-                                        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+                                        }
                                     )
                                 }
                             }

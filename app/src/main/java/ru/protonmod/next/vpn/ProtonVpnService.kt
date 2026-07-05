@@ -859,6 +859,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             try {
                 while (isActive && !isVerified && System.currentTimeMillis() - startTime < timeout) {
                     // Re-scan for VPN network in each attempt
+                    @Suppress("DEPRECATION")
                     val vpnNetwork = cm.allNetworks.find { network ->
                         cm.getNetworkCapabilities(network)?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
                     }

@@ -618,6 +618,7 @@ class SettingsManager @Inject constructor(
     suspend fun getAllPreferences(): Map<String, String> {
         val prefs = dataStore.data.first()
         return prefs.asMap().entries.associate { (key, value) ->
+            @Suppress("UNCHECKED_CAST")
             val stringValue = when (value) {
                 is Set<*> -> Json.encodeToString(value as Set<String>)
                 else -> value.toString()
@@ -644,6 +645,7 @@ class SettingsManager @Inject constructor(
                     SENTRY_LOGS_ENABLED.name,
                     IP_HIDDEN.name -> {
                         val boolValue = value.toBoolean()
+                        @Suppress("UNCHECKED_CAST")
                         settings[key as Preferences.Key<Boolean>] = boolValue
                         prefs.edit { putBoolean(keyName, boolValue) }
                     }
@@ -652,12 +654,14 @@ class SettingsManager @Inject constructor(
                     AWG_JC.name, AWG_JMIN.name, AWG_JMAX.name, AWG_S1.name, AWG_S2.name, 
                     AWG_S3.name, AWG_S4.name, AWG_JUNK_LEVEL.name -> {
                         val intValue = value.toIntOrNull() ?: return@forEach
+                        @Suppress("UNCHECKED_CAST")
                         settings[key as Preferences.Key<Int>] = intValue
                         prefs.edit { putInt(keyName, intValue) }
                     }
                     
                     OTA_LAST_CHECK_TIME.name, PAUSE_END_TIME.name -> {
                         val longValue = value.toLongOrNull() ?: return@forEach
+                        @Suppress("UNCHECKED_CAST")
                         settings[key as Preferences.Key<Long>] = longValue
                         prefs.edit { putLong(keyName, longValue) }
                     }
@@ -671,6 +675,7 @@ class SettingsManager @Inject constructor(
                     QUICK_CONNECT_TARGET_ID.name, SETUP_STEP.name, AWG_H1.name, 
                     AWG_H2.name, AWG_H3.name, AWG_H4.name, AWG_I1.name, AWG_I2.name, 
                     AWG_I3.name, AWG_I4.name, AWG_I5.name -> {
+                        @Suppress("UNCHECKED_CAST")
                         settings[key as Preferences.Key<String>] = value
                         prefs.edit { putString(keyName, value) }
                     }
@@ -678,6 +683,7 @@ class SettingsManager @Inject constructor(
                     EXCLUDED_APPS.name, EXCLUDED_IPS.name, EXCLUDED_DOMAINS.name -> {
                         try {
                             val set = Json.decodeFromString<Set<String>>(value)
+                            @Suppress("UNCHECKED_CAST")
                             settings[key as Preferences.Key<Set<String>>] = set
                         } catch (e: Exception) {
                             // ignore

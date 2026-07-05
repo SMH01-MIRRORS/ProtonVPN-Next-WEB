@@ -49,7 +49,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -363,29 +365,27 @@ private fun StepWelcome(
 
         append(agreementTemplate)
 
+        val linkStyle = SpanStyle(color = colors.brandNorm, fontWeight = FontWeight.Bold)
+
         if (privacyIndex != -1) {
-            addStyle(
-                style = SpanStyle(color = colors.brandNorm, fontWeight = FontWeight.Bold),
-                start = privacyIndex,
-                end = privacyIndex + privacyPolicyText.length
-            )
-            addStringAnnotation(
-                tag = "URL",
-                annotation = "privacy",
+            addLink(
+                clickable = LinkAnnotation.Clickable(
+                    tag = "privacy",
+                    styles = TextLinkStyles(style = linkStyle),
+                    linkInteractionListener = { onPrivacyPolicy() }
+                ),
                 start = privacyIndex,
                 end = privacyIndex + privacyPolicyText.length
             )
         }
 
         if (disclaimerIndex != -1) {
-            addStyle(
-                style = SpanStyle(color = colors.brandNorm, fontWeight = FontWeight.Bold),
-                start = disclaimerIndex,
-                end = disclaimerIndex + disclaimerText.length
-            )
-            addStringAnnotation(
-                tag = "URL",
-                annotation = "disclaimer",
+            addLink(
+                clickable = LinkAnnotation.Clickable(
+                    tag = "disclaimer",
+                    styles = TextLinkStyles(style = linkStyle),
+                    linkInteractionListener = { onPrivacyPolicy() }
+                ),
                 start = disclaimerIndex,
                 end = disclaimerIndex + disclaimerText.length
             )
@@ -451,20 +451,12 @@ private fun StepWelcome(
         )
         Spacer(modifier = Modifier.weight(0.5f))
 
-        androidx.compose.foundation.text.ClickableText(
+        Text(
             text = annotatedString,
             style = MaterialTheme.typography.bodySmall.copy(
                 textAlign = TextAlign.Center,
                 color = colors.textWeak
             ),
-            onClick = { offset ->
-                annotatedString.getStringAnnotations(tag = "URL", start = offset, end = offset)
-                    .firstOrNull()?.let { annotation ->
-                        if (annotation.item == "privacy" || annotation.item == "disclaimer") {
-                            onPrivacyPolicy()
-                        }
-                    }
-            },
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 
