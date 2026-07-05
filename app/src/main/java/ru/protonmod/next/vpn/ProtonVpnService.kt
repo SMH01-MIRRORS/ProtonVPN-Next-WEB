@@ -17,12 +17,8 @@
 
 package ru.protonmod.next.vpn
 
+
 import android.annotation.SuppressLint
-
-
-
-
-
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -33,20 +29,13 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.net.ConnectivityManager
-import android.net.Network
 import android.net.NetworkCapabilities
-import android.net.NetworkRequest
 import android.os.Build
 import android.system.Os
-import ru.protonmod.next.utils.ProtonLogger
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.AndroidEntryPoint
-import java.net.InetSocketAddress
-import java.net.Socket
-import javax.net.ssl.HttpsURLConnection
-import javax.net.ssl.HostnameVerifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -55,15 +44,17 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 import org.amnezia.awg.backend.GoBackend
 import org.amnezia.awg.backend.Tunnel
 import org.amnezia.awg.config.Config
 import ru.protonmod.next.R
 import ru.protonmod.next.data.state.ConnectedServerState
+import ru.protonmod.next.utils.ProtonLogger
 import java.io.ByteArrayInputStream
+import java.net.InetSocketAddress
 import java.util.Locale
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Intermediate base class to help Hilt/KSP resolve the Service inheritance
@@ -153,7 +144,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     private var isForegroundServiceStarted: Boolean = false
 
     private val notificationManager by lazy {
-        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     }
 
     /**
@@ -301,6 +292,20 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         }
 
         super.onCreate()
+        
+        // Force-complete the library's internal future to ensure GoBackend sees US as the active service.
+        // This prevents TimeoutException when the library tries to start its own VpnService class.
+        try {
+            val futureField = GoBackend::class.java.getDeclaredField("vpnService")
+            futureField.isAccessible = true
+            val future = futureField.get(null)
+            val completeMethod = future.javaClass.getMethod("complete", Any::class.java)
+            completeMethod.invoke(future, this)
+            ProtonLogger.d(TAG, "Library vpnService future force-completed in onCreate")
+        } catch (_: Exception) {
+            ProtonLogger.v(TAG, "Could not force-complete library future (normal if using standard GoBackend implementation)")
+        }
+
         createNotificationChannels()
 
         // Register the dynamic settings receiver — also handles ACTION_DISCONNECT broadcast
@@ -320,7 +325,22 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
 
         when (action) {
             ACTION_CONNECT -> {
-                // Cancel any pending verification or reconnection from a previous server
+                // Ensure the library's future is completed before we call setState.
+                // If a previous instance just ran onDestroy(), it might have reset the future.
+                try {
+                    val futureField = GoBackend::class.java.getDeclaredField("vpnService")
+                    futureField.isAccessible = true
+                    val future = futureField.get(null)
+                    val isDoneMethod = future.javaClass.getMethod("isDone")
+                    val isDone = isDoneMethod.invoke(future) as Boolean
+                    if (!isDone) {
+                        val completeMethod = future.javaClass.getMethod("complete", Any::class.java)
+                        completeMethod.invoke(future, this)
+                        ProtonLogger.d(TAG, "Library vpnService future force-completed in ACTION_CONNECT")
+                    }
+                } catch (e: Exception) { /* ignored */ }
+
+                // Cancel any pending verification from a previous server
                 verificationJob?.cancel()
                 
                 // Only cancel reconnectionJob if this is a fresh manual connection attempt.
@@ -504,7 +524,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                     } catch (e: Exception) {
                         ProtonLogger.e(TAG, "Error while fetching traffic statistics", e)
                     }
-                    delay(1000) // Update frequency
+                    delay(1000.milliseconds) // Update frequency
                 }
             } finally {
                 ProtonLogger.d(TAG, "Traffic updates coroutine finished")
@@ -846,7 +866,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             // 1. Wait for handshake response (up to 5 seconds)
             var handshakeDetected = false
             try {
-                kotlinx.coroutines.withTimeoutOrNull(5000) {
+                kotlinx.coroutines.withTimeoutOrNull(5000.milliseconds) {
                     while (isActive) {
                         val stats = backend.getStatistics(tunnel)
                         val hasHandshake = stats.peers().any { key ->
@@ -857,7 +877,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                             ProtonLogger.i(TAG, "Handshake response detected. Starting download test...")
                             break
                         }
-                        delay(500)
+                        delay(500.milliseconds)
                     }
                 }
             } catch (e: Exception) {
@@ -884,7 +904,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
 
                     if (vpnNetwork == null) {
                         ProtonLogger.v(TAG, "Verification: VPN network not found, retrying...")
-                        delay(500)
+                        delay(500.milliseconds)
                         continue
                     }
 
@@ -949,7 +969,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                     } catch (e: Exception) {
                         ProtonLogger.v(TAG, "Verification attempt failed: ${e.message} (Type: ${e.javaClass.simpleName})")
                     }
-                    if (!isVerified) delay(1000) // Increased delay between attempts
+                    if (!isVerified) delay(1000.milliseconds) // Increased delay between attempts
                 }
 
                 if (!isVerified && isActive) {
@@ -1033,7 +1053,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         // This is safer than using serviceScope which we are about to cancel.
         try {
             kotlinx.coroutines.runBlocking(Dispatchers.IO) {
-                kotlinx.coroutines.withTimeoutOrNull(2000) {
+                kotlinx.coroutines.withTimeoutOrNull(2000.milliseconds) {
                     ProtonLogger.i(TAG, "Stopping VPN tunnel on service destroy...")
                     backend.setState(tunnel, Tunnel.State.DOWN, null)
                 }
