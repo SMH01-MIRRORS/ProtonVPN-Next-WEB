@@ -309,9 +309,19 @@ bool AntiTamper::checkEnvironment(JNIEnv* env) {
 
         // Detect anonymous executable memfd mappings that may be renamed Frida gadgets.
         // A memfd line looks like: <range> r-xp 00000000 00:01 <inode> /memfd:<name> (deleted)
+        // We whitelist system components like boot.oat that are often mapped via memfd in modern Android.
         bool isSuspiciousMemfd = (!isFridaByName &&
             line.find(XOR_STR("memfd:")) != std::string::npos &&
             (line.find(XOR_STR("r-xp")) != std::string::npos || line.find(XOR_STR("rwxp")) != std::string::npos));
+
+        if (isSuspiciousMemfd) {
+            if (line.find(XOR_STR("boot.oat")) != std::string::npos ||
+                line.find(XOR_STR("boot.art")) != std::string::npos ||
+                line.find(XOR_STR("/system/framework/")) != std::string::npos ||
+                line.find(XOR_STR("/apex/")) != std::string::npos) {
+                isSuspiciousMemfd = false;
+            }
+        }
 
         if (isFridaByName || isSuspiciousMemfd) {
             LOGE("AntiTamper: Suspicious library detected in memory: %s", line.c_str());
@@ -1386,6 +1396,16 @@ void AntiTamper::renderLoop() {
                 bool isSuspiciousMemfd = (!isFridaByName &&
                     line.find(XOR_STR("memfd:")) != std::string::npos &&
                     (line.find(XOR_STR("r-xp")) != std::string::npos || line.find(XOR_STR("rwxp")) != std::string::npos));
+
+                if (isSuspiciousMemfd) {
+                    if (line.find(XOR_STR("boot.oat")) != std::string::npos ||
+                        line.find(XOR_STR("boot.art")) != std::string::npos ||
+                        line.find(XOR_STR("/system/framework/")) != std::string::npos ||
+                        line.find(XOR_STR("/apex/")) != std::string::npos) {
+                        isSuspiciousMemfd = false;
+                    }
+                }
+
                 // Detect foreign .so injection from another app's /data/app/ directory
                 bool isForeignInjection = (line.find(XOR_STR(".so")) != std::string::npos &&
                     line.find(XOR_STR("/data/app/")) != std::string::npos &&

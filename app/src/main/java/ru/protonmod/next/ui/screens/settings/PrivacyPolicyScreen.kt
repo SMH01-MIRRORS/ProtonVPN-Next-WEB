@@ -79,26 +79,29 @@ fun PrivacyPolicyScreen(
                     )
             )
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding(),
-                horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start
-            ) {
-                NavigationHeader(
-                    title = stringResource(R.string.settings_privacy_policy),
-                    onBack = onBack
-                )
+            val contentModifier = if (isTablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
 
-                val contentModifier = if (isTablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
+            SelectionContainer {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding(),
+                    contentPadding = PaddingValues(bottom = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start
+                ) {
+                    item(contentType = "Header") {
+                        NavigationHeader(
+                            title = stringResource(R.string.settings_privacy_policy),
+                            onBack = onBack
+                        )
+                    }
 
-                SelectionContainer {
-                    LazyColumn(
-                        modifier = contentModifier.fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        item(contentType = "Header") {
+                    item(contentType = "Header") {
+                        Column(
+                            modifier = contentModifier,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             // Header Icon
                             Box(
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
@@ -131,14 +134,14 @@ fun PrivacyPolicyScreen(
 
                             Spacer(modifier = Modifier.height(24.dp))
                         }
+                    }
 
-                        val lines = policyText.split("\n")
-                        items(lines) { line ->
-                            MarkdownLine(
-                                line = line,
-                                modifier = Modifier.padding(horizontal = 16.dp)
-                            )
-                        }
+                    val lines = policyText.split("\n")
+                    items(lines, contentType = { "PolicyLine" }) { line ->
+                        MarkdownLine(
+                            line = line,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
                     }
                 }
             }

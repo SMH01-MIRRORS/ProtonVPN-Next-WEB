@@ -91,35 +91,40 @@ fun ThemeSelectionScreen(
                     )
             )
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding()
-            ) {
-                NavigationHeader(
-                    title = stringResource(R.string.settings_app_theme),
-                    onBack = onBack
-                )
-
-                val themes = remember {
-                    AppTheme.entries.filter { theme ->
-                        when (theme) {
-                            AppTheme.SYSTEM -> Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-                            AppTheme.NOTHING -> ru.protonmod.next.utils.system.SystemUtils.isNothingDevice()
-                            else -> true
-                        }
+            val themes = remember {
+                AppTheme.entries.filter { theme ->
+                    when (theme) {
+                        AppTheme.SYSTEM -> Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                        AppTheme.NOTHING -> ru.protonmod.next.utils.system.SystemUtils.isNothingDevice()
+                        else -> true
                     }
                 }
+            }
 
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 32.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding(),
+                contentPadding = PaddingValues(bottom = 32.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item(
+                    span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) },
+                    contentType = "Header"
                 ) {
-                    item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    NavigationHeader(
+                        title = stringResource(R.string.settings_app_theme),
+                        onBack = onBack
+                    )
+                }
+
+                item(
+                    span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) },
+                    contentType = "Header"
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             // Header Icon
                             Box(
                                 modifier = Modifier.padding(vertical = 32.dp),
@@ -182,7 +187,6 @@ fun ThemeSelectionScreen(
             }
         }
     }
-}
 
 @Composable
 fun ThemePreviewCard(
