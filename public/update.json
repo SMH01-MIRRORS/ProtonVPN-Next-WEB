@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160093,
-      "versionName": "12.0.0-alpha2-12-g4322040-nightly",
+      "versionCode": 605160096,
+      "versionName": "12.0.0-alpha2-15-g3a1e206-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "chore: refactor DataStore multiprocess implementation and clean up dependencies\n\n- Removed the `androidx.datastore:datastore-preferences-multiprocess` dependency from `libs.versions.toml` and `app/build.gradle.kts`.\n- Migrated `SettingsManager` to use `MultiProcessDataStoreFactory` from the core DataStore library instead of the multiprocess-specific artifact.\n- Updated `SettingsManager` to use `PreferencesFileSerializer` for the DataStore instance.\n- Cleaned up the NDK architecture comment in `app/build.gradle.kts` to remove outdated references to `go-vpn-lib`.",
+      "changelog": "refactor: improve QuickConnectBottomSheet layout and placement\n\n- Moved `QuickConnectBottomSheet` outside of `AnimatedContent` in `DashboardScreen` to prevent gesture conflicts and clipping during screen transitions.\n- Replaced `LazyColumn` with a `Column` using `verticalScroll` in `QuickConnectBottomSheet` to simplify the list structure.\n- Explicitly passed `sheetState` to `ModalBottomSheet` and configured it to support partial expansion.\n- Refactored `StrategyItem` to simplify icon rendering logic and removed custom `MutableInteractionSource` from the clickable modifier.\n- Updated profile and recent server lists to use standard `forEach` loops instead of lazy list items.\n- Adjusted padding and layout constraints for better visual consistency.",
       "force": false
     },
     "release": {
-      "versionCode": 605160093,
-      "versionName": "12.0.0-alpha2-12-g4322040-nightly",
+      "versionCode": 605160096,
+      "versionName": "12.0.0-alpha2-15-g3a1e206-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "chore: refactor DataStore multiprocess implementation and clean up dependencies\n\n- Removed the `androidx.datastore:datastore-preferences-multiprocess` dependency from `libs.versions.toml` and `app/build.gradle.kts`.\n- Migrated `SettingsManager` to use `MultiProcessDataStoreFactory` from the core DataStore library instead of the multiprocess-specific artifact.\n- Updated `SettingsManager` to use `PreferencesFileSerializer` for the DataStore instance.\n- Cleaned up the NDK architecture comment in `app/build.gradle.kts` to remove outdated references to `go-vpn-lib`.",
+      "changelog": "refactor: improve QuickConnectBottomSheet layout and placement\n\n- Moved `QuickConnectBottomSheet` outside of `AnimatedContent` in `DashboardScreen` to prevent gesture conflicts and clipping during screen transitions.\n- Replaced `LazyColumn` with a `Column` using `verticalScroll` in `QuickConnectBottomSheet` to simplify the list structure.\n- Explicitly passed `sheetState` to `ModalBottomSheet` and configured it to support partial expansion.\n- Refactored `StrategyItem` to simplify icon rendering logic and removed custom `MutableInteractionSource` from the clickable modifier.\n- Updated profile and recent server lists to use standard `forEach` loops instead of lazy list items.\n- Adjusted padding and layout constraints for better visual consistency.",
       "force": false
     }
   },
