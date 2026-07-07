@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160117,
-      "versionName": "12.0.0-alpha2-36-ge985392-nightly",
+      "versionCode": 605160119,
+      "versionName": "12.0.0-alpha2-38-g2501d2f-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "Crowdin updates\n\nNew Crowdin updates",
+      "changelog": "sec: enhance PII scrubbing to redact URLs and standardize logging\n\n- Added `URL_DOMAIN_REGEX` to `PiiScrubber` to identify and redact URLs and domains, treating browsing history as PII.\n- Updated `PiiScrubber.scrub` to replace identified URLs with `[URL_REDACTED]`.\n- Replaced standard `android.util.Log` with `ProtonLogger` in `AmneziaVpnManager` to ensure generated AWG configurations are properly sanitized before logging.\n- Updated unit tests in `PiiScrubberTest` to verify redaction of full URLs and browsing-related log messages.",
       "force": false
     },
     "release": {
-      "versionCode": 605160117,
-      "versionName": "12.0.0-alpha2-36-ge985392-nightly",
+      "versionCode": 605160119,
+      "versionName": "12.0.0-alpha2-38-g2501d2f-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "Crowdin updates\n\nNew Crowdin updates",
+      "changelog": "sec: enhance PII scrubbing to redact URLs and standardize logging\n\n- Added `URL_DOMAIN_REGEX` to `PiiScrubber` to identify and redact URLs and domains, treating browsing history as PII.\n- Updated `PiiScrubber.scrub` to replace identified URLs with `[URL_REDACTED]`.\n- Replaced standard `android.util.Log` with `ProtonLogger` in `AmneziaVpnManager` to ensure generated AWG configurations are properly sanitized before logging.\n- Updated unit tests in `PiiScrubberTest` to verify redaction of full URLs and browsing-related log messages.",
       "force": false
     }
   },
