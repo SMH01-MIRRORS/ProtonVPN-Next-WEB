@@ -253,6 +253,23 @@ object NetworkModule {
                 .scheme(newBaseUrl.scheme)
                 .host(newBaseUrl.host)
                 .port(newBaseUrl.port)
+                .apply {
+                    if (useProxy && (strategy == SettingsManager.STRATEGY_CLOUDFLARE || 
+                                    strategy == SettingsManager.STRATEGY_DENO ||
+                                    strategy == SettingsManager.STRATEGY_NETLIFY)) {
+                        val pathPrefix = when (originalUrl.host) {
+                            "verify-api.proton.me" -> "verify-api"
+                            "verify.proton.me" -> "verify"
+                            else -> null
+                        }
+                        if (pathPrefix != null) {
+                            val originalSegments = originalUrl.pathSegments
+                            encodedPath("/")
+                            addPathSegment(pathPrefix)
+                            originalSegments.forEach { addPathSegment(it) }
+                        }
+                    }
+                }
                 .build()
 
             val newRequest = request.newBuilder()
