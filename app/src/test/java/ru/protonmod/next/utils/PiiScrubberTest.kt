@@ -33,7 +33,14 @@ class PiiScrubberTest {
     @Test
     fun testScrubUrlTokens() {
         val input = "https://example.com/captcha?token=secret123&other=val"
-        val expected = "https://example.com/captcha?token=[REDACTED]&other=val"
+        val expected = "[URL_REDACTED]"
+        assertEquals(expected, PiiScrubber.scrub(input))
+    }
+
+    @Test
+    fun testScrubBrowsingHistory() {
+        val input = "Connect & Go: Timed out waiting for VPN to connect for URL: https://sxyprn.com"
+        val expected = "Connect & Go: Timed out waiting for VPN to connect for URL: [URL_REDACTED]"
         assertEquals(expected, PiiScrubber.scrub(input))
     }
 

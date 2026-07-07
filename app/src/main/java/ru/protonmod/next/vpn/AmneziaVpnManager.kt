@@ -22,7 +22,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
-import android.util.Log
 import androidx.core.net.toUri
 import ru.protonmod.next.utils.ProtonLogger
 import androidx.core.content.ContextCompat
@@ -694,7 +693,7 @@ class AmneziaVpnManager @Inject constructor(
                 obfuscationParams = params
             )
             
-            Log.d(TAG, "Generated AWG Config:\n$configStr")
+            ProtonLogger.d(TAG, "Generated AWG Config:\n$configStr")
             ProtonLogger.v(TAG, "Generated AWG Config Length: ${configStr.length}")
 
             val sessionId = System.currentTimeMillis()

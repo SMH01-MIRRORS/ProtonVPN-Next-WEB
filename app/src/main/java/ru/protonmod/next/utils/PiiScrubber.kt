@@ -45,6 +45,12 @@ object PiiScrubber {
         "(?i)\\b(token|sessionId|access_token|refresh_token|captchaToken)=([^&\\s]+)"
     )
 
+    // URL regex to redact domains (browsing history is PII)
+    // Matches http://, https://, or just domains that look like they are part of a URL
+    private val URL_DOMAIN_REGEX = Regex(
+        "(?i)\\b(https?://|www\\.)[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\\.[a-zA-Z]{2,})+(?::\\d+)?(?:/\\S*)?"
+    )
+
     // Standalone long tokens (likely session tokens, keys or identifiers)
     // Catches strings that look like Base64/Hex/Tokens with 32+ characters
     private val STANDALONE_TOKEN_REGEX = Regex(
@@ -95,7 +101,10 @@ object PiiScrubber {
             prefix + "[REDACTED]" + suffix
         }
 
-        // 5. Redact Standalone long tokens
+        // 5. Redact URLs (domains) as browsing history is PII
+        result = URL_DOMAIN_REGEX.replace(result, "[URL_REDACTED]")
+
+        // 6. Redact Standalone long tokens
         result = STANDALONE_TOKEN_REGEX.replace(result) { match ->
             // Skip if it's already redacted or an IP tag
             if (match.value.startsWith("[") && match.value.endsWith("]")) return@replace match.value
