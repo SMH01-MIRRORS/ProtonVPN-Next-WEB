@@ -320,9 +320,9 @@ fun DomainListItem(
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .clickable(onClick = onRemove)
             .padding(vertical = 4.dp)
             .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.3f, shadowElevation = 0.dp)
-            .clickable(onClick = onRemove)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),

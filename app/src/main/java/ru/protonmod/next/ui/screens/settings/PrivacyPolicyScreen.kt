@@ -20,7 +20,7 @@ package ru.protonmod.next.ui.screens.settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
@@ -137,7 +137,11 @@ fun PrivacyPolicyScreen(
                     }
 
                     val lines = policyText.split("\n")
-                    items(lines, contentType = { "PolicyLine" }) { line ->
+                    itemsIndexed(
+                        items = lines,
+                        key = { index, _ -> index },
+                        contentType = { _, _ -> "PolicyLine" }
+                    ) { _, line ->
                         MarkdownLine(
                             line = line,
                             modifier = Modifier.padding(horizontal = 16.dp)

@@ -320,9 +320,9 @@ fun IpListItem(
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .clickable(onClick = onRemove)
             .padding(vertical = 4.dp)
             .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.3f, shadowElevation = 0.dp)
-            .clickable(onClick = onRemove)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
