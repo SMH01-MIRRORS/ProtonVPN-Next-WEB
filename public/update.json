@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160119,
-      "versionName": "12.0.0-alpha2-38-g2501d2f-nightly",
+      "versionCode": 605160121,
+      "versionName": "12.0.0-alpha2-40-g4de4484-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "sec: enhance PII scrubbing to redact URLs and standardize logging\n\n- Added `URL_DOMAIN_REGEX` to `PiiScrubber` to identify and redact URLs and domains, treating browsing history as PII.\n- Updated `PiiScrubber.scrub` to replace identified URLs with `[URL_REDACTED]`.\n- Replaced standard `android.util.Log` with `ProtonLogger` in `AmneziaVpnManager` to ensure generated AWG configurations are properly sanitized before logging.\n- Updated unit tests in `PiiScrubberTest` to verify redaction of full URLs and browsing-related log messages.",
+      "changelog": "refactor: optimize list rendering and clickable areas in settings screens\n\n- Switched to `itemsIndexed` with explicit keys and content types in `PolicyAcceptanceScreen` and `PrivacyPolicyScreen` to improve `LazyColumn` recomposition performance.\n- Reordered modifiers in `SplitTunnelingAppsScreen`, `SplitTunnelingDomainsScreen`, and `SplitTunnelingIpsScreen` to place `clickable` before padding and custom background effects.\n- Ensures consistent touch target behavior and ripple clipping for split tunneling list items.",
       "force": false
     },
     "release": {
-      "versionCode": 605160119,
-      "versionName": "12.0.0-alpha2-38-g2501d2f-nightly",
+      "versionCode": 605160121,
+      "versionName": "12.0.0-alpha2-40-g4de4484-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "sec: enhance PII scrubbing to redact URLs and standardize logging\n\n- Added `URL_DOMAIN_REGEX` to `PiiScrubber` to identify and redact URLs and domains, treating browsing history as PII.\n- Updated `PiiScrubber.scrub` to replace identified URLs with `[URL_REDACTED]`.\n- Replaced standard `android.util.Log` with `ProtonLogger` in `AmneziaVpnManager` to ensure generated AWG configurations are properly sanitized before logging.\n- Updated unit tests in `PiiScrubberTest` to verify redaction of full URLs and browsing-related log messages.",
+      "changelog": "refactor: optimize list rendering and clickable areas in settings screens\n\n- Switched to `itemsIndexed` with explicit keys and content types in `PolicyAcceptanceScreen` and `PrivacyPolicyScreen` to improve `LazyColumn` recomposition performance.\n- Reordered modifiers in `SplitTunnelingAppsScreen`, `SplitTunnelingDomainsScreen`, and `SplitTunnelingIpsScreen` to place `clickable` before padding and custom background effects.\n- Ensures consistent touch target behavior and ripple clipping for split tunneling list items.",
       "force": false
     }
   },
