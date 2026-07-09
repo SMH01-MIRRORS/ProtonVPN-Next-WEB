@@ -63,7 +63,7 @@ class SplitTunnelingIpsViewModel @Inject constructor(
 
     fun addIp(ip: String) {
         val trimmedIp = ip.trim()
-        if (isValidIp(trimmedIp) && ipSubnetCalculator.isValidIpOrCidr(trimmedIp)) {
+        if (ipSubnetCalculator.isValidIpOrCidr(trimmedIp)) {
             viewModelScope.launch {
                 val current = settingsManager.excludedIps.stateIn(viewModelScope).value
                 val normalizedIp = ipSubnetCalculator.normalizeIp(trimmedIp)
@@ -79,38 +79,5 @@ class SplitTunnelingIpsViewModel @Inject constructor(
             val current = settingsManager.excludedIps.stateIn(viewModelScope).value
             settingsManager.setExcludedIps(current - ip)
         }
-    }
-
-    private fun isValidIp(ip: String): Boolean {
-        if (ip.isEmpty()) return false
-
-        // Check if it's a valid IPv4 address or CIDR notation
-        val ipPattern = Regex("^(\\d{1,3}\\.){3}\\d{1,3}(/\\d{1,2})?$")
-        if (!ipPattern.matches(ip)) return false
-
-        // Validate IPv4 octets
-        val parts = ip.split("/")[0].split(".")
-        if (parts.size != 4) return false
-
-        for (part in parts) {
-            try {
-                val octet = part.toInt()
-                if (octet < 0 || octet > 255) return false
-            } catch (_: Exception) {
-                return false
-            }
-        }
-
-        // Check CIDR prefix if present
-        if (ip.contains("/")) {
-            try {
-                val prefix = ip.split("/")[1].toInt()
-                if (prefix < 0 || prefix > 32) return false
-            } catch (_: Exception) {
-                return false
-            }
-        }
-
-        return true
     }
 }

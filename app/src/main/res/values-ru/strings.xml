@@ -171,7 +171,7 @@
     <string name="settings_custom_dns_title">Пользовательский DNS-сервер</string>
     <string name="settings_custom_dns_desc">Введите IPv4 или IPv6 адрес. Оставьте пустым, чтобы использовать безопасный DNS Proton по умолчанию.</string>
     <string name="settings_custom_dns_reset">Сбросить</string>
-    <string name="settings_custom_dns_placeholder">напр. 1.1.1.1 или 94.140.14.14</string>
+    <string name="settings_custom_dns_placeholder">напр. 1.1.1.1, 8.8.8.8, 2001:4860:4860::8888</string>
     <!-- Customization -->
     <string name="settings_customization">Кастомизация</string>
     <string name="settings_app_theme">Тема приложения</string>
@@ -304,7 +304,7 @@
     <string name="st_show_system_apps">Показать системные приложения</string>
     <string name="st_selected_apps_header">Выбранные приложения (%1$d)</string>
     <string name="st_available_apps_header">Доступные приложения (%1$d)</string>
-    <string name="st_ip_hint">например, 192.168.1.0/24</string>
+    <string name="st_ip_hint">напр. 1.1.1.1, 10.0.0.0/8, 2001:db8::/32</string>
     <string name="st_add_ip_desc">Добавить IP</string>
     <string name="st_invalid_ip_error">Неверный формат IP-адреса</string>
     <string name="st_excluded_ips_header">Исключенные IP (%1$d)</string>

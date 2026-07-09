@@ -371,7 +371,7 @@
     <string name="st_show_system_apps">Show system apps</string>
     <string name="st_selected_apps_header">Selected Apps (%1$d)</string>
     <string name="st_available_apps_header">Available Apps (%1$d)</string>
-    <string name="st_ip_hint">e.g., 192.168.1.0/24</string>
+    <string name="st_ip_hint">e.g., 1.1.1.1, 10.0.0.0/8, 2001:db8::/32</string>
     <string name="st_add_ip_desc">Add IP</string>
     <string name="st_invalid_ip_error">Invalid IP address format</string>
     <string name="st_excluded_ips_header">Excluded IPs (%1$d)</string>

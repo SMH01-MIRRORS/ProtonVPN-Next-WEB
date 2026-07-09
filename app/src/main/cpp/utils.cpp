@@ -1,12 +1,43 @@
 #include "utils.h"
 #include <sstream>
 #include <algorithm>
+#include <arpa/inet.h>
+#include <cstring>
 
 namespace next {
 
 bool IpSubnetCalculator::isValidIpOrCidr(const std::string& input) {
-    if (input.find(':') != std::string::npos) return false;
-    return !input.empty();
+    if (input.empty()) return false;
+
+    std::string ip = input;
+    std::string prefix_str;
+    size_t slash_pos = input.find('/');
+    if (slash_pos != std::string::npos) {
+        ip = input.substr(0, slash_pos);
+        prefix_str = input.substr(slash_pos + 1);
+    }
+
+    // Try IPv4
+    struct in_addr addr4;
+    if (inet_pton(AF_INET, ip.c_str(), &addr4) == 1) {
+        if (prefix_str.empty()) return true;
+        try {
+            int prefix = std::stoi(prefix_str);
+            return prefix >= 0 && prefix <= 32;
+        } catch (...) { return false; }
+    }
+
+    // Try IPv6
+    struct in6_addr addr6;
+    if (inet_pton(AF_INET6, ip.c_str(), &addr6) == 1) {
+        if (prefix_str.empty()) return true;
+        try {
+            int prefix = std::stoi(prefix_str);
+            return prefix >= 0 && prefix <= 128;
+        } catch (...) { return false; }
+    }
+
+    return false;
 }
 
 std::string IpSubnetCalculator::normalizeIp(const std::string& ip) {
