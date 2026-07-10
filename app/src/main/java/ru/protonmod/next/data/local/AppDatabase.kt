@@ -31,7 +31,7 @@ import androidx.room.withTransaction
         CityTranslationEntity::class,
         CityCacheEntity::class
     ],
-    version = 18,
+    version = 19,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

@@ -639,4 +639,11 @@
     <string name="byedpi_test_desc">Test different strategies to find the best one for your network.</string>
     <string name="byedpi_auto_test_title">Optimizing connection…</string>
     <string name="byedpi_auto_test_desc">We are finding the best connection strategy for your region.</string>
+
+    <!-- Extended Cert Settings -->
+    <string name="settings_cert_management">Certificate Management</string>
+    <string name="settings_cert_management_desc">Manage your VPN certificate rotation and persistence settings.</string>
+    <string name="settings_extended_cert">Extended Certificate (1 Year)</string>
+    <string name="settings_extended_cert_enabled">Persistent certificate active. Rotation disabled.</string>
+    <string name="settings_extended_cert_disabled">Temporary certificate active. Rotates regularly.</string>
 </resources>

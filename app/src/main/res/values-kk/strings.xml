@@ -532,4 +532,10 @@
     <string name="byedpi_test_desc">Желіңіз үшін ең жақсысын табу үшін әртүрлі стратегияларды тексеріңіз.</string>
     <string name="byedpi_auto_test_title">Қосылымды оңтайландыру…</string>
     <string name="byedpi_auto_test_desc">Біз сіздің аймағыңыз үшін ең жақсы қосылу стратегиясын таңдап жатырмыз.</string>
+    <!-- Extended Cert Settings -->
+    <string name="settings_cert_management">Сертификатты басқару</string>
+    <string name="settings_cert_management_desc">VPN сертификатының ротациясы мен тұрақтылық параметрлерін басқару.</string>
+    <string name="settings_extended_cert">Кеңейтілген сертификат (1 жыл)</string>
+    <string name="settings_extended_cert_enabled">Тұрақты сертификат белсенді. Ротация өшірілген.</string>
+    <string name="settings_extended_cert_disabled">Уақытша сертификат белсенді. Үнемі ротацияланады.</string>
 </resources>

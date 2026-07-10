@@ -56,6 +56,7 @@ sealed class Screen(val route: String) {
     data object ObfuscationSettings : Screen("obfuscation_settings")
     data object KillSwitch : Screen("kill_switch")
     data object ErrorReporting : Screen("error_reporting")
+    data object CertSettings : Screen("cert_settings")
 
     data object ThemeSelection : Screen("theme_selection")
     data object LoadDisplayModeSelection : Screen("load_display_mode_selection")
@@ -132,7 +133,16 @@ fun NavGraphBuilder.appNavGraph(
             },
             onNavigateToPortSelection = { currentPort ->
                 navController.navigate(Screen.PortSelection.createRoute(currentPort, true))
+            },
+            onNavigateToCertSettings = {
+                navController.navigate(Screen.CertSettings.route)
             }
+        )
+    }
+
+    composable(Screen.CertSettings.route) {
+        CertSettingsScreen(
+            onBack = { navController.popBackStack() }
         )
     }
 

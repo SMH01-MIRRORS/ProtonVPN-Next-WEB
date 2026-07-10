@@ -74,6 +74,7 @@ fun SettingsScreen(
     onNavigateToCustomDns: (() -> Unit)? = null,
     onNavigateToCountrySpoofing: (() -> Unit)? = null,
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
+    onNavigateToCertSettings: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
@@ -126,6 +127,7 @@ fun SettingsScreen(
                 onNavigateToCustomDns = onNavigateToCustomDns,
                 onNavigateToCountrySpoofing = onNavigateToCountrySpoofing,
                 onNavigateToPortSelection = onNavigateToPortSelection,
+                onNavigateToCertSettings = onNavigateToCertSettings,
                 onOtaFrequencyChange = viewModel::setOtaUpdateFrequency,
                 onCheckForUpdates = viewModel::checkForUpdates,
                 modifier = Modifier
@@ -159,7 +161,8 @@ fun SettingsContent(
     onNavigateToBackup: (() -> Unit)? = null,
     onNavigateToCustomDns: (() -> Unit)? = null,
     onNavigateToCountrySpoofing: (() -> Unit)? = null,
-    onNavigateToPortSelection: ((Int) -> Unit)? = null
+    onNavigateToPortSelection: ((Int) -> Unit)? = null,
+    onNavigateToCertSettings: (() -> Unit)? = null
 ) {
     LazyColumn(
         modifier = modifier,
@@ -211,7 +214,8 @@ fun SettingsContent(
                             state = state,
                             onAutoConnectChange = onAutoConnectChange,
                             onNavigateToApiBypass = onNavigateToApiBypass,
-                            onNavigateToPortSelection = onNavigateToPortSelection
+                            onNavigateToPortSelection = onNavigateToPortSelection,
+                            onNavigateToCertSettings = onNavigateToCertSettings
                         )
 
                         CustomizationSettingsSection(
@@ -272,7 +276,8 @@ fun SettingsContent(
                     onAutoConnectChange = onAutoConnectChange,
                     modifier = contentModifier,
                     onNavigateToApiBypass = onNavigateToApiBypass,
-                    onNavigateToPortSelection = onNavigateToPortSelection
+                    onNavigateToPortSelection = onNavigateToPortSelection,
+                    onNavigateToCertSettings = onNavigateToCertSettings
                 )
             }
 
@@ -437,7 +442,8 @@ private fun ConnectionSettingsSection(
     onAutoConnectChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     onNavigateToApiBypass: (() -> Unit)? = null,
-    onNavigateToPortSelection: ((Int) -> Unit)? = null
+    onNavigateToPortSelection: ((Int) -> Unit)? = null,
+    onNavigateToCertSettings: (() -> Unit)? = null
 ) {
     SettingsCategory(modifier = modifier, title = stringResource(R.string.settings_connection)) {
         SettingToggleRow(
@@ -460,6 +466,13 @@ private fun ConnectionSettingsSection(
             title = stringResource(R.string.settings_port),
             subtitle = if (state.vpnPort == 0) stringResource(R.string.settings_port_auto) else state.vpnPort.toString(),
             onClick = { onNavigateToPortSelection?.invoke(state.vpnPort) }
+        )
+
+        SettingRowWithIcon(
+            icon = Icons.Rounded.Security,
+            title = stringResource(R.string.settings_cert_management),
+            subtitle = stringResource(R.string.settings_cert_management_desc),
+            onClick = { onNavigateToCertSettings?.invoke() }
         )
     }
 }

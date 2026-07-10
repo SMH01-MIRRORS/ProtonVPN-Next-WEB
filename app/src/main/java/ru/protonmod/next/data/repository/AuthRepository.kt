@@ -487,11 +487,12 @@ class AuthRepository @Inject constructor(
 
     private suspend fun registerAndGetVpnKeys(accessToken: String, sessionId: String): Triple<VpnKeyPair, CreateCertificateResponse, String> {
         try {
-            val vpnKeyPair = cryptoWrapper.generateVpnKeyPair()
-            val regResult = vpnRepository.registerWireGuardKey(accessToken, sessionId, vpnKeyPair.publicKeyPem)
+            val regResult = vpnRepository.registerWireGuardKey(accessToken, sessionId)
 
             if (regResult.isSuccess) {
-                val response = regResult.getOrNull()!!
+                val pair = regResult.getOrNull()!!
+                val response = pair.first
+                val vpnKeyPair = pair.second
                 return Triple(vpnKeyPair, response, response.certificate ?: "")
             } else {
                 throw Exception("WireGuard key registration failed: ${regResult.exceptionOrNull()?.message ?: "unknown error"}")

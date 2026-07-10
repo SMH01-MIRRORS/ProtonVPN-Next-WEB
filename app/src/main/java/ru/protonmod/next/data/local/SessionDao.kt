@@ -41,6 +41,10 @@ data class SessionEntity(
     val wgCertificate: String? = null,
     val certExpiresAt: Long = 0, // Unix timestamp in seconds
     val certRefreshAt: Long = 0,
+    val wgAlternateCertificate: String? = null,
+    val altCertExpiresAt: Long = 0,
+    val altCertRefreshAt: Long = 0,
+    val isExtendedCertEnabled: Boolean = false,
     val vpnIpv4: String? = null,
     val vpnIpv6: String? = null,
     val vpnDns: String? = null // Comma-separated list
@@ -80,6 +84,15 @@ interface SessionDao {
 
     @Query("UPDATE session SET certExpiresAt = :expiresAt, certRefreshAt = :refreshAt WHERE id = 1")
     suspend fun updateCertificateExpiry(expiresAt: Long, refreshAt: Long)
+
+    @Query("UPDATE session SET isExtendedCertEnabled = :enabled WHERE id = 1")
+    suspend fun updateExtendedCertEnabled(enabled: Boolean)
+
+    @Query("UPDATE session SET wgCertificate = :cert, certExpiresAt = :expiresAt, certRefreshAt = :refreshAt, wgPrivateKey = :privKey, wgPublicKeyPem = :pubKey WHERE id = 1")
+    suspend fun updateCertificateAndKeys(cert: String, expiresAt: Long, refreshAt: Long, privKey: String, pubKey: String)
+
+    @Query("UPDATE session SET wgCertificate = :newCert, certExpiresAt = :newExpiresAt, certRefreshAt = :newRefreshAt, wgAlternateCertificate = :altCert, altCertExpiresAt = :altExpiresAt, altCertRefreshAt = :altRefreshAt WHERE id = 1")
+    suspend fun swapCertificates(newCert: String?, newExpiresAt: Long, newRefreshAt: Long, altCert: String?, altExpiresAt: Long, altRefreshAt: Long)
 
     @Query("UPDATE session SET vpnIpv4 = :ipv4, vpnIpv6 = :ipv6, vpnDns = :dns WHERE id = 1")
     suspend fun updateVpnConnectionInfo(ipv4: String?, ipv6: String?, dns: String?)

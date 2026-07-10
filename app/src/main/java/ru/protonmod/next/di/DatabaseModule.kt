@@ -201,6 +201,30 @@ object DatabaseModule {
         }
     }
 
+    val MIGRATION_18_19 = object : Migration(18, 19) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            val sessionCursor = db.query("PRAGMA table_info(session)")
+            val sessionColumns = mutableListOf<String>()
+            while (sessionCursor.moveToNext()) {
+                sessionColumns.add(sessionCursor.getString(sessionCursor.getColumnIndexOrThrow("name")))
+            }
+            sessionCursor.close()
+
+            if (!sessionColumns.contains("wgAlternateCertificate")) {
+                db.execSQL("ALTER TABLE session ADD COLUMN wgAlternateCertificate TEXT")
+            }
+            if (!sessionColumns.contains("altCertExpiresAt")) {
+                db.execSQL("ALTER TABLE session ADD COLUMN altCertExpiresAt INTEGER NOT NULL DEFAULT 0")
+            }
+            if (!sessionColumns.contains("altCertRefreshAt")) {
+                db.execSQL("ALTER TABLE session ADD COLUMN altCertRefreshAt INTEGER NOT NULL DEFAULT 0")
+            }
+            if (!sessionColumns.contains("isExtendedCertEnabled")) {
+                db.execSQL("ALTER TABLE session ADD COLUMN isExtendedCertEnabled INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -224,6 +248,7 @@ object DatabaseModule {
         .addMigrations(MIGRATION_15_16)
         .addMigrations(MIGRATION_16_17)
         .addMigrations(MIGRATION_17_18)
+        .addMigrations(MIGRATION_18_19)
         .build()
     }
 

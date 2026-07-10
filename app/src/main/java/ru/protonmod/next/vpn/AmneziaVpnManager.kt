@@ -349,19 +349,22 @@ class AmneziaVpnManager @Inject constructor(
         ProtonLogger.i(TAG, "Starting certificate refresh (force=$force, previous state: $previousState)")
 
         try {
-            val keyPair = cryptoWrapper.generateVpnKeyPair()
-            ProtonLogger.v(TAG, "Generated new VPN keypair for registration")
+            ProtonLogger.v(TAG, "Requesting new VPN keypair and certificate from API")
 
+            val mode = if (currentSession.isExtendedCertEnabled) "persistent" else null
             val result = vpnRepositoryProvider.get().registerWireGuardKey(
                 accessToken = currentSession.accessToken,
                 sessionId = currentSession.sessionId,
-                publicKeyPem = keyPair.publicKeyPem
+                mode = mode
             )
 
             if (result.isSuccess) {
-                val response = result.getOrNull()
+                val pair = result.getOrNull()
+                val response = pair?.first
+                val keyPair = pair?.second
                 val newCert = response?.certificate
-                if (newCert != null) {
+                
+                if (newCert != null && keyPair != null) {
                     ProtonLogger.i(TAG, "Successfully obtained WireGuard certificate")
 
                     // Metrics
@@ -379,7 +382,7 @@ class AmneziaVpnManager @Inject constructor(
                     updateCertificateState(newCert)
                     Result.success(newCert)
                 } else {
-                    ProtonLogger.e(TAG, "Server returned success but certificate is null or empty")
+                    ProtonLogger.e(TAG, "Server returned success but certificate or keys are missing")
                     _certState.value = previousState
                     Result.failure(Exception("Empty certificate in response"))
                 }

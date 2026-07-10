@@ -22,7 +22,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CreateCertificateRequest(
-    @SerialName("ClientPublicKey") val clientPublicKey: String
+    @SerialName("ClientPublicKey") val clientPublicKey: String,
+    @SerialName("Mode") val mode: String? = null
 )
 
 @Serializable

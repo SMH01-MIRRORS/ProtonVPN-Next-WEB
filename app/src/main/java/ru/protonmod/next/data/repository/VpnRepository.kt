@@ -48,6 +48,8 @@ import ru.protonmod.next.di.ApplicationScope
 import ru.protonmod.next.utils.coroutines.DispatcherProvider
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import ru.protonmod.next.utils.crypto.CryptoWrapper
+import ru.protonmod.next.utils.crypto.VpnKeyPair
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
@@ -64,6 +66,7 @@ open class VpnRepository @Inject constructor(
     private val recentConnectionDao: RecentConnectionDao,
     private val cityRepository: CityRepository,
     private val dispatcherProvider: DispatcherProvider,
+    private val cryptoWrapper: CryptoWrapper,
     @ApplicationScope private val managerScope: CoroutineScope
 ) {
     /**
@@ -532,22 +535,24 @@ open class VpnRepository @Inject constructor(
     suspend fun registerWireGuardKey(
         accessToken: String,
         sessionId: String,
-        publicKeyPem: String
-    ): Result<CreateCertificateResponse> = withContext(dispatcherProvider.io()) {
+        mode: String? = null
+    ): Result<Pair<CreateCertificateResponse, VpnKeyPair>> = withContext(dispatcherProvider.io()) {
         try {
+            val keyPair = cryptoWrapper.generateVpnKeyPair()
             val bearer = "Bearer $accessToken"
-            val request = CreateCertificateRequest(clientPublicKey = publicKeyPem)
+            val request = CreateCertificateRequest(clientPublicKey = keyPair.publicKeyPem, mode = mode)
             val response = vpnApi.registerVpnKey(bearer, sessionId, request)
 
             ProtonLogger.d(TAG, "registerWireGuardKey response code: ${response.code}, cert length: ${response.certificate?.length ?: 0}")
-
             if (response.code == 1000) {
-                val cert = response.certificate
-                val expiresAt = response.expirationTime ?: 0
-                val refreshAt = response.refreshTime ?: 0
-                
-                if (cert != null) {
-                    sessionDao.updateCertificate(cert, expiresAt, refreshAt)
+                if (response.certificate != null) {
+                    sessionDao.updateCertificateAndKeys(
+                        cert = response.certificate,
+                        expiresAt = response.expirationTime ?: 0L,
+                        refreshAt = response.refreshTime ?: 0L,
+                        privKey = keyPair.privateKeyX25519,
+                        pubKey = keyPair.publicKeyPem
+                    )
                 }
 
                 // Update vpn information (ipv4, ipv6, dns) returned from the certificate response.
@@ -559,7 +564,7 @@ open class VpnRepository @Inject constructor(
                     dns = response.dns?.joinToString(",")
                 )
 
-                Result.success(response)
+                Result.success(Pair(response, keyPair))
             } else {
                 Result.failure(Exception("Proton Cert Error: ${response.code}"))
             }
@@ -621,14 +626,36 @@ open class VpnRepository @Inject constructor(
             if (session.certRefreshAt != 0L && session.certRefreshAt < now) {
                 ProtonLogger.i(TAG, "Certificate is valid but needs refresh. Triggering background update.")
                 managerScope.launch {
-                    registerWireGuardKey(accessToken, sessionId, publicKeyPem)
+                    val mode = if (session.isExtendedCertEnabled) "persistent" else null
+                    registerWireGuardKey(accessToken, sessionId, mode)
                 }
             }
             return@withContext Result.success(session.wgCertificate)
         }
 
         ProtonLogger.i(TAG, "No valid certificate found. Registering new WireGuard key.")
-        registerWireGuardKey(accessToken, sessionId, publicKeyPem).map { it.certificate ?: "" }
+        val mode = if (session?.isExtendedCertEnabled == true) "persistent" else null
+        registerWireGuardKey(accessToken, sessionId, mode).map { it.first.certificate ?: "" }
+    }
+
+    suspend fun setExtendedCertEnabled(enabled: Boolean, accessToken: String, sessionId: String): Result<Boolean> = withContext(dispatcherProvider.io()) {
+        val session = sessionDao.getSession() ?: return@withContext Result.failure(Exception("No session"))
+        if (session.isExtendedCertEnabled == enabled) return@withContext Result.success(true)
+
+        val mode = if (enabled) "persistent" else null
+        val result = registerWireGuardKey(accessToken, sessionId, mode)
+        if (result.isFailure) {
+            return@withContext Result.failure(result.exceptionOrNull() ?: Exception("Unknown error"))
+        }
+
+        sessionDao.updateExtendedCertEnabled(enabled)
+        Result.success(true)
+    }
+
+    suspend fun forceRefreshCertificate(accessToken: String, sessionId: String): Result<CreateCertificateResponse> = withContext(dispatcherProvider.io()) {
+        val session = sessionDao.getSession()
+        val mode = if (session?.isExtendedCertEnabled == true) "persistent" else null
+        registerWireGuardKey(accessToken, sessionId, mode).map { it.first }
     }
 
     private suspend fun refreshCityTranslations(accessToken: String, sessionId: String) {
