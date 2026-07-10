@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160121,
-      "versionName": "12.0.0-alpha2-40-g4de4484-nightly",
+      "versionCode": 605160125,
+      "versionName": "12.0.0-alpha2-44-g49b1734-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "refactor: optimize list rendering and clickable areas in settings screens\n\n- Switched to `itemsIndexed` with explicit keys and content types in `PolicyAcceptanceScreen` and `PrivacyPolicyScreen` to improve `LazyColumn` recomposition performance.\n- Reordered modifiers in `SplitTunnelingAppsScreen`, `SplitTunnelingDomainsScreen`, and `SplitTunnelingIpsScreen` to place `clickable` before padding and custom background effects.\n- Ensures consistent touch target behavior and ripple clipping for split tunneling list items.",
+      "changelog": "fix: add null checks for Sentry event scrubbing\n\n- Updated `FlavorInitializer` to use safe calls when iterating over `event.extras` and breadcrumb `data`.\n- Prevents potential null pointer exceptions during the PII scrubbing process when these fields are null.",
       "force": false
     },
     "release": {
-      "versionCode": 605160121,
-      "versionName": "12.0.0-alpha2-40-g4de4484-nightly",
+      "versionCode": 605160125,
+      "versionName": "12.0.0-alpha2-44-g49b1734-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "refactor: optimize list rendering and clickable areas in settings screens\n\n- Switched to `itemsIndexed` with explicit keys and content types in `PolicyAcceptanceScreen` and `PrivacyPolicyScreen` to improve `LazyColumn` recomposition performance.\n- Reordered modifiers in `SplitTunnelingAppsScreen`, `SplitTunnelingDomainsScreen`, and `SplitTunnelingIpsScreen` to place `clickable` before padding and custom background effects.\n- Ensures consistent touch target behavior and ripple clipping for split tunneling list items.",
+      "changelog": "fix: add null checks for Sentry event scrubbing\n\n- Updated `FlavorInitializer` to use safe calls when iterating over `event.extras` and breadcrumb `data`.\n- Prevents potential null pointer exceptions during the PII scrubbing process when these fields are null.",
       "force": false
     }
   },
