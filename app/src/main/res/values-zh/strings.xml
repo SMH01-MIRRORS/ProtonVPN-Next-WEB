@@ -535,4 +535,10 @@
     <string name="settings_extended_cert">扩展证书（1年）</string>
     <string name="settings_extended_cert_enabled">持久证书已激活。轮换已禁用。</string>
     <string name="settings_extended_cert_disabled">临时证书已激活。定期轮换。</string>
+    <string name="settings_cert_current_header">当前证书</string>
+    <string name="settings_cert_id">证书 ID</string>
+    <string name="settings_cert_issued">签发时间</string>
+    <string name="settings_cert_expires">到期时间</string>
+    <string name="settings_cert_loading">加载中...</string>
+    <string name="settings_cert_refresh_desc">向 Proton 请求新证书</string>
 </resources>

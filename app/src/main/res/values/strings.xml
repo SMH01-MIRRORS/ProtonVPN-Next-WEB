@@ -646,4 +646,10 @@
     <string name="settings_extended_cert">Extended Certificate (1 Year)</string>
     <string name="settings_extended_cert_enabled">Persistent certificate active. Rotation disabled.</string>
     <string name="settings_extended_cert_disabled">Temporary certificate active. Rotates regularly.</string>
+    <string name="settings_cert_current_header">CURRENT CERTIFICATE</string>
+    <string name="settings_cert_id">Cert ID</string>
+    <string name="settings_cert_issued">Issued</string>
+    <string name="settings_cert_expires">Expires</string>
+    <string name="settings_cert_loading">Loading...</string>
+    <string name="settings_cert_refresh_desc">Request a new certificate from Proton</string>
 </resources>

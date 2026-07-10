@@ -146,14 +146,14 @@ fun CertSettingsScreen(
                         // Certificate Status Info
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = "CURRENT CERTIFICATE",
+                                text = stringResource(R.string.settings_cert_current_header),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = colors.textWeak,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
-                            CertInfoRow("Cert ID", uiState.certId)
-                            uiState.certIssued?.let { CertInfoRow("Issued", it) }
-                            uiState.certExpires?.let { CertInfoRow("Expires", it) }
+                            CertInfoRow(stringResource(R.string.settings_cert_id), uiState.certId)
+                            uiState.certIssued?.let { CertInfoRow(stringResource(R.string.settings_cert_issued), it) }
+                            uiState.certExpires?.let { CertInfoRow(stringResource(R.string.settings_cert_expires), it) }
                         }
 
                         HorizontalDivider(
@@ -164,7 +164,7 @@ fun CertSettingsScreen(
                         SettingRowWithIcon(
                             icon = Icons.Rounded.Refresh,
                             title = stringResource(R.string.debug_btn_refresh_cert),
-                            subtitle = if (uiState.isLoading) "Loading..." else "Request a new certificate from Proton",
+                            subtitle = if (uiState.isLoading) stringResource(R.string.settings_cert_loading) else stringResource(R.string.settings_cert_refresh_desc),
                             onClick = { viewModel.forceRefreshCertificate() }
                         )
                     }
