@@ -203,8 +203,8 @@ class AmneziaVpnManagerTest {
         whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(newKeys)
         
         val refreshResponse = CreateCertificateResponse(code = 1000, certificate = "new_cert", expirationTime = 0, refreshTime = 0)
-        whenever(vpnRepository.registerWireGuardKey(eq("at"), eq("sid"), eq("new_pub_pem")))
-            .thenReturn(Result.success(refreshResponse))
+        whenever(vpnRepository.registerWireGuardKey(eq("at"), eq("sid"), anyOrNull()))
+            .thenReturn(Result.success(Pair(refreshResponse, newKeys)))
         
         manager.forceRefreshCertificate()
         
@@ -237,8 +237,9 @@ class AmneziaVpnManagerTest {
         )
 
         whenever(sessionDao.getSession()).thenReturn(session)
-        whenever(vpnRepository.registerWireGuardKey(any(), any(), any())).thenReturn(
-            Result.success(CreateCertificateResponse(code = 1000, certificate = "new_cert", expirationTime = 0L, refreshTime = 0L))
+        val certResponse = CreateCertificateResponse(code = 1000, certificate = "new_cert", expirationTime = 0L, refreshTime = 0L)
+        whenever(vpnRepository.registerWireGuardKey(any(), any(), anyOrNull())).thenReturn(
+            Result.success(Pair(certResponse, VpnKeyPair("pubkeypem", "privkey")))
         )
 
         manager.connect("logical_1", server, session)

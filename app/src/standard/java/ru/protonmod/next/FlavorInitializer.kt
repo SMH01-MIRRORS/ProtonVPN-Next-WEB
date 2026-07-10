@@ -78,10 +78,10 @@ object FlavorInitializer {
                 event.message?.let { it.message = PiiScrubber.scrub(it.message) }
                 event.exceptions?.forEach { ex -> ex.value = PiiScrubber.scrub(ex.value) }
                 event.user?.let { user -> user.ipAddress = null }
-                event.extras?.forEach { (k, v) -> if (v is String) event.setExtra(k, PiiScrubber.scrub(v)) }
+                event.extras.forEach { (k, v) -> if (v is String) event.setExtra(k, PiiScrubber.scrub(v)) }
                 event.breadcrumbs?.forEach { b ->
                     b.message = PiiScrubber.scrub(b.message)
-                    b.data?.forEach { (k, v) -> if (v is String) b.setData(k, PiiScrubber.scrub(v)) }
+                    b.data.forEach { (k, v) -> if (v is String) b.setData(k, PiiScrubber.scrub(v)) }
                 }
                 event
             }

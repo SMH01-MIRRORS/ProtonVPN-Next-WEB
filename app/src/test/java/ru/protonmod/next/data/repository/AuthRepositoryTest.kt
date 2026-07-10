@@ -135,12 +135,11 @@ class AuthRepositoryTest {
         
         whenever(authApi.performLogin(any(), any(), any(), anyOrNull(), anyOrNull())).thenReturn(loginResponse)
 
-        whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(
-            VpnKeyPair("pubkey", "privkey")
-        )
+        val vpnKeyPair = VpnKeyPair("pubkey", "privkey")
+        whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(vpnKeyPair)
 
-        whenever(vpnRepository.registerWireGuardKey(any(), any(), any())).thenReturn(
-            Result.success(CreateCertificateResponse(code = 1000, certificate = "cert"))
+        whenever(vpnRepository.registerWireGuardKey(any(), any(), anyOrNull())).thenReturn(
+            Result.success(Pair(CreateCertificateResponse(code = 1000, certificate = "cert"), vpnKeyPair))
         )
         
         whenever(vpnRepository.getVpnInfo(any(), any())).thenReturn(
@@ -172,12 +171,11 @@ class AuthRepositoryTest {
         whenever(authApi.performLoginLess(any(), any(), any(), anyOrNull(), anyOrNull()))
             .thenReturn(loginResponse)
         
-        whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(
-            VpnKeyPair("pubkey", "privkey")
-        )
+        val vpnKeyPair = VpnKeyPair("pubkey", "privkey")
+        whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(vpnKeyPair)
 
-        whenever(vpnRepository.registerWireGuardKey(any(), any(), any())).thenReturn(
-            Result.success(CreateCertificateResponse(code = 1000, certificate = "cert"))
+        whenever(vpnRepository.registerWireGuardKey(any(), any(), anyOrNull())).thenReturn(
+            Result.success(Pair(CreateCertificateResponse(code = 1000, certificate = "cert"), vpnKeyPair))
         )
 
         // Act
@@ -249,9 +247,10 @@ class AuthRepositoryTest {
             UserResponse(code = 1000, user = UserInfo(id = "user_id"))
         )
         
-        whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(VpnKeyPair("pub", "priv"))
-        whenever(vpnRepository.registerWireGuardKey(any(), any(), any())).thenReturn(
-            Result.success(CreateCertificateResponse(code = 1000, certificate = "cert"))
+        val vpnKeyPair = VpnKeyPair("pub", "priv")
+        whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(vpnKeyPair)
+        whenever(vpnRepository.registerWireGuardKey(any(), any(), anyOrNull())).thenReturn(
+            Result.success(Pair(CreateCertificateResponse(code = 1000, certificate = "cert"), vpnKeyPair))
         )
         whenever(vpnRepository.getVpnInfo(any(), any())).thenReturn(
             Result.success(VpnInfoResponse(code = 1000, vpnInfo = VpnInfo(maxTier = 0)))

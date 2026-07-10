@@ -76,6 +76,9 @@ class VpnRepositoryTest {
     @Mock
     private lateinit var cityRepository: ru.protonmod.next.data.repository.CityRepository
 
+    @Mock
+    private lateinit var cryptoWrapper: ru.protonmod.next.utils.crypto.CryptoWrapper
+
     private val testDispatcher = StandardTestDispatcher()
     
     private val testDispatcherProvider = object : DispatcherProvider {
@@ -95,7 +98,7 @@ class VpnRepositoryTest {
         repository = object : VpnRepository(
             vpnApi, database, serverDao, sessionDao, serversCacheDao,
             cityTranslationDao, profileDao, recentConnectionDao,
-            cityRepository, testDispatcherProvider, testScope
+            cityRepository, testDispatcherProvider, cryptoWrapper, testScope
         ) {
             override suspend fun <R> performTransaction(block: suspend () -> R): R = block()
         }

@@ -130,21 +130,6 @@
                 android:resource="@xml/vpn_widget_info" />
         </receiver>
 
-        <!-- Nothing App Widget -->
-        <receiver
-            android:name=".ui.widget.VpnNothingWidgetProvider"
-            android:enabled="false"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="ru.protonmod.next.NOTHING_WIDGET_CLICK" />
-                <action android:name="ru.protonmod.next.vpn.STATE_CHANGED" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/vpn_widget_nothing_info" />
-        </receiver>
-
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
