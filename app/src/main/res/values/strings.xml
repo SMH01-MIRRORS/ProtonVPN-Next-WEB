@@ -318,7 +318,7 @@
 
     <string name="url_github" translatable="false">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
     <string name="url_codeberg" translatable="false">https://codeberg.org/SMH01/ProtonVPN-Next</string>
-    <string name="url_telegram" translatable="false">https://telegram.me/ProtonVPN_MOD</string>
+    <string name="url_telegram" translatable="false">https://t.me/ProtonVPN_MOD</string>
     <string name="url_crowdin" translatable="false">https://crowdin.com/project/protonvpn-next</string>
 
     <string name="url_ota_mirror_1" translatable="false">https://kvn.protonnext.qzz.io/update.json</string>

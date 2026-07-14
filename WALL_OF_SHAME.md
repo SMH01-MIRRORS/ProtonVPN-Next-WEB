@@ -27,19 +27,19 @@ If you wish to modify this client, you MUST:
 
 ### Malicious Entities (DO NOT USE)
 
-- ❌ `telegram.me/Getmodpcs` — Distributes tampered APKs.
+- ❌ `t.me/Getmodpcs` — Distributes tampered APKs.
     - **Deceptive Tactics:** Uses fake version numbers (e.g., v6.x) to mimic the original Proton VPN.
     - **Impersonation:** Uses the official package name and renames the app to "Proton VPN".
     - **Obfuscation:** Uses "360" protection/obfuscation to hide malicious code.
     - **Link Hijacking:** Replaces official project links with their own Telegram channel.
     - **Adware:** Injects pop-up banners promoting their Telegram channel into the app.
     - **Observed Malice:** Caught modifying update servers and sending non-JSON responses.
-- ❌ **TrimMOD / MODNIY** (`telegram.me/TrimMOD`, `telegram.me/MODNIY`) — Distributes unauthorized modifications.
+- ❌ **TrimMOD / MODNIY** (`t.me/TrimMOD`, `t.me/MODNIY`) — Distributes unauthorized modifications.
     - **Greed:** Charges 500 Telegram Stars just to send a private message to the owner, blocking communication and support.
     - **Branding:** Inserts a "TM" symbol into the version name to appear exclusive.
     - **Link Hijacking:** Replaces original project links with their own.
     - **Update Sabotage:** Inflates the version code to 2147483647 to permanently block official updates.
-- ❌ **Modi Apk Store** (`@ModiApkStore`, `@ModiApkStore_bot`, `@SafeAppsStore`, `@ModiOtt`, `telegram.me/+RNJ8WChbcZc4ZDZl`) — Re-packages tampered APKs from `Getmodpcs`.
+- ❌ **Modi Apk Store** (`@ModiApkStore`, `@ModiApkStore_bot`, `@SafeAppsStore`, `@ModiOtt`, `t.me/+RNJ8WChbcZc4ZDZl`) — Re-packages tampered APKs from `Getmodpcs`.
     - **Deceptive Tactics:** Inherits fake versioning and "360" obfuscation.
     - **Link Hijacking:** Replaces official links with their own resources.
     - **Adware:** Injects pop-up banners promoting their Telegram channel.
@@ -68,19 +68,19 @@ If you wish to modify this client, you MUST:
 
 ### Вредоносные ресурсы (НЕ ИСПОЛЬЗОВАТЬ)
 
-- ❌ `telegram.me/Getmodpcs` — Распространяет поддельные APK.
+- ❌ `t.me/Getmodpcs` — Распространяет поддельные APK.
     - **Обман:** Использует ложные номера версий (v6.x) для имитации оригинального Proton VPN.
     - **Маскировка:** Использует официальное имя пакета и название "Proton VPN".
     - **Защита:** Использует обфускацию "360" для скрытия вредоносного кода.
     - **Подмена ссылок:** Заменяет ссылки на ресурсы проекта ссылками на свой Telegram-канал.
     - **Реклама:** Внедряет всплывающие окна (баннеры) с рекламой своего канала в приложение.
     - **Нарушения:** Модифицирует серверы обновления и отправляет некорректные данные.
-- ❌ **TrimMOD / MODNIY** (`telegram.me/TrimMOD`, `telegram.me/MODNIY`) — Распространяет несанкционированные модификации.
+- ❌ **TrimMOD / MODNIY** (`t.me/TrimMOD`, `t.me/MODNIY`) — Распространяет несанкционированные модификации.
     - **Жадность:** Требует 500 Telegram Stars только за возможность написать владельцу, блокируя поддержку.
     - **Брендинг:** Вставляет символ "TM" в название версии для имитации эксклюзивности.
     - **Подмена ссылок:** Заменяет оригинальные ссылки своими.
     - **Саботаж обновлений:** Завышает код версии до 2147483647, чтобы навсегда заблокировать официальные обновления.
-- ❌ **Modi Apk Store** (`@ModiApkStore`, `@ModiApkStore_bot`, `@SafeAppsStore`, `@ModiOtt`, `telegram.me/+RNJ8WChbcZc4ZDZl`) — Переупаковывает поддельные APK от `Getmodpcs`.
+- ❌ **Modi Apk Store** (`@ModiApkStore`, `@ModiApkStore_bot`, `@SafeAppsStore`, `@ModiOtt`, `t.me/+RNJ8WChbcZc4ZDZl`) — Переупаковывает поддельные APK от `Getmodpcs`.
     - **Обман:** Наследует ложные версии и обфускацию "360".
     - **Подмена ссылок:** Заменяет официальные ссылки своими ресурсами.
     - **Реклама:** Внедряет всплывающие баннеры своего канала.
@@ -109,13 +109,13 @@ If you wish to modify this client, you MUST:
 
 ### Шкідливі ресурси (НЕ ВИКОРИСТОВУВАТИ)
 
-- ❌ `telegram.me/Getmodpcs` — Розповсюджує підроблені APK.
+- ❌ `t.me/Getmodpcs` — Розповсюджує підроблені APK.
     - **Обман:** Використовує фальшиві номери версій (v6.x) для імітації Proton VPN.
     - **Маскування:** Використовує офіційну назву пакета та назву "Proton VPN".
     - **Захист:** Використовує обфускацію "360" для приховування шкідливого коду.
     - **Підміна посилань:** Замінює посилання проекту на свій Telegram-канал.
     - **Реклама:** Впроваджує спливаючі банери свого каналу в додаток.
-- ❌ **TrimMOD / MODNIY** (`telegram.me/TrimMOD`, `telegram.me/MODNIY`)
+- ❌ **TrimMOD / MODNIY** (`t.me/TrimMOD`, `t.me/MODNIY`)
     - **Жадібність:** Вимагає 500 Telegram Stars за можливість написати власнику.
     - **Підміна посилань:** Замінює оригінальні посилання своїми.
     - **Саботаж оновлень:** Завищує код версії до 2147483647.
@@ -147,7 +147,7 @@ If you wish to modify this client, you MUST:
 
 ### Шкодныя рэсурсу (НЕ ВЫКАРЫСТОЎВАЦЬ)
 
-- ❌ `telegram.me/Getmodpcs`
+- ❌ `t.me/Getmodpcs`
     - **Абман:** Выкарыстоўвае ілжывыя нумары версій (v6.x).
     - **Маскіроўка:** Выкарыстоўвае назву "Proton VPN".
     - **Падмена спасылак:** Замяняе спасылкі на свой Telegram-канал.
@@ -184,7 +184,7 @@ If you wish to modify this client, you MUST:
 
 ### Зиянды ресурстар (ПАЙДАЛАНБАҢЫЗ)
 
-- ❌ `telegram.me/Getmodpcs`
+- ❌ `t.me/Getmodpcs`
     - **Алдамшы тактика:** Жалған нұсқа нөмірлерін (v6.x) пайдаланады.
     - **Кейіптеу:** "Proton VPN" атауын пайдаланады.
     - **Сілтемелерді ауыстыру:** Жоба сілтемелерін өз Telegram арнасына ауыстырады.
@@ -221,7 +221,7 @@ If you wish to modify this client, you MUST:
 
 ### نهادهای مخرب (استفاده نکنید)
 
-- ❌ `telegram.me/Getmodpcs`
+- ❌ `t.me/Getmodpcs`
     - **تاکتیک‌های فریبنده:** استفاده از شماره نسخه‌های جعلی (v6.x).
     - **جعل هویت:** استفاده از نام "Proton VPN".
     - **سرقت لینک:** جایگزینی لینک‌های پروژه با کانال تلگرام خود.
@@ -258,7 +258,7 @@ If you wish to modify this client, you MUST:
 
 ### 恶意实体（切勿使用）
 
-- ❌ `telegram.me/Getmodpcs`
+- ❌ `t.me/Getmodpcs`
     - **欺骗手段：** 使用虚假版本号 (v6.x)。
     - **冒充：** 使用“Proton VPN”名称。
     - **链接劫持：** 将项目链接替换为自己的 Telegram 频道。

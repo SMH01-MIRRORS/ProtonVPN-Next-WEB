@@ -26,7 +26,7 @@
 **Official Sources:**
 - ✅ [GitHub Mirror](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR)
 - ✅ [Codeberg Repo](https://codeberg.org/SMH01/ProtonVPN-Next)
-- ✅ [Telegram Channel](https://telegram.me/ProtonVPN_MOD)
+- ✅ [Telegram Channel](https://t.me/ProtonVPN_MOD)
 
 ### 📱 System Requirements
 | Requirement | Specification |
@@ -68,7 +68,7 @@ Detailed build instructions for both Terminal and Android Studio are available i
 **Официальные источники:**
 - ✅ [Зеркало GitHub](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR)
 - ✅ [Репозиторий Codeberg](https://codeberg.org/SMH01/ProtonVPN-Next)
-- ✅ [Telegram-канал](https://telegram.me/ProtonVPN_MOD)
+- ✅ [Telegram-канал](https://t.me/ProtonVPN_MOD)
 
 ### 📱 Системные требования
 - **ОС:** Android 10+
