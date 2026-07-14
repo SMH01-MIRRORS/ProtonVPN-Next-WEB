@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160125,
-      "versionName": "12.0.0-alpha2-44-g49b1734-nightly",
+      "versionCode": 605160127,
+      "versionName": "12.0.0-alpha2-46-g1af40e1-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "fix: add null checks for Sentry event scrubbing\n\n- Updated `FlavorInitializer` to use safe calls when iterating over `event.extras` and breadcrumb `data`.\n- Prevents potential null pointer exceptions during the PII scrubbing process when these fields are null.",
+      "changelog": "chore: replace t.me with telegram.me in links\n\n- Updated the `url_telegram` string to use `telegram.me` in `antitamper.cpp` for both string retrieval and critical string verification logic.\n- Modified the `url_telegram` entry in `strings.xml` to use the full domain.\n- Updated Telegram links in `README.md` for official sources in all translated sections.\n- Replaced `t.me` with `telegram.me` for all malicious entity links and project references in `WALL_OF_SHAME.md` across multiple languages.",
       "force": false
     },
     "release": {
-      "versionCode": 605160125,
-      "versionName": "12.0.0-alpha2-44-g49b1734-nightly",
+      "versionCode": 605160127,
+      "versionName": "12.0.0-alpha2-46-g1af40e1-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "fix: add null checks for Sentry event scrubbing\n\n- Updated `FlavorInitializer` to use safe calls when iterating over `event.extras` and breadcrumb `data`.\n- Prevents potential null pointer exceptions during the PII scrubbing process when these fields are null.",
+      "changelog": "chore: replace t.me with telegram.me in links\n\n- Updated the `url_telegram` string to use `telegram.me` in `antitamper.cpp` for both string retrieval and critical string verification logic.\n- Modified the `url_telegram` entry in `strings.xml` to use the full domain.\n- Updated Telegram links in `README.md` for official sources in all translated sections.\n- Replaced `t.me` with `telegram.me` for all malicious entity links and project references in `WALL_OF_SHAME.md` across multiple languages.",
       "force": false
     }
   },
