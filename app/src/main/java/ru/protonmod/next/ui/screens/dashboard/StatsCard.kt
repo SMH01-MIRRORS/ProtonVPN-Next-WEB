@@ -313,6 +313,12 @@ private fun ChartBlock(
     }
 }
 
+/** Normalizes chart point totals to 0..1 fractions of the maximum value. */
+private fun normalizeChartPoints(points: List<TrafficChartPoint>): List<Float> {
+    val maxValue = points.maxOfOrNull { it.totalBytes }?.coerceAtLeast(1L)?.toFloat() ?: 1f
+    return points.map { point -> point.totalBytes.toFloat() / maxValue }
+}
+
 /**
  * Smooth cubic-bezier area chart - port of the desktop SimpleChart
  * (control point offset = dx / 2.5, area gradient + stroke line).
@@ -324,10 +330,7 @@ private fun SmoothChart(
     modifier: Modifier = Modifier,
 ) {
     // Normalized point heights (0..1), recomputed only when the data changes.
-    val normalized = remember(points) {
-        val maxValue = points.maxOfOrNull { it.totalBytes }?.coerceAtLeast(1L)?.toFloat() ?: 1f
-        points.map { point -> point.totalBytes.toFloat() / maxValue }
-    }
+    val normalized = remember(points) { normalizeChartPoints(points) }
 
     Canvas(modifier = modifier) {
         if (normalized.size < 2 || size.width <= 0f || size.height <= 0f) return@Canvas
