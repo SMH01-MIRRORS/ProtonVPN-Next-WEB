@@ -156,7 +156,7 @@ internal fun TabletDashboardLayout(
                 stats = stats,
                 isConnected = state.isConnected,
                 liveSpeed = state.speed,
-                onToggleEnabled = onToggleStats,
+                onToggle = onToggleStats,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(240.dp)
@@ -286,7 +286,7 @@ internal fun PhoneDashboardLayout(
                 stats = stats,
                 isConnected = state.isConnected,
                 liveSpeed = state.speed,
-                onToggleEnabled = onToggleStats,
+                onToggle = onToggleStats,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -562,10 +562,12 @@ internal fun MapLocationOverlay(
             color = colors.textWeak,
             modifier = Modifier.padding(top = 8.dp)
         )
-        val ipText = if (isIpHidden) {
-            locationText.ip.map { ch -> if (ch == '.' || ch == ':') ch else '*' }.joinToString("")
-        } else {
-            locationText.ip
+        val ipText = remember(locationText.ip, isIpHidden) {
+            if (isIpHidden) {
+                locationText.ip.map { ch -> if (ch == '.' || ch == ':') ch else '*' }.joinToString("")
+            } else {
+                locationText.ip
+            }
         }
         Text(
             text = ipText,

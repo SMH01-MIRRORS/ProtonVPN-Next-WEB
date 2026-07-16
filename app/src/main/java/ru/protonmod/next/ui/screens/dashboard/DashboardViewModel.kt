@@ -47,6 +47,7 @@ import ru.protonmod.next.data.local.ProfileDao
 import ru.protonmod.next.data.local.RecentConnectionEntity
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SettingsManager
+import kotlinx.collections.immutable.toImmutableList
 import ru.protonmod.next.data.local.TrafficStatsDao
 import ru.protonmod.next.data.local.TrafficStatsEntity
 import ru.protonmod.next.data.local.VpnProfileEntity
@@ -697,9 +698,9 @@ class DashboardViewModel @Inject constructor(
             today = summarize { it.day == todayKey },
             month = summarize { it.day.startsWith(monthPrefix) },
             year = summarize { it.day.startsWith(yearPrefix) },
-            dailyChart = daily,
-            monthlyChart = monthly,
-            yearlyChart = yearly,
+            dailyChart = daily.toImmutableList(),
+            monthlyChart = monthly.toImmutableList(),
+            yearlyChart = yearly.toImmutableList(),
         )
     }
 

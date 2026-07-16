@@ -595,9 +595,9 @@ fun DashboardContent(
     onRefreshCert: () -> Unit,
     onToggleIpVisibility: () -> Unit,
     onChangeQuickConnect: () -> Unit,
+    modifier: Modifier = Modifier,
     stats: TrafficStatsUiState = TrafficStatsUiState(),
     onToggleStats: () -> Unit = {},
-    modifier: Modifier = Modifier,
     isTablet: Boolean = false
 ) {
     Box(modifier = modifier) {

@@ -61,6 +61,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.collections.immutable.ImmutableList
+import androidx.compose.runtime.remember
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
@@ -75,7 +77,7 @@ fun StatsCard(
     stats: TrafficStatsUiState,
     isConnected: Boolean,
     liveSpeed: String?,
-    onToggleEnabled: () -> Unit,
+    onToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var slide by rememberSaveable { mutableIntStateOf(0) }
@@ -124,7 +126,7 @@ fun StatsCard(
                     tint = ProtonNextTheme.colors.iconWeak
                 )
             }
-            IconButton(onClick = onToggleEnabled, modifier = Modifier.size(28.dp)) {
+            IconButton(onClick = onToggle, modifier = Modifier.size(28.dp)) {
                 Icon(
                     imageVector = if (stats.enabled) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                     contentDescription = stringResource(R.string.stats_toggle_desc),
@@ -136,7 +138,7 @@ fun StatsCard(
 
         Box(modifier = Modifier.weight(1f)) {
             if (!stats.enabled) {
-                StatsDisabledOverlay(onEnable = onToggleEnabled)
+                StatsDisabledOverlay(onEnable = onToggle)
             } else {
                 Crossfade(targetState = slide, label = "stats_slide") { current ->
                     when (current) {
@@ -287,7 +289,7 @@ private fun AnalyticsSlide(stats: TrafficStatsUiState) {
 @Composable
 private fun ChartBlock(
     label: String,
-    points: List<TrafficChartPoint>,
+    points: ImmutableList<TrafficChartPoint>,
     color: Color,
     chartHeight: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier,
@@ -317,28 +319,31 @@ private fun ChartBlock(
  */
 @Composable
 private fun SmoothChart(
-    points: List<TrafficChartPoint>,
+    points: ImmutableList<TrafficChartPoint>,
     color: Color,
     modifier: Modifier = Modifier,
 ) {
-    Canvas(modifier = modifier) {
-        if (points.size < 2 || size.width <= 0f || size.height <= 0f) return@Canvas
+    // Normalized point heights (0..1), recomputed only when the data changes.
+    val normalized = remember(points) {
+        val maxValue = points.maxOfOrNull { it.totalBytes }?.coerceAtLeast(1L)?.toFloat() ?: 1f
+        points.map { point -> point.totalBytes.toFloat() / maxValue }
+    }
 
-        val maxValue = points.maxOf { it.totalBytes }.coerceAtLeast(1L).toFloat()
-        val stepX = size.width / (points.size - 1)
+    Canvas(modifier = modifier) {
+        if (normalized.size < 2 || size.width <= 0f || size.height <= 0f) return@Canvas
+
+        val stepX = size.width / (normalized.size - 1)
         // Keep 5% padding at top and bottom, exactly like the desktop chart.
         val usableHeight = size.height * 0.9f
-        val ys = points.map { point ->
-            size.height * 0.95f - (point.totalBytes.toFloat() / maxValue) * usableHeight
-        }
+        fun yAt(index: Int): Float = size.height * 0.95f - normalized[index] * usableHeight
 
         val line = Path().apply {
-            moveTo(0f, ys[0])
-            for (i in 1 until points.size) {
+            moveTo(0f, yAt(0))
+            for (i in 1 until normalized.size) {
                 val x0 = (i - 1) * stepX
                 val x1 = i * stepX
                 val cpDx = (x1 - x0) / 2.5f
-                cubicTo(x0 + cpDx, ys[i - 1], x1 - cpDx, ys[i], x1, ys[i])
+                cubicTo(x0 + cpDx, yAt(i - 1), x1 - cpDx, yAt(i), x1, yAt(i))
             }
         }
 

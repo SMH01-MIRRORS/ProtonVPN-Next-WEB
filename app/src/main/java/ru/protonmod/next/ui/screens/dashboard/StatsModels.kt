@@ -18,6 +18,8 @@
 package ru.protonmod.next.ui.screens.dashboard
 
 import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import java.util.Locale
 
 /** Aggregated rx/tx/usage for a calendar period (today / month / year). */
@@ -43,11 +45,11 @@ data class TrafficStatsUiState(
     val month: TrafficPeriodSummary = TrafficPeriodSummary(),
     val year: TrafficPeriodSummary = TrafficPeriodSummary(),
     /** Last 30 days, oldest first, missing days filled with zeroes. */
-    val dailyChart: List<TrafficChartPoint> = emptyList(),
+    val dailyChart: ImmutableList<TrafficChartPoint> = persistentListOf(),
     /** Last 12 months, oldest first, missing months filled with zeroes. */
-    val monthlyChart: List<TrafficChartPoint> = emptyList(),
+    val monthlyChart: ImmutableList<TrafficChartPoint> = persistentListOf(),
     /** All known years, oldest first. */
-    val yearlyChart: List<TrafficChartPoint> = emptyList(),
+    val yearlyChart: ImmutableList<TrafficChartPoint> = persistentListOf(),
 )
 
 /** Formats a byte count the same way the desktop dashboard does (B/KB/MB/GB/TB). */
