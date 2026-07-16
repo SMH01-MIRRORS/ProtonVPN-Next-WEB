@@ -40,9 +40,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -195,6 +204,7 @@ internal fun PhoneDashboardLayout(
     onChangeQuickConnect: () -> Unit,
     onToggleStats: () -> Unit,
 ) {
+    var showRecentsSheet by remember { mutableStateOf(false) }
     val windowInfo = LocalWindowInfo.current
     val density = LocalDensity.current
     val screenHeight = with(density) { windowInfo.containerSize.height.toDp() }
@@ -262,10 +272,11 @@ internal fun PhoneDashboardLayout(
                 recents = state.recentConnections.toImmutableList(),
                 connectedServerId = state.connectedServer?.id,
                 onServerClick = onServerClick,
+                maxVisible = 3,
+                onShowAll = { showRecentsSheet = true },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .height(280.dp)
             )
         }
 
@@ -283,11 +294,27 @@ internal fun PhoneDashboardLayout(
             )
         }
     }
+
+    if (showRecentsSheet) {
+        RecentConnectionsBottomSheet(
+            recents = state.recentConnections.toImmutableList(),
+            connectedServerId = state.connectedServer?.id,
+            onServerClick = { server ->
+                showRecentsSheet = false
+                onServerClick(server)
+            },
+            onDismiss = { showRecentsSheet = false }
+        )
+    }
 }
 
 /**
  * Desktop-style "Recent connections" card: flag + country + city/server rows
  * with a chevron, inside a liquid-glass container.
+ *
+ * When [maxVisible] is set the card shows at most that many rows without any
+ * inner scrolling, and [onShowAll] adds a small top-right button that opens
+ * the full scrollable list (used on phones to avoid nested-scroll conflicts).
  */
 @Composable
 internal fun RecentConnectionsCard(
@@ -295,92 +322,197 @@ internal fun RecentConnectionsCard(
     connectedServerId: String?,
     onServerClick: (LogicalServer) -> Unit,
     modifier: Modifier = Modifier,
+    maxVisible: Int? = null,
+    onShowAll: (() -> Unit)? = null,
 ) {
     val colors = ProtonNextTheme.colors
-    val context = LocalContext.current
 
     Column(
         modifier = modifier
             .liquidGlass(shape = RoundedCornerShape(24.dp))
             .padding(20.dp)
     ) {
-        Text(
-            text = stringResource(R.string.title_recent_connections).uppercase(),
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.sp,
-            color = colors.textWeak
-        )
-
-        if (recents.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = stringResource(R.string.dashboard_no_recents),
-                    fontSize = 13.sp,
-                    color = colors.textWeak
-                )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.title_recent_connections).uppercase(),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp,
+                color = colors.textWeak,
+                modifier = Modifier.weight(1f)
+            )
+            if (onShowAll != null && recents.isNotEmpty()) {
+                IconButton(
+                    onClick = onShowAll,
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreHoriz,
+                        contentDescription = stringResource(R.string.title_recent_connections),
+                        tint = colors.iconWeak,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(top = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                items(recents, key = { it.id }, contentType = { "RecentRow" }) { server ->
-                    val isActive = connectedServerId == server.id
-                    Row(
-                        modifier = Modifier
+        }
+
+        when {
+            recents.isEmpty() -> {
+                Box(
+                    modifier = if (maxVisible == null) {
+                        Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (isActive) colors.brandNorm.copy(alpha = 0.12f) else Color.Transparent)
-                            .clickable { onServerClick(server) }
-                            .padding(horizontal = 8.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        FlagIcon(
-                            countryFlag = CountryUtils.getFlagResource(context, server.exitCountry),
-                            size = DpSize(28.dp, 20.dp)
+                            .weight(1f)
+                    } else {
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp)
+                    },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.dashboard_no_recents),
+                        fontSize = 13.sp,
+                        color = colors.textWeak
+                    )
+                }
+            }
+            maxVisible != null -> {
+                // Static rows, no inner scrolling (phone).
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    recents.take(maxVisible).forEach { server ->
+                        RecentServerRow(
+                            server = server,
+                            isActive = connectedServerId == server.id,
+                            onClick = { onServerClick(server) }
                         )
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(start = 12.dp)
-                        ) {
-                            Text(
-                                text = CountryUtils.getCountryName(context, server.exitCountry),
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = colors.textNorm,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                text = listOf(server.localizedCity ?: server.city, server.name)
-                                    .filter { it.isNotBlank() }
-                                    .joinToString(", "),
-                                fontSize = 11.sp,
-                                color = colors.textWeak,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                        Icon(
-                            imageVector = Icons.Default.ChevronRight,
-                            contentDescription = null,
-                            tint = colors.iconWeak,
-                            modifier = Modifier.size(16.dp)
+                    }
+                }
+            }
+            else -> {
+                // Scrollable full list (tablet, bounded height).
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(top = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    items(recents, key = { it.id }, contentType = { "RecentRow" }) { server ->
+                        RecentServerRow(
+                            server = server,
+                            isActive = connectedServerId == server.id,
+                            onClick = { onServerClick(server) }
                         )
                     }
                 }
             }
         }
+    }
+}
+
+/** Full scrollable list of recent connections (opened from the phone card). */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun RecentConnectionsBottomSheet(
+    recents: ImmutableList<LogicalServer>,
+    connectedServerId: String?,
+    onServerClick: (LogicalServer) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val colors = ProtonNextTheme.colors
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = colors.backgroundSecondary
+    ) {
+        Text(
+            text = stringResource(R.string.title_recent_connections).uppercase(),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp,
+            color = colors.textWeak,
+            modifier = Modifier.padding(horizontal = 20.dp)
+        )
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            items(recents, key = { it.id }, contentType = { "RecentRow" }) { server ->
+                RecentServerRow(
+                    server = server,
+                    isActive = connectedServerId == server.id,
+                    onClick = { onServerClick(server) }
+                )
+            }
+        }
+    }
+}
+
+/** One desktop-style recent-connection row. */
+@Composable
+private fun RecentServerRow(
+    server: LogicalServer,
+    isActive: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = ProtonNextTheme.colors
+    val context = LocalContext.current
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (isActive) colors.brandNorm.copy(alpha = 0.12f) else Color.Transparent)
+            .clickable { onClick() }
+            .padding(horizontal = 8.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        FlagIcon(
+            countryFlag = CountryUtils.getFlagResource(context, server.exitCountry),
+            size = DpSize(28.dp, 20.dp)
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 12.dp)
+        ) {
+            Text(
+                text = CountryUtils.getCountryName(context, server.exitCountry),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.textNorm,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = listOf(server.localizedCity ?: server.city, server.name)
+                    .filter { it.isNotBlank() }
+                    .joinToString(", "),
+                fontSize = 11.sp,
+                color = colors.textWeak,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        Icon(
+            imageVector = Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = colors.iconWeak,
+            modifier = Modifier.size(16.dp)
+        )
     }
 }
 
