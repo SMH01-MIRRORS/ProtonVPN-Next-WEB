@@ -185,6 +185,7 @@ internal fun TabletDashboardLayout(
 internal fun PhoneDashboardLayout(
     state: DashboardUiState.Success,
     stats: TrafficStatsUiState,
+    onServerClick: (LogicalServer) -> Unit,
     onQuickConnect: () -> Unit,
     onDisconnect: () -> Unit,
     onPause: () -> Unit,
@@ -252,6 +253,19 @@ internal fun PhoneDashboardLayout(
                 vpnState = state.vpnState,
                 connectedServer = state.connectedServer,
                 allServers = state.servers.toImmutableList()
+            )
+        }
+
+        // Recent connections (desktop-style card) between connection and stats.
+        item(contentType = "RecentConnections") {
+            RecentConnectionsCard(
+                recents = state.recentConnections.toImmutableList(),
+                connectedServerId = state.connectedServer?.id,
+                onServerClick = onServerClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .height(280.dp)
             )
         }
 

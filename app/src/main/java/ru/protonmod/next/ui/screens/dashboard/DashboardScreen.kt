@@ -619,6 +619,7 @@ fun DashboardContent(
             PhoneDashboardLayout(
                 state = state,
                 stats = stats,
+                onServerClick = onServerClick,
                 onQuickConnect = onQuickConnect,
                 onDisconnect = onDisconnect,
                 onPause = onPause,
