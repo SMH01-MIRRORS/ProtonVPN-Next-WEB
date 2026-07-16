@@ -128,6 +128,7 @@ class SettingsManager @Inject constructor(
         private val CUSTOM_PROFILES = stringPreferencesKey("custom_profiles")
 
         private val ANALYTICS_ENABLED = booleanPreferencesKey("analytics_enabled")
+        private val TRAFFIC_STATS_ENABLED = booleanPreferencesKey("traffic_stats_enabled")
         private val CRASH_REPORTS_ENABLED = booleanPreferencesKey("crash_reports_enabled")
         private val SENTRY_PERFORMANCE_ENABLED = booleanPreferencesKey("sentry_performance_enabled")
         private val SENTRY_NON_FATAL_ENABLED = booleanPreferencesKey("sentry_non_fatal_enabled")
@@ -284,6 +285,9 @@ class SettingsManager @Inject constructor(
     val quickConnectStrategy: Flow<String> = dataStore.data.map { it[QUICK_CONNECT_STRATEGY] ?: "fastest" }
     val quickConnectTargetId: Flow<String?> = dataStore.data.map { it[QUICK_CONNECT_TARGET_ID] }
     val isIpHidden: Flow<Boolean> = dataStore.data.map { it[IP_HIDDEN] ?: false }
+
+    /** Dashboard traffic statistics collection toggle (mirrors desktop traffic_stats_enabled). */
+    val trafficStatsEnabled: Flow<Boolean> = dataStore.data.map { it[TRAFFIC_STATS_ENABLED] ?: true }
 
     val pauseEndTime: Flow<Long> = dataStore.data.map { it[PAUSE_END_TIME] ?: 0L }
 
@@ -543,6 +547,10 @@ class SettingsManager @Inject constructor(
 
     suspend fun setIpHidden(hidden: Boolean) {
         dataStore.edit { it[IP_HIDDEN] = hidden }
+    }
+
+    suspend fun setTrafficStatsEnabled(enabled: Boolean) {
+        dataStore.edit { it[TRAFFIC_STATS_ENABLED] = enabled }
     }
 
     suspend fun setPauseEndTime(time: Long) {

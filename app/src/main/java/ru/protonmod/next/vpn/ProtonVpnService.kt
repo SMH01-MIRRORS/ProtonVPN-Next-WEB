@@ -72,6 +72,9 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     @Inject
     lateinit var connectedServerState: ConnectedServerState
 
+    @Inject
+    lateinit var trafficStatsRecorder: TrafficStatsRecorder
+
     // SupervisorJob ensures that if one child coroutine fails, it doesn't crash the whole scope
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -502,6 +505,10 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                         lastRx = totalRx
                         lastTx = totalTx
 
+                        // Persist daily statistics for the dashboard (Traffic / Usage cards).
+                        // The loop ticks once per second, hence deltaSeconds = 1.
+                        trafficStatsRecorder.record(deltaRx, deltaTx, 1L)
+
                         val upStr = formatSpeed(deltaTx)
                         val downStr = formatSpeed(deltaRx)
                         lastSpeedText = getString(R.string.vpn_speed_format, upStr, downStr)
@@ -549,6 +556,9 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         val totalTx = lastTx
         ProtonLogger.i(TAG, "VPN Session ended. Final stats: RX=${formatSpeed(totalRx)}, TX=${formatSpeed(totalTx)}")
         ProtonLogger.addSentryBreadcrumb(TAG, "VPN Session Ended: RX=$totalRx, TX=$totalTx", "INFO", "vpn.stats")
+
+        // Persist whatever is still buffered for this session.
+        serviceScope.launch(Dispatchers.IO) { trafficStatsRecorder.flush() }
 
         lastSpeedText = null
     }

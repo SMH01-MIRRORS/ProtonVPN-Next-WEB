@@ -29,9 +29,10 @@ import androidx.room.withTransaction
         RecentConnectionEntity::class,
         VpnProfileEntity::class,
         CityTranslationEntity::class,
-        CityCacheEntity::class
+        CityCacheEntity::class,
+        TrafficStatsEntity::class
     ],
-    version = 19,
+    version = 20,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -41,4 +42,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun recentConnectionDao(): RecentConnectionDao
     abstract fun profileDao(): ProfileDao
     abstract fun cityTranslationDao(): CityTranslationDao
+    abstract fun trafficStatsDao(): TrafficStatsDao
 }

@@ -349,6 +349,7 @@ fun DashboardScreen(
 ) {
     val colors = ProtonNextTheme.colors
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val statsUiState by viewModel.statsUiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var pendingServer by remember { mutableStateOf<LogicalServer?>(null) }
     var isQuickConnectPending by remember { mutableStateOf(false) }
@@ -480,15 +481,22 @@ fun DashboardScreen(
                 )
             }
 
-            VpnStatusTop(
-                isConnected = isConnected,
-                isConnecting = isConnecting,
-                vpnState = successState?.vpnState ?: AmneziaVpnManager.VpnState.DISCONNECTED,
+            // On tablets the pill is centered over the map area (matches desktop).
+            Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .padding(start = if (isTablet) 420.dp else 0.dp)
                     .windowInsetsPadding(WindowInsets.statusBars)
-                    .padding(top = 16.dp)
-            )
+                    .padding(top = 16.dp),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                VpnStatusTop(
+                    isConnected = isConnected,
+                    isConnecting = isConnecting,
+                    vpnState = successState?.vpnState ?: AmneziaVpnManager.VpnState.DISCONNECTED
+                )
+            }
 
             val baseState = when (uiState) {
                 is DashboardUiState.Loading -> 0
@@ -537,7 +545,9 @@ fun DashboardScreen(
                                         onResume = { viewModel.resumeVpn() },
                                         onRefreshCert = { viewModel.refreshCertificate() },
                                         onToggleIpVisibility = { viewModel.toggleIpVisibility() },
-                                        onChangeQuickConnect = { showQuickConnectConfig = true }
+                                        onChangeQuickConnect = { showQuickConnectConfig = true },
+                                        stats = statsUiState,
+                                        onToggleStats = { viewModel.toggleTrafficStats() }
                                     )
                                 }
 
@@ -585,276 +595,39 @@ fun DashboardContent(
     onRefreshCert: () -> Unit,
     onToggleIpVisibility: () -> Unit,
     onChangeQuickConnect: () -> Unit,
+    stats: TrafficStatsUiState = TrafficStatsUiState(),
+    onToggleStats: () -> Unit = {},
     modifier: Modifier = Modifier,
     isTablet: Boolean = false
 ) {
-    val colors = ProtonNextTheme.colors
-    val windowInfo = LocalWindowInfo.current
-    val density = LocalDensity.current
-    val screenHeight = with(density) { windowInfo.containerSize.height.toDp() }
-    
     Box(modifier = modifier) {
         if (isTablet) {
-            // Tablet Layout: Split connection (Left) and recent connections (Right)
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 32.dp)
-                    .padding(bottom = 140.dp), // Increased for the centered bottom bar
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(32.dp)
-            ) {
-                // Left Side: Connection Status
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    CertificateBanner(
-                        state = state.certificateState,
-                        onRefresh = onRefreshCert,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-
-                    if (state.isBatteryOptimized) {
-                        BatteryOptimizationBanner(modifier = Modifier.padding(bottom = 16.dp))
-                    }
-
-                    if (state.pauseEndTime > System.currentTimeMillis()) {
-                        PauseBanner(
-                            endTime = state.pauseEndTime,
-                            onResume = onResume,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-                    }
-
-                    ConnectionStatusCard(
-                        isConnected = state.isConnected,
-                        isConnecting = state.isConnecting,
-                        originalLocationText = state.originalLocationText,
-                        vpnLocationText = state.vpnLocationText,
-                        isIpHidden = state.isIpHidden,
-                        quickConnectStrategy = state.quickConnectStrategy,
-                        quickConnectTargetId = state.quickConnectTargetId,
-                        profiles = state.profiles.toImmutableList(),
-                        onToggleIpVisibility = onToggleIpVisibility,
-                        onToggleConnection = {
-                            if (state.isConnected) onDisconnect() else onQuickConnect()
-                        },
-                        onPause = onPause,
-                        onChangeQuickConnect = onChangeQuickConnect,
-                        vpnState = state.vpnState,
-                        connectedServer = state.connectedServer,
-                        allServers = state.servers.toImmutableList()
-                    )
-
-                    if (state.isConnected) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            StatCard(
-                                label = stringResource(R.string.label_speed),
-                                value = state.speed ?: "0 B/s",
-                                icon = Icons.Rounded.Speed,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp)
-                            )
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                StatCard(
-                                    label = stringResource(R.string.label_download),
-                                    value = state.trafficRx ?: "0 B",
-                                    icon = Icons.Rounded.CloudDownload,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                StatCard(
-                                    label = stringResource(R.string.label_upload),
-                                    value = state.trafficTx ?: "0 B",
-                                    icon = Icons.Rounded.CloudUpload,
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // Right Side: Recent Connections
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    if (state.recentConnections.isNotEmpty()) {
-                        Text(
-                            text = stringResource(R.string.title_recent_connections),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = colors.textNorm,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(colors.backgroundNorm.copy(alpha = 0.5f)),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            items(state.recentConnections, key = { it.id }, contentType = { "Server" }) { server ->
-                                ServerCard(
-                                    server = server,
-                                    isConnected = state.connectedServer?.id == server.id,
-                                    isConnecting = state.isConnecting && state.connectedServer?.id == server.id,
-                                    displayMode = state.serverLoadDisplayMode,
-                                    onClick = { onServerClick(server) }
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+            TabletDashboardLayout(
+                state = state,
+                stats = stats,
+                onServerClick = onServerClick,
+                onQuickConnect = onQuickConnect,
+                onDisconnect = onDisconnect,
+                onPause = onPause,
+                onResume = onResume,
+                onRefreshCert = onRefreshCert,
+                onToggleIpVisibility = onToggleIpVisibility,
+                onChangeQuickConnect = onChangeQuickConnect,
+                onToggleStats = onToggleStats
+            )
         } else {
-            // Phone Layout (original LazyColumn)
-            val topSpacerHeight = (screenHeight * 0.55f).coerceAtLeast(400.dp)
-
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 140.dp)
-            ) {
-                item(contentType = "Spacer") {
-                    Spacer(modifier = Modifier.height(topSpacerHeight))
-                }
-
-                item(contentType = "CertificateBanner") {
-                    CertificateBanner(
-                        state = state.certificateState,
-                        onRefresh = onRefreshCert,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                    )
-                }
-
-                if (state.isBatteryOptimized) {
-                    item(contentType = "BatteryOptimization") {
-                        BatteryOptimizationBanner(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
-                    }
-                }
-
-                if (state.pauseEndTime > System.currentTimeMillis()) {
-                    item(contentType = "PauseBanner") {
-                        PauseBanner(
-                            endTime = state.pauseEndTime,
-                            onResume = onResume,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                        )
-                    }
-                }
-
-                item(contentType = "ConnectionStatus") {
-                    ConnectionStatusCard(
-                        isConnected = state.isConnected,
-                        isConnecting = state.isConnecting,
-                        originalLocationText = state.originalLocationText,
-                        vpnLocationText = state.vpnLocationText,
-                        isIpHidden = state.isIpHidden,
-                        quickConnectStrategy = state.quickConnectStrategy,
-                        quickConnectTargetId = state.quickConnectTargetId,
-                        profiles = state.profiles.toImmutableList(),
-                        onToggleIpVisibility = onToggleIpVisibility,
-                        onToggleConnection = {
-                            if (state.isConnected) onDisconnect() else onQuickConnect()
-                        },
-                        onPause = onPause,
-                        onChangeQuickConnect = onChangeQuickConnect,
-                        vpnState = state.vpnState,
-                        connectedServer = state.connectedServer,
-                        allServers = state.servers.toImmutableList()
-                    )
-
-                    if (state.isConnected) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            StatCard(
-                                label = stringResource(R.string.label_speed),
-                                value = state.speed ?: "0 B/s",
-                                icon = Icons.Rounded.Speed,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp)
-                            )
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                StatCard(
-                                    label = stringResource(R.string.label_download),
-                                    value = state.trafficRx ?: "0 B",
-                                    icon = Icons.Rounded.CloudDownload,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                StatCard(
-                                    label = stringResource(R.string.label_upload),
-                                    value = state.trafficTx ?: "0 B",
-                                    icon = Icons.Rounded.CloudUpload,
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                        }
-                    }
-                }
-
-                if (state.recentConnections.isNotEmpty()) {
-                    item(contentType = "RecentConnectionsHeader") {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    brush = Brush.verticalGradient(
-                                        colors = listOf(Color.Transparent, colors.backgroundNorm)
-                                    )
-                                )
-                                .padding(top = 24.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.title_recent_connections),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = colors.textNorm,
-                                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
-                            )
-                        }
-                    }
-
-                    items(state.recentConnections, key = { it.id }, contentType = { "Server" }) { server ->
-                        Box(modifier = Modifier.background(colors.backgroundNorm)) {
-                            ServerCard(
-                                server = server,
-                                isConnected = state.connectedServer?.id == server.id,
-                                isConnecting = state.isConnecting && state.connectedServer?.id == server.id,
-                                displayMode = state.serverLoadDisplayMode,
-                                onClick = { onServerClick(server) },
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
-                            )
-                        }
-                    }
-                }
-            }
+            PhoneDashboardLayout(
+                state = state,
+                stats = stats,
+                onQuickConnect = onQuickConnect,
+                onDisconnect = onDisconnect,
+                onPause = onPause,
+                onResume = onResume,
+                onRefreshCert = onRefreshCert,
+                onToggleIpVisibility = onToggleIpVisibility,
+                onChangeQuickConnect = onChangeQuickConnect,
+                onToggleStats = onToggleStats
+            )
         }
     }
 }

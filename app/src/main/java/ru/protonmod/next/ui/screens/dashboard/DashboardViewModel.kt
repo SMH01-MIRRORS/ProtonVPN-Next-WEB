@@ -47,6 +47,8 @@ import ru.protonmod.next.data.local.ProfileDao
 import ru.protonmod.next.data.local.RecentConnectionEntity
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.data.local.TrafficStatsDao
+import ru.protonmod.next.data.local.TrafficStatsEntity
 import ru.protonmod.next.data.local.VpnProfileEntity
 import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.data.network.LogicalServer
@@ -101,7 +103,8 @@ class DashboardViewModel @Inject constructor(
     private val vpnAutomationManager: VpnAutomationManager,
     private val connectedServerState: ConnectedServerState,
     private val profileDao: ProfileDao,
-    private val recentConnectionDao: ru.protonmod.next.data.local.RecentConnectionDao
+    private val recentConnectionDao: ru.protonmod.next.data.local.RecentConnectionDao,
+    private val trafficStatsDao: TrafficStatsDao
 ) : ViewModel() {
 
     // Shared OkHttpClient instances — created once, reused for every IP fetch, shut down in onCleared().
@@ -615,6 +618,89 @@ class DashboardViewModel @Inject constructor(
 
     private fun findBestServerForProfile(profile: VpnProfileEntity, allServers: List<LogicalServer>): LogicalServer? {
         return vpnRepository.findBestServerForProfile(profile, allServers)
+    }
+
+    /**
+     * Persistent traffic statistics for the dashboard stats card.
+     * Kept separate from [uiState] to avoid growing the main combine().
+     */
+    val statsUiState: StateFlow<TrafficStatsUiState> = combine(
+        trafficStatsDao.observeAll(),
+        settingsManager.trafficStatsEnabled,
+    ) { rows, enabled ->
+        buildTrafficStatsUiState(rows, enabled)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TrafficStatsUiState())
+
+    fun toggleTrafficStats() {
+        viewModelScope.launch {
+            settingsManager.setTrafficStatsEnabled(!settingsManager.trafficStatsEnabled.first())
+        }
+    }
+
+    private fun buildTrafficStatsUiState(
+        rows: List<TrafficStatsEntity>,
+        enabled: Boolean,
+    ): TrafficStatsUiState {
+        val dayFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+        val monthFormat = java.text.SimpleDateFormat("yyyy-MM", java.util.Locale.US)
+        val todayKey = dayFormat.format(java.util.Date())
+        val monthPrefix = todayKey.substring(0, 7)
+        val yearPrefix = todayKey.substring(0, 4)
+
+        fun summarize(predicate: (TrafficStatsEntity) -> Boolean): TrafficPeriodSummary {
+            var rx = 0L
+            var tx = 0L
+            var usage = 0L
+            for (row in rows) {
+                if (predicate(row)) {
+                    rx += row.rxBytes
+                    tx += row.txBytes
+                    usage += row.usageSeconds
+                }
+            }
+            return TrafficPeriodSummary(rx, tx, usage)
+        }
+
+        // Daily chart: last 30 calendar days, empty days included so the
+        // curve keeps a stable time axis (matches the desktop behaviour).
+        val byDay = rows.associateBy { it.day }
+        val dayCal = java.util.Calendar.getInstance()
+        dayCal.add(java.util.Calendar.DAY_OF_YEAR, -29)
+        val daily = (0 until 30).map {
+            val key = dayFormat.format(dayCal.time)
+            dayCal.add(java.util.Calendar.DAY_OF_YEAR, 1)
+            val row = byDay[key]
+            TrafficChartPoint(key.substring(8), (row?.rxBytes ?: 0L) + (row?.txBytes ?: 0L))
+        }
+
+        // Monthly chart: last 12 months.
+        val byMonth = rows.groupBy { it.day.substring(0, 7) }
+        val monthCal = java.util.Calendar.getInstance()
+        monthCal.add(java.util.Calendar.MONTH, -11)
+        val monthly = (0 until 12).map {
+            val key = monthFormat.format(monthCal.time)
+            monthCal.add(java.util.Calendar.MONTH, 1)
+            val total = byMonth[key]?.sumOf { row -> row.rxBytes + row.txBytes } ?: 0L
+            TrafficChartPoint(key.substring(5), total)
+        }
+
+        // Yearly chart: every year we have data for.
+        val yearly = rows
+            .groupBy { it.day.substring(0, 4) }
+            .toSortedMap()
+            .map { (year, list) ->
+                TrafficChartPoint(year, list.sumOf { row -> row.rxBytes + row.txBytes })
+            }
+
+        return TrafficStatsUiState(
+            enabled = enabled,
+            today = summarize { it.day == todayKey },
+            month = summarize { it.day.startsWith(monthPrefix) },
+            year = summarize { it.day.startsWith(yearPrefix) },
+            dailyChart = daily,
+            monthlyChart = monthly,
+            yearlyChart = yearly,
+        )
     }
 
     fun setQuickConnectStrategy(strategy: String, targetId: String? = null) {

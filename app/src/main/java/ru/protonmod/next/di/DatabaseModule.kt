@@ -34,6 +34,7 @@ import ru.protonmod.next.data.local.ServerDao
 import ru.protonmod.next.data.local.RecentConnectionDao
 import ru.protonmod.next.data.local.ProfileDao
 import ru.protonmod.next.data.local.CityTranslationDao
+import ru.protonmod.next.data.local.TrafficStatsDao
 import javax.inject.Singleton
 
 @Module
@@ -225,6 +226,22 @@ object DatabaseModule {
         }
     }
 
+    val MIGRATION_19_20 = object : Migration(19, 20) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Daily VPN traffic statistics for the redesigned dashboard.
+            // NOTE: no DEFAULT clauses here on purpose - Room validates the
+            // migrated schema against the entity definition exactly.
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `traffic_stats` (" +
+                        "`day` TEXT NOT NULL, " +
+                        "`rxBytes` INTEGER NOT NULL, " +
+                        "`txBytes` INTEGER NOT NULL, " +
+                        "`usageSeconds` INTEGER NOT NULL, " +
+                        "PRIMARY KEY(`day`))"
+            )
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -249,6 +266,7 @@ object DatabaseModule {
         .addMigrations(MIGRATION_16_17)
         .addMigrations(MIGRATION_17_18)
         .addMigrations(MIGRATION_18_19)
+        .addMigrations(MIGRATION_19_20)
         .build()
     }
 
@@ -286,5 +304,11 @@ object DatabaseModule {
     @Singleton
     fun provideCityTranslationDao(database: AppDatabase): CityTranslationDao {
         return database.cityTranslationDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTrafficStatsDao(database: AppDatabase): TrafficStatsDao {
+        return database.trafficStatsDao()
     }
 }
