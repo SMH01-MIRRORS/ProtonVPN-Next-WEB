@@ -121,8 +121,7 @@ internal fun DesktopTabletDashboard(
             modifier = Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(20.dp)
-                .padding(bottom = 100.dp),
+                .padding(20.dp),
             horizontalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Column(
@@ -402,7 +401,7 @@ private fun DesktopMapPanel(
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 20.dp)
+                    .padding(bottom = 72.dp)
                     .widthIn(max = 360.dp)
             ) {
                 BatteryOptimizationBanner()
