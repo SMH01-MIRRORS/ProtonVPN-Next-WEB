@@ -17,6 +17,8 @@
 
 package ru.protonmod.next.ui.nav
 
+import androidx.activity.ComponentActivity
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -341,7 +343,11 @@ fun NavGraphBuilder.appNavGraph(
     }
 
     composable(Screen.Profiles.route) {
+        // Keep one activity-scoped instance for the list and editor so the
+        // selected profile is already in memory on the editor's first frame.
+        val profilesViewModel: ProfilesViewModel = hiltViewModel(LocalContext.current as ComponentActivity)
         ProfilesScreen(
+            viewModel = profilesViewModel,
             onNavigateToHome = {
                 navController.navigate(Screen.Home.route) {
                     popUpTo(Screen.Home.route) { inclusive = false }
@@ -366,9 +372,10 @@ fun NavGraphBuilder.appNavGraph(
         })
     ) { backStackEntry ->
         val profileId = backStackEntry.arguments?.getString("profileId")
+        val profilesViewModel: ProfilesViewModel = hiltViewModel(LocalContext.current as ComponentActivity)
         EditProfileScreen(
             profileId = profileId,
-            viewModel = hiltViewModel(),
+            viewModel = profilesViewModel,
             onNavigateToPortSelection = { port ->
                 navController.navigate(Screen.PortSelection.createRoute(port, false))
             },
