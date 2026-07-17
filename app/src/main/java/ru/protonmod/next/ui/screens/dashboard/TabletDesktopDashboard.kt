@@ -394,11 +394,18 @@ private fun DesktopMapPanel(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             CertificateBanner(state = state.certificateState, onRefresh = onRefreshCert)
-            if (state.isBatteryOptimized) {
-                BatteryOptimizationBanner()
-            }
             if (state.pauseEndTime > System.currentTimeMillis()) {
                 PauseBanner(endTime = state.pauseEndTime, onResume = onResume)
+            }
+        }
+        if (state.isBatteryOptimized) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 20.dp)
+                    .widthIn(max = 360.dp)
+            ) {
+                BatteryOptimizationBanner()
             }
         }
     }
