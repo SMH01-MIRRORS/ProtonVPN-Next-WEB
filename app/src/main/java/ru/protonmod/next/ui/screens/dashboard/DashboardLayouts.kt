@@ -134,7 +134,7 @@ internal fun TabletDashboardLayout(
                 profiles = state.profiles.toImmutableList(),
                 onToggleIpVisibility = onToggleIpVisibility,
                 onToggleConnection = {
-                    if (state.isConnected) onDisconnect() else onQuickConnect()
+                    if (state.isConnected || state.isConnecting) onDisconnect() else onQuickConnect()
                 },
                 onPause = onPause,
                 onChangeQuickConnect = onChangeQuickConnect,
@@ -256,7 +256,7 @@ internal fun PhoneDashboardLayout(
                 profiles = state.profiles.toImmutableList(),
                 onToggleIpVisibility = onToggleIpVisibility,
                 onToggleConnection = {
-                    if (state.isConnected) onDisconnect() else onQuickConnect()
+                    if (state.isConnected || state.isConnecting) onDisconnect() else onQuickConnect()
                 },
                 onPause = onPause,
                 onChangeQuickConnect = onChangeQuickConnect,

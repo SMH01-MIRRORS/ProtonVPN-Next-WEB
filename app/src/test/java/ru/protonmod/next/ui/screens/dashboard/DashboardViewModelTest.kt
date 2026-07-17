@@ -36,6 +36,7 @@ import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import ru.protonmod.next.data.local.ProfileDao
 import ru.protonmod.next.data.local.RecentConnectionDao
@@ -227,5 +228,16 @@ class DashboardViewModelTest {
         
         val state = viewModel.uiState.first { it is DashboardUiState.Success && it.isConnected }
         assertTrue("Expected isConnected=true", (state as DashboardUiState.Success).isConnected)
+    }
+
+    @Test
+    fun `disconnect is available while VPN is connecting`() = runTest {
+        vpnStateFlow.value = AmneziaVpnManager.VpnState.CONNECTING
+
+        viewModel.disconnect()
+        advanceUntilIdle()
+
+        verify(connectedServerState).setConnectedServer(null)
+        verify(amneziaVpnManager).disconnect()
     }
 }

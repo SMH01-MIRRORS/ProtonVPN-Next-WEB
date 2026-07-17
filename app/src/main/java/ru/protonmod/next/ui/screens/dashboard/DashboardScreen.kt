@@ -1018,34 +1018,34 @@ fun ConnectionStatusCard(
                     }
                 }
 
+                val canDisconnect = isConnected || isConnecting
                 Button(
                     onClick = onToggleConnection,
                     modifier = Modifier
-                        .weight(if (isConnected) 2f else 1f)
+                        .weight(if (canDisconnect) 2f else 1f)
                         .height(58.dp),
                     shape = RoundedCornerShape(18.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isConnected) colors.shade20 else colors.brandNorm,
-                        contentColor = if (isConnected) colors.textNorm else colors.textInverted
+                        containerColor = if (canDisconnect) colors.shade20 else colors.brandNorm,
+                        contentColor = if (canDisconnect) colors.textNorm else colors.textInverted
                     ),
                     elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = if (isConnected) 0.dp else 4.dp,
+                        defaultElevation = if (canDisconnect) 0.dp else 4.dp,
                         pressedElevation = 2.dp
-                    ),
-                    enabled = !isConnecting
+                    )
                 ) {
                     if (isConnecting) {
                         ExpressiveCircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = colors.textInverted
+                            modifier = Modifier.size(20.dp),
+                            color = colors.textNorm
                         )
-                    } else {
-                        Text(
-                            text = if (isConnected) stringResource(R.string.btn_disconnect) else stringResource(R.string.btn_quick_connect),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Spacer(modifier = Modifier.width(10.dp))
                     }
+                    Text(
+                        text = if (canDisconnect) stringResource(R.string.btn_disconnect) else stringResource(R.string.btn_quick_connect),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
