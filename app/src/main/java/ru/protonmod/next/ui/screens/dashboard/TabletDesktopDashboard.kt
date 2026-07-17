@@ -51,6 +51,7 @@ import androidx.compose.material.icons.rounded.AccessTime
 import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Star
@@ -274,6 +275,7 @@ private fun DesktopConnectionCard(
                     Icon(
                         imageVector = when (state.quickConnectStrategy) {
                             "profile" -> Icons.Rounded.Star
+                            "recent" -> Icons.Rounded.History
                             else -> if (state.isConnected) Icons.Rounded.Public else Icons.Rounded.Speed
                         },
                         contentDescription = null,
