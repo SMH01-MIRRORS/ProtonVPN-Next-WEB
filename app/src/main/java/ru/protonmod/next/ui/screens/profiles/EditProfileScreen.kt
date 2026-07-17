@@ -20,6 +20,8 @@ package ru.protonmod.next.ui.screens.profiles
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -39,7 +41,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -104,19 +105,24 @@ fun EditProfileScreen(
         profiles.find { it.id == profileId }
     }
 
-    var profileName by rememberSaveable { mutableStateOf("") }
-    var targetCountry by rememberSaveable { mutableStateOf<String?>(null) }
-    var targetCity by rememberSaveable { mutableStateOf<String?>(null) }
-    var targetCityLocalized by rememberSaveable { mutableStateOf<String?>(null) }
-    var targetServerId by rememberSaveable { mutableStateOf<String?>(null) }
-    var targetServerName by rememberSaveable { mutableStateOf<String?>(null) }
-    var selectedProtocol by rememberSaveable { mutableStateOf("AmneziaWG") }
-    var selectedPort by rememberSaveable { mutableIntStateOf(0) }
-    var autoOpenUrl by rememberSaveable { mutableStateOf("") }
-    var obfuscationEnabled by rememberSaveable { mutableStateOf(false) }
-    var obfuscationProfileId by rememberSaveable { mutableStateOf("standard_1") }
-
-    var isLoaded by rememberSaveable { mutableStateOf(false) }
+    // Seed the editor synchronously when the profile is already present in the
+    // ViewModel. The profile id is part of the saveable key, so the state is
+    // recreated with real values as soon as an asynchronously loaded profile
+    // becomes available, without waiting for a post-composition effect.
+    val editorStateKey = editingProfile?.id
+    var profileName by rememberSaveable(profileId, editorStateKey) { mutableStateOf(editingProfile?.name.orEmpty()) }
+    var targetCountry by rememberSaveable(profileId, editorStateKey) { mutableStateOf(editingProfile?.targetCountry) }
+    var targetCity by rememberSaveable(profileId, editorStateKey) { mutableStateOf(editingProfile?.targetCity) }
+    var targetCityLocalized by rememberSaveable(profileId, editorStateKey) { mutableStateOf(editingProfile?.localizedCity) }
+    var targetServerId by rememberSaveable(profileId, editorStateKey) { mutableStateOf(editingProfile?.targetServerId) }
+    var targetServerName by rememberSaveable(profileId, editorStateKey) { mutableStateOf(editingProfile?.targetServerName) }
+    var selectedProtocol by rememberSaveable(profileId, editorStateKey) { mutableStateOf(editingProfile?.protocol ?: "AmneziaWG") }
+    var selectedPort by rememberSaveable(profileId, editorStateKey) { mutableIntStateOf(editingProfile?.port ?: 0) }
+    var autoOpenUrl by rememberSaveable(profileId, editorStateKey) { mutableStateOf(editingProfile?.autoOpenUrl.orEmpty()) }
+    var obfuscationEnabled by rememberSaveable(profileId, editorStateKey) { mutableStateOf(editingProfile?.isObfuscationEnabled ?: false) }
+    var obfuscationProfileId by rememberSaveable(profileId, editorStateKey) {
+        mutableStateOf(editingProfile?.obfuscationProfileId ?: "standard_1")
+    }
 
     var showLocationDialog by remember { mutableStateOf(false) }
     var showObfuscationConfigDialog by remember { mutableStateOf(false) }
@@ -141,46 +147,26 @@ fun EditProfileScreen(
             }
         }
 
-        // Update state when editingProfile is loaded
-        LaunchedEffect(editingProfile) {
-            if (!isLoaded && editingProfile != null) {
-                editingProfile.let {
-                    profileName = it.name
-                    targetCountry = it.targetCountry
-                    targetCity = it.targetCity
-                    targetCityLocalized = it.localizedCity
-                    targetServerId = it.targetServerId
-                    targetServerName = it.targetServerName
-                    selectedProtocol = it.protocol
-                    selectedPort = it.port
-                    autoOpenUrl = it.autoOpenUrl ?: ""
-                    obfuscationEnabled = it.isObfuscationEnabled
-                    obfuscationProfileId = it.obfuscationProfileId ?: "standard_1"
-                }
-                isLoaded = true
-            }
-        }
-
-        // Resolve the edit accent directly from the loaded profile before the
-        // editable state is hydrated. This prevents the default fastest/green
-        // accent from flashing before a server profile becomes metallic gray.
-        val isWaitingForProfile = profileId != null && !isLoaded
-        val accent = when {
-            !isWaitingForProfile -> profileAccent(targetServerId, targetCity, targetCountry)
-            editingProfile != null -> profileAccent(
-                editingProfile.targetServerId,
-                editingProfile.targetCity,
-                editingProfile.targetCountry,
-            )
-            else -> null
-        }
+        // The editor always renders immediately. If a cold database read is
+        // needed, the accent transitions smoothly from the neutral background
+        // to the resolved target color instead of hiding the whole screen.
+        val accent = profileAccent(targetServerId, targetCity, targetCountry)
+        val animatedBackgroundAccent by animateColorAsState(
+            targetValue = if (profileId != null && editingProfile == null) {
+                colors.backgroundNorm
+            } else {
+                accent.end.copy(alpha = 0.30f)
+            },
+            animationSpec = tween(durationMillis = 220),
+            label = "profileBackgroundAccent",
+        )
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            accent?.end?.copy(alpha = 0.30f) ?: colors.backgroundNorm,
+                            animatedBackgroundAccent,
                             colors.backgroundNorm.copy(alpha = 0.1f),
                             colors.backgroundNorm
                         )
@@ -189,9 +175,7 @@ fun EditProfileScreen(
         )
 
         Scaffold(
-            modifier = Modifier
-                .fillMaxSize()
-                .alpha(if (isWaitingForProfile) 0f else 1f),
+            modifier = Modifier.fillMaxSize(),
             containerColor = Color.Transparent,
             contentWindowInsets = WindowInsets(0, 0, 0, 0)
         ) { padding ->
