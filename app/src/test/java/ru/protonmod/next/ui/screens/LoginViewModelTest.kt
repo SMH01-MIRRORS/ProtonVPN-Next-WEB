@@ -20,6 +20,7 @@ package ru.protonmod.next.ui.screens
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.*
 import org.junit.Assert.assertEquals
@@ -85,6 +86,7 @@ class LoginViewModelTest {
     fun setup() {
         MockitoAnnotations.openMocks(this)
         whenever(settingsManager.apiBypassEnabled).thenReturn(flowOf(false))
+        whenever(networkMonitor.isVpnActive).thenReturn(MutableStateFlow(true))
         viewModel = LoginViewModel(
             context,
             authRepository,

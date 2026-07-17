@@ -44,6 +44,7 @@ import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.data.local.TrafficStatsDao
 import ru.protonmod.next.data.local.VpnProfileEntity
 import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.data.network.LogicalServer
@@ -92,6 +93,9 @@ class DashboardViewModelTest {
 
     @Mock
     private lateinit var recentConnectionDao: RecentConnectionDao
+
+    @Mock
+    private lateinit var trafficStatsDao: TrafficStatsDao
 
     @Mock
     private lateinit var powerManager: android.os.PowerManager
@@ -161,6 +165,7 @@ class DashboardViewModelTest {
         whenever(connectedServerState.connectedServer).thenReturn(connectedServerFlow)
         whenever(recentConnectionDao.getRecentConnections()).thenReturn(MutableStateFlow(emptyList()))
         whenever(profileDao.getAllProfilesFlow()).thenReturn(MutableStateFlow(emptyList()))
+        whenever(trafficStatsDao.observeAll()).thenReturn(flowOf(emptyList()))
         
         whenever(settingsManager.quickConnectStrategy).thenReturn(quickConnectStrategyFlow)
         whenever(settingsManager.quickConnectTargetId).thenReturn(quickConnectTargetIdFlow)
@@ -171,6 +176,7 @@ class DashboardViewModelTest {
         whenever(settingsManager.customProfiles).thenReturn(customProfilesFlow)
         whenever(settingsManager.isIpHidden).thenReturn(isIpHiddenFlow)
         whenever(settingsManager.pauseEndTime).thenReturn(pauseEndTimeFlow)
+        whenever(settingsManager.trafficStatsEnabled).thenReturn(flowOf(true))
         
         
         val testSession = SessionEntity(
@@ -193,7 +199,8 @@ class DashboardViewModelTest {
             vpnAutomationManager,
             connectedServerState,
             profileDao,
-            recentConnectionDao
+            recentConnectionDao,
+            trafficStatsDao
         )
     }
 
