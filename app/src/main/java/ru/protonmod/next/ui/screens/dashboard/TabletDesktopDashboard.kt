@@ -265,6 +265,11 @@ private fun DesktopConnectionCard(
                 val flag = flagCode?.let { CountryUtils.getFlagResource(context, it) } ?: 0
                 if (flag != 0) {
                     FlagIcon(countryFlag = flag, size = DpSize(40.dp, 40.dp))
+                } else if (!state.isConnected && state.quickConnectStrategy == "fastest") {
+                    FlagIcon(
+                        countryFlag = R.drawable.flag_fastest,
+                        size = DpSize(28.dp, 20.dp)
+                    )
                 } else {
                     Icon(
                         imageVector = when (state.quickConnectStrategy) {
