@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160139,
-      "versionName": "12.0.0-alpha2-58-gbf600ed-nightly",
+      "versionCode": 605160140,
+      "versionName": "12.0.0-alpha2-59-g7f3db67-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "fix: allow disconnect while connecting",
+      "changelog": "feat: add privacy-first telemetry setup",
       "force": false
     },
     "release": {
-      "versionCode": 605160139,
-      "versionName": "12.0.0-alpha2-58-gbf600ed-nightly",
+      "versionCode": 605160140,
+      "versionName": "12.0.0-alpha2-59-g7f3db67-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "fix: allow disconnect while connecting",
+      "changelog": "feat: add privacy-first telemetry setup",
       "force": false
     }
   },
