@@ -374,10 +374,20 @@ private fun DesktopMapPanel(
             isInteractive = true,
             modifier = Modifier.fillMaxSize()
         )
-        DesktopStatusPill(
-            state = state,
-            modifier = Modifier.align(Alignment.TopCenter).padding(top = 20.dp)
-        )
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            DesktopStatusPill(state = state)
+            if (state.isBatteryOptimized) {
+                Spacer(Modifier.height(8.dp))
+                Box(modifier = Modifier.widthIn(max = 360.dp)) {
+                    BatteryOptimizationBanner()
+                }
+            }
+        }
         val location = if (state.isConnected) state.vpnLocationText else state.originalLocationText
         if (location != null) {
             DesktopMapLocationOverlay(
@@ -395,16 +405,6 @@ private fun DesktopMapPanel(
             CertificateBanner(state = state.certificateState, onRefresh = onRefreshCert)
             if (state.pauseEndTime > System.currentTimeMillis()) {
                 PauseBanner(endTime = state.pauseEndTime, onResume = onResume)
-            }
-        }
-        if (state.isBatteryOptimized) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 72.dp)
-                    .widthIn(max = 360.dp)
-            ) {
-                BatteryOptimizationBanner()
             }
         }
     }
