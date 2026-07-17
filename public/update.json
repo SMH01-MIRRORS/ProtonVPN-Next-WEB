@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160128,
-      "versionName": "12.0.0-alpha2-47-ge9ad89f-nightly",
+      "versionCode": 605160139,
+      "versionName": "12.0.0-alpha2-58-gbf600ed-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "Revert \"chore: replace t.me with telegram.me in links\"\n\nThis reverts commit 1af40e16acb3260cef40eab24dba59f544aacc04.",
+      "changelog": "fix: allow disconnect while connecting",
       "force": false
     },
     "release": {
-      "versionCode": 605160128,
-      "versionName": "12.0.0-alpha2-47-ge9ad89f-nightly",
+      "versionCode": 605160139,
+      "versionName": "12.0.0-alpha2-58-gbf600ed-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "Revert \"chore: replace t.me with telegram.me in links\"\n\nThis reverts commit 1af40e16acb3260cef40eab24dba59f544aacc04.",
+      "changelog": "fix: allow disconnect while connecting",
       "force": false
     }
   },
