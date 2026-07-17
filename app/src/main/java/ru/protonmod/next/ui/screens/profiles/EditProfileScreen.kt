@@ -39,6 +39,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -160,15 +161,26 @@ fun EditProfileScreen(
             }
         }
 
-        // Background gradient
-        // Background gradient
+        // Resolve the edit accent directly from the loaded profile before the
+        // editable state is hydrated. This prevents the default fastest/green
+        // accent from flashing before a server profile becomes metallic gray.
+        val isWaitingForProfile = profileId != null && !isLoaded
+        val accent = when {
+            !isWaitingForProfile -> profileAccent(targetServerId, targetCity, targetCountry)
+            editingProfile != null -> profileAccent(
+                editingProfile.targetServerId,
+                editingProfile.targetCity,
+                editingProfile.targetCountry,
+            )
+            else -> null
+        }
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            colors.brandNorm.copy(alpha = 0.25f),
+                            accent?.end?.copy(alpha = 0.30f) ?: colors.backgroundNorm,
                             colors.backgroundNorm.copy(alpha = 0.1f),
                             colors.backgroundNorm
                         )
@@ -177,7 +189,9 @@ fun EditProfileScreen(
         )
 
         Scaffold(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(if (isWaitingForProfile) 0f else 1f),
             containerColor = Color.Transparent,
             contentWindowInsets = WindowInsets(0, 0, 0, 0)
         ) { padding ->
@@ -232,6 +246,29 @@ fun EditProfileScreen(
                                 Text(stringResource(R.string.btn_save), color = colors.onInteraction, fontWeight = FontWeight.Bold)
                             }
                         }
+                    )
+                }
+
+                item(contentType = "Preview") {
+                    val previewSubtitle = when {
+                        targetServerId != null -> stringResource(R.string.location_server, (targetServerName ?: targetServerId) as Any)
+                        targetCity != null -> {
+                            val city = targetCityLocalized ?: targetCity!!
+                            val country = CountryUtils.getCountryName(context, targetCountry)
+                            stringResource(R.string.location_city_format, country, city)
+                        }
+                        targetCountry != null -> CountryUtils.getCountryName(context, targetCountry)
+                        else -> stringResource(R.string.location_fastest)
+                    }
+                    ProfileHeroPreview(
+                        name = profileName.ifBlank { stringResource(R.string.label_profile_name) },
+                        subtitle = previewSubtitle,
+                        protocolLabel = selectedProtocol,
+                        portLabel = if (selectedPort == 0) stringResource(R.string.settings_port_auto) else selectedPort.toString(),
+                        targetServerId = targetServerId,
+                        targetCity = targetCity,
+                        targetCountry = targetCountry,
+                        modifier = contentModifier.padding(horizontal = 16.dp)
                     )
                 }
 
@@ -1173,4 +1210,90 @@ private fun EditParamField(
         ),
         singleLine = true
     )
+}
+
+/**
+ * Live preview of the profile being edited - same visual language as
+ * ProfileCardItem on the profiles screen (accent gradient by target).
+ */
+@Composable
+private fun ProfileHeroPreview(
+    name: String,
+    subtitle: String,
+    protocolLabel: String,
+    portLabel: String,
+    targetServerId: String?,
+    targetCity: String?,
+    targetCountry: String?,
+    modifier: Modifier = Modifier,
+) {
+    val colors = ProtonNextTheme.colors
+    val context = LocalContext.current
+    val accent = profileAccent(targetServerId, targetCity, targetCountry)
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .liquidGlass(shape = RoundedCornerShape(28.dp), alpha = 0.4f, shadowElevation = 0.dp)
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        accent.start.copy(alpha = 0.25f),
+                        Color.Transparent,
+                        accent.end.copy(alpha = 0.15f)
+                    )
+                ),
+                shape = RoundedCornerShape(28.dp)
+            )
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(24.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(72.dp, 48.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(accent.start.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                val flagResId = if (targetCountry != null) CountryUtils.getFlagResource(context, targetCountry) else 0
+                when {
+                    flagResId != 0 -> FlagIcon(countryFlag = flagResId, size = DpSize(72.dp, 48.dp))
+                    targetCountry != null -> Text(
+                        text = CountryUtils.getFlagForCountry(targetCountry),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    else -> FlagIcon(countryFlag = R.drawable.flag_fastest, size = DpSize(72.dp, 48.dp))
+                }
+            }
+
+            Spacer(modifier = Modifier.width(20.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = colors.textNorm,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.textWeak,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FeatureBadge(text = protocolLabel, accent = accent.start)
+                    FeatureBadge(text = portLabel, accent = accent.start)
+                }
+            }
+        }
+    }
 }
