@@ -95,95 +95,19 @@ internal fun TabletDashboardLayout(
     onChangeQuickConnect: () -> Unit,
     onToggleStats: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.statusBars)
-            .padding(20.dp)
-            .padding(bottom = 120.dp), // Keep clear of the centered bottom bar
-        horizontalArrangement = Arrangement.spacedBy(20.dp)
-    ) {
-        // Left column: fixed width, mirrors the desktop 380px grid track.
-        Column(
-            modifier = Modifier
-                .width(380.dp)
-                .fillMaxHeight(),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            CertificateBanner(
-                state = state.certificateState,
-                onRefresh = onRefreshCert
-            )
-
-            if (state.isBatteryOptimized) {
-                BatteryOptimizationBanner()
-            }
-
-            if (state.pauseEndTime > System.currentTimeMillis()) {
-                PauseBanner(endTime = state.pauseEndTime, onResume = onResume)
-            }
-
-            ConnectionStatusCard(
-                isConnected = state.isConnected,
-                isConnecting = state.isConnecting,
-                originalLocationText = state.originalLocationText,
-                vpnLocationText = state.vpnLocationText,
-                isIpHidden = state.isIpHidden,
-                quickConnectStrategy = state.quickConnectStrategy,
-                quickConnectTargetId = state.quickConnectTargetId,
-                profiles = state.profiles.toImmutableList(),
-                onToggleIpVisibility = onToggleIpVisibility,
-                onToggleConnection = {
-                    if (state.isConnected || state.isConnecting) onDisconnect() else onQuickConnect()
-                },
-                onPause = onPause,
-                onChangeQuickConnect = onChangeQuickConnect,
-                vpnState = state.vpnState,
-                connectedServer = state.connectedServer,
-                allServers = state.servers.toImmutableList()
-            )
-
-            RecentConnectionsCard(
-                recents = state.recentConnections.toImmutableList(),
-                connectedServerId = state.connectedServer?.id,
-                onServerClick = onServerClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            )
-
-            StatsCard(
-                stats = stats,
-                isConnected = state.isConnected,
-                liveSpeed = state.speed,
-                onToggle = onToggleStats,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(240.dp)
-            )
-        }
-
-        // Right side: the interactive map renders behind this row;
-        // overlay the desktop-style location card in the bottom-right corner.
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-        ) {
-            val locationText = if (state.isConnected) state.vpnLocationText else state.originalLocationText
-            if (locationText != null) {
-                MapLocationOverlay(
-                    locationText = locationText,
-                    isProtected = state.isConnected,
-                    isIpHidden = state.isIpHidden,
-                    onToggleIpVisibility = onToggleIpVisibility,
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(4.dp)
-                )
-            }
-        }
-    }
+    DesktopTabletDashboard(
+        state = state,
+        stats = stats,
+        onServerClick = onServerClick,
+        onQuickConnect = onQuickConnect,
+        onDisconnect = onDisconnect,
+        onPause = onPause,
+        onResume = onResume,
+        onRefreshCert = onRefreshCert,
+        onToggleIpVisibility = onToggleIpVisibility,
+        onChangeQuickConnect = onChangeQuickConnect,
+        onToggleStats = onToggleStats
+    )
 }
 
 /**

@@ -440,38 +440,35 @@ fun DashboardScreen(
                     .background(colors.backgroundNorm)
             )
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(if (isTablet) 1f else 0.6f)
-            ) {
-                HomeMap(
-                    allServers = (successState?.servers ?: emptyList()).toImmutableList(),
-                    connectedServer = successState?.connectedServer,
-                    isConnected = isConnected,
-                    isConnecting = isConnecting,
-                    modifier = Modifier.fillMaxSize(),
-                    userCountryCode = successState?.originalLocationText?.countryCode,
-                    isInteractive = isTablet
+            if (isTablet) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .vpnStatusOverlayBackground(isConnected, isConnecting, colors)
                 )
-
-                // Fade out map at the bottom to blend with background
-                if (!isTablet) {
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.6f)
+                ) {
+                    HomeMap(
+                        allServers = (successState?.servers ?: emptyList()).toImmutableList(),
+                        connectedServer = successState?.connectedServer,
+                        isConnected = isConnected,
+                        isConnecting = isConnecting,
+                        modifier = Modifier.fillMaxSize(),
+                        userCountryCode = successState?.originalLocationText?.countryCode,
+                        isInteractive = false
+                    )
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(100.dp)
                             .align(Alignment.BottomCenter)
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(Color.Transparent, colors.backgroundNorm)
-                                )
-                            )
+                            .background(Brush.verticalGradient(listOf(Color.Transparent, colors.backgroundNorm)))
                     )
                 }
-            }
-
-            if (!isTablet) {
                 Spacer(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -479,23 +476,20 @@ fun DashboardScreen(
                         .align(Alignment.TopCenter)
                         .vpnStatusOverlayBackground(isConnected, isConnecting, colors)
                 )
-            }
-
-            // On tablets the pill is centered over the map area (matches desktop).
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .fillMaxWidth()
-                    .padding(start = if (isTablet) 420.dp else 0.dp)
-                    .windowInsetsPadding(WindowInsets.statusBars)
-                    .padding(top = 16.dp),
-                contentAlignment = Alignment.TopCenter
-            ) {
-                VpnStatusTop(
-                    isConnected = isConnected,
-                    isConnecting = isConnecting,
-                    vpnState = successState?.vpnState ?: AmneziaVpnManager.VpnState.DISCONNECTED
-                )
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.statusBars)
+                        .padding(top = 16.dp),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    VpnStatusTop(
+                        isConnected = isConnected,
+                        isConnecting = isConnecting,
+                        vpnState = successState?.vpnState ?: AmneziaVpnManager.VpnState.DISCONNECTED
+                    )
+                }
             }
 
             val baseState = when (uiState) {
