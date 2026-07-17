@@ -67,10 +67,12 @@ object FlavorInitializer {
             options.setBeforeSend { event, hint ->
                 val currentCrashEnabled = settingsManager.isCrashReportsEnabledSync()
                 val currentNonFatalEnabled = settingsManager.isNonFatalEnabledSync()
-                val currentAnalyticsEnabled = settingsManager.isAnalyticsEnabledSync()
                 
                 if (event.isCrashed && !currentCrashEnabled) return@setBeforeSend null
-                if (!event.isCrashed && (!currentNonFatalEnabled || !currentAnalyticsEnabled)) return@setBeforeSend null
+                // Error reporting is independent from optional usage analytics.
+                // Standard builds send crashes and handled errors by default while
+                // breadcrumbs, logs, metrics, tracing and replay remain opt-in.
+                if (!event.isCrashed && !currentNonFatalEnabled) return@setBeforeSend null
 
                 // Filter out common network noise that is not actionable
                 if (shouldFilterNetworkNoise(event, hint)) return@setBeforeSend null

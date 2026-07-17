@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.data.local.SetupStep
@@ -168,7 +169,12 @@ fun WelcomeScreen(
                 SetupStep.CONFIG_OBFUSCATION -> SetupStep.CONFIG_PORT
                 SetupStep.CONFIG_SERVER_LOAD -> SetupStep.CONFIG_OBFUSCATION
                 SetupStep.CONFIG_THEME -> SetupStep.CONFIG_SERVER_LOAD
-                SetupStep.COMPLETE -> SetupStep.CONFIG_THEME
+                SetupStep.CONFIG_TELEMETRY -> SetupStep.CONFIG_THEME
+                SetupStep.COMPLETE -> if (BuildConfig.IS_PRIVACY_BUILD) {
+                    SetupStep.CONFIG_THEME
+                } else {
+                    SetupStep.CONFIG_TELEMETRY
+                }
                 else -> SetupStep.WELCOME
             }
             viewModel.resetError()
@@ -336,10 +342,29 @@ fun WelcomeScreen(
                 SetupStep.CONFIG_THEME -> StepConfigTheme(
                     onNext = { theme ->
                         viewModel.setAppTheme(theme)
-                        advanceTo(SetupStep.COMPLETE)
+                        advanceTo(
+                            if (BuildConfig.IS_PRIVACY_BUILD) SetupStep.COMPLETE
+                            else SetupStep.CONFIG_TELEMETRY
+                        )
                     },
                     onBack = { currentStep = SetupStep.CONFIG_SERVER_LOAD }
                 )
+                SetupStep.CONFIG_TELEMETRY -> {
+                    if (BuildConfig.IS_PRIVACY_BUILD) {
+                        LaunchedEffect(Unit) {
+                            viewModel.setSetupStep(SetupStep.COMPLETE)
+                            currentStep = SetupStep.COMPLETE
+                        }
+                    } else {
+                        StepConfigTelemetry(
+                            onNext = { telemetry ->
+                                viewModel.setTelemetrySettings(telemetry)
+                                currentStep = SetupStep.COMPLETE
+                            },
+                            onBack = { currentStep = SetupStep.CONFIG_THEME }
+                        )
+                    }
+                }
                 SetupStep.COMPLETE -> StepComplete(
                     onFinish = onNavigateToHome
                 )
@@ -910,6 +935,154 @@ private fun StepConfigTheme(onNext: (AppTheme) -> Unit, onBack: () -> Unit) {
             onNext = { onNext(selectedTheme) },
             nextText = stringResource(R.string.troubleshoot_btn_next)
         )
+    }
+}
+
+@Composable
+private fun StepConfigTelemetry(
+    onNext: (InitialTelemetrySettings) -> Unit,
+    onBack: () -> Unit
+) {
+    var settings by remember { mutableStateOf(InitialTelemetrySettings()) }
+    val colors = ProtonNextTheme.colors
+
+    Column(
+        modifier = Modifier.fillMaxSize().statusBarsPadding().padding(24.dp).background(Color.Transparent)
+    ) {
+        Spacer(modifier = Modifier.height(48.dp))
+        Box(
+            modifier = Modifier.size(64.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Rounded.PrivacyTip, null, modifier = Modifier.size(32.dp), tint = colors.brandNorm)
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        Text(
+            text = stringResource(R.string.setup_telemetry_title),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = colors.textNorm
+        )
+        Text(
+            text = stringResource(R.string.setup_telemetry_desc),
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.textWeak
+        )
+        Spacer(modifier = Modifier.height(20.dp))
+
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            item {
+                Text(
+                    text = stringResource(R.string.setup_telemetry_default_note),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textWeak,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .liquidGlass(RoundedCornerShape(16.dp), alpha = 0.2f, shadowElevation = 0.dp)
+                        .padding(16.dp)
+                )
+            }
+            item {
+                TelemetrySetupToggle(
+                    title = stringResource(R.string.settings_crash_reports),
+                    subtitle = stringResource(R.string.settings_crash_reports_desc),
+                    checked = settings.crashReports,
+                    onCheckedChange = { settings = settings.copy(crashReports = it) }
+                )
+            }
+            item {
+                TelemetrySetupToggle(
+                    title = stringResource(R.string.settings_sentry_non_fatal),
+                    subtitle = stringResource(R.string.settings_sentry_non_fatal_desc),
+                    checked = settings.nonFatalErrors,
+                    onCheckedChange = { settings = settings.copy(nonFatalErrors = it) }
+                )
+            }
+            item {
+                TelemetrySetupToggle(
+                    title = stringResource(R.string.settings_sentry_anr),
+                    subtitle = stringResource(R.string.settings_sentry_anr_desc),
+                    checked = settings.anrDetection,
+                    onCheckedChange = { settings = settings.copy(anrDetection = it) }
+                )
+            }
+            item {
+                TelemetrySetupToggle(
+                    title = stringResource(R.string.settings_sentry_metrics),
+                    subtitle = stringResource(R.string.settings_sentry_metrics_desc),
+                    checked = settings.metrics,
+                    onCheckedChange = { settings = settings.copy(metrics = it) }
+                )
+            }
+            item {
+                TelemetrySetupToggle(
+                    title = stringResource(R.string.settings_sentry_logs),
+                    subtitle = stringResource(R.string.settings_sentry_logs_desc),
+                    checked = settings.logs,
+                    onCheckedChange = { settings = settings.copy(logs = it) }
+                )
+            }
+            item {
+                TelemetrySetupToggle(
+                    title = stringResource(R.string.settings_sentry_performance),
+                    subtitle = stringResource(R.string.settings_sentry_performance_desc),
+                    checked = settings.performance,
+                    onCheckedChange = { settings = settings.copy(performance = it) }
+                )
+            }
+            item {
+                TelemetrySetupToggle(
+                    title = stringResource(R.string.settings_analytics),
+                    subtitle = stringResource(R.string.settings_analytics_desc),
+                    checked = settings.analytics,
+                    onCheckedChange = { settings = settings.copy(analytics = it) }
+                )
+            }
+            item {
+                TelemetrySetupToggle(
+                    title = stringResource(R.string.settings_sentry_session_replay),
+                    subtitle = stringResource(R.string.settings_sentry_session_replay_desc),
+                    checked = settings.sessionReplay,
+                    onCheckedChange = { settings = settings.copy(sessionReplay = it) }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        WizardNavigation(
+            onBack = onBack,
+            onNext = { onNext(settings) },
+            nextText = stringResource(R.string.troubleshoot_btn_next)
+        )
+    }
+}
+
+@Composable
+private fun TelemetrySetupToggle(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    val colors = ProtonNextTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .clickable { onCheckedChange(!checked) }
+            .liquidGlass(RoundedCornerShape(18.dp), alpha = 0.18f, shadowElevation = 0.dp)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleSmall, color = colors.textNorm)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = colors.textWeak)
+        }
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 

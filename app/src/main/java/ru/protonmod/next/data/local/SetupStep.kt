@@ -28,5 +28,6 @@ enum class SetupStep {
     CONFIG_OBFUSCATION,
     CONFIG_SERVER_LOAD,
     CONFIG_THEME,
+    CONFIG_TELEMETRY,
     COMPLETE
 }

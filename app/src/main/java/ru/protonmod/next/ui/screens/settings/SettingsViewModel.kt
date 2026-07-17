@@ -125,14 +125,14 @@ data class SettingsUiState(
     val customDns: String = "",
 
     // Privacy & Analytics
-    val isAnalyticsEnabled: Boolean = true,
+    val isAnalyticsEnabled: Boolean = false,
     val isCrashReportsEnabled: Boolean = true,
-    val isSentryPerformanceEnabled: Boolean = true,
+    val isSentryPerformanceEnabled: Boolean = false,
     val isSentryNonFatalEnabled: Boolean = true,
-    val isSentrySessionReplayEnabled: Boolean = true,
-    val isSentryAnrEnabled: Boolean = true,
-    val isSentryMetricsEnabled: Boolean = true,
-    val isSentryLogsEnabled: Boolean = true,
+    val isSentrySessionReplayEnabled: Boolean = false,
+    val isSentryAnrEnabled: Boolean = false,
+    val isSentryMetricsEnabled: Boolean = false,
+    val isSentryLogsEnabled: Boolean = false,
 
     val isPrivacyBuild: Boolean = ru.protonmod.next.BuildConfig.IS_PRIVACY_BUILD
 )

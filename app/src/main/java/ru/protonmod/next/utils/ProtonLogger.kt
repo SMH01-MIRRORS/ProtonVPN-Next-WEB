@@ -49,9 +49,9 @@ object ProtonLogger {
     /** Controlled by SettingsManager at runtime/startup */
     var isNonFatalEnabled: Boolean = true
     /** Controlled by SettingsManager at runtime/startup */
-    var isAnalyticsEnabled: Boolean = true
+    var isAnalyticsEnabled: Boolean = false
     /** Controlled by SettingsManager at runtime/startup */
-    var isSentryLogsEnabled: Boolean = true
+    var isSentryLogsEnabled: Boolean = false
     /** Global toggle for logcat output. Can be overridden in release builds. */
     var isLogcatEnabled: Boolean = BuildConfig.DEBUG
 

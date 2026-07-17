@@ -61,6 +61,17 @@ class CaptchaRequiredException(val webUrl: String, val token: String, val sessio
 
 // --- UI State ---
 
+data class InitialTelemetrySettings(
+    val crashReports: Boolean = true,
+    val nonFatalErrors: Boolean = true,
+    val anrDetection: Boolean = false,
+    val metrics: Boolean = false,
+    val logs: Boolean = false,
+    val performance: Boolean = false,
+    val analytics: Boolean = false,
+    val sessionReplay: Boolean = false
+)
+
 sealed class LoginUiState {
     data object Idle : LoginUiState()
     data object Loading : LoginUiState()
@@ -146,6 +157,21 @@ class LoginViewModel @Inject constructor(
     fun setAppTheme(theme: ru.protonmod.next.ui.theme.AppTheme) {
         viewModelScope.launch {
             settingsManager.setAppTheme(theme)
+        }
+    }
+
+    fun setTelemetrySettings(settings: InitialTelemetrySettings) {
+        viewModelScope.launch {
+            settingsManager.setCrashReportsEnabled(settings.crashReports)
+            settingsManager.setSentryNonFatalEnabled(settings.nonFatalErrors)
+            settingsManager.setSentryAnrEnabled(settings.anrDetection)
+            settingsManager.setSentryMetricsEnabled(settings.metrics)
+            settingsManager.setSentryLogsEnabled(settings.logs)
+            settingsManager.setSentryPerformanceEnabled(settings.performance)
+            settingsManager.setAnalyticsEnabled(settings.analytics)
+            settingsManager.setSentrySessionReplayEnabled(settings.sessionReplay)
+            settingsManager.setSetupStep(SetupStep.COMPLETE)
+            ru.protonmod.next.vpn.SentryConfigurator.applySettings(settingsManager)
         }
     }
 

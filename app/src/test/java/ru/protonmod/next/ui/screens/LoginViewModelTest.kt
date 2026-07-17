@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.*
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -34,6 +35,7 @@ import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.*
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.data.local.SetupStep
 import ru.protonmod.next.data.network.LoginResponse
 import ru.protonmod.next.data.network.byedpi.ByeDpiManager
 import ru.protonmod.next.data.network.byedpi.ByeDpiStrategyTester
@@ -134,6 +136,47 @@ class LoginViewModelTest {
         val state = viewModel.uiState.value
         assertTrue("Expected Error state but was $state", state is LoginUiState.Error)
         assertEquals("Auth failed", (state as LoginUiState.Error).message)
+    }
+
+    @Test
+    fun `initial telemetry enables only errors and crashes`() {
+        val settings = InitialTelemetrySettings()
+
+        assertTrue(settings.crashReports)
+        assertTrue(settings.nonFatalErrors)
+        assertFalse(settings.anrDetection)
+        assertFalse(settings.metrics)
+        assertFalse(settings.logs)
+        assertFalse(settings.performance)
+        assertFalse(settings.analytics)
+        assertFalse(settings.sessionReplay)
+    }
+
+    @Test
+    fun `telemetry setup persists every choice before completion`() = runTest {
+        val settings = InitialTelemetrySettings(
+            crashReports = false,
+            nonFatalErrors = true,
+            anrDetection = true,
+            metrics = true,
+            logs = false,
+            performance = true,
+            analytics = true,
+            sessionReplay = false
+        )
+
+        viewModel.setTelemetrySettings(settings)
+        advanceUntilIdle()
+
+        verify(settingsManager).setCrashReportsEnabled(false)
+        verify(settingsManager).setSentryNonFatalEnabled(true)
+        verify(settingsManager).setSentryAnrEnabled(true)
+        verify(settingsManager).setSentryMetricsEnabled(true)
+        verify(settingsManager).setSentryLogsEnabled(false)
+        verify(settingsManager).setSentryPerformanceEnabled(true)
+        verify(settingsManager).setAnalyticsEnabled(true)
+        verify(settingsManager).setSentrySessionReplayEnabled(false)
+        verify(settingsManager).setSetupStep(SetupStep.COMPLETE)
     }
 
     @Test

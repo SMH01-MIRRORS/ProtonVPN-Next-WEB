@@ -242,27 +242,29 @@ class SettingsManager @Inject constructor(
 
     val allowLanEnabled: Flow<Boolean> = dataStore.data.map { it[ALLOW_LAN_CONNECTIONS] ?: false }
 
-    val analyticsEnabled: Flow<Boolean> = dataStore.data.map { it[ANALYTICS_ENABLED] ?: true }
+    // Privacy-first defaults: only crash reports and handled errors are enabled.
+    // All optional telemetry requires an explicit user opt-in.
+    val analyticsEnabled: Flow<Boolean> = dataStore.data.map { it[ANALYTICS_ENABLED] ?: false }
     val crashReportsEnabled: Flow<Boolean> = dataStore.data.map { it[CRASH_REPORTS_ENABLED] ?: true }
-    val sentryPerformanceEnabled: Flow<Boolean> = dataStore.data.map { it[SENTRY_PERFORMANCE_ENABLED] ?: true }
+    val sentryPerformanceEnabled: Flow<Boolean> = dataStore.data.map { it[SENTRY_PERFORMANCE_ENABLED] ?: false }
     val sentryNonFatalEnabled: Flow<Boolean> = dataStore.data.map { it[SENTRY_NON_FATAL_ENABLED] ?: true }
-    val sentrySessionReplayEnabled: Flow<Boolean> = dataStore.data.map { it[SENTRY_SESSION_REPLAY_ENABLED] ?: true }
-    val sentryAnrEnabled: Flow<Boolean> = dataStore.data.map { it[SENTRY_ANR_ENABLED] ?: true }
-    val sentryMetricsEnabled: Flow<Boolean> = dataStore.data.map { it[SENTRY_METRICS_ENABLED] ?: true }
-    val sentryLogsEnabled: Flow<Boolean> = dataStore.data.map { it[SENTRY_LOGS_ENABLED] ?: true }
+    val sentrySessionReplayEnabled: Flow<Boolean> = dataStore.data.map { it[SENTRY_SESSION_REPLAY_ENABLED] ?: false }
+    val sentryAnrEnabled: Flow<Boolean> = dataStore.data.map { it[SENTRY_ANR_ENABLED] ?: false }
+    val sentryMetricsEnabled: Flow<Boolean> = dataStore.data.map { it[SENTRY_METRICS_ENABLED] ?: false }
+    val sentryLogsEnabled: Flow<Boolean> = dataStore.data.map { it[SENTRY_LOGS_ENABLED] ?: false }
 
     /** Synchronous check for app startup initializers to avoid ANR from runBlocking */
-    fun isAnalyticsEnabledSync(): Boolean = prefs.getBoolean("analytics_enabled", true)
+    fun isAnalyticsEnabledSync(): Boolean = prefs.getBoolean("analytics_enabled", false)
     
     /** Synchronous check for app startup initializers to avoid ANR from runBlocking */
     fun isCrashReportsEnabledSync(): Boolean = prefs.getBoolean("crash_reports_enabled", true)
 
-    fun isPerformanceEnabledSync(): Boolean = prefs.getBoolean("sentry_performance_enabled", true)
+    fun isPerformanceEnabledSync(): Boolean = prefs.getBoolean("sentry_performance_enabled", false)
     fun isNonFatalEnabledSync(): Boolean = prefs.getBoolean("sentry_non_fatal_enabled", true)
-    fun isSessionReplayEnabledSync(): Boolean = prefs.getBoolean("sentry_session_replay_enabled", true)
-    fun isAnrEnabledSync(): Boolean = prefs.getBoolean("sentry_anr_enabled", true)
-    fun isMetricsEnabledSync(): Boolean = prefs.getBoolean("sentry_metrics_enabled", true)
-    fun isLogsEnabledSync(): Boolean = prefs.getBoolean("sentry_logs_enabled", true)
+    fun isSessionReplayEnabledSync(): Boolean = prefs.getBoolean("sentry_session_replay_enabled", false)
+    fun isAnrEnabledSync(): Boolean = prefs.getBoolean("sentry_anr_enabled", false)
+    fun isMetricsEnabledSync(): Boolean = prefs.getBoolean("sentry_metrics_enabled", false)
+    fun isLogsEnabledSync(): Boolean = prefs.getBoolean("sentry_logs_enabled", false)
 
     fun isApiBypassEnabledSync(): Boolean = prefs.getBoolean("api_bypass_enabled", false)
     fun getApiBypassStrategySync(): String {

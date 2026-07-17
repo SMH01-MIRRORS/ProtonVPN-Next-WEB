@@ -45,6 +45,9 @@
     <string name="setup_initial_config">Initial Configuration</string>
     <string name="setup_choose_connection">Choose how you want to connect</string>
     <string name="setup_hide_traffic">Hide VPN traffic from your ISP</string>
+    <string name="setup_telemetry_title">Telemetry preferences</string>
+    <string name="setup_telemetry_desc">Choose exactly which diagnostic data the Standard build may send. You can change every option later in Settings.</string>
+    <string name="setup_telemetry_default_note">Only crash reports and handled errors are enabled by default. Logs, analytics, metrics, performance traces, ANR detection and session replay require your explicit consent.</string>
     <string name="setup_complete_title">Setup Complete</string>
     <string name="setup_complete_desc">You are ready to browse securely and privately.</string>
     <string name="setup_btn_finish">Finish</string>

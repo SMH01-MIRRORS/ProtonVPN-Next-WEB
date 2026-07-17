@@ -66,6 +66,7 @@ fun ExpressiveBackground(
             SetupStep.CONFIG_OBFUSCATION -> Offset(0.1f, 0.4f)
             SetupStep.CONFIG_SERVER_LOAD -> Offset(0.8f, 0.5f)
             SetupStep.CONFIG_THEME -> Offset(0.2f, 0.8f)
+            SetupStep.CONFIG_TELEMETRY -> Offset(0.75f, 0.75f)
             SetupStep.COMPLETE -> Offset(0.5f, 0.5f)
         }
     }
@@ -79,6 +80,7 @@ fun ExpressiveBackground(
             SetupStep.CONFIG_OBFUSCATION -> Offset(0.9f, 0.6f)
             SetupStep.CONFIG_SERVER_LOAD -> Offset(0.2f, 0.4f)
             SetupStep.CONFIG_THEME -> Offset(0.8f, 0.2f)
+            SetupStep.CONFIG_TELEMETRY -> Offset(0.25f, 0.25f)
             SetupStep.COMPLETE -> Offset(0.5f, 0.5f)
         }
     }
