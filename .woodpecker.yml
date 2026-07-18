@@ -43,7 +43,7 @@ steps:
         apt-get update -qq
         apt-get install -y -qq --no-install-recommends ca-certificates curl git python3
         rm -rf /usr/local/go
-        # Keep this literal: Woodpecker interpolates ${...} before step environment is applied.
+        # Keep the Go version literal because Woodpecker expands variables before step execution.
         curl -fsSL "https://go.dev/dl/go1.26.4.linux-amd64.tar.gz" | tar -C /usr/local -xz
         export PATH="/usr/local/go/bin:$PATH"
         go version
