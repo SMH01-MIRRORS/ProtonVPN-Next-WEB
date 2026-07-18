@@ -197,30 +197,10 @@ fun ObfuscationSettingsScreen(
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             CategoryHeader(title = stringResource(R.string.proxy_chain_setup_title))
                             InfoCard(text = stringResource(R.string.proxy_chain_info))
-                            OutlinedTextField(
-                                value = uiState.proxyChainConfig,
-                                onValueChange = viewModel::setProxyChainConfig,
-                                modifier = Modifier.fillMaxWidth(),
-                                label = { Text(stringResource(R.string.proxy_chain_config)) },
-                                placeholder = { Text(stringResource(R.string.proxy_chain_placeholder)) },
-                                minLines = 4,
-                                isError = uiState.proxyChainConfig.isNotBlank() && !uiState.isProxyChainConfigValid,
-                                supportingText = {
-                                    val isEmpty = uiState.proxyChainConfig.isBlank()
-                                    Text(
-                                        text = when {
-                                            isEmpty -> stringResource(R.string.proxy_chain_input_hint)
-                                            uiState.isProxyChainConfigValid -> stringResource(R.string.proxy_chain_valid)
-                                            else -> stringResource(R.string.proxy_chain_invalid)
-                                        },
-                                        color = when {
-                                            isEmpty -> colors.textWeak
-                                            uiState.isProxyChainConfigValid -> colors.notificationSuccess
-                                            else -> colors.notificationError
-                                        }
-                                    )
-                                },
-                                shape = RoundedCornerShape(16.dp)
+                            ProxyChainEditor(
+                                config = uiState.proxyChainConfig,
+                                onConfigChange = viewModel::setProxyChainConfig,
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }

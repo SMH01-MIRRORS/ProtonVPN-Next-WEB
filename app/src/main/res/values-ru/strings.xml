@@ -584,7 +584,7 @@
     <string name="obfuscation_transport_mode">Защита подключения</string>
     <string name="obfuscation_transport_awg">Параметры AWG</string>
     <string name="obfuscation_transport_proxy_chain">Цепочка прокси</string>
-    <string name="proxy_chain_info">Направляет Proton AWG-туннель через один или несколько VLESS/VMess-прокси. Укажите по одной ссылке на строку в порядке подключения. Параметры обфускации AWG в этом режиме отключены.</string>
+    <string name="proxy_chain_info">Соберите маршрут к Proton из прокси VLESS/VMess. Удерживайте значок перетаскивания, чтобы изменить порядок подключения.</string>
     <string name="proxy_chain_config">Ссылки VLESS/VMess</string>
     <string name="proxy_chain_placeholder">vless://… или vmess://…</string>
     <string name="proxy_chain_valid">Цепочка прокси корректна</string>
@@ -599,4 +599,18 @@
     <string name="proxy_chain_setup_title">Настройка цепочки</string>
     <string name="proxy_chain_input_hint">По одной ссылке VLESS или VMess на строку, в порядке подключения.</string>
     <string name="obfuscation_tuning_mode">Детализация настроек</string>
+    <string name="proxy_chain_empty">Прокси пока не добавлены. Добавьте ссылку VLESS или VMess, чтобы собрать цепочку.</string>
+    <string name="proxy_chain_add">Добавить прокси</string>
+    <string name="proxy_chain_limit">Максимум 4 прокси</string>
+    <string name="proxy_chain_reorder_hint">Удерживайте и перетаскивайте значок, чтобы изменить порядок. Трафик идёт сверху вниз.</string>
+    <string name="proxy_chain_add_title">Добавить прокси</string>
+    <string name="proxy_chain_add_desc">Вставьте одну ссылку VLESS или VMess. Название и сервер определятся автоматически.</string>
+    <string name="proxy_chain_link_label">Ссылка VLESS или VMess</string>
+    <string name="proxy_chain_add_action">Добавить</string>
+    <string name="proxy_chain_duplicate">Этот прокси уже есть в цепочке</string>
+    <string name="proxy_chain_invalid_node">Некорректный прокси</string>
+    <string name="proxy_chain_delete">Удалить прокси</string>
+    <string name="proxy_chain_drag">Изменить порядок прокси</string>
+    <string name="proxy_chain_proton_server">Сервер Proton</string>
+    <string name="proxy_chain_proton_server_desc">Здесь устанавливается зашифрованный туннель AWG.</string>
 </resources>

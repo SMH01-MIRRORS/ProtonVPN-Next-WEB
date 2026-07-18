@@ -19,6 +19,26 @@ import java.util.Base64
 /** Parses share links into trusted sing-box outbound objects. Arbitrary JSON is never accepted. */
 object ProxyLinkParser {
     data class ParsedProxy(val name: String, val outbound: JsonObject)
+    data class ProxyLinkInfo(
+        val name: String,
+        val protocol: String,
+        val server: String,
+        val port: Int
+    )
+
+    fun inspectLink(link: String): ProxyLinkInfo {
+        val normalized = link.trim()
+        require(normalized.isNotBlank() && '\n' !in normalized && '\r' !in normalized) {
+            "Expected exactly one proxy link"
+        }
+        val parsed = parse(normalized, "preview")
+        return ProxyLinkInfo(
+            name = parsed.name,
+            protocol = parsed.outbound.getValue("type").jsonPrimitive.content,
+            server = parsed.outbound.getValue("server").jsonPrimitive.content,
+            port = parsed.outbound.getValue("server_port").jsonPrimitive.content.toInt()
+        )
+    }
 
     private val json = Json { ignoreUnknownKeys = true }
     private val uuid = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")

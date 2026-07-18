@@ -49,6 +49,19 @@ class ProxyLinkParserTest {
         assertTrue(ProxyLinkParser.isValid(vmess))
     }
 
+    @Test
+    fun `extracts percent decoded vless name and endpoint for chain UI`() {
+        val link = "vless://123e4567-e89b-12d3-a456-426614174000@se.example.com:8443" +
+            "?encryption=none&type=tcp#%F0%9F%87%B8%F0%9F%87%AA%20Sweden%2C%20Stockholm%20%7C%20%5BBL%5D%20%283%29"
+
+        val info = ProxyLinkParser.inspectLink(link)
+
+        assertEquals("🇸🇪 Sweden, Stockholm | [BL] (3)", info.name)
+        assertEquals("vless", info.protocol)
+        assertEquals("se.example.com", info.server)
+        assertEquals(8443, info.port)
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun `rejects unsupported proxy scheme`() {
         ProxyLinkParser.parseChain("trojan://secret@example.com:443")
