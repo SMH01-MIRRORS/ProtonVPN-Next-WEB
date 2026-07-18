@@ -23,6 +23,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -35,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -110,11 +112,39 @@ fun ObfuscationSettingsScreen(
                             }
                         }
                     )
+                    Box(
+                        modifier = contentModifier.padding(top = 24.dp, bottom = 20.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(104.dp)
+                                .clip(CircleShape)
+                                .background(colors.brandNorm.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.VisibilityOff,
+                                contentDescription = null,
+                                modifier = Modifier.size(56.dp),
+                                tint = colors.brandNorm
+                            )
+                        }
+                    }
                     Text(
-                        text = stringResource(R.string.obfuscation_screen_intro),
+                        text = stringResource(R.string.obfuscation_title),
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                        color = colors.textNorm,
+                        textAlign = TextAlign.Center,
+                        modifier = contentModifier.padding(horizontal = 16.dp)
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = stringResource(R.string.obfuscation_enable_desc),
                         style = MaterialTheme.typography.bodyMedium,
                         color = colors.textWeak,
-                        modifier = contentModifier.padding(horizontal = 20.dp, vertical = 4.dp)
+                        textAlign = TextAlign.Center,
+                        modifier = contentModifier.padding(horizontal = 32.dp)
                     )
                 }
 
