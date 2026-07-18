@@ -17,7 +17,6 @@ steps:
     image: ghcr.io/cirruslabs/android-sdk:36
     environment:
       ANDROID_HOME: /opt/android-sdk-linux
-      GO_VERSION: 1.26.4
       SIGNING_KEY_BASE64:
         from_secret: SIGNING_KEY_BASE64
       SIGNING_STORE_PASSWORD:
@@ -40,10 +39,12 @@ steps:
 
       # 2. Build the generated AWGBox dependency when it is not restored/present
       - |
-        apt-get update
-        apt-get install -y --no-install-recommends ca-certificates curl git python3
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update -qq
+        apt-get install -y -qq --no-install-recommends ca-certificates curl git python3
         rm -rf /usr/local/go
-        curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -C /usr/local -xz
+        # Keep this literal: Woodpecker interpolates ${...} before step environment is applied.
+        curl -fsSL "https://go.dev/dl/go1.26.4.linux-amd64.tar.gz" | tar -C /usr/local -xz
         export PATH="/usr/local/go/bin:$PATH"
         go version
         ./scripts/build-awgbox-lib.sh
