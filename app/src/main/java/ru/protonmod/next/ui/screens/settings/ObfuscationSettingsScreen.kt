@@ -167,6 +167,27 @@ fun ObfuscationSettingsScreen(
                     Spacer(modifier = Modifier.height(32.dp))
                 }
 
+                item(contentType = "ObfuscationTransportMode") {
+                    Column(
+                        modifier = contentModifier.padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        CategoryHeader(title = stringResource(R.string.obfuscation_transport_mode))
+                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                            SegmentedButton(
+                                selected = !uiState.proxyChainEnabled,
+                                onClick = { viewModel.setProxyChainEnabled(false) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                            ) { Text(stringResource(R.string.obfuscation_transport_awg)) }
+                            SegmentedButton(
+                                selected = uiState.proxyChainEnabled,
+                                onClick = { viewModel.setProxyChainEnabled(true) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                            ) { Text(stringResource(R.string.obfuscation_transport_proxy_chain)) }
+                        }
+                    }
+                }
+
                 // Master Toggle
                 item(contentType = "MasterToggle") {
                     Box(
@@ -176,7 +197,9 @@ fun ObfuscationSettingsScreen(
                                 shape = RoundedCornerShape(20.dp),
                                 alpha = if (uiState.isObfuscationEnabled) 0.3f else 0.5f
                             )
-                            .clickable { viewModel.setObfuscationEnabled(!uiState.isObfuscationEnabled) }
+                            .clickable(enabled = !uiState.proxyChainEnabled) {
+                                viewModel.setObfuscationEnabled(!uiState.isObfuscationEnabled)
+                            }
                     ) {
                         Row(
                             modifier = Modifier
@@ -193,7 +216,8 @@ fun ObfuscationSettingsScreen(
                                 )
                             }
                             Switch(
-                                checked = uiState.isObfuscationEnabled,
+                                checked = uiState.isObfuscationEnabled && !uiState.proxyChainEnabled,
+                                enabled = !uiState.proxyChainEnabled,
                                 onCheckedChange = { viewModel.setObfuscationEnabled(it) },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = colors.textInverted,
@@ -207,10 +231,44 @@ fun ObfuscationSettingsScreen(
                     }
                 }
 
+
+                item(contentType = "ProxyChainSettings") {
+                    AnimatedVisibility(
+                        visible = uiState.proxyChainEnabled,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically(),
+                        modifier = contentModifier.padding(horizontal = 16.dp)
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            InfoCard(text = stringResource(R.string.proxy_chain_info))
+                            OutlinedTextField(
+                                value = uiState.proxyChainConfig,
+                                onValueChange = viewModel::setProxyChainConfig,
+                                modifier = Modifier.fillMaxWidth(),
+                                label = { Text(stringResource(R.string.proxy_chain_config)) },
+                                placeholder = { Text(stringResource(R.string.proxy_chain_placeholder)) },
+                                minLines = 3,
+                                isError = uiState.proxyChainConfig.isNotBlank() && !uiState.isProxyChainConfigValid,
+                                supportingText = {
+                                    Text(
+                                        text = stringResource(
+                                            if (uiState.isProxyChainConfigValid) R.string.proxy_chain_valid
+                                            else R.string.proxy_chain_invalid
+                                        ),
+                                        color = if (uiState.isProxyChainConfigValid) colors.notificationSuccess
+                                        else colors.notificationError
+                                    )
+                                },
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                        }
+                    }
+                }
+
                 // Animated content for detailed settings
                 item(contentType = "DetailedSettings") {
                     AnimatedVisibility(
-                        visible = uiState.isObfuscationEnabled,
+                        visible = uiState.isObfuscationEnabled && !uiState.proxyChainEnabled,
                         enter = fadeIn() + expandVertically(),
                         exit = fadeOut() + shrinkVertically(),
                         modifier = contentModifier.padding(horizontal = 16.dp)

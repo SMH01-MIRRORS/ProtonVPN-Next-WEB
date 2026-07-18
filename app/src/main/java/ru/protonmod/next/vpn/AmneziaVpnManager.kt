@@ -675,9 +675,18 @@ class AmneziaVpnManager @Inject constructor(
                     p
                 } else port
             }
-            val isObfuscationEnabled = overrideObfuscation ?: settingsManager.obfuscationEnabled.first()
+            val proxyChainEnabled = settingsManager.proxyChainEnabled.first()
+            val proxyChainConfig = settingsManager.proxyChainConfig.first().trim()
+            require(!proxyChainEnabled || ProxyLinkParser.isValid(proxyChainConfig)) {
+                "Proxy chain is enabled but its vless:// or vmess:// configuration is invalid"
+            }
+            val isObfuscationEnabled = !proxyChainEnabled &&
+                (overrideObfuscation ?: settingsManager.obfuscationEnabled.first())
 
-            ProtonLogger.i(TAG, "Connection parameters: Port=$selectedPort, Obfuscation=$isObfuscationEnabled")
+            ProtonLogger.i(
+                TAG,
+                "Connection parameters: Port=$selectedPort, AWG obfuscation=$isObfuscationEnabled, proxy chain=$proxyChainEnabled"
+            )
 
             val params = if (isObfuscationEnabled) {
                 obfuscationParams ?: ObfuscationParams(
@@ -721,7 +730,8 @@ class AmneziaVpnManager @Inject constructor(
                 selectedIps = selectedIps,
                 port = selectedPort,
                 certificate = currentSession.wgCertificate,
-                obfuscationParams = params
+                obfuscationParams = params,
+                proxyChainConfig = proxyChainConfig.takeIf { proxyChainEnabled }
             )
             
             ProtonLogger.d(TAG, "Generated awgbox config (length=${configStr.length}, endpoint=$targetIp:$selectedPort)")

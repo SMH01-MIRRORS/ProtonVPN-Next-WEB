@@ -56,6 +56,20 @@ outbound are omitted. No external Clash controller is configured. Android's syst
 This keeps VLESS/Reality client compatibility while substantially reducing the
 native library size.
 
+## Proxy chaining
+
+The client accepts trusted `vless://` and base64 `vmess://` share links. One link
+per line creates up to four ordered hops. The Proton AWG endpoint uses the first
+proxy as its dialer detour; each proxy detours through the next one. UDP is
+carried with XUDP so the AWG endpoint can traverse the proxy chain.
+
+When proxy-chain mode is active, AWG junk, magic-header and special-packet
+parameters are omitted from the generated configuration. Only parsed fields are
+accepted; arbitrary sing-box JSON is not imported. Supported proxy transports
+are TCP, WebSocket and HTTP Upgrade, with TLS and VLESS Reality/uTLS support.
+Proxy share links are intentionally excluded from exported settings backups
+because they contain authentication credentials.
+
 ## Security properties
 
 - Private keys are never written to application logs.

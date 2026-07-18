@@ -123,6 +123,9 @@ data class SettingsUiState(
     val customObfuscationProfiles: List<ObfuscationProfile> = emptyList(),
     val selectedProfileId: String = "standard_1",
     val customDns: String = "",
+    val proxyChainEnabled: Boolean = false,
+    val proxyChainConfig: String = "",
+    val isProxyChainConfigValid: Boolean = false,
 
     // Privacy & Analytics
     val isAnalyticsEnabled: Boolean = false,
@@ -254,7 +257,9 @@ class SettingsViewModel @Inject constructor(
         byeDpiStrategyTester.testResults,
         _isAnyVpnActive,
         _isCheckingForUpdates,
-        _isUpdateAvailable
+        _isUpdateAvailable,
+        settingsManager.proxyChainEnabled,
+        settingsManager.proxyChainConfig
     ) { args: Array<Any?> ->
         SettingsUiState(
             killSwitchEnabled = args[0] as Boolean,
@@ -319,7 +324,10 @@ class SettingsViewModel @Inject constructor(
             byeDpiResults = args[59] as List<ByeDpiStrategyTester.TestResult>,
             isAnyVpnActive = args[60] as Boolean,
             isCheckingForUpdates = args[61] as Boolean,
-            isUpdateAvailable = args[62] as Boolean
+            isUpdateAvailable = args[62] as Boolean,
+            proxyChainEnabled = args[63] as Boolean,
+            proxyChainConfig = args[64] as String,
+            isProxyChainConfigValid = ru.protonmod.next.vpn.ProxyLinkParser.isValid(args[64] as String)
         )
     }.stateIn(
         scope = viewModelScope,
@@ -512,6 +520,17 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             settingsManager.setObfuscationAdvancedMode(enabled)
         }
+    }
+
+    fun setProxyChainEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setProxyChainEnabled(enabled)
+            if (!enabled) settingsManager.setObfuscationEnabled(true)
+        }
+    }
+
+    fun setProxyChainConfig(config: String) {
+        viewModelScope.launch { settingsManager.setProxyChainConfig(config) }
     }
 
     fun setAnalyticsEnabled(enabled: Boolean) {

@@ -581,4 +581,12 @@
     <string name="dashboard_no_recents">Недавних подключений пока нет</string>
     <string name="qc_lowest_load">Наименьшая нагрузка</string>
     <string name="qc_last_used">Последнее использованное</string>
+    <string name="obfuscation_transport_mode">Защита подключения</string>
+    <string name="obfuscation_transport_awg">Параметры AWG</string>
+    <string name="obfuscation_transport_proxy_chain">Цепочка прокси</string>
+    <string name="proxy_chain_info">Направляет Proton AWG-туннель через один или несколько VLESS/VMess-прокси. Укажите по одной ссылке на строку в порядке подключения. Параметры обфускации AWG в этом режиме отключены.</string>
+    <string name="proxy_chain_config">Ссылки VLESS/VMess</string>
+    <string name="proxy_chain_placeholder">vless://… или vmess://…</string>
+    <string name="proxy_chain_valid">Цепочка прокси корректна</string>
+    <string name="proxy_chain_invalid">Введите корректную ссылку vless:// или vmess://</string>
 </resources>

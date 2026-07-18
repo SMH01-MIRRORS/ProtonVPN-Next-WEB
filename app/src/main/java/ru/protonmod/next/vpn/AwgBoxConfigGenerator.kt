@@ -25,7 +25,8 @@ interface AwgBoxConfigGenerator {
         selectedIps: Set<String> = emptySet(),
         port: Int = 1194,
         certificate: String? = null,
-        obfuscationParams: AmneziaVpnManager.ObfuscationParams
+        obfuscationParams: AmneziaVpnManager.ObfuscationParams,
+        proxyChainConfig: String? = null
     ): String
 }
 
@@ -47,12 +48,16 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
         selectedIps: Set<String>,
         port: Int,
         certificate: String?,
-        obfuscationParams: AmneziaVpnManager.ObfuscationParams
+        obfuscationParams: AmneziaVpnManager.ObfuscationParams,
+        proxyChainConfig: String?
     ): String {
         require(port in 1..65535) { "Invalid AWG port: $port" }
         require(targetIp.isNotBlank()) { "AWG endpoint is empty" }
 
         val localPrefix = ipSubnetCalculator.normalizeIp(localIp)
+        val proxyChain = proxyChainConfig?.takeIf(String::isNotBlank)
+            ?.let(ProxyLinkParser::parseChain)
+            .orEmpty()
         val routeAddresses = when {
             isIncludeMode && selectedIps.isNotEmpty() -> selectedIps.sorted()
             else -> listOf("0.0.0.0/0")
@@ -89,13 +94,6 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
             "address" to strings(listOf(localPrefix)),
             "private_key" to JsonPrimitive(privateKey),
             "mtu" to JsonPrimitive(1408),
-            "jc" to JsonPrimitive(obfuscationParams.jc),
-            "jmin" to JsonPrimitive(obfuscationParams.jmin),
-            "jmax" to JsonPrimitive(obfuscationParams.jmax),
-            "s1" to JsonPrimitive(obfuscationParams.s1),
-            "s2" to JsonPrimitive(obfuscationParams.s2),
-            "s3" to JsonPrimitive(obfuscationParams.s3),
-            "s4" to JsonPrimitive(obfuscationParams.s4),
             "peers" to JsonArray(listOf(JsonObject(mapOf(
                 "address" to JsonPrimitive(targetIp),
                 "port" to JsonPrimitive(port),
@@ -104,15 +102,26 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                 "persistent_keepalive_interval" to JsonPrimitive(25)
             ))))
         ).apply {
-            awgValue(obfuscationParams.h1)?.let { put("h1", it) }
-            awgValue(obfuscationParams.h2)?.let { put("h2", it) }
-            awgValue(obfuscationParams.h3)?.let { put("h3", it) }
-            awgValue(obfuscationParams.h4)?.let { put("h4", it) }
-            awgValue(obfuscationParams.i1)?.let { put("i1", it) }
-            awgValue(obfuscationParams.i2)?.let { put("i2", it) }
-            awgValue(obfuscationParams.i3)?.let { put("i3", it) }
-            awgValue(obfuscationParams.i4)?.let { put("i4", it) }
-            awgValue(obfuscationParams.i5)?.let { put("i5", it) }
+            if (proxyChain.isNotEmpty()) {
+                put("detour", JsonPrimitive(proxyChain.first().outbound.getValue("tag").let { (it as JsonPrimitive).content }))
+            } else {
+                put("jc", JsonPrimitive(obfuscationParams.jc))
+                put("jmin", JsonPrimitive(obfuscationParams.jmin))
+                put("jmax", JsonPrimitive(obfuscationParams.jmax))
+                put("s1", JsonPrimitive(obfuscationParams.s1))
+                put("s2", JsonPrimitive(obfuscationParams.s2))
+                put("s3", JsonPrimitive(obfuscationParams.s3))
+                put("s4", JsonPrimitive(obfuscationParams.s4))
+                awgValue(obfuscationParams.h1)?.let { put("h1", it) }
+                awgValue(obfuscationParams.h2)?.let { put("h2", it) }
+                awgValue(obfuscationParams.h3)?.let { put("h3", it) }
+                awgValue(obfuscationParams.h4)?.let { put("h4", it) }
+                awgValue(obfuscationParams.i1)?.let { put("i1", it) }
+                awgValue(obfuscationParams.i2)?.let { put("i2", it) }
+                awgValue(obfuscationParams.i3)?.let { put("i3", it) }
+                awgValue(obfuscationParams.i4)?.let { put("i4", it) }
+                awgValue(obfuscationParams.i5)?.let { put("i5", it) }
+            }
         }
 
         val config = JsonObject(mapOf(
@@ -121,17 +130,24 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                 "timestamp" to JsonPrimitive(true)
             )),
             "dns" to JsonObject(mapOf(
-                "servers" to JsonArray(listOf(JsonObject(mapOf(
-                    "type" to JsonPrimitive("udp"),
-                    "tag" to JsonPrimitive("proton-dns"),
-                    "server" to JsonPrimitive(dnsServer),
-                    "server_port" to JsonPrimitive(53),
-                    "detour" to JsonPrimitive("proton-awg")
-                )))),
+                "servers" to JsonArray(buildList {
+                    if (proxyChain.isNotEmpty()) add(JsonObject(mapOf(
+                        "type" to JsonPrimitive("local"),
+                        "tag" to JsonPrimitive("bootstrap-dns")
+                    )))
+                    add(JsonObject(mapOf(
+                        "type" to JsonPrimitive("udp"),
+                        "tag" to JsonPrimitive("proton-dns"),
+                        "server" to JsonPrimitive(dnsServer),
+                        "server_port" to JsonPrimitive(53),
+                        "detour" to JsonPrimitive("proton-awg")
+                    )))
+                }),
                 "strategy" to JsonPrimitive("ipv4_only")
             )),
             "inbounds" to JsonArray(listOf(JsonObject(tun))),
             "endpoints" to JsonArray(listOf(JsonObject(awg))),
+            "outbounds" to JsonArray(proxyChain.map(ProxyLinkParser.ParsedProxy::outbound)),
             "route" to JsonObject(mapOf(
                 "auto_detect_interface" to JsonPrimitive(true),
                 "rules" to JsonArray(listOf(

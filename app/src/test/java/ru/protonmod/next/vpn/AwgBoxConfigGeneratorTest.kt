@@ -97,6 +97,33 @@ class AwgBoxConfigGeneratorTest {
         assertEquals(1, Regex(Regex.escape(privateKey)).findAll(config).count())
     }
 
+    @Test
+    fun `proxy chain detours AWG and omits AWG obfuscation fields`() {
+        val config = generator.buildConfig(
+            serverPublicKey = "PUBLIC_KEY",
+            privateKey = "PRIVATE_KEY",
+            localIp = "10.2.0.2",
+            dnsServer = "10.2.0.1",
+            targetIp = "198.51.100.1",
+            port = 51820,
+            obfuscationParams = AmneziaVpnManager.ObfuscationParams(
+                jc = 10, jmin = 20, jmax = 30, s1 = 40, s2 = 50,
+                h1 = "1", h2 = "2", h3 = "3", h4 = "4", i1 = "junk"
+            ),
+            proxyChainConfig = "vless://123e4567-e89b-12d3-a456-426614174000@192.0.2.10:443?encryption=none"
+        )
+        val root = Json.parseToJsonElement(config).jsonObject
+        val awg = root.getValue("endpoints").jsonArray.single().jsonObject
+        val proxy = root.getValue("outbounds").jsonArray.single().jsonObject
+
+        assertEquals("proxy-1", awg.getValue("detour").jsonPrimitive.content)
+        assertFalse("jc" in awg)
+        assertFalse("i1" in awg)
+        assertEquals("vless", proxy.getValue("type").jsonPrimitive.content)
+        assertEquals("xudp", proxy.getValue("packet_encoding").jsonPrimitive.content)
+        assertEquals(2, root.getValue("dns").jsonObject.getValue("servers").jsonArray.size)
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun `rejects invalid endpoint port`() {
         generator.buildConfig(

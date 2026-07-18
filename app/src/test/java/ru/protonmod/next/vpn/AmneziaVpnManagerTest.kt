@@ -122,6 +122,8 @@ class AmneziaVpnManagerTest {
             whenever(settingsManager.splitTunnelingEnabled).thenReturn(flowOf(false))
             whenever(settingsManager.vpnPort).thenReturn(flowOf(1194))
             whenever(settingsManager.obfuscationEnabled).thenReturn(flowOf(false))
+            whenever(settingsManager.proxyChainEnabled).thenReturn(flowOf(false))
+            whenever(settingsManager.proxyChainConfig).thenReturn(flowOf(""))
             whenever(settingsManager.customDns).thenReturn(flowOf(""))
             whenever(settingsManager.pauseEndTime).thenReturn(flowOf(0L))
             whenever(settingsManager.allowLanEnabled).thenReturn(flowOf(false))
@@ -153,7 +155,7 @@ class AmneziaVpnManagerTest {
             whenever(vpnRepository.getCachedServers()).thenReturn(emptyList())
             
             whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(VpnKeyPair("pub", "priv"))
-            whenever(awgBoxConfigGenerator.buildConfig(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+            whenever(awgBoxConfigGenerator.buildConfig(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), isNull()))
                 .thenReturn("mock_config")
             val verificationCycle = VpnNetworkMonitor.VerificationCycle(1, emptySet())
             whenever(vpnNetworkMonitor.beginVerificationCycle()).thenReturn(verificationCycle)
@@ -305,7 +307,7 @@ class AmneziaVpnManagerTest {
         verify(awgBoxConfigGenerator).buildConfig(
             any(), any(), any(), any(), any(), any(), 
             eq(true), // allowLan should be true
-            any(), any(), any(), any(), any()
+            any(), any(), any(), any(), any(), isNull()
         )
     }
 }

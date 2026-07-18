@@ -124,6 +124,8 @@ class SettingsManager @Inject constructor(
 
         private val OBFUSCATION_ENABLED = booleanPreferencesKey("obfuscation_enabled")
         private val OBFUSCATION_ADVANCED_MODE = booleanPreferencesKey("obfuscation_advanced_mode")
+        private val PROXY_CHAIN_ENABLED = booleanPreferencesKey("proxy_chain_enabled")
+        private val PROXY_CHAIN_CONFIG = stringPreferencesKey("proxy_chain_config")
         private val SELECTED_PROFILE_ID = stringPreferencesKey("selected_profile_id")
         private val CUSTOM_PROFILES = stringPreferencesKey("custom_profiles")
 
@@ -229,6 +231,8 @@ class SettingsManager @Inject constructor(
 
     val obfuscationEnabled: Flow<Boolean> = dataStore.data.map { it[OBFUSCATION_ENABLED] ?: false }
     val obfuscationAdvancedMode: Flow<Boolean> = dataStore.data.map { it[OBFUSCATION_ADVANCED_MODE] ?: false }
+    val proxyChainEnabled: Flow<Boolean> = dataStore.data.map { it[PROXY_CHAIN_ENABLED] ?: false }
+    val proxyChainConfig: Flow<String> = dataStore.data.map { it[PROXY_CHAIN_CONFIG] ?: "" }
     val selectedProfileId: Flow<String> = dataStore.data.map { it[SELECTED_PROFILE_ID] ?: "standard_1" }
 
     val setupStep: Flow<SetupStep> = dataStore.data.map { preferences ->
@@ -478,6 +482,17 @@ class SettingsManager @Inject constructor(
 
     suspend fun setObfuscationAdvancedMode(enabled: Boolean) {
         dataStore.edit { it[OBFUSCATION_ADVANCED_MODE] = enabled }
+    }
+
+    suspend fun setProxyChainEnabled(enabled: Boolean) {
+        dataStore.edit {
+            it[PROXY_CHAIN_ENABLED] = enabled
+            if (enabled) it[OBFUSCATION_ENABLED] = false
+        }
+    }
+
+    suspend fun setProxyChainConfig(config: String) {
+        dataStore.edit { it[PROXY_CHAIN_CONFIG] = config.trim() }
     }
 
     suspend fun setAllowLanEnabled(enabled: Boolean) {
