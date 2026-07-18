@@ -316,23 +316,23 @@ class AmneziaVpnManager @Inject constructor(
         }
         verificationJob = applicationScope.launch {
             updateVpnState(VpnState.VERIFYING)
-            ProtonLogger.d(TAG, "Waiting for a stable validated VPN network")
+            ProtonLogger.d(TAG, "Waiting for a usable VPN network")
 
             try {
-                val validated = vpnNetworkMonitor.awaitValidated(cycle)
+                val usable = vpnNetworkMonitor.awaitUsable(cycle)
                 if (_tunnelState.value != VpnTunnelState.UP) return@launch
 
-                if (validated) {
-                    ProtonLogger.i(TAG, "VPN network validation completed")
+                if (usable) {
+                    ProtonLogger.i(TAG, "VPN connectivity confirmed")
                 } else {
-                    ProtonLogger.w(TAG, "VPN network validation timed out; keeping the established tunnel")
+                    ProtonLogger.w(TAG, "VPN usability probe timed out; keeping the established tunnel")
                 }
                 updateVpnState(VpnState.CONNECTED)
                 systemContextWrapper.setVpnVerified()
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: Exception) {
-                ProtonLogger.w(TAG, "VPN network validation failed: ${error.message}")
+                ProtonLogger.w(TAG, "VPN usability verification failed: ${error.message}")
                 if (_tunnelState.value == VpnTunnelState.UP) {
                     updateVpnState(VpnState.CONNECTED)
                     systemContextWrapper.setVpnVerified()

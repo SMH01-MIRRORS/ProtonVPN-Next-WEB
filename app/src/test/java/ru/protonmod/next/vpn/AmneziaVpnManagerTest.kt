@@ -159,7 +159,7 @@ class AmneziaVpnManagerTest {
                 .thenReturn("mock_config")
             val verificationCycle = VpnNetworkMonitor.VerificationCycle(1, emptySet())
             whenever(vpnNetworkMonitor.beginVerificationCycle()).thenReturn(verificationCycle)
-            whenever(vpnNetworkMonitor.awaitValidated(any(), any(), any())).thenReturn(false)
+            whenever(vpnNetworkMonitor.awaitUsable(any(), any(), any())).thenReturn(false)
 
             manager = AmneziaVpnManager(
                 context,
@@ -262,20 +262,20 @@ class AmneziaVpnManagerTest {
     }
 
     @Test
-    fun `VPN state transitions to CONNECTED when the new VPN network is validated`() = runTest(testDispatcher) {
-        whenever(vpnNetworkMonitor.awaitValidated(any(), any(), any())).thenReturn(true)
+    fun `VPN state transitions to CONNECTED when the new VPN network is usable`() = runTest(testDispatcher) {
+        whenever(vpnNetworkMonitor.awaitUsable(any(), any(), any())).thenReturn(true)
 
         manager.handleTunnelStateChange(VpnTunnelState.UP)
         advanceUntilIdle()
 
         assertEquals(AmneziaVpnManager.VpnState.CONNECTED, manager.vpnState.value)
-        verify(vpnNetworkMonitor, times(1)).awaitValidated(any(), any(), any())
+        verify(vpnNetworkMonitor, times(1)).awaitUsable(any(), any(), any())
         verify(systemContextWrapper, times(1)).setVpnVerified()
     }
 
     @Test
     fun `cancelled verification is not converted into a connected state`() = runTest(testDispatcher) {
-        whenever(vpnNetworkMonitor.awaitValidated(any(), any(), any())).thenAnswer {
+        whenever(vpnNetworkMonitor.awaitUsable(any(), any(), any())).thenAnswer {
             throw kotlinx.coroutines.CancellationException("test cancellation")
         }
 

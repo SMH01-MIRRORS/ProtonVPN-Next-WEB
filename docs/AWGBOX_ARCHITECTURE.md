@@ -99,3 +99,17 @@ The migration intentionally creates extension points for:
 
 These should be added as explicit policies rather than by concatenating arbitrary
 user JSON into the trusted configuration.
+
+## Connection readiness
+
+The UI does not wait exclusively for Android's delayed
+`NET_CAPABILITY_VALIDATED` captive-portal result. Each connection attempt
+snapshots existing VPN network handles, waits for the new VPN network, and
+marks it connected as soon as either:
+
+- Android reports the new network as validated; or
+- a short TCP probe bound explicitly to that VPN network succeeds.
+
+Binding the probe socket to the new VPN `Network` prevents the underlying Wi-Fi
+or cellular connection from producing a false positive. Failed probes are
+retried briefly; an established tunnel is still kept on timeout.

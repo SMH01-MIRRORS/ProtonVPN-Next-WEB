@@ -14,12 +14,14 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import ru.protonmod.next.utils.ProtonLogger
+import java.net.InetSocketAddress
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,10 +29,11 @@ import javax.inject.Singleton
 /**
  * Tracks Android VPN networks independently from the default network.
  *
- * A verification cycle snapshots existing VPN network handles while the old tunnel is still being
- * torn down. Validation then waits for the new VPN network and requires it to remain validated for
- * a short stability window. This prevents a stale `VALIDATED` value from completing a new
- * connection immediately and prevents capability callback bursts from restarting verification.
+ * Android's NET_CAPABILITY_VALIDATED is driven by system captive-portal probes and can arrive many
+ * seconds after applications already exchange traffic through a working tunnel. A verification
+ * cycle therefore accepts either the system capability or a successful TCP probe explicitly bound
+ * to the newly-created VPN network. Binding the socket to that Network ensures a direct underlying
+ * connection cannot produce a false positive.
  */
 @Singleton
 class VpnNetworkMonitor @Inject constructor(
@@ -41,9 +44,13 @@ class VpnNetworkMonitor @Inject constructor(
         internal val baselineHandles: Set<Long>
     )
 
+    private data class TrackedNetwork(
+        val network: Network,
+        val systemValidated: Boolean
+    )
+
     private data class Snapshot(
-        val version: Long = 0,
-        val networks: Map<Long, Boolean> = emptyMap()
+        val networks: Map<Long, TrackedNetwork> = emptyMap()
     )
 
     private val connectivityManager =
@@ -61,7 +68,7 @@ class VpnNetworkMonitor @Inject constructor(
         override fun onLost(network: Network) {
             val handle = network.networkHandle
             snapshot.update { current ->
-                Snapshot(current.version + 1, current.networks - handle)
+                Snapshot(current.networks - handle)
             }
         }
     }
@@ -86,38 +93,60 @@ class VpnNetworkMonitor @Inject constructor(
     }
 
     /**
-     * Waits for the cycle's new Android VPN network to be validated and stable.
-     * Returns false on timeout; cancellation is propagated normally without error logging.
+     * Waits until the cycle's new VPN network is actually usable.
+     *
+     * Android validation wins immediately when available. Otherwise a short TCP connection is made
+     * through the VPN Network itself. This reflects real tunnel usability instead of waiting for
+     * Android's delayed captive-portal validation. Returns false on timeout; cancellation propagates.
      */
-    suspend fun awaitValidated(
+    suspend fun awaitUsable(
         cycle: VerificationCycle,
         timeoutMs: Long = DEFAULT_TIMEOUT_MS,
-        stabilityMs: Long = DEFAULT_STABILITY_MS
+        retryDelayMs: Long = DEFAULT_RETRY_DELAY_MS
     ): Boolean = withTimeoutOrNull(timeoutMs) {
-        var observedVersion = -1L
         while (true) {
-            val current = snapshot.value
-            val candidate = current.networks.entries.firstOrNull { (handle, validated) ->
-                handle !in cycle.baselineHandles && validated
+            val candidate = snapshot.value.networks.entries.firstOrNull { (handle, _) ->
+                handle !in cycle.baselineHandles
             }
 
-            if (candidate != null) {
-                val handle = candidate.key
-                val stableVersion = current.version
-                delay(stabilityMs)
-                val stable = snapshot.value
-                if (stable.networks[handle] == true && stable.version == stableVersion) {
-                    ProtonLogger.d(TAG, "VPN network validated for cycle ${cycle.id}")
-                    return@withTimeoutOrNull true
-                }
+            if (candidate == null) {
+                delay(retryDelayMs)
+                continue
             }
 
-            observedVersion = current.version
-            snapshot.first { it.version != observedVersion }
+            val handle = candidate.key
+            val tracked = candidate.value
+            if (tracked.systemValidated) {
+                ProtonLogger.d(TAG, "VPN network system-validated for cycle ${cycle.id}")
+                return@withTimeoutOrNull true
+            }
+
+            if (probeVpnNetwork(tracked.network)) {
+                ProtonLogger.d(TAG, "VPN network passed active traffic probe for cycle ${cycle.id}")
+                return@withTimeoutOrNull true
+            }
+
+            // The network may have disappeared or changed capabilities while the probe was running.
+            if (snapshot.value.networks[handle]?.systemValidated == true) {
+                ProtonLogger.d(TAG, "VPN network system-validated during probe for cycle ${cycle.id}")
+                return@withTimeoutOrNull true
+            }
+            delay(retryDelayMs)
         }
         @Suppress("UNREACHABLE_CODE")
         false
     } ?: false
+
+    private suspend fun probeVpnNetwork(network: Network): Boolean = withContext(Dispatchers.IO) {
+        PROBE_TARGETS.any { target ->
+            runCatching {
+                network.socketFactory.createSocket().use { socket ->
+                    socket.connect(InetSocketAddress(target, PROBE_PORT), PROBE_CONNECT_TIMEOUT_MS)
+                }
+                true
+            }.getOrDefault(false)
+        }
+    }
 
     private fun refreshNetwork(network: Network) {
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return
@@ -127,16 +156,22 @@ class VpnNetworkMonitor @Inject constructor(
     private fun updateNetwork(network: Network, capabilities: NetworkCapabilities) {
         if (!capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) return
         val handle = network.networkHandle
-        val validated = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        val tracked = TrackedNetwork(
+            network = network,
+            systemValidated = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        )
         snapshot.update { current ->
-            if (current.networks[handle] == validated) current
-            else Snapshot(current.version + 1, current.networks + (handle to validated))
+            if (current.networks[handle] == tracked) current
+            else Snapshot(current.networks + (handle to tracked))
         }
     }
 
     private companion object {
         const val TAG = "VpnNetworkMonitor"
-        const val DEFAULT_TIMEOUT_MS = 15_000L
-        const val DEFAULT_STABILITY_MS = 750L
+        const val DEFAULT_TIMEOUT_MS = 8_000L
+        const val DEFAULT_RETRY_DELAY_MS = 200L
+        const val PROBE_PORT = 443
+        const val PROBE_CONNECT_TIMEOUT_MS = 750
+        val PROBE_TARGETS = listOf("1.1.1.1", "8.8.8.8")
     }
 }
