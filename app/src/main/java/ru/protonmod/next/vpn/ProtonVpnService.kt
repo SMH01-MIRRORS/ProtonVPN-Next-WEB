@@ -18,6 +18,7 @@ import android.net.VpnService
 import android.os.Build
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
+import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
@@ -89,6 +90,9 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "vpn_status_channel"
         private const val CHANNEL_SILENT_ID = "vpn_status_channel_silent"
+        private const val TRANSPORT_FAILURE_THRESHOLD = 2
+        private const val TRANSPORT_FAILURE_WINDOW_MS = 15_000L
+        private const val HEALTH_RECONNECT_COOLDOWN_MS = 15_000L
         private val libboxInitialized = AtomicBoolean(false)
     }
 
@@ -109,6 +113,9 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     private var lastRx = 0L
     private var lastTx = 0L
     private var lastSpeed: String? = null
+    private var transportFailureCount = 0
+    private var lastTransportFailureAt = 0L
+    private var lastHealthReconnectAt = 0L
 
     private val settingsReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -202,6 +209,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
                 withContext(Dispatchers.Main) {
                     state = VpnTunnelState.UP
                     connecting = false
+                    resetTransportFailures()
                     sendState(VpnTunnelState.UP)
                     updateNotification(VpnTunnelState.UP.name)
                     startTrafficUpdates()
@@ -379,7 +387,86 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     override fun serviceReload() = Unit
     override fun getSystemProxyStatus() = SystemProxyStatus().apply { available = false; enabled = false }
     override fun setSystemProxyEnabled(isEnabled: Boolean) = Unit
-    override fun writeDebugMessage(message: String?) { ProtonLogger.d("awgbox", message.orEmpty()) }
+    override fun writeDebugMessage(message: String?) {
+        val logMessage = message.orEmpty()
+        ProtonLogger.d("awgbox", logMessage)
+        observeTransportHealth(logMessage)
+    }
+
+    private fun observeTransportHealth(message: String) {
+        val normalized = message.lowercase(Locale.ROOT)
+        when {
+            isSuccessfulTransportActivity(normalized) -> scope.launch { resetTransportFailures() }
+            isTransportFailure(normalized) -> scope.launch { recordTransportFailure(normalized) }
+        }
+    }
+
+    private fun isSuccessfulTransportActivity(message: String): Boolean {
+        return ("dns: exchanged " in message && "exchange failed" !in message) ||
+            "received handshake response" in message
+    }
+
+    private fun isTransportFailure(message: String): Boolean {
+        val timedOut = "context deadline exceeded" in message ||
+            "i/o timeout" in message ||
+            "tls handshake timeout" in message
+        val transportError = "connection reset by peer" in message ||
+            "broken pipe" in message ||
+            "network is unreachable" in message
+        val relevantPath = "dns: exchange failed" in message ||
+            "outbound/vless" in message ||
+            "outbound/vmess" in message ||
+            "endpoint/awg" in message
+        return relevantPath && (timedOut || transportError)
+    }
+
+    private fun recordTransportFailure(message: String) {
+        if (state != VpnTunnelState.UP || connecting || manualDisconnect) return
+
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastTransportFailureAt > TRANSPORT_FAILURE_WINDOW_MS) {
+            transportFailureCount = 0
+        }
+        lastTransportFailureAt = now
+        transportFailureCount++
+        ProtonLogger.w(
+            TAG,
+            "Tunnel transport health failure $transportFailureCount/$TRANSPORT_FAILURE_THRESHOLD"
+        )
+
+        if (transportFailureCount < TRANSPORT_FAILURE_THRESHOLD) return
+        if (lastHealthReconnectAt != 0L && now - lastHealthReconnectAt < HEALTH_RECONNECT_COOLDOWN_MS) return
+
+        lastHealthReconnectAt = now
+        transportFailureCount = 0
+        restartTunnelAfterHealthFailure(message)
+    }
+
+    private fun restartTunnelAfterHealthFailure(reason: String) {
+        val config = lastConfig ?: return
+        if (connecting || manualDisconnect) return
+
+        ProtonLogger.w(TAG, "Tunnel transport is unresponsive; reconnecting")
+        ProtonLogger.addSentryBreadcrumb(
+            TAG,
+            "Automatic reconnect after transport health failure: ${reason.take(160)}",
+            "WARNING",
+            "vpn.health"
+        )
+        val retry = Intent(this, ProtonVpnService::class.java).apply {
+            action = ACTION_CONNECT
+            putExtra(EXTRA_CONFIG, config)
+            putExtra(EXTRA_LOGICAL_SERVER_ID, logicalServerId)
+            putExtra(EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
+            putExtra(EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
+        }
+        startTunnel(retry)
+    }
+
+    private fun resetTransportFailures() {
+        transportFailureCount = 0
+        lastTransportFailureAt = 0L
+    }
 
     override fun onRevoke() {
         stopTunnel(manual = true)

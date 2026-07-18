@@ -113,3 +113,14 @@ marks it connected as soon as either:
 Binding the probe socket to the new VPN `Network` prevents the underlying Wi-Fi
 or cellular connection from producing a false positive. Failed probes are
 retried briefly; an established tunnel is still kept on timeout.
+
+## Runtime transport health
+
+The foreground service also watches structured AWGBox transport errors after a
+connection has been verified. Repeated DNS, VLESS/VMess, or AWG timeout/reset
+errors within a short window indicate that the established path has become
+unusable (for example, after a DPI policy change). Successful DNS exchanges and
+AWG handshakes reset the failure streak. Two consecutive relevant failures
+trigger an in-place engine restart with the same configuration, immediately
+returning the UI to the connecting state. A cooldown prevents restart storms
+while blocking persists.
