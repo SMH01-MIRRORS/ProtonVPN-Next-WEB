@@ -134,7 +134,10 @@ object ProxyLinkParser {
 
     private fun addTransport(values: MutableMap<String, JsonElement>, query: Map<String, String>,) {
         when (val type = query["type"].orEmpty().ifBlank { "tcp" }.lowercase()) {
-            "tcp", "none" -> Unit
+            // Xray share links use both `tcp` and the newer `raw` name for
+            // the same unframed stream transport. sing-box represents both by
+            // omitting the transport object.
+            "tcp", "none", "raw" -> Unit
             "ws" -> {
                 val transport = linkedMapOf<String, JsonElement>(
                     "type" to JsonPrimitive("ws"),

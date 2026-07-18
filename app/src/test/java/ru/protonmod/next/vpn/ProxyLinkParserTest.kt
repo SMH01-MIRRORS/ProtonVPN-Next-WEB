@@ -62,6 +62,24 @@ class ProxyLinkParserTest {
         assertEquals(8443, info.port)
     }
 
+    @Test
+    fun `accepts xray raw transport as tcp stream`() {
+        val link = "vless://7dd08a29-44df-0bb8-9b67-e56607500009@89.208.231.191:8443" +
+            "?encryption=none&flow=xtls-rprx-vision&fp=qq" +
+            "&pbk=4CH3o5zOMcFNMbnwXnkAg0FFepmsc0QzhahXkUzb1ik" +
+            "&security=reality&sid=d8c6b58bcbb0c323&sni=max.ru&type=raw" +
+            "#%F0%9F%87%AB%F0%9F%87%AE%20Finland%20%E2%80%94%20%23118"
+
+        val proxy = ProxyLinkParser.parseChain(link).single()
+        val info = ProxyLinkParser.inspectLink(link)
+
+        assertEquals("🇫🇮 Finland — #118", info.name)
+        assertEquals("vless", info.protocol)
+        assertEquals("89.208.231.191", info.server)
+        assertEquals(8443, info.port)
+        assertFalse("transport" in proxy.outbound)
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun `rejects unsupported proxy scheme`() {
         ProxyLinkParser.parseChain("trojan://secret@example.com:443")
