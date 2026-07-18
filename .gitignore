@@ -34,6 +34,13 @@ desktop/libs/
 # External / nested repos or builds (e.g. Go-based VPN cores)
 vpn-core/
 
+# Environment, logs, and local runtime data
+.env
+.env.*
+*.log
+*.db
+*.sqlite
+
 # OS-specific files
 .DS_Store
 Thumbs.db
