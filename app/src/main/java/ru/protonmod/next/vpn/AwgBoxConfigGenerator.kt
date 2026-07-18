@@ -132,8 +132,11 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
             "dns" to JsonObject(mapOf(
                 "servers" to JsonArray(buildList {
                     if (proxyChain.isNotEmpty()) add(JsonObject(mapOf(
-                        "type" to JsonPrimitive("local"),
-                        "tag" to JsonPrimitive("bootstrap-dns")
+                        "type" to JsonPrimitive("udp"),
+                        "tag" to JsonPrimitive("bootstrap-dns"),
+                        "server" to JsonPrimitive("1.1.1.1"),
+                        "server_port" to JsonPrimitive(53),
+                        "detour" to JsonPrimitive("bootstrap-direct")
                     )))
                     add(JsonObject(mapOf(
                         "type" to JsonPrimitive("udp"),
@@ -147,7 +150,13 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
             )),
             "inbounds" to JsonArray(listOf(JsonObject(tun))),
             "endpoints" to JsonArray(listOf(JsonObject(awg))),
-            "outbounds" to JsonArray(proxyChain.map(ProxyLinkParser.ParsedProxy::outbound)),
+            "outbounds" to JsonArray(buildList {
+                if (proxyChain.isNotEmpty()) add(JsonObject(mapOf(
+                    "type" to JsonPrimitive("direct"),
+                    "tag" to JsonPrimitive("bootstrap-direct")
+                )))
+                addAll(proxyChain.map(ProxyLinkParser.ParsedProxy::outbound))
+            }),
             "route" to JsonObject(mapOf(
                 "auto_detect_interface" to JsonPrimitive(true),
                 "rules" to JsonArray(listOf(

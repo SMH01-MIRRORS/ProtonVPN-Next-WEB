@@ -114,14 +114,21 @@ class AwgBoxConfigGeneratorTest {
         )
         val root = Json.parseToJsonElement(config).jsonObject
         val awg = root.getValue("endpoints").jsonArray.single().jsonObject
-        val proxy = root.getValue("outbounds").jsonArray.single().jsonObject
+        val outbounds = root.getValue("outbounds").jsonArray.map { it.jsonObject }
+        val direct = outbounds.first { it.getValue("tag").jsonPrimitive.content == "bootstrap-direct" }
+        val proxy = outbounds.first { it.getValue("tag").jsonPrimitive.content == "proxy-1" }
+        val dnsServers = root.getValue("dns").jsonObject.getValue("servers").jsonArray.map { it.jsonObject }
+        val bootstrapDns = dnsServers.first { it.getValue("tag").jsonPrimitive.content == "bootstrap-dns" }
 
         assertEquals("proxy-1", awg.getValue("detour").jsonPrimitive.content)
         assertFalse("jc" in awg)
         assertFalse("i1" in awg)
+        assertEquals("direct", direct.getValue("type").jsonPrimitive.content)
         assertEquals("vless", proxy.getValue("type").jsonPrimitive.content)
         assertEquals("xudp", proxy.getValue("packet_encoding").jsonPrimitive.content)
-        assertEquals(2, root.getValue("dns").jsonObject.getValue("servers").jsonArray.size)
+        assertEquals("1.1.1.1", bootstrapDns.getValue("server").jsonPrimitive.content)
+        assertEquals("bootstrap-direct", bootstrapDns.getValue("detour").jsonPrimitive.content)
+        assertEquals(2, dnsServers.size)
     }
 
     @Test(expected = IllegalArgumentException::class)
