@@ -2,20 +2,31 @@
 set -euo pipefail
 
 REF="${AWGBOX_REF:-v1.13.13-awg2.1}"
+EXPECTED_COMMIT="${AWGBOX_COMMIT:-f40548f91a14582975096d0310e3c6afd44656f8}"
 REPO="${AWGBOX_REPO:-https://github.com/hoaxisr/amnezia-box.git}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORK="${AWGBOX_WORK_DIR:-$ROOT/.artifacts/amnezia-box}"
 OUTPUT="$ROOT/app/libs/libbox-awgbox-v1.13.13-awg2.1.aar"
-CHECKSUM_FILE="$ROOT/third_party/amnezia-box/libbox-awgbox-v1.13.13-awg2.1.sha256"
 FORCE_REBUILD="${AWGBOX_FORCE_REBUILD:-0}"
 
-expected_sha256() {
-  awk 'NR == 1 { print $1 }' "$CHECKSUM_FILE"
-}
-
 output_is_valid() {
-  [[ -s "$OUTPUT" && -f "$CHECKSUM_FILE" ]] || return 1
-  [[ "$(sha256sum "$OUTPUT" | awk '{ print $1 }')" == "$(expected_sha256)" ]]
+  [[ -s "$OUTPUT" ]] || return 1
+  command -v python3 >/dev/null || return 1
+  python3 - "$OUTPUT" <<'PY_AAR'
+from pathlib import Path
+from zipfile import BadZipFile, ZipFile
+import sys
+
+path = Path(sys.argv[1])
+required = {"AndroidManifest.xml", "classes.jar", "jni/arm64-v8a/libbox.so"}
+try:
+    with ZipFile(path) as archive:
+        names = set(archive.namelist())
+        if not required.issubset(names) or archive.testzip() is not None:
+            raise SystemExit(1)
+except (BadZipFile, OSError):
+    raise SystemExit(1)
+PY_AAR
 }
 
 if [[ "$FORCE_REBUILD" != "1" ]] && output_is_valid; then
@@ -59,6 +70,13 @@ fi
 
 rm -rf "$WORK"
 git clone --depth 1 --branch "$REF" "$REPO" "$WORK"
+actual_commit="$(git -C "$WORK" rev-parse HEAD)"
+if [[ "$actual_commit" != "$EXPECTED_COMMIT" ]]; then
+  echo "AWGBox source revision mismatch" >&2
+  echo "Expected: $EXPECTED_COMMIT" >&2
+  echo "Actual:   $actual_commit" >&2
+  exit 1
+fi
 git -C "$WORK" submodule update --init --depth 1
 
 GOBIN_DIR="$WORK/.bin"
@@ -118,14 +136,12 @@ cp "$GOBIN_DIR/gobind" "$GOPATH_DIR/bin/"
 
 TEMP_OUTPUT="$OUTPUT.tmp"
 cp "$WORK/libbox.aar" "$TEMP_OUTPUT"
-actual_sha256="$(sha256sum "$TEMP_OUTPUT" | awk '{ print $1 }')"
-expected_sha256="$(expected_sha256)"
-if [[ "$actual_sha256" != "$expected_sha256" ]]; then
+if ! OUTPUT="$TEMP_OUTPUT" output_is_valid; then
   rm -f "$TEMP_OUTPUT"
-  echo "AWGBox reproducibility check failed" >&2
-  echo "Expected: $expected_sha256" >&2
-  echo "Actual:   $actual_sha256" >&2
+  echo "Generated AWGBox AAR is corrupt or missing required arm64 contents" >&2
   exit 1
 fi
+actual_sha256="$(sha256sum "$TEMP_OUTPUT" | awk '{ print $1 }')"
 mv "$TEMP_OUTPUT" "$OUTPUT"
+echo "AWGBox AAR built from pinned commit $EXPECTED_COMMIT"
 echo "$actual_sha256  ${OUTPUT#$ROOT/}"
