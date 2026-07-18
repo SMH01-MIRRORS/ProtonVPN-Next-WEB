@@ -529,6 +529,16 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun setConnectionProtectionMode(
+        proxyChainEnabled: Boolean,
+        obfuscationEnabled: Boolean
+    ) {
+        viewModelScope.launch {
+            settingsManager.setProxyChainEnabled(proxyChainEnabled)
+            settingsManager.setObfuscationEnabled(obfuscationEnabled && !proxyChainEnabled)
+        }
+    }
+
     fun setProxyChainConfig(config: String) {
         viewModelScope.launch { settingsManager.setProxyChainConfig(config) }
     }

@@ -23,7 +23,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -33,12 +32,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -72,6 +68,11 @@ fun ObfuscationSettingsScreen(
     val selectedProfile = allProfiles.find { it.id == uiState.selectedProfileId } ?: standardProfile
 
     var showConfigDropdown by remember { mutableStateOf(false) }
+    val protectionMode = when {
+        uiState.proxyChainEnabled -> ProtectionMode.PROXY_CHAIN
+        uiState.isObfuscationEnabled -> ProtectionMode.AWG
+        else -> ProtectionMode.OFF
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -83,28 +84,13 @@ fun ObfuscationSettingsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Background gradient
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                colors.brandNorm.copy(alpha = 0.25f),
-                                colors.backgroundNorm.copy(alpha = 0.1f),
-                                colors.backgroundNorm
-                            )
-                        )
-                    )
-            )
-
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding(),
                 horizontalAlignment = if (isTablet) Alignment.CenterHorizontally else Alignment.Start,
-                contentPadding = PaddingValues(bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                contentPadding = PaddingValues(bottom = 48.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 val contentModifier = if (isTablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
 
@@ -113,133 +99,73 @@ fun ObfuscationSettingsScreen(
                         title = stringResource(R.string.obfuscation_title),
                         onBack = onBack,
                         actions = {
-                            IconButton(onClick = { viewModel.resetToStandard() }) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Refresh,
-                                    contentDescription = stringResource(R.string.settings_reset_obfuscation),
-                                    tint = colors.brandNorm
-                                )
+                            if (protectionMode == ProtectionMode.AWG) {
+                                IconButton(onClick = { viewModel.resetToStandard() }) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Refresh,
+                                        contentDescription = stringResource(R.string.settings_reset_obfuscation),
+                                        tint = colors.brandNorm
+                                    )
+                                }
                             }
                         }
                     )
-
-                    // Header Icon
-                    Box(
-                        modifier = contentModifier.padding(vertical = 32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(120.dp)
-                                .clip(CircleShape)
-                                .background(colors.brandNorm.copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.VisibilityOff,
-                                contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = colors.brandNorm
-                            )
-                        }
-                    }
-
-                    // Title
                     Text(
-                        text = stringResource(R.string.obfuscation_title),
-                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                        color = colors.textNorm,
-                        textAlign = TextAlign.Center,
-                        modifier = contentModifier.padding(horizontal = 16.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Description
-                    Text(
-                        text = stringResource(R.string.obfuscation_enable_desc),
+                        text = stringResource(R.string.obfuscation_screen_intro),
                         style = MaterialTheme.typography.bodyMedium,
                         color = colors.textWeak,
-                        textAlign = TextAlign.Center,
-                        modifier = contentModifier.padding(horizontal = 32.dp)
+                        modifier = contentModifier.padding(horizontal = 20.dp, vertical = 4.dp)
                     )
-
-                    Spacer(modifier = Modifier.height(32.dp))
                 }
 
-                item(contentType = "ObfuscationTransportMode") {
+                item(contentType = "ProtectionMode") {
                     Column(
                         modifier = contentModifier.padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        CategoryHeader(title = stringResource(R.string.obfuscation_transport_mode))
-                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                            SegmentedButton(
-                                selected = !uiState.proxyChainEnabled,
-                                onClick = { viewModel.setProxyChainEnabled(false) },
-                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
-                            ) { Text(stringResource(R.string.obfuscation_transport_awg)) }
-                            SegmentedButton(
-                                selected = uiState.proxyChainEnabled,
-                                onClick = { viewModel.setProxyChainEnabled(true) },
-                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
-                            ) { Text(stringResource(R.string.obfuscation_transport_proxy_chain)) }
-                        }
+                        CategoryHeader(title = stringResource(R.string.obfuscation_protection_mode))
+                        ProtectionModeSelector(
+                            selectedMode = protectionMode,
+                            onModeSelected = { mode ->
+                                when (mode) {
+                                    ProtectionMode.OFF -> viewModel.setConnectionProtectionMode(
+                                        proxyChainEnabled = false,
+                                        obfuscationEnabled = false
+                                    )
+                                    ProtectionMode.AWG -> viewModel.setConnectionProtectionMode(
+                                        proxyChainEnabled = false,
+                                        obfuscationEnabled = true
+                                    )
+                                    ProtectionMode.PROXY_CHAIN -> viewModel.setConnectionProtectionMode(
+                                        proxyChainEnabled = true,
+                                        obfuscationEnabled = false
+                                    )
+                                }
+                            }
+                        )
                     }
                 }
 
-                // Master Toggle
-                item(contentType = "MasterToggle") {
-                    Box(
-                        modifier = contentModifier
-                            .padding(horizontal = 16.dp)
-                            .liquidGlass(
-                                shape = RoundedCornerShape(20.dp),
-                                alpha = if (uiState.isObfuscationEnabled) 0.3f else 0.5f
-                            )
-                            .clickable(enabled = !uiState.proxyChainEnabled) {
-                                viewModel.setObfuscationEnabled(!uiState.isObfuscationEnabled)
-                            }
+                item(contentType = "DisabledHint") {
+                    AnimatedVisibility(
+                        visible = protectionMode == ProtectionMode.OFF,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically(),
+                        modifier = contentModifier.padding(horizontal = 16.dp)
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(R.string.obfuscation_enable),
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = colors.textNorm
-                                )
-                            }
-                            Switch(
-                                checked = uiState.isObfuscationEnabled && !uiState.proxyChainEnabled,
-                                enabled = !uiState.proxyChainEnabled,
-                                onCheckedChange = { viewModel.setObfuscationEnabled(it) },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = colors.textInverted,
-                                    checkedTrackColor = colors.brandNorm,
-                                    uncheckedThumbColor = colors.shade60,
-                                    uncheckedTrackColor = colors.shade20,
-                                    uncheckedBorderColor = Color.Transparent
-                                )
-                            )
-                        }
+                        InfoCard(text = stringResource(R.string.obfuscation_off_info))
                     }
                 }
-
 
                 item(contentType = "ProxyChainSettings") {
                     AnimatedVisibility(
-                        visible = uiState.proxyChainEnabled,
+                        visible = protectionMode == ProtectionMode.PROXY_CHAIN,
                         enter = fadeIn() + expandVertically(),
                         exit = fadeOut() + shrinkVertically(),
                         modifier = contentModifier.padding(horizontal = 16.dp)
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            CategoryHeader(title = stringResource(R.string.proxy_chain_setup_title))
                             InfoCard(text = stringResource(R.string.proxy_chain_info))
                             OutlinedTextField(
                                 value = uiState.proxyChainConfig,
@@ -247,16 +173,21 @@ fun ObfuscationSettingsScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 label = { Text(stringResource(R.string.proxy_chain_config)) },
                                 placeholder = { Text(stringResource(R.string.proxy_chain_placeholder)) },
-                                minLines = 3,
+                                minLines = 4,
                                 isError = uiState.proxyChainConfig.isNotBlank() && !uiState.isProxyChainConfigValid,
                                 supportingText = {
+                                    val isEmpty = uiState.proxyChainConfig.isBlank()
                                     Text(
-                                        text = stringResource(
-                                            if (uiState.isProxyChainConfigValid) R.string.proxy_chain_valid
-                                            else R.string.proxy_chain_invalid
-                                        ),
-                                        color = if (uiState.isProxyChainConfigValid) colors.notificationSuccess
-                                        else colors.notificationError
+                                        text = when {
+                                            isEmpty -> stringResource(R.string.proxy_chain_input_hint)
+                                            uiState.isProxyChainConfigValid -> stringResource(R.string.proxy_chain_valid)
+                                            else -> stringResource(R.string.proxy_chain_invalid)
+                                        },
+                                        color = when {
+                                            isEmpty -> colors.textWeak
+                                            uiState.isProxyChainConfigValid -> colors.notificationSuccess
+                                            else -> colors.notificationError
+                                        }
                                     )
                                 },
                                 shape = RoundedCornerShape(16.dp)
@@ -268,7 +199,7 @@ fun ObfuscationSettingsScreen(
                 // Animated content for detailed settings
                 item(contentType = "DetailedSettings") {
                     AnimatedVisibility(
-                        visible = uiState.isObfuscationEnabled && !uiState.proxyChainEnabled,
+                        visible = protectionMode == ProtectionMode.AWG,
                         enter = fadeIn() + expandVertically(),
                         exit = fadeOut() + shrinkVertically(),
                         modifier = contentModifier.padding(horizontal = 16.dp)
@@ -276,36 +207,6 @@ fun ObfuscationSettingsScreen(
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
 
                             InfoCard(text = stringResource(R.string.obfuscation_info_desc))
-
-                            // Mode Selector (Easy / Advanced)
-                            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                                SegmentedButton(
-                                    selected = !uiState.isObfuscationAdvancedMode,
-                                    onClick = { viewModel.setObfuscationAdvancedMode(false) },
-                                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                                    colors = SegmentedButtonDefaults.colors(
-                                        activeContainerColor = colors.brandNorm,
-                                        activeContentColor = colors.onInteraction,
-                                        inactiveContainerColor = colors.backgroundSecondary.copy(alpha = 0.5f),
-                                        inactiveContentColor = colors.textNorm
-                                    )
-                                ) {
-                                    Text(stringResource(R.string.obfuscation_mode_easy))
-                                }
-                                SegmentedButton(
-                                    selected = uiState.isObfuscationAdvancedMode,
-                                    onClick = { viewModel.setObfuscationAdvancedMode(true) },
-                                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                                    colors = SegmentedButtonDefaults.colors(
-                                        activeContainerColor = colors.brandNorm,
-                                        activeContentColor = colors.onInteraction,
-                                        inactiveContainerColor = colors.backgroundSecondary.copy(alpha = 0.5f),
-                                        inactiveContentColor = colors.textNorm
-                                    )
-                                ) {
-                                    Text(stringResource(R.string.obfuscation_mode_advanced))
-                                }
-                            }
 
                             // Configuration Selector
                             CategoryHeader(title = stringResource(R.string.obfuscation_config))
@@ -346,6 +247,37 @@ fun ObfuscationSettingsScreen(
                                             contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                                         )
                                     }
+                                }
+                            }
+
+
+                            CategoryHeader(title = stringResource(R.string.obfuscation_tuning_mode))
+                            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                                SegmentedButton(
+                                    selected = !uiState.isObfuscationAdvancedMode,
+                                    onClick = { viewModel.setObfuscationAdvancedMode(false) },
+                                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                                    colors = SegmentedButtonDefaults.colors(
+                                        activeContainerColor = colors.brandNorm,
+                                        activeContentColor = colors.onInteraction,
+                                        inactiveContainerColor = colors.backgroundSecondary.copy(alpha = 0.5f),
+                                        inactiveContentColor = colors.textNorm
+                                    )
+                                ) {
+                                    Text(stringResource(R.string.obfuscation_mode_easy))
+                                }
+                                SegmentedButton(
+                                    selected = uiState.isObfuscationAdvancedMode,
+                                    onClick = { viewModel.setObfuscationAdvancedMode(true) },
+                                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                                    colors = SegmentedButtonDefaults.colors(
+                                        activeContainerColor = colors.brandNorm,
+                                        activeContentColor = colors.onInteraction,
+                                        inactiveContainerColor = colors.backgroundSecondary.copy(alpha = 0.5f),
+                                        inactiveContentColor = colors.textNorm
+                                    )
+                                ) {
+                                    Text(stringResource(R.string.obfuscation_mode_advanced))
                                 }
                             }
 
@@ -725,6 +657,84 @@ fun ObfuscationSettingsScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+private enum class ProtectionMode {
+    OFF,
+    AWG,
+    PROXY_CHAIN
+}
+
+@Composable
+private fun ProtectionModeSelector(
+    selectedMode: ProtectionMode,
+    onModeSelected: (ProtectionMode) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    SettingsCard(modifier = modifier) {
+        ProtectionModeOption(
+            title = stringResource(R.string.obfuscation_mode_off),
+            description = stringResource(R.string.obfuscation_mode_off_desc),
+            selected = selectedMode == ProtectionMode.OFF,
+            onClick = { onModeSelected(ProtectionMode.OFF) }
+        )
+        HorizontalDivider(color = ProtonNextTheme.colors.shade20.copy(alpha = 0.5f))
+        ProtectionModeOption(
+            title = stringResource(R.string.obfuscation_transport_awg),
+            description = stringResource(R.string.obfuscation_mode_awg_desc),
+            selected = selectedMode == ProtectionMode.AWG,
+            onClick = { onModeSelected(ProtectionMode.AWG) }
+        )
+        HorizontalDivider(color = ProtonNextTheme.colors.shade20.copy(alpha = 0.5f))
+        ProtectionModeOption(
+            title = stringResource(R.string.obfuscation_transport_proxy_chain),
+            description = stringResource(R.string.obfuscation_mode_proxy_desc),
+            selected = selectedMode == ProtectionMode.PROXY_CHAIN,
+            onClick = { onModeSelected(ProtectionMode.PROXY_CHAIN) }
+        )
+    }
+}
+
+@Composable
+private fun ProtectionModeOption(
+    title: String,
+    description: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    val colors = ProtonNextTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (selected) colors.brandNorm.copy(alpha = 0.10f) else colors.backgroundNorm.copy(alpha = 0f))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 4.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = selected,
+            onClick = onClick,
+            colors = RadioButtonDefaults.colors(
+                selectedColor = colors.brandNorm,
+                unselectedColor = colors.shade60
+            )
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                color = if (selected) colors.brandNorm else colors.textNorm
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.textWeak
+            )
         }
     }
 }

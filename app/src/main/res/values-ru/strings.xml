@@ -589,4 +589,14 @@
     <string name="proxy_chain_placeholder">vless://… или vmess://…</string>
     <string name="proxy_chain_valid">Цепочка прокси корректна</string>
     <string name="proxy_chain_invalid">Введите корректную ссылку vless:// или vmess://</string>
+    <string name="obfuscation_screen_intro">Выберите один способ защиты подключения. На экране останутся только относящиеся к нему настройки.</string>
+    <string name="obfuscation_protection_mode">Способ защиты</string>
+    <string name="obfuscation_mode_off">Без дополнительной защиты</string>
+    <string name="obfuscation_mode_off_desc">Обычное подключение через Proton AWG без дополнительных способов обхода.</string>
+    <string name="obfuscation_mode_awg_desc">Скрывает признаки WireGuard с помощью параметров пакетов AmneziaWG.</string>
+    <string name="obfuscation_mode_proxy_desc">Направляет туннель Proton AWG через прокси VLESS или VMess.</string>
+    <string name="obfuscation_off_info">Включайте обфускацию AWG или цепочку прокси, только если текущая сеть блокирует или замедляет VPN.</string>
+    <string name="proxy_chain_setup_title">Настройка цепочки</string>
+    <string name="proxy_chain_input_hint">По одной ссылке VLESS или VMess на строку, в порядке подключения.</string>
+    <string name="obfuscation_tuning_mode">Детализация настроек</string>
 </resources>

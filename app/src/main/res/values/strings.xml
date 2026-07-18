@@ -688,4 +688,14 @@
     <string name="proxy_chain_placeholder">vless://… or vmess://…</string>
     <string name="proxy_chain_valid">Proxy chain is valid</string>
     <string name="proxy_chain_invalid">Enter a valid vless:// or vmess:// link</string>
+    <string name="obfuscation_screen_intro">Choose one connection protection method. Only settings relevant to the selected method are shown.</string>
+    <string name="obfuscation_protection_mode">Protection method</string>
+    <string name="obfuscation_mode_off">No additional protection</string>
+    <string name="obfuscation_mode_off_desc">Use the Proton AWG tunnel without extra circumvention.</string>
+    <string name="obfuscation_mode_awg_desc">Hide WireGuard fingerprints using AmneziaWG packet parameters.</string>
+    <string name="obfuscation_mode_proxy_desc">Route the Proton AWG tunnel through VLESS or VMess proxies.</string>
+    <string name="obfuscation_off_info">Enable AWG obfuscation or a proxy chain only when the current network blocks or throttles the VPN.</string>
+    <string name="proxy_chain_setup_title">Proxy chain setup</string>
+    <string name="proxy_chain_input_hint">One VLESS or VMess share link per line, in connection order.</string>
+    <string name="obfuscation_tuning_mode">Settings detail</string>
 </resources>
