@@ -19,8 +19,10 @@ GOBIN="$GOBIN_DIR" go install github.com/sagernet/gomobile/cmd/gobind@v0.1.12
 
 # Keep the mobile core intentionally small. VLESS, VMess, SOCKS/HTTP and proxy
 # chaining are part of the base sing-box build. AWG and uTLS are the only
-# optional features required by ProtonVPN-Next. This excludes QUIC
-# (Hysteria2/TUIC), gVisor, WireGuard, Tailscale, Naive and Clash API.
+# optional protocol features required by ProtonVPN-Next. Clash API is retained
+# because libbox CommandServer uses its internal tracker even without an external
+# controller. This excludes QUIC (Hysteria2/TUIC), gVisor, WireGuard, Tailscale
+# and Naive.
 python3 - "$WORK/cmd/internal/build_libbox/main.go" <<'PY'
 from pathlib import Path
 import re
@@ -30,7 +32,7 @@ path = Path(sys.argv[1])
 text = path.read_text()
 text, count = re.subn(
     r'sharedTags = append\(sharedTags, "with_gvisor"[^\n]+',
-    'sharedTags = append(sharedTags, "with_awg", "with_utls", "badlinkname", "tfogo_checklinkname0")',
+    'sharedTags = append(sharedTags, "with_awg", "with_utls", "with_clash_api", "badlinkname", "tfogo_checklinkname0")',
     text,
     count=1,
 )

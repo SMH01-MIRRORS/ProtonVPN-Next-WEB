@@ -50,9 +50,9 @@ extensibility.
 ## Minimal mobile build
 
 The embedded core is compiled only with `with_awg` and `with_utls` optional
-features. VLESS, VMess, SOCKS/HTTP and proxy chaining are part of the base core.
+features, plus `with_clash_api` because libbox CommandServer requires its internal connection tracker. VLESS, VMess, SOCKS/HTTP and proxy chaining are part of the base core.
 QUIC protocols (Hysteria2/TUIC), gVisor, standard WireGuard, Tailscale, Naive
-outbound and Clash API are omitted. Android's system TUN stack replaces gVisor.
+outbound are omitted. No external Clash controller is configured. Android's system TUN stack replaces gVisor.
 This keeps VLESS/Reality client compatibility while substantially reducing the
 native library size.
 
