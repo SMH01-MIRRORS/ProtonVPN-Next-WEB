@@ -678,4 +678,6 @@
     <string name="dashboard_no_recents">No recent connections yet</string>
     <string name="qc_lowest_load">Lowest load</string>
     <string name="qc_last_used">Last used</string>
+    <string name="vpn_session_name">Proton VPN-Next (AWGBox)</string>
+    <string name="notification_channel_silent_name">VPN status (silent)</string>
 </resources>

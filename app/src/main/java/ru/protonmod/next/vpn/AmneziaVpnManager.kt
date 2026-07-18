@@ -43,10 +43,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
-import org.amnezia.awg.backend.Tunnel
-import org.amnezia.awg.config.Config
-import org.amnezia.awg.config.Interface
-import org.amnezia.awg.config.Peer
+import ru.protonmod.next.vpn.VpnTunnelState
 import java.net.InetAddress
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.local.SessionEntity
@@ -75,7 +72,7 @@ class AmneziaVpnManager @Inject constructor(
     private val connectedServerState: ConnectedServerState,
     private val systemContextWrapper: SystemContextWrapper,
     private val cryptoWrapper: CryptoWrapper,
-    private val amneziaConfigGenerator: AmneziaConfigGenerator,
+    private val awgBoxConfigGenerator: AwgBoxConfigGenerator,
     private val nextVpnManager: NextVpnManager,
     private val vpnNetworkMonitor: VpnNetworkMonitor,
     private val dispatcherProvider: DispatcherProvider,
@@ -141,10 +138,10 @@ class AmneziaVpnManager @Inject constructor(
     private val _trafficTx = MutableStateFlow<String?>(null)
     val trafficTx: StateFlow<String?> = _trafficTx.asStateFlow()
 
-    private val _tunnelState = MutableStateFlow(Tunnel.State.DOWN)
-    val tunnelState: StateFlow<Tunnel.State> = _tunnelState
+    private val _tunnelState = MutableStateFlow(VpnTunnelState.DOWN)
+    val tunnelState: StateFlow<VpnTunnelState> = _tunnelState
 
-    private val _rawTunnelState = MutableStateFlow(Tunnel.State.DOWN)
+    private val _rawTunnelState = MutableStateFlow(VpnTunnelState.DOWN)
     private var isReconnecting = false
     private var isPaused = false
     private var pauseJob: Job? = null
@@ -167,7 +164,7 @@ class AmneziaVpnManager @Inject constructor(
                         val serverId = intent.getStringExtra(ProtonVpnService.EXTRA_LOGICAL_SERVER_ID)
                         val isServiceReconnecting = intent.getBooleanExtra(ProtonVpnService.EXTRA_IS_RECONNECTING, false)
                         
-                        if (serverId != null && serverId != currentServerId && stateStr != Tunnel.State.DOWN.name) {
+                        if (serverId != null && serverId != currentServerId && stateStr != VpnTunnelState.DOWN.name) {
                             currentServerId = serverId
                             applicationScope.launch {
                                 val resolved = vpnRepositoryProvider.get().getCachedServers().find { it.id == serverId }
@@ -183,14 +180,14 @@ class AmneziaVpnManager @Inject constructor(
                                 updateVpnState(VpnState.CONNECTING)
                             } else {
                                 try {
-                                    val newState = Tunnel.State.valueOf(it)
+                                    val newState = VpnTunnelState.valueOf(it)
                                     _rawTunnelState.value = newState
                                     _isConnecting.value = false
 
                                     _tunnelState.value = newState
                                     
                                     // If service is reconnecting, we don't clear the server state even if it's DOWN
-                                    if (newState == Tunnel.State.DOWN && (isReconnecting || isServiceReconnecting)) {
+                                    if (newState == VpnTunnelState.DOWN && (isReconnecting || isServiceReconnecting)) {
                                         ProtonLogger.d(TAG, "Tunnel DOWN during reconnection, preserving server state")
                                     } else {
                                         handleTunnelStateChange(newState)
@@ -253,9 +250,9 @@ class AmneziaVpnManager @Inject constructor(
         }
     }
 
-    internal fun handleTunnelStateChange(newState: Tunnel.State) {
+    internal fun handleTunnelStateChange(newState: VpnTunnelState) {
         when (newState) {
-            Tunnel.State.UP -> {
+            VpnTunnelState.UP -> {
                 isPaused = false
                 pauseJob?.cancel()
                 applicationScope.launch { settingsManager.setPauseEndTime(0) }
@@ -263,7 +260,7 @@ class AmneziaVpnManager @Inject constructor(
                 checkAndRefreshCertificateProactively()
                 startTunnelVerification()
             }
-            Tunnel.State.DOWN -> {
+            VpnTunnelState.DOWN -> {
                 verificationJob?.cancel()
                 if (!isReconnecting) {
                     updateVpnState(VpnState.DISCONNECTED)
@@ -275,9 +272,6 @@ class AmneziaVpnManager @Inject constructor(
                 } else {
                     updateVpnState(VpnState.CONNECTING)
                 }
-            }
-            else -> {
-                // Ignore TOGGLE or other new states
             }
         }
     }
@@ -414,7 +408,7 @@ class AmneziaVpnManager @Inject constructor(
                 val session = sessionDao.getSession() ?: break
                 updateCertificateState(session.wgCertificate)
 
-                val isConnected = _tunnelState.value == Tunnel.State.UP
+                val isConnected = _tunnelState.value == VpnTunnelState.UP
 
                 if (_certState.value is CertificateState.Valid) {
                     // All good, check again in 2 hours
@@ -497,7 +491,7 @@ class AmneziaVpnManager @Inject constructor(
                 return@launch
             }
 
-            if (currentServerId == logicalServerId && _tunnelState.value == Tunnel.State.UP) {
+            if (currentServerId == logicalServerId && _tunnelState.value == VpnTunnelState.UP) {
                 ProtonLogger.d(TAG, "Already connected to $logicalServerId")
                 return@launch
             }
@@ -569,7 +563,7 @@ class AmneziaVpnManager @Inject constructor(
                     targetIp = fallbackIp
                 } else {
                     _isConnecting.value = false
-                    _tunnelState.value = Tunnel.State.DOWN
+                    _tunnelState.value = VpnTunnelState.DOWN
                     throw Exception("forceFallback=true but no exitIp available for ${server.domain}").also {
                         ProtonLogger.e(TAG, it.message!!)
                     }
@@ -598,7 +592,7 @@ class AmneziaVpnManager @Inject constructor(
                         targetIp = fallbackIp
                     } else {
                         _isConnecting.value = false
-                        _tunnelState.value = Tunnel.State.DOWN
+                        _tunnelState.value = VpnTunnelState.DOWN
                         throw Exception("DNS resolution failed for ${server.domain} after $DNS_RETRY_COUNT attempts").also {
                             ProtonLogger.e(TAG, it.message!!)
                         }
@@ -681,7 +675,7 @@ class AmneziaVpnManager @Inject constructor(
             ProtonLogger.i(TAG, "Using DNS Server: $activeDns, Client IP: $localIp")
 
             ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: Building Config", "DEBUG", "vpn.connect")
-            val configStr = amneziaConfigGenerator.buildConfig(
+            val configStr = awgBoxConfigGenerator.buildConfig(
                 serverPublicKey = serverPubKey,
                 privateKey = wgPrivateKeyB64,
                 localIp = localIp,
@@ -696,8 +690,7 @@ class AmneziaVpnManager @Inject constructor(
                 obfuscationParams = params
             )
             
-            ProtonLogger.d(TAG, "Generated AWG Config:\n$configStr")
-            ProtonLogger.v(TAG, "Generated AWG Config Length: ${configStr.length}")
+            ProtonLogger.d(TAG, "Generated awgbox config (length=${configStr.length}, endpoint=$targetIp:$selectedPort)")
 
             val sessionId = System.currentTimeMillis()
             ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: Starting Service (Session: $sessionId)", "INFO", "vpn.connect")
@@ -725,7 +718,7 @@ class AmneziaVpnManager @Inject constructor(
             ProtonLogger.recordCount("vpn_connection_failure", 1.0)
 
             _isConnecting.value = false
-            _tunnelState.value = Tunnel.State.DOWN
+            _tunnelState.value = VpnTunnelState.DOWN
             connectedServerState.setConnectedServer(null)
             currentServerId = null
             Result.failure(e)
@@ -781,7 +774,7 @@ class AmneziaVpnManager @Inject constructor(
                     disconnectInternal()
                     try {
                         withTimeout(5000) {
-                            _rawTunnelState.first { it == Tunnel.State.DOWN }
+                            _rawTunnelState.first { it == VpnTunnelState.DOWN }
                         }
                     } catch (_: Exception) {
                     }
@@ -870,14 +863,14 @@ class AmneziaVpnManager @Inject constructor(
                     
                     // 2. Then wait for the tunnel state to be UP
                     ProtonLogger.d(TAG, "Connect & Go: VPN attempt finished, waiting for UP state...")
-                    _tunnelState.first { it == Tunnel.State.UP }
+                    _tunnelState.first { it == VpnTunnelState.UP }
                 }
 
                 // 3. Extra delay to ensure routing and DNS are fully established and browser can reach the site
                 ProtonLogger.d(TAG, "Connect & Go: Tunnel is UP, waiting for routing stabilization...")
                 delay(3000)
 
-                if (_tunnelState.value == Tunnel.State.UP) {
+                if (_tunnelState.value == VpnTunnelState.UP) {
                     val intent = Intent(Intent.ACTION_VIEW, targetUrl.toUri()).apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }

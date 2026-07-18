@@ -43,7 +43,7 @@ import ru.protonmod.next.utils.crypto.VpnKeyPair
 import ru.protonmod.next.utils.system.SystemContextWrapper
 import java.net.InetAddress
 import org.mockito.Mockito
-import org.amnezia.awg.backend.Tunnel
+import ru.protonmod.next.vpn.VpnTunnelState
 import org.junit.Assert.assertEquals
 import org.mockito.MockedStatic
 import java.security.cert.CertificateFactory
@@ -75,7 +75,7 @@ class AmneziaVpnManagerTest {
     private lateinit var cryptoWrapper: CryptoWrapper
     
     @Mock
-    private lateinit var amneziaConfigGenerator: AmneziaConfigGenerator
+    private lateinit var awgBoxConfigGenerator: AwgBoxConfigGenerator
 
     @Mock
     private lateinit var nextVpnManager: NextVpnManager
@@ -153,7 +153,7 @@ class AmneziaVpnManagerTest {
             whenever(vpnRepository.getCachedServers()).thenReturn(emptyList())
             
             whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(VpnKeyPair("pub", "priv"))
-            whenever(amneziaConfigGenerator.buildConfig(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+            whenever(awgBoxConfigGenerator.buildConfig(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn("mock_config")
             whenever(vpnNetworkMonitor.isValidated).thenReturn(MutableStateFlow(false))
 
@@ -165,7 +165,7 @@ class AmneziaVpnManagerTest {
                 connectedServerState,
                 systemContextWrapper,
                 cryptoWrapper,
-                amneziaConfigGenerator,
+                awgBoxConfigGenerator,
                 nextVpnManager,
                 vpnNetworkMonitor,
                 testDispatcherProvider,
@@ -263,7 +263,7 @@ class AmneziaVpnManagerTest {
         whenever(vpnNetworkMonitor.isValidated).thenReturn(isValidatedFlow)
 
         // Simulate Tunnel UP
-        manager.handleTunnelStateChange(Tunnel.State.UP)
+        manager.handleTunnelStateChange(VpnTunnelState.UP)
         
         // We don't advanceUntilIdle here because it might jump past the verification timeout
         
@@ -297,7 +297,7 @@ class AmneziaVpnManagerTest {
         manager.connect("l1", server, session)
         advanceUntilIdle()
         
-        verify(amneziaConfigGenerator).buildConfig(
+        verify(awgBoxConfigGenerator).buildConfig(
             any(), any(), any(), any(), any(), any(), 
             eq(true), // allowLan should be true
             any(), any(), any(), any(), any()

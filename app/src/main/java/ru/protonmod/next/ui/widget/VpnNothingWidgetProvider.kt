@@ -27,7 +27,7 @@ import android.widget.RemoteViews
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.amnezia.awg.backend.Tunnel
+import ru.protonmod.next.vpn.VpnTunnelState
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.network.LogicalServer
@@ -72,7 +72,7 @@ class VpnNothingWidgetProvider : AppWidgetProvider() {
         super.onReceive(context, intent)
         if (intent.action == ACTION_WIDGET_CLICK) {
             val currentState = amneziaVpnManager.tunnelState.value
-            if (currentState == Tunnel.State.UP) {
+            if (currentState == VpnTunnelState.UP) {
                 amneziaVpnManager.disconnect()
             } else {
                 applicationScope.launch {
@@ -90,7 +90,7 @@ class VpnNothingWidgetProvider : AppWidgetProvider() {
         val views = RemoteViews(context.packageName, R.layout.widget_vpn_nothing)
         
         val currentState = amneziaVpnManager.tunnelState.value
-        val isConnected = currentState == Tunnel.State.UP
+        val isConnected = currentState == VpnTunnelState.UP
         val connectedServer = connectedServerState.connectedServer.value
         
         if (isConnected && connectedServer != null) {

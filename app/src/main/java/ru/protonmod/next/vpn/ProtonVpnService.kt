@@ -1,24 +1,9 @@
 /*
  * Copyright (C) 2026 SMH01
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
-
 package ru.protonmod.next.vpn
 
-
-import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -28,14 +13,21 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
+import android.net.TrafficStats
+import android.net.VpnService
 import android.os.Build
-import android.system.Os
+import android.os.IBinder
+import android.os.ParcelFileDescriptor
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.AndroidEntryPoint
+import io.nekohasekai.libbox.CommandServer
+import io.nekohasekai.libbox.CommandServerHandler
+import io.nekohasekai.libbox.Libbox
+import io.nekohasekai.libbox.OverrideOptions
+import io.nekohasekai.libbox.SetupOptions
+import io.nekohasekai.libbox.SystemProxyStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -44,71 +36,30 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import org.amnezia.awg.backend.GoBackend
-import org.amnezia.awg.backend.Tunnel
-import org.amnezia.awg.config.Config
+import kotlinx.coroutines.withContext
+import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
 import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.utils.ProtonLogger
-import java.io.ByteArrayInputStream
-import java.net.InetSocketAddress
+import java.io.File
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
- * Intermediate base class to help Hilt/KSP resolve the Service inheritance
- * from the library's nested class.
- */
-open class AmneziaVpnServiceBase : GoBackend.VpnService()
-
-/**
- * Service implementation for AmneziaWG tunnel used in Proton VPN-Next.
- * Manages the VPN lifecycle, foreground notifications, and network traffic statistics.
+ * Android VPN service backed by amnezia-box (sing-box + AWG/AWG2).
+ *
+ * The service intentionally keeps the public Intent/broadcast contract stable so the rest of the
+ * app can migrate independently from the old wg-quick/GoBackend implementation.
  */
 @AndroidEntryPoint
-class ProtonVpnService : AmneziaVpnServiceBase() {
-
-    @Inject
-    lateinit var connectedServerState: ConnectedServerState
-
-    @Inject
-    lateinit var trafficStatsRecorder: TrafficStatsRecorder
-
-    // SupervisorJob ensures that if one child coroutine fails, it doesn't crash the whole scope
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-
-    private var statsJob: Job? = null
-    private var logcatJob: Job? = null
-    private var lastRx: Long = 0L
-    private var lastTx: Long = 0L
-    private var lastSpeedText: String? = null
-
-    private var notificationsEnabled: Boolean = true
-    @Volatile
-    private var killSwitchEnabled: Boolean = false
-    @Volatile
-    private var isManualDisconnect: Boolean = false
-    @Volatile
-    private var isVerified: Boolean = false
-    private var lastLogicalServerId: String? = null
-    private var lastSessionId: Long = 0L
-    private var lastConnectIntent: Intent? = null
-    private var verificationJob: Job? = null
-    private var reconnectionJob: Job? = null
-    @Volatile
-    private var isInternalReconnecting: Boolean = false
-
-    // Cached PendingIntent objects to reduce IPC calls to system service
-    // These are reused across notification updates to avoid DeadSystemException
-    // when the system PendingIntent service becomes temporarily unavailable
-    private var cachedDisconnectPendingIntent: PendingIntent? = null
-    private var cachedContentPendingIntent: PendingIntent? = null
+class ProtonVpnService : VpnService(), CommandServerHandler {
+    @Inject lateinit var connectedServerState: ConnectedServerState
+    @Inject lateinit var trafficStatsRecorder: TrafficStatsRecorder
 
     companion object {
         private const val TAG = "ProtonVpnService"
-
-        // Intent Actions
         const val ACTION_CONNECT = "ru.protonmod.next.vpn.CONNECT"
         const val ACTION_DISCONNECT = "ru.protonmod.next.vpn.DISCONNECT"
         const val ACTION_STATE_CHANGED = "ru.protonmod.next.vpn.STATE_CHANGED"
@@ -117,7 +68,6 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         const val ACTION_SET_VERIFIED = "ru.protonmod.next.vpn.SET_VERIFIED"
         const val ACTION_QUERY_STATE = "ru.protonmod.next.vpn.QUERY_STATE"
 
-        // Intent Extras
         const val EXTRA_CONFIG = "config_string"
         const val EXTRA_EXCLUDED_APPS = "excluded_apps"
         const val EXTRA_EXCLUDED_IPS = "excluded_ips"
@@ -132,413 +82,230 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         const val EXTRA_LOGICAL_SERVER_ID = "logical_server_id"
         const val EXTRA_SESSION_ID = "session_id"
         const val EXTRA_IS_RECONNECTING = "is_reconnecting"
+        const val STATE_CONNECTING = "CONNECTING"
+        const val TUNNEL_NAME = "proton_awgbox"
 
-        const val TUNNEL_NAME = "proton_awg"
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "vpn_status_channel"
         private const val CHANNEL_SILENT_ID = "vpn_status_channel_silent"
-
-        const val STATE_CONNECTING = "CONNECTING"
+        private val libboxInitialized = AtomicBoolean(false)
     }
 
-    private lateinit var backend: GoBackend
-    private var currentTunnelState: Tunnel.State = Tunnel.State.DOWN
-    private var isCurrentlyConnecting: Boolean = false
-    private var isForegroundServiceStarted: Boolean = false
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private lateinit var platform: AwgBoxPlatform
+    private var commandServer: CommandServer? = null
+    private var tunDescriptor: ParcelFileDescriptor? = null
+    private var statsJob: Job? = null
+    private var reconnectJob: Job? = null
+    private var state = VpnTunnelState.DOWN
+    private var connecting = false
+    private var verified = false
+    private var manualDisconnect = false
+    private var notificationsEnabled = true
+    private var killSwitchEnabled = false
+    private var logicalServerId: String? = null
+    private var lastConfig: String? = null
+    private var lastRx = 0L
+    private var lastTx = 0L
+    private var lastSpeed: String? = null
 
-    private val notificationManager by lazy {
-        getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-    }
-
-    /**
-     * Tunnel callback interface to monitor VPN states and preferences.
-     */
-    private val tunnel = object : Tunnel {
-        override fun getName() = TUNNEL_NAME
-
-        override fun onStateChange(newState: Tunnel.State) {
-            val wasConnecting = isCurrentlyConnecting
-            if (currentTunnelState == newState && !wasConnecting) return
-            
-            // Log the transition for debugging
-            ProtonLogger.d(TAG, "onStateChange: $newState (isInternalReconnecting=$isInternalReconnecting, isVerified=$isVerified)")
-
-            currentTunnelState = newState
-            
-            // If we transitioned out of DOWN (e.g. to UP or TOGGLE), 
-            // we are no longer in the "waiting for DOWN" phase of reconnection.
-            if (newState != Tunnel.State.DOWN) {
-                isInternalReconnecting = false
-            }
-
-            // Keep isCurrentlyConnecting true if we are in UP state but not yet verified,
-            // OR if we are performing an internal reconnection.
-            isCurrentlyConnecting = when {
-                newState == Tunnel.State.UP && !isVerified -> true
-                isInternalReconnecting -> true
-                else -> false
-            }
-
-            ProtonLogger.v(TAG, "VPN State updated internal: isCurrentlyConnecting=$isCurrentlyConnecting")
-            ProtonLogger.addSentryBreadcrumb(TAG, "VPN State Changed: $newState", "INFO", "vpn.state")
-
-            // Broadcast the new state to the rest of the application.
-            // If the tunnel is UP but not yet verified, we still report it as CONNECTING to the UI.
-            val broadcast = Intent(ACTION_STATE_CHANGED).apply {
-                val stateLabel = if (newState == Tunnel.State.UP && !isVerified) STATE_CONNECTING else newState.name
-                putExtra(EXTRA_STATE, stateLabel)
-                putExtra(EXTRA_LOGICAL_SERVER_ID, lastLogicalServerId)
-                putExtra(EXTRA_IS_RECONNECTING, isInternalReconnecting)
-                setPackage(packageName)
-            }
-            sendBroadcast(broadcast)
-
-            // Handle traffic updates based on the current state
-            if (newState == Tunnel.State.DOWN) {
-                lastLogicalServerId = null
-                verificationJob?.cancel()
-                stopTrafficUpdates()
-                stopLogcatCollection()
-
-                // If the tunnel went DOWN unexpectedly (not a manual disconnect),
-                // we should trigger a reconnect.
-                if (!isManualDisconnect && !isInternalReconnecting && lastConnectIntent != null) {
-                    ProtonLogger.w(TAG, "Tunnel went DOWN unexpectedly. Triggering reconnect from onStateChange...")
-                    reconnect()
-                } else {
-                    ProtonLogger.d(TAG, "Tunnel went DOWN (isManualDisconnect=$isManualDisconnect, isInternalReconnecting=$isInternalReconnecting)")
-                }
-            }
-
-            updateNotification(newState.name)
-
-            if (newState == Tunnel.State.UP) {
-                startTrafficUpdates()
-                // Log collection is already started in ACTION_CONNECT,
-                // but we ensure it's active here just in case of unexpected state transitions.
-                startLogcatCollection()
-
-                if (!isVerified) {
-                    runVerification()
-                }
-            }
-        }
-    }
-
-    /**
-     * BroadcastReceiver to dynamically update settings (like notifications/kill switch)
-     * without restarting the VPN service.
-     */
     private val settingsReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
-                ACTION_UPDATE_SETTINGS -> {
-                    notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
-                    killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
-
-                    if (intent.hasExtra(EXTRA_NON_FATAL_ENABLED)) {
-                        val nonFatal = intent.getBooleanExtra(EXTRA_NON_FATAL_ENABLED, true)
-                        ProtonLogger.isNonFatalEnabled = nonFatal
-                    }
-
-                    if (intent.hasExtra(EXTRA_ANALYTICS_ENABLED)) {
-                        val analytics = intent.getBooleanExtra(EXTRA_ANALYTICS_ENABLED, true)
-                        ProtonLogger.isAnalyticsEnabled = analytics
-                    }
-
-                    ProtonLogger.d(TAG, "Settings updated via broadcast: notifications=$notificationsEnabled, killSwitch=$killSwitchEnabled, nonFatal=${ProtonLogger.isNonFatalEnabled}, analytics=${ProtonLogger.isAnalyticsEnabled}")
-
-                    val label = when {
-                        isCurrentlyConnecting -> STATE_CONNECTING
-                        else -> currentTunnelState.name
-                    }
-
-                    updateNotification(label)
-                }
-                ACTION_DISCONNECT -> {
-                    // Handles disconnect requests sent as a broadcast (e.g. from a backgrounded app).
-                    // This mirrors the ACTION_DISCONNECT branch in onStartCommand but is reachable
-                    // without startService(), avoiding BackgroundServiceStartNotAllowedException.
-                    ProtonLogger.i(TAG, "Action DISCONNECT via broadcast: Stopping tunnel gracefully")
-                    isManualDisconnect = true
-                    isCurrentlyConnecting = false
-                    serviceScope.launch(Dispatchers.IO) {
-                        try {
-                            backend.setState(tunnel, Tunnel.State.DOWN, null)
-                        } catch (e: Exception) {
-                            ProtonLogger.e(TAG, "Failed to stop VPN tunnel cleanly via broadcast", e)
-                            stopForegroundOrService()
-                        }
-                    }
-                }
+                ACTION_DISCONNECT -> stopTunnel(manual = true)
+                ACTION_UPDATE_SETTINGS -> applySettings(intent)
             }
         }
     }
 
     override fun onCreate() {
-        ProtonLogger.i(TAG, "VPN Service creating in isolated :vpn process (PID: ${android.os.Process.myPid()})")
-
-        // Verify 64-bit runtime (failsafe for 32-bit device detection)
-        if (System.getProperty("ro.product.cpu.abi")?.contains("armeabi") == true ||
-            System.getProperty("ro.product.cpu.abi")?.contains("x86") == true &&
-            System.getProperty("ro.product.cpu.abi")?.contains("x86_64") == false) {
-            ProtonLogger.e(TAG, "FATAL: App requires 64-bit CPU (arm64-v8a or x86_64). This device is 32-bit and not supported.")
-        }
-
-        // Set environment variables required for the Go backend (WireGuard/AmneziaWG)
-        try {
-            Os.setenv("TMPDIR", cacheDir.absolutePath, true)
-            Os.setenv("WG_TUN_DIR", cacheDir.absolutePath, true)
-            ProtonLogger.d(TAG, "Backend environment variables initialized")
-        } catch (e: Exception) {
-            ProtonLogger.e(TAG, "Failed to set environment variables for the backend", e)
-        }
-
         super.onCreate()
-        
-        // Force-complete the library's internal future to ensure GoBackend sees US as the active service.
-        // This prevents TimeoutException when the library tries to start its own VpnService class.
-        try {
-            val futureField = GoBackend::class.java.getDeclaredField("vpnService")
-            futureField.isAccessible = true
-            val future = futureField.get(null)
-            val completeMethod = future.javaClass.getMethod("complete", Any::class.java)
-            completeMethod.invoke(future, this)
-            ProtonLogger.d(TAG, "Library vpnService future force-completed in onCreate")
-        } catch (_: Exception) {
-            ProtonLogger.v(TAG, "Could not force-complete library future (normal if using standard GoBackend implementation)")
-        }
-
         createNotificationChannels()
-
-        // Register the dynamic settings receiver — also handles ACTION_DISCONNECT broadcast
-        // so the tunnel can be stopped from a backgrounded app without startService().
-        val filter = IntentFilter(ACTION_UPDATE_SETTINGS).apply {
-            addAction(ACTION_DISCONNECT)
+        initializeLibbox()
+        platform = AwgBoxPlatform(this) { descriptor ->
+            tunDescriptor?.close()
+            tunDescriptor = descriptor
         }
-        ContextCompat.registerReceiver(this, settingsReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
-
-        // Initialize the Go backend
-        backend = GoBackend(this)
+        ContextCompat.registerReceiver(
+            this,
+            settingsReceiver,
+            IntentFilter().apply {
+                addAction(ACTION_DISCONNECT)
+                addAction(ACTION_UPDATE_SETTINGS)
+            },
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+        ProtonLogger.i(TAG, "amnezia-box ${Libbox.version()} initialized")
     }
 
+    private fun initializeLibbox() {
+        if (!libboxInitialized.compareAndSet(false, true)) return
+        val workingDir = getExternalFilesDir(null) ?: filesDir
+        val options = SetupOptions().apply {
+            basePath = filesDir.absolutePath
+            workingPath = workingDir.absolutePath
+            tempPath = cacheDir.absolutePath
+            logMaxLines = 2_000
+            debug = BuildConfig.DEBUG
+            fixAndroidStack = true
+        }
+        Libbox.setup(options)
+        Libbox.setLocale(Locale.getDefault().toLanguageTag().replace('-', '_'))
+        runCatching { Libbox.redirectStderr(File(workingDir, "awgbox-stderr.log").absolutePath) }
+    }
+
+    override fun onBind(intent: Intent): IBinder? = super.onBind(intent)
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val action = intent?.action
-        ProtonLogger.i(TAG, "Service start command: $action (StartID: $startId, Flags: $flags)")
-
-        when (action) {
-            ACTION_CONNECT -> {
-                // Ensure the library's future is completed before we call setState.
-                // If a previous instance just ran onDestroy(), it might have reset the future.
-                try {
-                    val futureField = GoBackend::class.java.getDeclaredField("vpnService")
-                    futureField.isAccessible = true
-                    val future = futureField.get(null)
-                    val isDoneMethod = future.javaClass.getMethod("isDone")
-                    val isDone = isDoneMethod.invoke(future) as Boolean
-                    if (!isDone) {
-                        val completeMethod = future.javaClass.getMethod("complete", Any::class.java)
-                        completeMethod.invoke(future, this)
-                        ProtonLogger.d(TAG, "Library vpnService future force-completed in ACTION_CONNECT")
-                    }
-                } catch (e: Exception) { /* ignored */ }
-
-                // Cancel any pending verification from a previous server
-                verificationJob?.cancel()
-                
-                // Only cancel reconnectionJob if this is a fresh manual connection attempt.
-                // If it's a reconnection triggered internally, we let it finish gracefully.
-                if (!isInternalReconnecting) {
-                    reconnectionJob?.cancel()
-                }
-
-                isManualDisconnect = false
-                isVerified = false
-                
-                // Note: isInternalReconnecting is NOT reset here. 
-                // It will be reset in onStateChange when the state transitions away from DOWN.
-                
-                lastConnectIntent = intent
-                val configStr = intent.getStringExtra(EXTRA_CONFIG)
-                lastLogicalServerId = intent.getStringExtra(EXTRA_LOGICAL_SERVER_ID)
-                lastSessionId = intent.getLongExtra(EXTRA_SESSION_ID, 0L)
-                notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, true)
-                killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, false)
-
-                ProtonLogger.d(TAG, "Action CONNECT: session=$lastSessionId, notifications=$notificationsEnabled, killSwitch=$killSwitchEnabled")
-
-                // Important: Show connecting notification immediately to satisfy
-                // Android's Foreground Service requirements and prevent exceptions.
-                isCurrentlyConnecting = true
-                startLogcatCollection() // Start early to capture handshake and init logs
-                updateNotification(STATE_CONNECTING)
-
-                if (configStr != null) {
-                    val hasAwg = configStr.contains("Jc =") || configStr.contains("H1 =")
-                    ProtonLogger.v(TAG, "Connection config received (Length: ${configStr.length}, HasAWG: $hasAwg)")
-                    serviceScope.launch(Dispatchers.IO) {
-                        try {
-                            val configStream = ByteArrayInputStream(configStr.toByteArray())
-                            val config = Config.parse(configStream)
-
-                            ProtonLogger.i(TAG, "Config parsed successfully. Bringing tunnel UP...")
-
-                            // Broadcast connecting state to UI
-                            val broadcast = Intent(ACTION_STATE_CHANGED).apply {
-                                putExtra(EXTRA_STATE, STATE_CONNECTING)
-                                putExtra(EXTRA_LOGICAL_SERVER_ID, lastLogicalServerId)
-                                setPackage(packageName)
-                            }
-                            sendBroadcast(broadcast)
-
-                            // Bring the tunnel up
-                            val state = backend.setState(tunnel, Tunnel.State.UP, config)
-                            if (state == Tunnel.State.UP) {
-                                // Ensure onStateChange is triggered in case backend skips it on in-place updates
-                                tunnel.onStateChange(Tunnel.State.UP)
-                            }
-                        } catch (e: Exception) {
-                            ProtonLogger.e(TAG, "Critical failure during tunnel startup", e)
-                            isInternalReconnecting = false
-                            tunnel.onStateChange(Tunnel.State.DOWN)
-                        }
-                    }
-                } else {
-                    ProtonLogger.e(TAG, "Action CONNECT received but config string is NULL")
-                    stopForegroundOrService()
-                }
-            }
-            ACTION_DISCONNECT -> {
-                ProtonLogger.i(TAG, "Action DISCONNECT: Stopping tunnel gracefully")
-                verificationJob?.cancel()
-                reconnectionJob?.cancel()
-                isManualDisconnect = true
-                isCurrentlyConnecting = false
-                serviceScope.launch(Dispatchers.IO) {
-                    try {
-                        // Bring the tunnel down gracefully off the main thread
-                        backend.setState(tunnel, Tunnel.State.DOWN, null)
-                    } catch (e: Exception) {
-                        ProtonLogger.e(TAG, "Failed to stop VPN tunnel cleanly", e)
-                        stopForegroundOrService()
-                    }
-                }
-            }
-            ACTION_UPDATE_SETTINGS -> {
-                // ... (unchanged)
-            }
+        when (intent?.action) {
+            ACTION_CONNECT -> startTunnel(intent)
+            ACTION_DISCONNECT -> stopTunnel(manual = true)
+            ACTION_UPDATE_SETTINGS -> applySettings(intent)
             ACTION_SET_VERIFIED -> {
-                isVerified = true
-                val label = if (currentTunnelState == Tunnel.State.UP) Tunnel.State.UP.name else STATE_CONNECTING
-                updateNotification(label)
+                verified = true
+                connecting = false
+                sendState(VpnTunnelState.UP)
+                updateNotification(VpnTunnelState.UP.name)
             }
-            ACTION_QUERY_STATE -> {
-                ProtonLogger.d(TAG, "Action QUERY_STATE: Broadcasting current status")
-                val stateBroadcast = Intent(ACTION_STATE_CHANGED).apply {
-                    val label = if (isCurrentlyConnecting) STATE_CONNECTING else currentTunnelState.name
-                    putExtra(EXTRA_STATE, label)
-                    putExtra(EXTRA_LOGICAL_SERVER_ID, lastLogicalServerId)
-                    setPackage(packageName)
-                }
-                sendBroadcast(stateBroadcast)
-
-                if (currentTunnelState == Tunnel.State.UP) {
-                    val speedBroadcast = Intent(ACTION_STATS_UPDATED).apply {
-                        putExtra(EXTRA_SPEED, lastSpeedText)
-                        putExtra(EXTRA_LOGICAL_SERVER_ID, lastLogicalServerId)
-                        // Note: Traffic Rx/Tx are usually only available in the statsJob, 
-                        // but if it's already running, it will send the next update soon.
-                        setPackage(packageName)
-                    }
-                    sendBroadcast(speedBroadcast)
-                }
-            }
-            else -> {
-                return super.onStartCommand(intent, flags, startId)
-            }
+            ACTION_QUERY_STATE -> sendState(if (connecting) null else state)
+            else -> return START_NOT_STICKY
         }
         return START_STICKY
     }
 
-    /**
-     * Creates notification channels.
-     */
-    private fun createNotificationChannels() {
-        val notificationManager: NotificationManager =
-            getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-
-        val name = getString(R.string.notification_channel_name)
-
-        // Standard channel for visible VPN status
-        val channel = NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_LOW).apply {
-            description = getString(R.string.notification_channel_desc)
-            setShowBadge(false)
+    private fun startTunnel(intent: Intent) {
+        val config = intent.getStringExtra(EXTRA_CONFIG) ?: run {
+            ProtonLogger.e(TAG, "Missing awgbox configuration")
+            return
         }
-        notificationManager.createNotificationChannel(channel)
+        logicalServerId = intent.getStringExtra(EXTRA_LOGICAL_SERVER_ID)
+        notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, true)
+        killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, false)
+        lastConfig = config
+        manualDisconnect = false
+        verified = false
+        connecting = true
+        updateNotification(STATE_CONNECTING)
+        sendState(null)
 
-        // Silent channel for background operation without disturbing the user
-        val silentChannel = NotificationChannel(CHANNEL_SILENT_ID, "$name (Silent)", NotificationManager.IMPORTANCE_MIN).apply {
-            setShowBadge(false)
+        reconnectJob?.cancel()
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                closeEngine()
+                val server = CommandServer(this@ProtonVpnService, platform).also { it.start() }
+                server.checkConfig(config)
+                server.startOrReloadService(config, OverrideOptions())
+                commandServer = server
+            }.onSuccess {
+                withContext(Dispatchers.Main) {
+                    state = VpnTunnelState.UP
+                    connecting = false
+                    sendState(VpnTunnelState.UP)
+                    updateNotification(VpnTunnelState.UP.name)
+                    startTrafficUpdates()
+                }
+            }.onFailure { error ->
+                ProtonLogger.e(TAG, "Failed to start amnezia-box tunnel", error)
+                withContext(Dispatchers.Main) { handleEngineFailure() }
+            }
         }
-        notificationManager.createNotificationChannel(silentChannel)
     }
 
-    /**
-     * Periodically queries the backend for network statistics and updates the notification.
-     */
+    private fun handleEngineFailure() {
+        state = VpnTunnelState.DOWN
+        connecting = false
+        verified = false
+        sendState(VpnTunnelState.DOWN)
+        updateNotification(VpnTunnelState.DOWN.name)
+        if (killSwitchEnabled && !manualDisconnect && !lastConfig.isNullOrBlank()) {
+            reconnectJob?.cancel()
+            reconnectJob = scope.launch {
+                delay(3.seconds)
+                val retry = Intent(this@ProtonVpnService, ProtonVpnService::class.java).apply {
+                    action = ACTION_CONNECT
+                    putExtra(EXTRA_CONFIG, lastConfig)
+                    putExtra(EXTRA_LOGICAL_SERVER_ID, logicalServerId)
+                    putExtra(EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
+                    putExtra(EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
+                }
+                startTunnel(retry)
+            }
+        } else {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+        }
+    }
+
+    private fun stopTunnel(manual: Boolean) {
+        manualDisconnect = manual
+        reconnectJob?.cancel()
+        connecting = false
+        verified = false
+        scope.launch(Dispatchers.IO) {
+            closeEngine()
+            withContext(Dispatchers.Main) {
+                state = VpnTunnelState.DOWN
+                sendState(VpnTunnelState.DOWN)
+                stopTrafficUpdates()
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                if (manual || !killSwitchEnabled) stopSelf()
+            }
+        }
+    }
+
+    private fun closeEngine() {
+        runCatching { commandServer?.closeService() }
+        runCatching { commandServer?.close() }
+        commandServer = null
+        runCatching { tunDescriptor?.close() }
+        tunDescriptor = null
+    }
+
+    private fun applySettings(intent: Intent) {
+        notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
+        killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
+        if (intent.hasExtra(EXTRA_NON_FATAL_ENABLED)) {
+            ProtonLogger.isNonFatalEnabled = intent.getBooleanExtra(EXTRA_NON_FATAL_ENABLED, true)
+        }
+        if (intent.hasExtra(EXTRA_ANALYTICS_ENABLED)) {
+            ProtonLogger.isAnalyticsEnabled = intent.getBooleanExtra(EXTRA_ANALYTICS_ENABLED, true)
+        }
+        updateNotification(if (connecting) STATE_CONNECTING else state.name)
+    }
+
+    private fun sendState(explicitState: VpnTunnelState?) {
+        sendBroadcast(Intent(ACTION_STATE_CHANGED).apply {
+            putExtra(EXTRA_STATE, explicitState?.name ?: STATE_CONNECTING)
+            putExtra(EXTRA_LOGICAL_SERVER_ID, logicalServerId)
+            putExtra(EXTRA_IS_RECONNECTING, reconnectJob?.isActive == true)
+            setPackage(packageName)
+        })
+    }
+
     private fun startTrafficUpdates() {
         stopTrafficUpdates()
-
-        lastRx = 0L
-        lastTx = 0L
-        statsJob = serviceScope.launch(Dispatchers.IO) {
-            try {
-                while (isActive) {
-                    try {
-                        val stats = backend.getStatistics(tunnel)
-                        val totalRx = stats.totalRx()
-                        val totalTx = stats.totalTx()
-
-                        val deltaRx = if (lastRx == 0L) 0L else (totalRx - lastRx)
-                        val deltaTx = if (lastTx == 0L) 0L else (totalTx - lastTx)
-
-                        lastRx = totalRx
-                        lastTx = totalTx
-
-                        // Persist daily statistics for the dashboard (Traffic / Usage cards).
-                        // The loop ticks once per second, hence deltaSeconds = 1.
-                        trafficStatsRecorder.record(deltaRx, deltaTx, 1L)
-
-                        val upStr = formatSpeed(deltaTx)
-                        val downStr = formatSpeed(deltaRx)
-                        lastSpeedText = getString(R.string.vpn_speed_format, upStr, downStr)
-
-                        val totalRxStr = formatBytes(totalRx, false)
-                        val totalTxStr = formatBytes(totalTx, false)
-
-                        // Broadcast speed updates to UI components
-                        val speedBroadcast = Intent(ACTION_STATS_UPDATED).apply {
-                            putExtra(EXTRA_SPEED, lastSpeedText)
-                            putExtra(EXTRA_TRAFFIC_RX, totalRxStr)
-                            putExtra(EXTRA_TRAFFIC_TX, totalTxStr)
-                            putExtra(EXTRA_LOGICAL_SERVER_ID, lastLogicalServerId)
-                            setPackage(packageName)
-                        }
-                        sendBroadcast(speedBroadcast)
-
-                        if (notificationsEnabled && currentTunnelState == Tunnel.State.UP) {
-                            // Update notification directly on the IO thread to avoid blocking the main thread.
-                            // notificationManager.notify() is a Binder IPC call that can block for several
-                            // seconds on slower devices; running it on IO prevents ANR on the main thread.
-                            updateNotification(Tunnel.State.UP.name, isSpeedUpdateOnly = true)
-                        }
-                    } catch (e: Exception) {
-                        ProtonLogger.e(TAG, "Error while fetching traffic statistics", e)
-                    }
-                    delay(1000.milliseconds) // Update frequency
-                }
-            } finally {
-                ProtonLogger.d(TAG, "Traffic updates coroutine finished")
+        val uid = applicationInfo.uid
+        lastRx = TrafficStats.getUidRxBytes(uid).coerceAtLeast(0)
+        lastTx = TrafficStats.getUidTxBytes(uid).coerceAtLeast(0)
+        statsJob = scope.launch(Dispatchers.IO) {
+            while (isActive) {
+                delay(1.seconds)
+                val rx = TrafficStats.getUidRxBytes(uid).coerceAtLeast(lastRx)
+                val tx = TrafficStats.getUidTxBytes(uid).coerceAtLeast(lastTx)
+                val deltaRx = rx - lastRx
+                val deltaTx = tx - lastTx
+                lastRx = rx
+                lastTx = tx
+                trafficStatsRecorder.record(deltaRx, deltaTx, 1)
+                lastSpeed = getString(R.string.vpn_speed_format, formatBytes(deltaTx, true), formatBytes(deltaRx, true))
+                sendBroadcast(Intent(ACTION_STATS_UPDATED).apply {
+                    putExtra(EXTRA_SPEED, lastSpeed)
+                    putExtra(EXTRA_TRAFFIC_RX, formatBytes(rx, false))
+                    putExtra(EXTRA_TRAFFIC_TX, formatBytes(tx, false))
+                    putExtra(EXTRA_LOGICAL_SERVER_ID, logicalServerId)
+                    setPackage(packageName)
+                })
+                if (state == VpnTunnelState.UP) updateNotification(state.name)
             }
         }
     }
@@ -546,538 +313,82 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     private fun stopTrafficUpdates() {
         statsJob?.cancel()
         statsJob = null
-
-        // Clear cached PendingIntent objects to allow fresh creation on next connection
-        cachedDisconnectPendingIntent = null
-        cachedContentPendingIntent = null
-
-        // Log final session stats
-        val totalRx = lastRx
-        val totalTx = lastTx
-        ProtonLogger.i(TAG, "VPN Session ended. Final stats: RX=${formatSpeed(totalRx)}, TX=${formatSpeed(totalTx)}")
-        ProtonLogger.addSentryBreadcrumb(TAG, "VPN Session Ended: RX=$totalRx, TX=$totalTx", "INFO", "vpn.stats")
-
-        // Persist whatever is still buffered for this session.
-        serviceScope.launch(Dispatchers.IO) { trafficStatsRecorder.flush() }
-
-        lastSpeedText = null
+        scope.launch(Dispatchers.IO) { trafficStatsRecorder.flush() }
     }
 
-    /**
-     * Starts background collection of tunnel-specific logs from Logcat
-     * and explicitly forwards critical AmneziaWG logs to Sentry as Breadcrumbs.
-     *
-     * To prevent CPU saturation (which can cause background ANRs on the main thread):
-     * - Repetitive log lines are deduplicated within a rolling time window.
-     * - Unimportant logs are filtered out using isImportantAwgLog().
-     * - A small coroutine yield is inserted between each line so the IO thread
-     * is not monopolised, allowing other work to be scheduled.
-     * - The expensive Sentry Logs API (addSentryLog) is intentionally NOT called
-     * here; breadcrumbs alone are sufficient for tunnel diagnostics.
-     */
-    @SuppressLint("LogTagMismatch")
-    private fun startLogcatCollection() {
-        if (logcatJob?.isActive == true) {
-            ProtonLogger.v(TAG, "Logcat collection already running, skipping restart.")
-            return
+    private fun formatBytes(bytes: Long, speed: Boolean): String {
+        val value = bytes.coerceAtLeast(0).toDouble()
+        val (scaled, unit) = when {
+            value >= 1024 * 1024 * 1024 -> value / (1024 * 1024 * 1024) to if (speed) R.string.unit_gb_s else R.string.unit_gb
+            value >= 1024 * 1024 -> value / (1024 * 1024) to if (speed) R.string.unit_mb_s else R.string.unit_mb
+            value >= 1024 -> value / 1024 to if (speed) R.string.unit_kb_s else R.string.unit_kb
+            else -> value to if (speed) R.string.unit_b_s else R.string.unit_b
         }
-        logcatJob?.cancel()
-        logcatJob = serviceScope.launch(Dispatchers.IO) {
-            ProtonLogger.d(TAG, "Starting Logcat collection for 'Tun/proton_awg'")
-            val process = try {
-                // BUGFIX: Use :D (Debug) instead of :V (Verbose) to eliminate empty log spam.
-                val command = arrayOf(
-                    "logcat",
-                    "-v", "tag",
-                    "-T", "1",
-                    "--pid=${android.os.Process.myPid()}",
-                    "Tun/proton_awg:D",
-                    "tun/proton_awg:D",
-                    "*:S"
-                )
-                Runtime.getRuntime().exec(command)
-            } catch (e: Exception) {
-                ProtonLogger.e(TAG, "Failed to start Logcat process", e)
-                return@launch
-            }
-
-            // Deduplication: track last seen message and when it was last forwarded.
-            // High-frequency identical messages (e.g. repeated handshake/keepalive lines
-            // during a degraded tunnel) are suppressed to avoid flooding Sentry and
-            // saturating DefaultDispatcher-worker threads.
-            var lastLine = ""
-            var lastLineEmittedAt = 0L
-            val deduplicationWindowMs = 5_000L // suppress exact duplicates within 5 s
-
-            try {
-                process.inputStream.bufferedReader().useLines { lines ->
-                    lines.forEach { line ->
-                        if (!isActive) return@useLines
-
-                        // logcat with '-v tag' outputs format: "D/Tun/proton_awg: actual message"
-                        // We find the colon and extract only the message part.
-                        val msgSeparatorIndex = line.indexOf(": ")
-                        if (msgSeparatorIndex == -1) return@forEach
-
-                        val cleanLine = line.substring(msgSeparatorIndex + 2).trim()
-
-                        // Drop completely empty logs or logs that are not considered important
-                        // to reduce spam and Sentry noise.
-                        if (cleanLine.isBlank() || !isImportantAwgLog(cleanLine)) return@forEach
-
-                        val now = System.currentTimeMillis()
-
-                        // Suppress exact duplicate lines within the deduplication window.
-                        if (cleanLine == lastLine && now - lastLineEmittedAt < deduplicationWindowMs) {
-                            return@forEach
-                        }
-                        lastLine = cleanLine
-                        lastLineEmittedAt = now
-
-                        // Add as breadcrumb (will be sent IF a crash/error happens later).
-                        // Note: we deliberately do NOT call ProtonLogger.d() here because that
-                        // would trigger addSentryLog() — an extra Sentry SDK IPC call per line
-                        // that is unnecessary for routine tunnel noise and adds significant cost.
-                        ProtonLogger.addSentryBreadcrumb(
-                            "AmneziaWG",
-                            cleanLine,
-                            "DEBUG",
-                            "vpn.awg"
-                        )
-
-                        // Local logcat output (debug builds only, no Sentry overhead)
-                        if (android.util.Log.isLoggable("Tun/proton_awg", android.util.Log.DEBUG)) {
-                            android.util.Log.d("Tun/proton_awg", cleanLine)
-                        }
-
-                        // Yield to the coroutine dispatcher so this hot loop does not
-                        // monopolise a DefaultDispatcher worker thread and starve the UI.
-                        kotlinx.coroutines.yield()
-                    }
-                }
-            } catch (e: Exception) {
-                ProtonLogger.e(TAG, "Failed to read tunnel logs from Logcat", e)
-            } finally {
-                process.destroy()
-            }
-        }
+        return String.format(Locale.US, if (scaled >= 1024) "%.0f %s" else "%.1f %s", scaled, getString(unit))
     }
 
-    /**
-     * Filters AWG logs to keep only actionable/important events.
-     */
-    private fun isImportantAwgLog(msg: String): Boolean {
-        val importantKeywords = listOf(
-            "handshake",
-            "keepalive",
-            "keypair",
-            "cookie",
-            "Rekeying",
-            "Retrying",
-            "Receiving",
-            "Sending"
-        )
-        return importantKeywords.any { msg.contains(it, ignoreCase = true) }
+    private fun createNotificationChannels() {
+        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val name = getString(R.string.notification_channel_name)
+        manager.createNotificationChannel(NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_LOW))
+        manager.createNotificationChannel(NotificationChannel(CHANNEL_SILENT_ID, getString(R.string.notification_channel_silent_name), NotificationManager.IMPORTANCE_MIN))
     }
 
-    private fun stopLogcatCollection() {
-        ProtonLogger.d(TAG, "Stopping Logcat collection")
-        logcatJob?.cancel()
-        logcatJob = null
-    }
-
-    /**
-     * Formats bytes into a human-readable speed string.
-     */
-    private fun formatSpeed(bytesPerSec: Long): String {
-        return formatBytes(bytesPerSec, true)
-    }
-
-    /**
-     * Formats bytes into a human-readable size or speed string.
-     */
-    private fun formatBytes(bytes: Long, isSpeed: Boolean): String {
-        val b = maxOf(0.0, bytes.toDouble())
-        if (b <= 0.0) return "0 ${getString(if (isSpeed) R.string.unit_b_s else R.string.unit_b)}"
-        val kib = 1024.0
-        val mib = kib * 1024.0
-        val gib = mib * 1024.0
-        val unitRes = when {
-            b >= gib -> if (isSpeed) R.string.unit_gb_s else R.string.unit_gb
-            b >= mib -> if (isSpeed) R.string.unit_mb_s else R.string.unit_mb
-            b >= kib -> if (isSpeed) R.string.unit_kb_s else R.string.unit_kb
-            else -> if (isSpeed) R.string.unit_b_s else R.string.unit_b
-        }
-        val value = when {
-            b >= gib -> b / gib
-            b >= mib -> b / mib
-            b >= kib -> b / kib
-            else -> b
-        }
-        val format = when {
-            b >= mib -> "%.2f %s"
-            b >= kib -> "%.1f %s"
-            else -> "%.0f %s"
-        }
-        return String.format(Locale.US, format, value, getString(unitRes))
-    }
-
-    /**
-     * Builds the notification object based on the current VPN state.
-     */
-    private fun createNotification(stateName: String, speedText: String? = null): Notification {
-        val serverName = connectedServerState.connectedServer.value?.name ?: "Proton VPN"
-
+    private fun createNotification(stateName: String): Notification {
+        val serverName = connectedServerState.connectedServer.value?.name ?: getString(R.string.app_name)
         val title = when {
-            stateName == Tunnel.State.UP.name && isVerified -> getString(R.string.notification_title_connected, serverName)
-            stateName == Tunnel.State.UP.name && !isVerified -> getString(R.string.notification_title_verifying)
+            stateName == VpnTunnelState.UP.name && verified -> getString(R.string.notification_title_connected, serverName)
+            stateName == VpnTunnelState.UP.name -> getString(R.string.notification_title_verifying)
             stateName == STATE_CONNECTING -> getString(R.string.notification_title_connecting)
             else -> getString(R.string.notification_title_disconnected)
         }
-
-        // Get or create cached PendingIntent for disconnect action
-        // Caching reduces IPC calls to system service and prevents DeadSystemException
-        val disconnectPendingIntent = try {
-            if (cachedDisconnectPendingIntent == null) {
-                val disconnectIntent = Intent(this, ProtonVpnService::class.java).apply {
-                    action = ACTION_DISCONNECT
-                }
-                cachedDisconnectPendingIntent = PendingIntent.getService(
-                    this, 0, disconnectIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-                )
-            }
-            cachedDisconnectPendingIntent
-        } catch (e: Exception) {
-            ProtonLogger.e(TAG, "Failed to create disconnect PendingIntent, system service may be unavailable", e)
-            null
+        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+        val contentIntent = launchIntent?.let {
+            PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         }
-
-        // Get or create cached PendingIntent for app launch
-        val contentPendingIntent = try {
-            if (cachedContentPendingIntent == null) {
-                val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
-                if (launchIntent != null) {
-                    cachedContentPendingIntent = PendingIntent.getActivity(
-                        this, 0, launchIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-                    )
-                }
-            }
-            cachedContentPendingIntent
-        } catch (e: Exception) {
-            ProtonLogger.e(TAG, "Failed to create content PendingIntent, system service may be unavailable", e)
-            null
-        }
-
-        val activeChannelId = if (notificationsEnabled) CHANNEL_ID else CHANNEL_SILENT_ID
-
-        val builder = NotificationCompat.Builder(this, activeChannelId)
+        val disconnectIntent = PendingIntent.getService(
+            this,
+            1,
+            Intent(this, ProtonVpnService::class.java).setAction(ACTION_DISCONNECT),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        return NotificationCompat.Builder(this, if (notificationsEnabled) CHANNEL_ID else CHANNEL_SILENT_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
-            .setPriority(if (notificationsEnabled) NotificationCompat.PRIORITY_LOW else NotificationCompat.PRIORITY_MIN)
-            .setOngoing(stateName != Tunnel.State.DOWN.name)
+            .setContentText(lastSpeed)
+            .setContentIntent(contentIntent)
+            .setOngoing(stateName != VpnTunnelState.DOWN.name)
             .setShowWhen(false)
-
-        // Set content intent if available
-        if (contentPendingIntent != null) {
-            builder.setContentIntent(contentPendingIntent)
-        }
-
-        if (stateName == Tunnel.State.UP.name) {
-            // Add disconnect action only if PendingIntent was successfully created
-            if (disconnectPendingIntent != null) {
-                builder.addAction(
-                    0,
-                    getString(R.string.notification_action_disconnect),
-                    disconnectPendingIntent
-                )
-            }
-            if (!speedText.isNullOrEmpty() && notificationsEnabled) {
-                builder.setContentText(speedText)
-            }
-        }
-
-        return builder.build()
+            .addAction(0, getString(R.string.notification_action_disconnect), disconnectIntent)
+            .build()
     }
 
-    /**
-     * Updates the foreground service notification or removes it if appropriate.
-     */
-    private fun updateNotification(stateName: String, isSpeedUpdateOnly: Boolean = false) {
-        val isDown = stateName == Tunnel.State.DOWN.name
-        val isConnecting = isCurrentlyConnecting || stateName == STATE_CONNECTING
-
-        // Decide if we should show a foreground notification.
-        // It must be shown during connection, and kept alive if kill switch is active.
-        // CRITICAL FIX: To prevent ForegroundServiceDidNotStartInTimeException,
-        // we MUST always show the notification if the service is starting or active.
-        // We use the 'SILENT' channel if the user has disabled VPN notifications.
-        val shouldShow = when {
-            isConnecting -> true
-            isDown -> killSwitchEnabled && !isManualDisconnect
-            else -> true // Always show if UP, to satisfy Foreground requirements
-        }
-
-        if (shouldShow) {
-            val notification = createNotification(stateName, lastSpeedText)
-
-            try {
-                if (!isForegroundServiceStarted || !isSpeedUpdateOnly) {
-                    // Compat layer to handle Android 14+ Foreground Service types safely
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                        ServiceCompat.startForeground(
-                            this,
-                            NOTIFICATION_ID,
-                            notification,
-                            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-                        )
-                    } else {
-                        startForeground(NOTIFICATION_ID, notification)
-                    }
-                    isForegroundServiceStarted = true
-                } else {
-                    // Update existing notification without re-registering the foreground service
-                    notificationManager.notify(NOTIFICATION_ID, notification)
-                }
-            } catch (e: Exception) {
-                ProtonLogger.e(TAG, "Failed to start/update foreground service", e)
-                // If it's a ForegroundServiceStartNotAllowedException, we can't do much
-                // but at least we don't crash. The VPN might still work as a background VpnService
-                // or it might be killed soon.
-            }
+    private fun updateNotification(stateName: String) {
+        val notification = createNotification(stateName)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
         } else {
-            stopForegroundOrService(isDown)
+            startForeground(NOTIFICATION_ID, notification)
         }
     }
 
-    /**
-     * Helper to correctly stop the foreground service.
-     */
-    private fun stopForegroundOrService(stopSelf: Boolean = true) {
-        val caller = Thread.currentThread().stackTrace.getOrNull(3)?.methodName ?: "unknown"
-        ProtonLogger.d(TAG, "stopForegroundOrService(stopSelf=$stopSelf) called from $caller. isInternalReconnecting=$isInternalReconnecting")
-        verificationJob?.cancel()
-        stopForeground(STOP_FOREGROUND_REMOVE)
+    override fun serviceStop() { stopTunnel(manual = false) }
+    override fun serviceReload() = Unit
+    override fun getSystemProxyStatus() = SystemProxyStatus().apply { available = false; enabled = false }
+    override fun setSystemProxyEnabled(isEnabled: Boolean) = Unit
+    override fun writeDebugMessage(message: String?) { ProtonLogger.d("awgbox", message.orEmpty()) }
 
-        isForegroundServiceStarted = false
-        isCurrentlyConnecting = false
-        stopTrafficUpdates()
-        stopLogcatCollection()
-
-        if (stopSelf) {
-            stopSelf()
-        }
-    }
-
-    private fun runVerification() {
-        verificationJob?.cancel()
-        verificationJob = serviceScope.launch(Dispatchers.IO) {
-            val threshold = 20 * 1024 // 20 KB
-            val timeout = 10000L // 10 seconds
-            val startTime = System.currentTimeMillis()
-
-            ProtonLogger.i(TAG, "Connectivity verification: Waiting for tunnel handshake...")
-            
-            // 1. Wait for handshake response (up to 5 seconds)
-            var handshakeDetected = false
-            try {
-                kotlinx.coroutines.withTimeoutOrNull(5000.milliseconds) {
-                    while (isActive) {
-                        val stats = backend.getStatistics(tunnel)
-                        val hasHandshake = stats.peers().any { key ->
-                            (stats.peer(key)?.latestHandshakeEpochMillis ?: 0L) > 0L
-                        }
-                        if (hasHandshake) {
-                            handshakeDetected = true
-                            ProtonLogger.i(TAG, "Handshake response detected. Starting download test...")
-                            break
-                        }
-                        delay(500.milliseconds)
-                    }
-                }
-            } catch (e: Exception) {
-                ProtonLogger.v(TAG, "Handshake detection failed: ${e.message}")
-            }
-
-            if (!handshakeDetected) {
-                ProtonLogger.w(TAG, "Handshake not detected within 5s. Proceeding with verification anyway.")
-            }
-
-            // 2. Capture initial RX AFTER handshake or timeout
-            val startRx = backend.getStatistics(tunnel).totalRx()
-            ProtonLogger.i(TAG, "Connectivity verification started (Target: 20KB, Timeout: 10s, InitialRx: $startRx)")
-
-            val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
-            try {
-                while (isActive && !isVerified && System.currentTimeMillis() - startTime < timeout) {
-                    // The active network is the VPN while the tunnel is established.
-                    val vpnNetwork = cm.activeNetwork?.takeIf { network ->
-                        cm.getNetworkCapabilities(network)?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
-                    }
-
-                    if (vpnNetwork == null) {
-                        ProtonLogger.v(TAG, "Verification: VPN network not found, retrying...")
-                        delay(500.milliseconds)
-                        continue
-                    }
-
-                    try {
-                        // PRIMARY CHECK: TCP-based to bypass TLS/Hostname and Cleartext issues
-                        // We check if we can establish a TCP connection to common DNS ports (443 or 53)
-                        val checkIps = listOf("1.1.1.1", "8.8.8.8", "9.9.9.9")
-                        var tcpSuccess = false
-                        
-                        for (ip in checkIps) {
-                            if (isVerified || !isActive) break
-                            
-                            try {
-                                val socket = vpnNetwork.socketFactory.createSocket()
-                                // Establish a TCP connection to port 443 (HTTPS)
-                                socket.connect(InetSocketAddress(ip, 443), 2000)
-                                socket.close()
-                                
-                                ProtonLogger.i(TAG, "Verification (TCP-based) successful: $ip:443 is reachable")
-                                isVerified = true
-                                tcpSuccess = true
-                                finalizeVerification()
-                                break
-                            } catch (e: Exception) {
-                                ProtonLogger.v(TAG, "TCP-based verification attempt failed for $ip: ${e.message}")
-                            }
-                        }
-                        
-                        if (tcpSuccess) return@launch
-
-                        // SECONDARY CHECK: DNS-based (original download test)
-                        val url = java.net.URL("https://www.google.com")
-                        val connection = vpnNetwork.openConnection(url) as java.net.HttpURLConnection
-                        
-                        connection.requestMethod = "GET"
-                        connection.connectTimeout = 3000
-                        connection.readTimeout = 3000
-                        
-                        connection.inputStream.use { input ->
-                            val buffer = ByteArray(8192)
-                            var lastProgressLog = 0L
-                            while (isActive && !isVerified && System.currentTimeMillis() - startTime < timeout) {
-                                val read = input.read(buffer)
-                                if (read == -1) break
-                                
-                                val currentRx = backend.getStatistics(tunnel).totalRx()
-                                val downloaded = currentRx - startRx
-                                
-                                if (downloaded >= threshold) {
-                                    ProtonLogger.i(TAG, "Verification successful: $downloaded bytes downloaded")
-                                    isVerified = true
-                                    finalizeVerification()
-                                    return@launch
-                                }
-                                
-                                if (downloaded - lastProgressLog >= 10240) {
-                                    ProtonLogger.v(TAG, "Verification progress: $downloaded / $threshold bytes")
-                                    lastProgressLog = downloaded
-                                }
-                            }
-                        }
-                    } catch (e: Exception) {
-                        ProtonLogger.v(TAG, "Verification attempt failed: ${e.message} (Type: ${e.javaClass.simpleName})")
-                    }
-                    if (!isVerified) delay(1000.milliseconds) // Increased delay between attempts
-                }
-
-                if (!isVerified && isActive) {
-                    ProtonLogger.w(TAG, "Verification failed: threshold not reached in ${timeout}ms. Reconnecting...")
-                    reconnect()
-                }
-            } catch (e: Exception) {
-                ProtonLogger.e(TAG, "Verification error", e)
-            }
-        }
-    }
-
-    private fun finalizeVerification() {
-        isCurrentlyConnecting = false
-        isInternalReconnecting = false
-        
-        // Transition UI from CONNECTING to UP
-        val broadcast = Intent(ACTION_STATE_CHANGED).apply {
-            putExtra(EXTRA_STATE, Tunnel.State.UP.name)
-            putExtra(EXTRA_LOGICAL_SERVER_ID, lastLogicalServerId)
-            putExtra(EXTRA_IS_RECONNECTING, false)
-            setPackage(packageName)
-        }
-        sendBroadcast(broadcast)
-
-        updateNotification(Tunnel.State.UP.name)
-    }
-
-    private fun reconnect() {
-        val intent = lastConnectIntent ?: return
-        val sessionToReconnect = lastSessionId
-        
-        if (isInternalReconnecting) {
-            ProtonLogger.d(TAG, "reconnect() ignored: already reconnecting")
-            return
-        }
-        
-        ProtonLogger.i(TAG, "reconnect() initiated for session $sessionToReconnect")
-        isInternalReconnecting = true
-        
-        // Launch in GlobalScope because backend.setState(DOWN) will call Context.stopService(),
-        // which destroys this service instance and cancels its serviceScope.
-        // We need the coroutine to survive the destruction to call startForegroundService.
-        @OptIn(kotlinx.coroutines.DelicateCoroutinesApi::class)
-        kotlinx.coroutines.GlobalScope.launch(Dispatchers.IO) {
-            try {
-                if (currentTunnelState != Tunnel.State.DOWN) {
-                    ProtonLogger.i(TAG, "Reconnection: Bringing tunnel DOWN first...")
-                    backend.setState(tunnel, Tunnel.State.DOWN, null)
-                }
-            } catch (e: Exception) {
-                ProtonLogger.v(TAG, "Reconnection: Cleanup error: ${e.message}")
-            }
-            
-            // Give the system time to process the service destruction and onDestroy()
-            delay(500)
-
-            try {
-                ProtonLogger.d(TAG, "Reconnection: Sending startService intent for new instance")
-                startForegroundService(intent)
-            } catch (e: Exception) {
-                ProtonLogger.e(TAG, "Failed to start service for reconnect", e)
-            }
-        }
+    override fun onRevoke() {
+        stopTunnel(manual = true)
+        super.onRevoke()
     }
 
     override fun onDestroy() {
-        ProtonLogger.d(TAG, "VPN Service destroyed")
-        
-        // Cancel all jobs except the shutdown logic
-        verificationJob?.cancel()
-        reconnectionJob?.cancel()
-        statsJob?.cancel()
-        logcatJob?.cancel()
-
-        try {
-            unregisterReceiver(settingsReceiver)
-        } catch (e: Exception) {
-            ProtonLogger.w(TAG, "Receiver already unregistered", e)
-        }
-
-        // Use GlobalScope to avoid blocking the Main Thread. 
-        // GoBackend.setState is synchronized and could be held by other threads,
-        // so runBlocking here could cause a deadlock resulting in ANR or TimeoutExceptions.
-        @OptIn(kotlinx.coroutines.DelicateCoroutinesApi::class)
-        kotlinx.coroutines.GlobalScope.launch(Dispatchers.IO) {
-            try {
-                ProtonLogger.i(TAG, "Stopping VPN tunnel on service destroy...")
-                backend.setState(tunnel, Tunnel.State.DOWN, null)
-            } catch (e: Exception) {
-                ProtonLogger.e(TAG, "Error during async shutdown in onDestroy", e)
-            }
-        }
-
-        serviceScope.cancel()
+        runCatching { unregisterReceiver(settingsReceiver) }
+        reconnectJob?.cancel()
+        stopTrafficUpdates()
+        closeEngine()
+        scope.cancel()
         super.onDestroy()
     }
 }

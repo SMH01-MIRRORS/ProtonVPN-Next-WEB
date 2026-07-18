@@ -32,7 +32,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import org.amnezia.awg.backend.Tunnel
+import ru.protonmod.next.vpn.VpnTunnelState
 import ru.protonmod.next.MainActivity
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.ProfileDao
@@ -100,7 +100,7 @@ class VpnTileService : TileService() {
     }
 
     private data class UpdateParams(
-        val state: Tunnel.State,
+        val state: VpnTunnelState,
         val strategy: String,
         val targetId: String?,
         val connectedServer: LogicalServer?
@@ -122,7 +122,7 @@ class VpnTileService : TileService() {
         super.onClick()
         val currentState = amneziaVpnManager.tunnelState.value
         
-        if (currentState == Tunnel.State.UP) {
+        if (currentState == VpnTunnelState.UP) {
             amneziaVpnManager.disconnect()
         } else {
             val vpnIntent = VpnService.prepare(this)
@@ -233,7 +233,7 @@ class VpnTileService : TileService() {
     }
 
     private suspend fun updateTile(
-        state: Tunnel.State,
+        state: VpnTunnelState,
         strategy: String,
         targetId: String?,
         connectedServer: LogicalServer?
@@ -241,11 +241,11 @@ class VpnTileService : TileService() {
         val tile = qsTile ?: return
         
         tile.state = when (state) {
-            Tunnel.State.UP -> Tile.STATE_ACTIVE
+            VpnTunnelState.UP -> Tile.STATE_ACTIVE
             else -> Tile.STATE_INACTIVE
         }
 
-        val subtitle = if (state == Tunnel.State.UP && connectedServer != null) {
+        val subtitle = if (state == VpnTunnelState.UP && connectedServer != null) {
             getString(R.string.tile_subtitle_connected, connectedServer.name)
         } else {
             when (strategy) {

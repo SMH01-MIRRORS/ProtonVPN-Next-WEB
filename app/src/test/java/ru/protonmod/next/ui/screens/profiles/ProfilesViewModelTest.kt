@@ -96,7 +96,7 @@ class ProfilesViewModelTest {
             SessionEntity(accessToken = "at", refreshToken = "rt", sessionId = "sid", userId = "uid")
         )
         
-        whenever(amneziaVpnManager.tunnelState).thenReturn(MutableStateFlow(org.amnezia.awg.backend.Tunnel.State.DOWN))
+        whenever(amneziaVpnManager.tunnelState).thenReturn(MutableStateFlow(ru.protonmod.next.vpn.VpnTunnelState.DOWN))
         whenever(amneziaVpnManager.isConnecting).thenReturn(MutableStateFlow(false))
         
         whenever(settingsManager.customProfiles).thenReturn(flowOf(emptyList()))

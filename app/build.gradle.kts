@@ -252,9 +252,7 @@ android {
             packaging {
                 jniLibs {
                     keepDebugSymbols.addAll(listOf(
-                        "**/libwg-go.so",
-                        "**/libwg-quick.so",
-                        "**/libwg.so",
+                        "**/libbox.so",
                         "**/libandroidx.graphics.path.so",
                         "**/libdatastore_shared_counter.so",
                         "**/libgojni.so",
@@ -326,7 +324,7 @@ tasks.register("generateSecurityMetadata") {
     
     // List of known official libraries (including the ones we build)
     val officialLibs = listOf(
-        "libwg-go.so", "libwg-quick.so", "libwg.so",
+        "libbox.so",
         "libandroidx.graphics.path.so", "libdatastore_shared_counter.so",
         "libbyedpi.so", "libnext.so"
     )
@@ -475,7 +473,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     // VPN Protocols
-    implementation(libs.amneziawg.android)
+    implementation(files("libs/libbox-awgbox-v1.13.13-awg2.1.aar"))
 
     // Crypto
     implementation(libs.bouncycastle.prov)

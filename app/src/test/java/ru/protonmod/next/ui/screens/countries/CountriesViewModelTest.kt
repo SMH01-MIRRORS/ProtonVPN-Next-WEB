@@ -99,7 +99,7 @@ class CountriesViewModelTest {
         whenever(vpnRepository.getServers(any(), any(), any(), any())).thenReturn(Result.success(testServers))
         whenever(vpnRepository.getCachedServers()).thenReturn(testServers)
         
-        whenever(amneziaVpnManager.tunnelState).thenReturn(MutableStateFlow(org.amnezia.awg.backend.Tunnel.State.DOWN))
+        whenever(amneziaVpnManager.tunnelState).thenReturn(MutableStateFlow(ru.protonmod.next.vpn.VpnTunnelState.DOWN))
         whenever(amneziaVpnManager.isConnecting).thenReturn(MutableStateFlow(false))
         whenever(settingsManager.serverLoadDisplayMode).thenReturn(flowOf(ServerLoadDisplayMode.ALL))
 

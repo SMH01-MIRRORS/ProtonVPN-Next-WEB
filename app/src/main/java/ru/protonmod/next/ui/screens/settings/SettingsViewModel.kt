@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import org.amnezia.awg.backend.Tunnel
+import ru.protonmod.next.vpn.VpnTunnelState
 import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.model.ObfuscationProfile
@@ -283,7 +283,7 @@ class SettingsViewModel @Inject constructor(
             awgI4 = args[23] as String,
             awgI5 = args[24] as String,
             awgJunkLevel = args[25] as Int,
-            isVpnConnected = args[26] == Tunnel.State.UP,
+            isVpnConnected = args[26] == VpnTunnelState.UP,
             isObfuscationEnabled = args[27] as Boolean,
             isObfuscationAdvancedMode = args[28] as Boolean,
             customObfuscationProfiles = args[29] as List<ObfuscationProfile>,

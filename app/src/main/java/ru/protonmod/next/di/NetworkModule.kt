@@ -49,7 +49,7 @@ import ru.protonmod.next.utils.DeviceInfoProvider
 import ru.protonmod.next.utils.NetworkMonitor
 import ru.protonmod.next.utils.ProtonLogger
 import ru.protonmod.next.vpn.AmneziaVpnManager
-import org.amnezia.awg.backend.Tunnel
+import ru.protonmod.next.vpn.VpnTunnelState
 import java.io.IOException
 import java.net.*
 import java.util.concurrent.TimeUnit
@@ -108,7 +108,7 @@ object NetworkModule {
         // Using provider.get() here is safe because this function is called inside interceptors/DNS
         // which run on background threads, OR it's called during OkHttp init which we've made safer.
         val vpnManager = vpnManagerProvider.get()
-        if (vpnManager.tunnelState.value == Tunnel.State.UP) return false
+        if (vpnManager.tunnelState.value == VpnTunnelState.UP) return false
 
         // 2. If a third-party VPN is active at the OS level, bypass is not needed
         try {

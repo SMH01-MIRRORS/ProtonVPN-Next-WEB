@@ -44,3 +44,7 @@ vpn-core/
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+# Pinned awgbox core (source and build recipe in third_party/amnezia-box)
+!app/libs/
+!app/libs/libbox-awgbox-v1.13.13-awg2.1.aar

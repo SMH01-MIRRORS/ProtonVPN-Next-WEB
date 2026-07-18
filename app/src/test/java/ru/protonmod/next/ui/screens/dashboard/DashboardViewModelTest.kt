@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.*
-import org.amnezia.awg.backend.Tunnel
+import ru.protonmod.next.vpn.VpnTunnelState
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -120,7 +120,7 @@ class DashboardViewModelTest {
     private val speedFlow = MutableStateFlow<String?>(null)
     private val trafficRxFlow = MutableStateFlow<String?>(null)
     private val trafficTxFlow = MutableStateFlow<String?>(null)
-    private val tunnelStateFlow = MutableStateFlow(Tunnel.State.DOWN)
+    private val tunnelStateFlow = MutableStateFlow(VpnTunnelState.DOWN)
     
     // Additional flows from SettingsManager
     private val quickConnectStrategyFlow = MutableStateFlow("fastest")

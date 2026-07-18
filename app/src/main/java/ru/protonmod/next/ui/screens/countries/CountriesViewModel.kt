@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.amnezia.awg.backend.Tunnel
+import ru.protonmod.next.vpn.VpnTunnelState
 import ru.protonmod.next.R
 import ru.protonmod.next.data.repository.VpnRepository
 import ru.protonmod.next.data.local.ServerLoadDisplayMode
@@ -184,7 +184,7 @@ class CountriesViewModel @Inject constructor(
                 ProtonLogger.e(TAG, "Cannot connect: No session found")
                 return
             }
-            if (tunnelState == Tunnel.State.UP || isConnecting) {
+            if (tunnelState == VpnTunnelState.UP || isConnecting) {
                 amneziaVpnManager.reconnect(server.id, physicalServer, session)
             } else {
                 amneziaVpnManager.connect(server.id, physicalServer, session)

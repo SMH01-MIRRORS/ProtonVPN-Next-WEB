@@ -21,8 +21,8 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import ru.protonmod.next.vpn.AmneziaConfigGenerator
-import ru.protonmod.next.vpn.AmneziaConfigGeneratorImpl
+import ru.protonmod.next.vpn.AwgBoxConfigGenerator
+import ru.protonmod.next.vpn.AwgBoxConfigGeneratorImpl
 import ru.protonmod.next.vpn.IpSubnetCalculator
 import ru.protonmod.next.vpn.IpSubnetCalculatorImpl
 import javax.inject.Singleton
@@ -33,9 +33,9 @@ abstract class VpnModule {
 
     @Binds
     @Singleton
-    abstract fun bindAmneziaConfigGenerator(
-        impl: AmneziaConfigGeneratorImpl
-    ): AmneziaConfigGenerator
+    abstract fun bindAwgBoxConfigGenerator(
+        impl: AwgBoxConfigGeneratorImpl
+    ): AwgBoxConfigGenerator
 
     @Binds
     @Singleton

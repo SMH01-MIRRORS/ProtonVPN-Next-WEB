@@ -1,0 +1,71 @@
+# AWGBox transport architecture
+
+## Goal
+
+Replace the dedicated AmneziaWG Android backend with an extensible sing-box core
+that still supports AWG/AWG2. This makes future censorship-resistance work
+possible without replacing Android's VPN lifecycle again.
+
+## Selected core
+
+The first integration uses `hoaxisr/amnezia-box` `v1.13.13-awg2.1` because it:
+
+- tracks stable sing-box;
+- embeds `amneziawg-go`;
+- exposes AWG 1.x and AWG2 fields (`Jc`, `Jmin/Jmax`, `S1-S4`, `H1-H4`, `I1-I5`);
+- provides gomobile `libbox` bindings for Android;
+- fixes AWG endpoint DNS handling in sing-box routing.
+
+The binary is pinned and reproducible rather than downloaded during a normal app
+build. Upgrading the core must be a deliberate review because it is part of the
+trusted network boundary.
+
+## Runtime layers
+
+1. `AmneziaVpnManager` remains the UI/application facade for now. Its name is
+   retained to avoid a high-risk, unrelated public API rename in the first core
+   migration.
+2. `AwgBoxConfigGenerator` translates Proton server/session data and existing
+   obfuscation settings into sing-box JSON.
+3. `ProtonVpnService` owns `CommandServer`, lifecycle, reconnect behavior,
+   notifications and traffic reporting.
+4. `AwgBoxPlatform` implements libbox's Android callbacks: TUN creation, socket
+   protection, app routing, interface discovery and default-network monitoring.
+5. `VpnTunnelState` isolates all UI code from any particular engine's state type.
+
+## Configuration topology
+
+```text
+Android apps
+    -> sing-box TUN inbound (mixed stack, strict route)
+    -> sing-box router and DNS hijack
+    -> AWG endpoint (amneziawg-go)
+    -> Proton VPN server
+```
+
+The AWG endpoint is represented as an `endpoint`, not a legacy outbound. That
+allows sing-box to use it as the final route while retaining DNS and route-rule
+extensibility.
+
+## Security properties
+
+- Private keys are never written to application logs.
+- VPN server sockets are protected from routing back into the Android TUN.
+- `strict_route` is enabled.
+- Existing per-app and IP split-tunnel settings are mapped into TUN routes.
+- The core AAR is pinned to one version and its source/license are documented.
+- Only arm64 native code is shipped.
+
+## Follow-up phases
+
+The migration intentionally creates extension points for:
+
+- domain/category route rules and remote rule sets;
+- DNS routing/fallback policies;
+- selectable sing-box transports (Hysteria2, VLESS/Reality, ShadowTLS, etc.);
+- chained detours before or after AWG;
+- core-level connection and traffic telemetry through the command API;
+- integration tests on a device/emulator with a controlled AWG endpoint.
+
+These should be added as explicit policies rather than by concatenating arbitrary
+user JSON into the trusted configuration.

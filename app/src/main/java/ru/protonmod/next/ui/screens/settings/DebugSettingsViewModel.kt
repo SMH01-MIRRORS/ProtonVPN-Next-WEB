@@ -42,7 +42,7 @@ import ru.protonmod.next.data.local.ServerMapper
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.repository.AuthRepository
 import ru.protonmod.next.utils.ProtonLogger
-import ru.protonmod.next.vpn.AmneziaConfigGenerator
+import ru.protonmod.next.vpn.AwgBoxConfigGenerator
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -73,7 +73,7 @@ class DebugSettingsViewModel @Inject constructor(
     private val serverDao: ServerDao,
     private val settingsManager: SettingsManager,
     private val vpnManager: AmneziaVpnManager,
-    private val configGenerator: AmneziaConfigGenerator,
+    private val configGenerator: AwgBoxConfigGenerator,
     private val authRepository: AuthRepository,
     private val database: AppDatabase
 ) : ViewModel() {

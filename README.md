@@ -8,7 +8,7 @@
 
 ## English
 
-**Proton VPN-Next** is a modern, high-performance **unofficial** Android client for Proton VPN. Built with a focus on privacy, speed, and a sleek Material 3 interface, it leverages AmneziaWG and advanced bypass strategies to ensure stable connectivity in restrictive environments.
+**Proton VPN-Next** is a modern, high-performance **unofficial** Android client for Proton VPN. Built with a focus on privacy, speed, and a sleek Material 3 interface, it uses an AWGBox core built on sing-box with AmneziaWG/AWG2 and advanced bypass strategies to ensure stable connectivity in restrictive environments.
 
 ### ⚠️ IMPORTANT DISCLAIMER
 - **UNOFFICIAL CLIENT:** This application is **NOT** an official product of Proton AG.
@@ -51,7 +51,7 @@ Detailed build instructions for both Terminal and Android Studio are available i
 
 ## Русский
 
-**Proton VPN-Next** — это современный высокопроизводительный **неофициальный** Android-клиент для Proton VPN. Создан с упором на приватность и скорость, использует AmneziaWG и продвинутые стратегии обхода блокировок.
+**Proton VPN-Next** — это современный высокопроизводительный **неофициальный** Android-клиент для Proton VPN. Создан с упором на приватность и скорость, использует ядро AWGBox на базе sing-box с AmneziaWG/AWG2 и продвинутые стратегии обхода блокировок.
 
 ### ⚠️ ВАЖНЫЙ ОТКАЗ ОТ ОТВЕТСТВЕННОСТИ
 - **НЕОФИЦИАЛЬНЫЙ КЛИЕНТ:** Приложение **НЕ ЯВЛЯЕТСЯ** официальным продуктом Proton AG.

@@ -21,7 +21,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.amnezia.awg.backend.Tunnel
+import ru.protonmod.next.vpn.VpnTunnelState
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.utils.NetworkMonitor
 import ru.protonmod.next.utils.ProtonLogger
@@ -68,7 +68,7 @@ class ByeDpiManager @Inject constructor(
                 val flags = args[2] as String
                 val sni = args[3] as String
                 val systemVpn = args[4] as Boolean
-                val ourVpn = args[5] as Tunnel.State
+                val ourVpn = args[5] as VpnTunnelState
                 val autoManage = args[6] as Boolean
 
                 if (!autoManage) {
@@ -78,7 +78,7 @@ class ByeDpiManager @Inject constructor(
                 val shouldBeRunning = enabled && 
                         strategy == SettingsManager.STRATEGY_BYEDPI && 
                         !systemVpn && 
-                        ourVpn != Tunnel.State.UP
+                        ourVpn != VpnTunnelState.UP
                 
                 if (shouldBeRunning) {
                     val port = settingsManager.getApiProxyPortSync()

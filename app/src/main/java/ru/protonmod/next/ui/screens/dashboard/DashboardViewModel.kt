@@ -38,7 +38,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.amnezia.awg.backend.Tunnel
+import ru.protonmod.next.vpn.VpnTunnelState
 import org.json.JSONObject
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.ServerLoadDisplayMode
@@ -351,7 +351,7 @@ class DashboardViewModel @Inject constructor(
             }
 
             // Guard against race condition: check if tunnel is still active before updating UI
-            if (amneziaVpnManager.tunnelState.value == Tunnel.State.UP) {
+            if (amneziaVpnManager.tunnelState.value == VpnTunnelState.UP) {
                 _vpnLocationText.value = LocationText(finalCountryName, finalSafeCountryCode, safeIp)
             }
         }
