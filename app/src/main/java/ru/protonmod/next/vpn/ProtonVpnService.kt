@@ -82,6 +82,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         const val EXTRA_LOGICAL_SERVER_ID = "logical_server_id"
         const val EXTRA_SESSION_ID = "session_id"
         const val EXTRA_IS_RECONNECTING = "is_reconnecting"
+        const val EXTRA_VERIFIED = "verified"
         const val STATE_CONNECTING = "CONNECTING"
         const val TUNNEL_NAME = "proton_awgbox"
 
@@ -162,10 +163,11 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
             ACTION_DISCONNECT -> stopTunnel(manual = true)
             ACTION_UPDATE_SETTINGS -> applySettings(intent)
             ACTION_SET_VERIFIED -> {
-                verified = true
-                connecting = false
-                sendState(VpnTunnelState.UP)
-                updateNotification(VpnTunnelState.UP.name)
+                if (!verified) {
+                    verified = true
+                    connecting = false
+                    updateNotification(VpnTunnelState.UP.name)
+                }
             }
             ACTION_QUERY_STATE -> sendState(if (connecting) null else state)
             else -> return START_NOT_STICKY
@@ -278,6 +280,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
             putExtra(EXTRA_STATE, explicitState?.name ?: STATE_CONNECTING)
             putExtra(EXTRA_LOGICAL_SERVER_ID, logicalServerId)
             putExtra(EXTRA_IS_RECONNECTING, reconnectJob?.isActive == true)
+            putExtra(EXTRA_VERIFIED, verified)
             setPackage(packageName)
         })
     }

@@ -26,6 +26,7 @@ import androidx.core.net.toUri
 import ru.protonmod.next.utils.ProtonLogger
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -148,6 +149,7 @@ class AmneziaVpnManager @Inject constructor(
     private var currentServerId: String? = null
     private var connectionJob: Job? = null
     private var verificationJob: Job? = null
+    private var verificationCycle: VpnNetworkMonitor.VerificationCycle? = null
     private var refreshJob: Job? = null
     private val refreshMutex = Mutex()
 
@@ -174,27 +176,52 @@ class AmneziaVpnManager @Inject constructor(
                             }
                         }
 
-                        stateStr?.let {
-                            if (it == STATE_CONNECTING) {
+                        stateStr?.let { stateLabel ->
+                            if (stateLabel == STATE_CONNECTING) {
+                                if (!_isConnecting.value) {
+                                    verificationCycle = vpnNetworkMonitor.beginVerificationCycle()
+                                }
                                 _isConnecting.value = true
                                 updateVpnState(VpnState.CONNECTING)
-                            } else {
-                                try {
-                                    val newState = VpnTunnelState.valueOf(it)
-                                    _rawTunnelState.value = newState
-                                    _isConnecting.value = false
+                                return@let
+                            }
 
-                                    _tunnelState.value = newState
-                                    
-                                    // If service is reconnecting, we don't clear the server state even if it's DOWN
-                                    if (newState == VpnTunnelState.DOWN && (isReconnecting || isServiceReconnecting)) {
-                                        ProtonLogger.d(TAG, "Tunnel DOWN during reconnection, preserving server state")
-                                    } else {
-                                        handleTunnelStateChange(newState)
+                            val newState = runCatching { VpnTunnelState.valueOf(stateLabel) }
+                                .getOrElse {
+                                    ProtonLogger.e(TAG, "Failed to parse tunnel state: $stateLabel")
+                                    return@let
+                                }
+                            val previousState = _rawTunnelState.value
+                            val serviceVerified = intent.getBooleanExtra(
+                                ProtonVpnService.EXTRA_VERIFIED,
+                                false
+                            )
+
+                            _rawTunnelState.value = newState
+                            _tunnelState.value = newState
+                            _isConnecting.value = false
+
+                            when (newState) {
+                                VpnTunnelState.UP -> when {
+                                    serviceVerified -> {
+                                        verificationJob?.cancel()
+                                        verificationCycle = null
+                                        updateVpnState(VpnState.CONNECTED)
                                     }
-                                    
-                                } catch (e: Exception) {
-                                    ProtonLogger.e(TAG, "Failed to parse tunnel state: $it")
+                                    previousState != VpnTunnelState.UP ||
+                                        _vpnState.value == VpnState.CONNECTING -> {
+                                        handleTunnelStateChange(VpnTunnelState.UP)
+                                    }
+                                    else -> ProtonLogger.v(TAG, "Ignoring duplicate tunnel UP state")
+                                }
+                                VpnTunnelState.DOWN -> {
+                                    verificationCycle = null
+                                    if (isReconnecting || isServiceReconnecting) {
+                                        ProtonLogger.d(TAG, "Tunnel DOWN during reconnection, preserving server state")
+                                    } else if (previousState != VpnTunnelState.DOWN ||
+                                        _vpnState.value != VpnState.DISCONNECTED) {
+                                        handleTunnelStateChange(VpnTunnelState.DOWN)
+                                    }
                                 }
                             }
                         }
@@ -251,6 +278,8 @@ class AmneziaVpnManager @Inject constructor(
     }
 
     internal fun handleTunnelStateChange(newState: VpnTunnelState) {
+        _rawTunnelState.value = newState
+        _tunnelState.value = newState
         when (newState) {
             VpnTunnelState.UP -> {
                 isPaused = false
@@ -277,34 +306,39 @@ class AmneziaVpnManager @Inject constructor(
     }
 
     private fun startTunnelVerification() {
-        verificationJob?.cancel()
+        if (verificationJob?.isActive == true) {
+            ProtonLogger.v(TAG, "Connectivity verification is already running")
+            return
+        }
+
+        val cycle = verificationCycle ?: vpnNetworkMonitor.beginVerificationCycle().also {
+            verificationCycle = it
+        }
         verificationJob = applicationScope.launch {
             updateVpnState(VpnState.VERIFYING)
-            ProtonLogger.i(TAG, "Tunnel is UP, starting connectivity verification...")
-            
+            ProtonLogger.d(TAG, "Waiting for a stable validated VPN network")
+
             try {
-                // Wait for the system to validate the VPN network.
-                // We use a timeout to prevent getting stuck in "Verifying" state forever.
-                withTimeout(15000) {
-                    vpnNetworkMonitor.isValidated.first { it }
+                val validated = vpnNetworkMonitor.awaitValidated(cycle)
+                if (_tunnelState.value != VpnTunnelState.UP) return@launch
+
+                if (validated) {
+                    ProtonLogger.i(TAG, "VPN network validation completed")
+                } else {
+                    ProtonLogger.w(TAG, "VPN network validation timed out; keeping the established tunnel")
                 }
-                
-                ProtonLogger.i(TAG, "Connectivity verification successful. VPN is fully connected.")
                 updateVpnState(VpnState.CONNECTED)
                 systemContextWrapper.setVpnVerified()
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.TimeoutCancellationException) {
-                    ProtonLogger.w(TAG, "Connectivity verification timed out. Network might be restricted or slow.")
-                    // Even if it times out, we might want to show "Connected" if the tunnel is still UP,
-                    // but according to the user request, we should probably be more strict.
-                    // However, sometimes validation takes longer. Let's still move to CONNECTED
-                    // but log the warning, or keep it as CONNECTED if we trust the tunnel.
-                    // The original app usually waits. 
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Exception) {
+                ProtonLogger.w(TAG, "VPN network validation failed: ${error.message}")
+                if (_tunnelState.value == VpnTunnelState.UP) {
                     updateVpnState(VpnState.CONNECTED)
-                } else {
-                    ProtonLogger.e(TAG, "Error during connectivity verification", e)
-                    updateVpnState(VpnState.CONNECTED)
+                    systemContextWrapper.setVpnVerified()
                 }
+            } finally {
+                verificationCycle = null
             }
         }
     }

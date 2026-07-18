@@ -155,7 +155,9 @@ class AmneziaVpnManagerTest {
             whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(VpnKeyPair("pub", "priv"))
             whenever(awgBoxConfigGenerator.buildConfig(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn("mock_config")
-            whenever(vpnNetworkMonitor.isValidated).thenReturn(MutableStateFlow(false))
+            val verificationCycle = VpnNetworkMonitor.VerificationCycle(1, emptySet())
+            whenever(vpnNetworkMonitor.beginVerificationCycle()).thenReturn(verificationCycle)
+            whenever(vpnNetworkMonitor.awaitValidated(any(), any(), any())).thenReturn(false)
 
             manager = AmneziaVpnManager(
                 context,
@@ -258,25 +260,28 @@ class AmneziaVpnManagerTest {
     }
 
     @Test
-    fun `VPN state transitions from VERIFYING to CONNECTED when validated`() = runTest(testDispatcher) {
-        val isValidatedFlow = MutableStateFlow(false)
-        whenever(vpnNetworkMonitor.isValidated).thenReturn(isValidatedFlow)
+    fun `VPN state transitions to CONNECTED when the new VPN network is validated`() = runTest(testDispatcher) {
+        whenever(vpnNetworkMonitor.awaitValidated(any(), any(), any())).thenReturn(true)
 
-        // Simulate Tunnel UP
         manager.handleTunnelStateChange(VpnTunnelState.UP)
-        
-        // We don't advanceUntilIdle here because it might jump past the verification timeout
-        
-        // Should be in VERIFYING state initially
-        assertEquals("Should be in VERIFYING state", AmneziaVpnManager.VpnState.VERIFYING, manager.vpnState.value)
-        
-        // Now simulate network validation
-        isValidatedFlow.value = true
         advanceUntilIdle()
-        
-        // Should transition to CONNECTED
-        assertEquals("Should be in CONNECTED state", AmneziaVpnManager.VpnState.CONNECTED, manager.vpnState.value)
-        verify(systemContextWrapper).setVpnVerified()
+
+        assertEquals(AmneziaVpnManager.VpnState.CONNECTED, manager.vpnState.value)
+        verify(vpnNetworkMonitor, times(1)).awaitValidated(any(), any(), any())
+        verify(systemContextWrapper, times(1)).setVpnVerified()
+    }
+
+    @Test
+    fun `cancelled verification is not converted into a connected state`() = runTest(testDispatcher) {
+        whenever(vpnNetworkMonitor.awaitValidated(any(), any(), any())).thenAnswer {
+            throw kotlinx.coroutines.CancellationException("test cancellation")
+        }
+
+        manager.handleTunnelStateChange(VpnTunnelState.UP)
+        advanceUntilIdle()
+
+        assertEquals(AmneziaVpnManager.VpnState.VERIFYING, manager.vpnState.value)
+        verify(systemContextWrapper, never()).setVpnVerified()
     }
 
     @Test
