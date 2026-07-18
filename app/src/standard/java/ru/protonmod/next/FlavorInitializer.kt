@@ -83,14 +83,14 @@ object FlavorInitializer {
                 event.extras?.forEach { (k, v) -> if (v is String) event.setExtra(k, PiiScrubber.scrub(v)) }
                 event.breadcrumbs?.forEach { b ->
                     b.message = PiiScrubber.scrub(b.message)
-                    b.data?.forEach { (k, v) -> if (v is String) b.setData(k, PiiScrubber.scrub(v)) }
+                    b.data.forEach { (k, v) -> if (v is String) b.setData(k, PiiScrubber.scrub(v)) }
                 }
                 event
             }
 
             options.setBeforeBreadcrumb { b, _ ->
                 b.message = PiiScrubber.scrub(b.message)
-                b.data?.forEach { (k, v) -> if (v is String) b.setData(k, PiiScrubber.scrub(v)) }
+                b.data.forEach { (k, v) -> if (v is String) b.setData(k, PiiScrubber.scrub(v)) }
                 b
             }
 

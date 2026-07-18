@@ -44,7 +44,6 @@ class SentryCrashReporter : CrashReporter {
             SentryLevel.WARNING -> SentryLogLevel.WARN
             SentryLevel.ERROR -> SentryLogLevel.ERROR
             SentryLevel.FATAL -> SentryLogLevel.FATAL
-            else -> SentryLogLevel.INFO
         }
 
         if (throwable != null) {
