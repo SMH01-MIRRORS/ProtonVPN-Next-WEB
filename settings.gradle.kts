@@ -40,5 +40,21 @@ dependencyResolutionManagement {
 
 rootProject.name = "ProtonVpnNext"
 
+// The generated gomobile AAR is intentionally not committed. Settings scripts are evaluated
+// during Android Studio sync as well as regular Gradle invocations, so a fresh checkout prepares
+// the pinned AWGBox core before :app resolves its local file dependency. The shell script exits
+// immediately when the existing artifact matches the committed checksum.
+val prepareAwgBox = ProcessBuilder(
+    "bash",
+    file("scripts/build-awgbox-lib.sh").absolutePath
+)
+    .directory(rootDir)
+    .inheritIO()
+    .start()
+    .waitFor()
+check(prepareAwgBox == 0) {
+    "Unable to prepare the AWGBox AAR. Check Android SDK/NDK, Go, git and python3."
+}
+
 // Include main application module
 include(":app")

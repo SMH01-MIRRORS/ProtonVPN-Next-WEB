@@ -6,14 +6,63 @@ REPO="${AWGBOX_REPO:-https://github.com/hoaxisr/amnezia-box.git}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORK="${AWGBOX_WORK_DIR:-$ROOT/.artifacts/amnezia-box}"
 OUTPUT="$ROOT/app/libs/libbox-awgbox-v1.13.13-awg2.1.aar"
+CHECKSUM_FILE="$ROOT/third_party/amnezia-box/libbox-awgbox-v1.13.13-awg2.1.sha256"
+FORCE_REBUILD="${AWGBOX_FORCE_REBUILD:-0}"
 
-: "${ANDROID_HOME:?Set ANDROID_HOME to an Android SDK containing an NDK}"
+expected_sha256() {
+  awk 'NR == 1 { print $1 }' "$CHECKSUM_FILE"
+}
+
+output_is_valid() {
+  [[ -s "$OUTPUT" && -f "$CHECKSUM_FILE" ]] || return 1
+  [[ "$(sha256sum "$OUTPUT" | awk '{ print $1 }')" == "$(expected_sha256)" ]]
+}
+
+if [[ "$FORCE_REBUILD" != "1" ]] && output_is_valid; then
+  echo "AWGBox AAR is already available and verified: $OUTPUT"
+  exit 0
+fi
+
+if [[ -e "$OUTPUT" ]]; then
+  echo "Removing stale or unverified AWGBox AAR: $OUTPUT"
+  rm -f "$OUTPUT"
+fi
+
+: "${ANDROID_HOME:=${ANDROID_SDK_ROOT:-}}"
+: "${ANDROID_HOME:?Set ANDROID_HOME or ANDROID_SDK_ROOT to an Android SDK containing an NDK}"
+export ANDROID_HOME
+command -v git >/dev/null || { echo "git is required to build AWGBox" >&2; exit 1; }
+command -v go >/dev/null || { echo "Go is required to build AWGBox" >&2; exit 1; }
+command -v python3 >/dev/null || { echo "python3 is required to build AWGBox" >&2; exit 1; }
+
+mkdir -p "$ROOT/.artifacts" "$(dirname "$OUTPUT")"
+LOCK_DIR="$ROOT/.artifacts/awgbox-build.lock"
+while ! mkdir "$LOCK_DIR" 2>/dev/null; do
+  if output_is_valid; then
+    echo "AWGBox AAR was prepared by another Gradle process: $OUTPUT"
+    exit 0
+  fi
+  if [[ ! -f "$LOCK_DIR/pid" ]] || ! kill -0 "$(cat "$LOCK_DIR/pid" 2>/dev/null)" 2>/dev/null; then
+    rm -rf "$LOCK_DIR"
+    continue
+  fi
+  sleep 1
+done
+echo "$$" > "$LOCK_DIR/pid"
+trap 'rm -rf "$LOCK_DIR"' EXIT
+
+# Another process may have completed while this process was waiting for the lock.
+if [[ "$FORCE_REBUILD" != "1" ]] && output_is_valid; then
+  echo "AWGBox AAR is already available and verified: $OUTPUT"
+  exit 0
+fi
+
 rm -rf "$WORK"
 git clone --depth 1 --branch "$REF" "$REPO" "$WORK"
 git -C "$WORK" submodule update --init --depth 1
 
 GOBIN_DIR="$WORK/.bin"
-mkdir -p "$GOBIN_DIR" "$(dirname "$OUTPUT")"
+mkdir -p "$GOBIN_DIR"
 GOBIN="$GOBIN_DIR" go install github.com/sagernet/gomobile/cmd/gomobile@v0.1.12
 GOBIN="$GOBIN_DIR" go install github.com/sagernet/gomobile/cmd/gobind@v0.1.12
 
@@ -62,5 +111,17 @@ cp "$GOBIN_DIR/gobind" "$GOPATH_DIR/bin/"
   GOPATH="$GOPATH_DIR" go run ./cmd/internal/build_libbox \
     -target android -platform android/arm64
 )
-cp "$WORK/libbox.aar" "$OUTPUT"
-sha256sum "$OUTPUT"
+
+TEMP_OUTPUT="$OUTPUT.tmp"
+cp "$WORK/libbox.aar" "$TEMP_OUTPUT"
+actual_sha256="$(sha256sum "$TEMP_OUTPUT" | awk '{ print $1 }')"
+expected_sha256="$(expected_sha256)"
+if [[ "$actual_sha256" != "$expected_sha256" ]]; then
+  rm -f "$TEMP_OUTPUT"
+  echo "AWGBox reproducibility check failed" >&2
+  echo "Expected: $expected_sha256" >&2
+  echo "Actual:   $actual_sha256" >&2
+  exit 1
+fi
+mv "$TEMP_OUTPUT" "$OUTPUT"
+echo "$actual_sha256  ${OUTPUT#$ROOT/}"

@@ -62,6 +62,15 @@ plugins {
     alias(libs.plugins.sentry) apply false
 }
 
+val prepareAwgBoxAar by tasks.registering(Exec::class) {
+    group = "build setup"
+    description = "Builds the pinned AWGBox AAR when it is absent or invalid"
+    workingDir(rootProject.rootDir)
+    commandLine("bash", rootProject.file("scripts/build-awgbox-lib.sh").absolutePath)
+}
+val awgBoxAar = files("libs/libbox-awgbox-v1.13.13-awg2.1.aar")
+    .builtBy(prepareAwgBoxAar)
+
 // Only apply Sentry for non-privacy builds to ensure zero dependencies in privacy flavor
 if (!project.gradle.startParameter.taskNames.any { it.contains("privacy", ignoreCase = true) }) {
     pluginManager.apply("io.sentry.android.gradle")
@@ -473,7 +482,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     // VPN Protocols
-    implementation(files("libs/libbox-awgbox-v1.13.13-awg2.1.aar"))
+    implementation(awgBoxAar)
 
     // Crypto
     implementation(libs.bouncycastle.prov)

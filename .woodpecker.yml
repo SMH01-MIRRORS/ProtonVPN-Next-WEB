@@ -1,6 +1,8 @@
 when:
   - event: push
-    branch: protonvpn-next-dev
+    branch:
+      - protonvpn-next-dev
+      - awgbox
   - event: tag
   - event: manual
 
@@ -15,6 +17,7 @@ steps:
     image: ghcr.io/cirruslabs/android-sdk:36
     environment:
       ANDROID_HOME: /opt/android-sdk-linux
+      GO_VERSION: 1.26.4
       SIGNING_KEY_BASE64:
         from_secret: SIGNING_KEY_BASE64
       SIGNING_STORE_PASSWORD:
@@ -35,17 +38,27 @@ steps:
       - sdkmanager --update
       - sdkmanager "platforms;android-37.0" "build-tools;37.0.0" "platform-tools" "ndk;29.0.14206865" "cmake;3.22.1"
 
-      # 2. Prepare Git metadata
+      # 2. Build the generated AWGBox dependency when it is not restored/present
+      - |
+        apt-get update
+        apt-get install -y --no-install-recommends ca-certificates curl git python3
+        rm -rf /usr/local/go
+        curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -C /usr/local -xz
+        export PATH="/usr/local/go/bin:$PATH"
+        go version
+        ./scripts/build-awgbox-lib.sh
+
+      # 3. Prepare Git metadata
       - git fetch --unshallow || true
       - git fetch --tags
       - 'echo "Current commit count: $(git rev-list --count HEAD)"'
 
-      # 3. Setup Keystore
+      # 4. Setup Keystore
       - echo $SIGNING_KEY_BASE64 | base64 -d > app/release.keystore
       - chmod +x gradlew
       - export SIGNING_KEY_FILE=release.keystore
 
-      # 4. Build APKs and Run Tests based on flavor
+      # 5. Build APKs and Run Tests based on flavor
       - |
         if [ -n "$CI_COMMIT_TAG" ]; then
           ./gradlew testStableStandardDebugUnitTest assembleStableStandardRelease
@@ -55,7 +68,7 @@ steps:
           ./gradlew testNightlyPrivacyDebugUnitTest assembleNightlyPrivacyDebug assembleNightlyPrivacyRelease
         fi
 
-      # 5. Generate SHA256 Checksums
+      # 6. Generate SHA256 Checksums
       - find app/build/outputs/apk/ -name "*.apk" -exec sh -c 'sha256sum "$1" > "$1.sha256"' _ {} \;
 
   generate-changelog:

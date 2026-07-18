@@ -1,6 +1,6 @@
 # amnezia-box binary notice
 
-`app/libs/libbox-awgbox-v1.13.13-awg2.1.aar` is built from
+The generated (git-ignored) `app/libs/libbox-awgbox-v1.13.13-awg2.1.aar` is built from
 [hoaxisr/amnezia-box](https://github.com/hoaxisr/amnezia-box), release
 `v1.13.13-awg2.1`, with a minimal mobile feature set: `with_awg`, `with_utls`,
 `with_clash_api`, `badlinkname` and `tfogo_checklinkname0`.
@@ -13,4 +13,7 @@ system stack instead of gVisor.
 The AAR is restricted to `android/arm64`, matching ProtonVPN-Next's supported ABI.
 It contains sing-box, amneziawg-go and generated gomobile bindings. See `LICENSE`
 and the upstream dependency licenses. The reproducible build entry point is
-`scripts/build-awgbox-lib.sh`.
+`scripts/build-awgbox-lib.sh`. Gradle sync invokes this script automatically; an
+existing AAR is accepted only when it matches the committed SHA-256 checksum.
+Woodpecker installs the pinned Go toolchain and runs the same script before the
+Android build.
