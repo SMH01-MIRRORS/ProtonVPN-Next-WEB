@@ -140,7 +140,6 @@ class DashboardViewModelTest {
         whenever(context.getSharedPreferences(any(), any())).thenReturn(sharedPreferences)
         whenever(sharedPreferences.getBoolean(any(), any())).thenReturn(false)
         whenever(context.getSystemService(Context.CONNECTIVITY_SERVICE)).thenReturn(connectivityManager)
-        whenever(connectivityManager.allNetworks).thenReturn(emptyArray())
         whenever(context.getSystemService(Context.POWER_SERVICE)).thenReturn(powerManager)
         whenever(context.packageName).thenReturn("ru.protonmod.next")
         whenever(powerManager.isIgnoringBatteryOptimizations(any())).thenReturn(true)

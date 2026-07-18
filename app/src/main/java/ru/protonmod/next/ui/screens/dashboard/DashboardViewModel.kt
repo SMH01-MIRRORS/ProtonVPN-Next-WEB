@@ -371,9 +371,8 @@ class DashboardViewModel @Inject constructor(
         // HTTP proxies, not the routing table / TUN interface.
         val client = if (bypassVpn) {
             val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            @Suppress("DEPRECATION")
-            val network = cm.allNetworks.find { net ->
-                val caps = cm.getNetworkCapabilities(net)
+            val network = cm.activeNetwork?.takeIf { activeNetwork ->
+                val caps = cm.getNetworkCapabilities(activeNetwork)
                 caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true &&
                         caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN) == true
             }
