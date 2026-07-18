@@ -108,7 +108,11 @@ cp "$GOBIN_DIR/gomobile" "$GOPATH_DIR/bin/"
 cp "$GOBIN_DIR/gobind" "$GOPATH_DIR/bin/"
 (
   cd "$WORK"
-  GOPATH="$GOPATH_DIR" go run ./cmd/internal/build_libbox \
+  export GOPATH="$GOPATH_DIR"
+  export PATH="$GOPATH_DIR/bin:$PATH"
+  command -v gomobile >/dev/null || { echo "gomobile is missing from GOPATH/bin" >&2; exit 1; }
+  command -v gobind >/dev/null || { echo "gobind is missing from GOPATH/bin" >&2; exit 1; }
+  go run ./cmd/internal/build_libbox \
     -target android -platform android/arm64
 )
 
