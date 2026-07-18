@@ -68,9 +68,11 @@ parameters are omitted from the generated configuration. Only parsed fields are
 accepted; arbitrary sing-box JSON is not imported. Supported proxy transports
 are TCP, WebSocket and HTTP Upgrade, with TLS and VLESS Reality/uTLS support.
 Proxy hostnames are resolved before the AWG tunnel through a dedicated public
-bootstrap DNS transport and an explicit protected direct outbound. Android's
-`local` DNS transport is not used because the libbox process has no usable
-localhost DNS listener. Normal application DNS still goes through Proton AWG.
+bootstrap DNS transport using sing-box's default platform-protected dialer.
+The DNS transport must not detour through an empty `direct` outbound: sing-box
+1.13 rejects that configuration. Android's `local` DNS transport is also not
+used because the libbox process has no usable localhost DNS listener. Normal
+application DNS still goes through Proton AWG.
 
 Proxy share links are intentionally excluded from exported settings backups
 because they contain authentication credentials.
