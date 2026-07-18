@@ -19,6 +19,7 @@ import android.os.Build
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.os.SystemClock
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
@@ -93,6 +94,8 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         private const val TRANSPORT_FAILURE_THRESHOLD = 2
         private const val TRANSPORT_FAILURE_WINDOW_MS = 15_000L
         private const val HEALTH_RECONNECT_COOLDOWN_MS = 15_000L
+        private const val FULL_CONFIG_LOG_TAG = "ProtonVpnConfig"
+        private const val LOGCAT_CHUNK_SIZE = 3_500
         private val libboxInitialized = AtomicBoolean(false)
     }
 
@@ -191,6 +194,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, true)
         killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, false)
         lastConfig = config
+        logFullConfigToLogcat(config)
         manualDisconnect = false
         verified = false
         connecting = true
@@ -219,6 +223,24 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
                 withContext(Dispatchers.Main) { handleEngineFailure() }
             }
         }
+    }
+
+    /**
+     * Emits the exact generated sing-box configuration to local Logcat only.
+     *
+     * This deliberately bypasses ProtonLogger so the private key, proxy UUIDs and other
+     * credentials can never become Sentry breadcrumbs or Sentry logs. Full configuration
+     * logging is restricted to debug builds because Logcat is not an appropriate secret store.
+     */
+    private fun logFullConfigToLogcat(config: String) {
+        if (!BuildConfig.DEBUG) return
+
+        val chunks = config.chunked(LOGCAT_CHUNK_SIZE).ifEmpty { listOf("") }
+        Log.d(FULL_CONFIG_LOG_TAG, "----- BEGIN AWGBOX CONFIG (${config.length} chars) -----")
+        chunks.forEachIndexed { index, chunk ->
+            Log.d(FULL_CONFIG_LOG_TAG, "[${index + 1}/${chunks.size}] $chunk")
+        }
+        Log.d(FULL_CONFIG_LOG_TAG, "----- END AWGBOX CONFIG -----")
     }
 
     private fun handleEngineFailure() {
