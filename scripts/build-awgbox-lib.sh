@@ -17,20 +17,38 @@ mkdir -p "$GOBIN_DIR" "$(dirname "$OUTPUT")"
 GOBIN="$GOBIN_DIR" go install github.com/sagernet/gomobile/cmd/gomobile@v0.1.12
 GOBIN="$GOBIN_DIR" go install github.com/sagernet/gomobile/cmd/gobind@v0.1.12
 
-# The fork's generic mobile target currently omits the feature gate even though
-# AWG sources are present. Keep this explicit until upstream includes it.
+# Keep the mobile core intentionally small. VLESS, VMess, SOCKS/HTTP and proxy
+# chaining are part of the base sing-box build. AWG and uTLS are the only
+# optional features required by ProtonVPN-Next. This excludes QUIC
+# (Hysteria2/TUIC), gVisor, WireGuard, Tailscale, Naive and Clash API.
 python3 - "$WORK/cmd/internal/build_libbox/main.go" <<'PY'
 from pathlib import Path
+import re
 import sys
+
 path = Path(sys.argv[1])
 text = path.read_text()
-needle = '"with_gvisor", "with_quic", "with_wireguard",'
-replacement = '"with_gvisor", "with_quic", "with_wireguard", "with_awg",'
-if '"with_awg"' not in text:
-    if needle not in text:
-        raise SystemExit("Unable to locate libbox build tags")
-    path.write_text(text.replace(needle, replacement, 1))
+text, count = re.subn(
+    r'sharedTags = append\(sharedTags, "with_gvisor"[^\n]+',
+    'sharedTags = append(sharedTags, "with_awg", "with_utls", "badlinkname", "tfogo_checklinkname0")',
+    text,
+    count=1,
+)
+if count != 1:
+    raise SystemExit("Unable to locate the default libbox feature tags")
+text = re.sub(
+    r'\n\s*sharedTags = append\(sharedTags, "with_tailscale"[^\n]+',
+    '',
+    text,
+    count=1,
+)
+# The project uses JDK 21; gomobile itself does not require the upstream helper's
+# exact JDK 17 string check.
+text = text.replace("\tcheckJavaVersion()", "\t// checkJavaVersion()")
+path.write_text(text)
 PY
+
+gofmt -w "$WORK/cmd/internal/build_libbox/main.go"
 
 # The generator locates gomobile through GOPATH/bin.
 GOPATH_DIR="$WORK/.gopath"

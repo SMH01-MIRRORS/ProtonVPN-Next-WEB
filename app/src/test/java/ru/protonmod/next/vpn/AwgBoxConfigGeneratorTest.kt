@@ -57,7 +57,7 @@ class AwgBoxConfigGeneratorTest {
         val peer = awg.getValue("peers").jsonArray.single().jsonObject
 
         assertEquals("tun", tun.getValue("type").jsonPrimitive.content)
-        assertEquals("mixed", tun.getValue("stack").jsonPrimitive.content)
+        assertEquals("system", tun.getValue("stack").jsonPrimitive.content)
         assertTrue(tun.getValue("strict_route").jsonPrimitive.content.toBoolean())
         assertEquals("awg", awg.getValue("type").jsonPrimitive.content)
         assertEquals("10.2.0.2/32", awg.getValue("address").jsonArray.single().jsonPrimitive.content)

@@ -73,7 +73,7 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
             "mtu" to JsonPrimitive(1400),
             "auto_route" to JsonPrimitive(true),
             "strict_route" to JsonPrimitive(true),
-            "stack" to JsonPrimitive("mixed"),
+            "stack" to JsonPrimitive("system"),
             "route_address" to strings(routeAddresses)
         ).apply {
             if (routeExcludes.isNotEmpty()) put("route_exclude_address", strings(routeExcludes))

@@ -47,6 +47,15 @@ The AWG endpoint is represented as an `endpoint`, not a legacy outbound. That
 allows sing-box to use it as the final route while retaining DNS and route-rule
 extensibility.
 
+## Minimal mobile build
+
+The embedded core is compiled only with `with_awg` and `with_utls` optional
+features. VLESS, VMess, SOCKS/HTTP and proxy chaining are part of the base core.
+QUIC protocols (Hysteria2/TUIC), gVisor, standard WireGuard, Tailscale, Naive
+outbound and Clash API are omitted. Android's system TUN stack replaces gVisor.
+This keeps VLESS/Reality client compatibility while substantially reducing the
+native library size.
+
 ## Security properties
 
 - Private keys are never written to application logs.
@@ -62,7 +71,7 @@ The migration intentionally creates extension points for:
 
 - domain/category route rules and remote rule sets;
 - DNS routing/fallback policies;
-- selectable sing-box transports (Hysteria2, VLESS/Reality, ShadowTLS, etc.);
+- VLESS/Reality and VMess proxy-chain policies;
 - chained detours before or after AWG;
 - core-level connection and traffic telemetry through the command API;
 - integration tests on a device/emulator with a controlled AWG endpoint.
