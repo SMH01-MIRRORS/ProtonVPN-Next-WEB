@@ -431,6 +431,7 @@ plugins.withId("io.sentry.android.gradle") {
 }
 
 dependencies {
+    implementation("info.guardianproject:tor-android:0.4.9.11")
     // AndroidX & Core UI
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

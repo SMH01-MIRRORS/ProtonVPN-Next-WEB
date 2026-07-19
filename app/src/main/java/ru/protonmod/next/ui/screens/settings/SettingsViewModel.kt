@@ -126,6 +126,7 @@ data class SettingsUiState(
     val proxyChainEnabled: Boolean = false,
     val proxyChainConfig: String = "",
     val isProxyChainConfigValid: Boolean = false,
+    val torModeEnabled: Boolean = false,
 
     // Privacy & Analytics
     val isAnalyticsEnabled: Boolean = false,
@@ -259,7 +260,8 @@ class SettingsViewModel @Inject constructor(
         _isCheckingForUpdates,
         _isUpdateAvailable,
         settingsManager.proxyChainEnabled,
-        settingsManager.proxyChainConfig
+        settingsManager.proxyChainConfig,
+        settingsManager.torModeEnabled
     ) { args: Array<Any?> ->
         SettingsUiState(
             killSwitchEnabled = args[0] as Boolean,
@@ -327,7 +329,8 @@ class SettingsViewModel @Inject constructor(
             isUpdateAvailable = args[62] as Boolean,
             proxyChainEnabled = args[63] as Boolean,
             proxyChainConfig = args[64] as String,
-            isProxyChainConfigValid = ru.protonmod.next.vpn.ProxyLinkParser.isValid(args[64] as String)
+            isProxyChainConfigValid = ru.protonmod.next.vpn.ProxyLinkParser.isValid(args[64] as String),
+            torModeEnabled = args[65] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -541,6 +544,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setProxyChainConfig(config: String) {
         viewModelScope.launch { settingsManager.setProxyChainConfig(config) }
+    }
+
+    fun setTorModeEnabled(enabled: Boolean) {
+        viewModelScope.launch { settingsManager.setTorModeEnabled(enabled) }
     }
 
     fun setAnalyticsEnabled(enabled: Boolean) {

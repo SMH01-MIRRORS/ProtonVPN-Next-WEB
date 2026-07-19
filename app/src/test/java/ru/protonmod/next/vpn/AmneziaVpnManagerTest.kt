@@ -125,6 +125,7 @@ class AmneziaVpnManagerTest {
 
             whenever(context.applicationContext).thenReturn(context)
             whenever(context.packageName).thenReturn("ru.protonmod.next")
+            whenever(context.applicationInfo).thenReturn(android.content.pm.ApplicationInfo().apply { nativeLibraryDir = "/data/app/lib/arm64" })
             
             whenever(settingsManager.notificationsEnabled).thenReturn(flowOf(true))
             whenever(settingsManager.killSwitchEnabled).thenReturn(flowOf(false))
@@ -135,6 +136,7 @@ class AmneziaVpnManagerTest {
             whenever(settingsManager.proxyChainConfig).thenReturn(flowOf(""))
             whenever(settingsManager.customDns).thenReturn(flowOf(""))
             whenever(settingsManager.netShieldLevel).thenReturn(flowOf(NetShieldLevel.DISABLED))
+            whenever(settingsManager.torModeEnabled).thenReturn(flowOf(false))
             whenever(localNetShield.activeRuleSets(NetShieldLevel.DISABLED)).thenReturn(emptyList())
             whenever(settingsManager.pauseEndTime).thenReturn(flowOf(0L))
             whenever(settingsManager.allowLanEnabled).thenReturn(flowOf(false))
@@ -171,7 +173,7 @@ class AmneziaVpnManagerTest {
             whenever(vpnRepository.getCachedServers()).thenReturn(emptyList())
             
             whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(VpnKeyPair("pub", "priv"))
-            whenever(awgBoxConfigGenerator.buildConfig(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), isNull(), any(), any()))
+            whenever(awgBoxConfigGenerator.buildConfig(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), isNull(), any(), any(), any(), any(), any()))
                 .thenReturn("mock_config")
             val verificationCycle = VpnNetworkMonitor.VerificationCycle(1, emptySet())
             whenever(vpnNetworkMonitor.beginVerificationCycle()).thenReturn(verificationCycle)
@@ -331,7 +333,7 @@ class AmneziaVpnManagerTest {
         verify(awgBoxConfigGenerator).buildConfig(
             any(), any(), any(), any(), any(), any(), 
             eq(true), // allowLan should be true
-            any(), any(), any(), any(), any(), any(), isNull(), any(), any()
+            any(), any(), any(), any(), any(), any(), isNull(), any(), any(), any(), any(), any()
         )
     }
 }

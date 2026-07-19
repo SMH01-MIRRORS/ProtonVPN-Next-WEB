@@ -68,7 +68,12 @@ if [[ "$FORCE_REBUILD" != "1" ]] && output_is_valid; then
   exit 0
 fi
 
-rm -rf "$WORK"
+if [[ -d "$WORK" ]]; then
+  # Go's module cache is read-only by design; make it removable before
+  # replacing a previous build workspace.
+  chmod -R u+w "$WORK" 2>/dev/null || true
+  rm -rf "$WORK"
+fi
 git clone --depth 1 --branch "$REF" "$REPO" "$WORK"
 actual_commit="$(git -C "$WORK" rev-parse HEAD)"
 if [[ "$actual_commit" != "$EXPECTED_COMMIT" ]]; then
@@ -79,14 +84,20 @@ if [[ "$actual_commit" != "$EXPECTED_COMMIT" ]]; then
 fi
 git -C "$WORK" submodule update --init --depth 1
 
+# Harden the Tor outbound for Android: wait for bootstrap and keep Tor's
+# internal SOCKS listener on an app-private Unix socket instead of exposing an
+# unauthenticated localhost TCP port. The current Tor executable is supplied by
+# the Guardian Project Android package.
+git -C "$WORK" apply "$ROOT/scripts/patches/awgbox-tor-android.patch"
+
 GOBIN_DIR="$WORK/.bin"
 mkdir -p "$GOBIN_DIR"
 GOBIN="$GOBIN_DIR" go install github.com/sagernet/gomobile/cmd/gomobile@v0.1.12
 GOBIN="$GOBIN_DIR" go install github.com/sagernet/gomobile/cmd/gobind@v0.1.12
 
-# Keep the mobile core intentionally small. VLESS, VMess, SOCKS/HTTP and proxy
-# chaining are part of the base sing-box build. AWG and uTLS are the only
-# optional protocol features required by ProtonVPN-Next. Clash API is retained
+# Keep the mobile core intentionally small. VLESS, VMess, SOCKS/HTTP, Tor and
+# proxy chaining are part of the base build. AWG and uTLS are the only optional
+# protocol features required by ProtonVPN-Next. Clash API is retained
 # because libbox CommandServer uses its internal tracker even without an external
 # controller. This excludes QUIC (Hysteria2/TUIC), gVisor, WireGuard, Tailscale
 # and Naive.

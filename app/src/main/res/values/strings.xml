@@ -765,4 +765,6 @@
     <string name="verification_auto_reconnect_title">Automatic reconnect</string>
     <string name="verification_auto_reconnect_desc">Restart the tunnel after a detected failure</string>
     <string name="verification_note">Disabling verification does not disable VPN encryption. It only skips active connectivity probes and health-based reconnects.</string>
+    <string name="settings_tor_mode">Tor mode</string>
+    <string name="settings_tor_mode_desc">Route VPN traffic through Tor. UDP is blocked while this mode is active.</string>
 </resources>

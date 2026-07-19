@@ -668,4 +668,6 @@
     <string name="verification_auto_reconnect_title">Автоматическое переподключение</string>
     <string name="verification_auto_reconnect_desc">Перезапускать туннель после обнаруженного отвала</string>
     <string name="verification_note">Отключение проверки не отключает шифрование VPN. Оно лишь пропускает активные проверки доступности и переподключения по состоянию туннеля.</string>
+    <string name="settings_tor_mode">Режим Tor</string>
+    <string name="settings_tor_mode_desc">Направлять трафик VPN через Tor. Пока режим активен, UDP-трафик блокируется.</string>
 </resources>

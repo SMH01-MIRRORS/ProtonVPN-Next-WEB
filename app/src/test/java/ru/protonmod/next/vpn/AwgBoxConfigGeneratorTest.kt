@@ -232,6 +232,36 @@ class AwgBoxConfigGeneratorTest {
         assertEquals("direct", route.getValue("final").jsonPrimitive.content)
     }
 
+    @Test
+    fun `tor mode routes through Tor while global exclusions stay direct`() {
+        val config = generator.buildConfig(
+            serverPublicKey = "PUBLIC_KEY", privateKey = "PRIVATE_KEY",
+            localIp = "10.2.0.2", dnsServer = "10.2.0.1", targetIp = "198.51.100.1",
+            selectedDomains = setOf("*.ru"), torModeEnabled = true,
+            torDataDirectory = "/data/user/0/app/no_backup/tor",
+            torExecutablePath = "/data/app/lib/arm64/libtor.so",
+            obfuscationParams = AmneziaVpnManager.ObfuscationParams(
+                jc = 0, jmin = 0, jmax = 0, s1 = 0, s2 = 0,
+                h1 = "", h2 = "", h3 = "", h4 = "", i1 = ""
+            )
+        )
+        val root = Json.parseToJsonElement(config).jsonObject
+        val route = root.getValue("route").jsonObject
+        val rules = route.getValue("rules").jsonArray.map { it.jsonObject }
+        val tor = root.getValue("outbounds").jsonArray.map { it.jsonObject }
+            .single { it.getValue("tag").jsonPrimitive.content == "tor" }
+        val dns = root.getValue("dns").jsonObject.getValue("servers").jsonArray.map { it.jsonObject }
+            .single { it.getValue("tag").jsonPrimitive.content == "proton-dns" }
+        assertEquals("tor", route.getValue("final").jsonPrimitive.content)
+        assertEquals("proton-awg", tor.getValue("detour").jsonPrimitive.content)
+        assertEquals("/data/app/lib/arm64/libtor.so", tor.getValue("executable_path").jsonPrimitive.content)
+        assertEquals("direct", rules.single { "domain_suffix" in it }.getValue("outbound").jsonPrimitive.content)
+        assertTrue(rules.any { it["action"]?.jsonPrimitive?.content == "reject" && "network" in it })
+        assertEquals("tcp", dns.getValue("type").jsonPrimitive.content)
+        assertEquals("1.1.1.1", dns.getValue("server").jsonPrimitive.content)
+        assertEquals("tor", dns.getValue("detour").jsonPrimitive.content)
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun `rejects invalid endpoint port`() {
         generator.buildConfig(

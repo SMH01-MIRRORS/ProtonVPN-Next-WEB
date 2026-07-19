@@ -30,7 +30,10 @@ interface AwgBoxConfigGenerator {
         obfuscationParams: AmneziaVpnManager.ObfuscationParams,
         proxyChainConfig: String? = null,
         netShieldRuleSets: List<NetShieldRuleSet> = emptyList(),
-        proxyServerOverrides: Map<String, String> = emptyMap()
+        proxyServerOverrides: Map<String, String> = emptyMap(),
+        torModeEnabled: Boolean = false,
+        torDataDirectory: String? = null,
+        torExecutablePath: String? = null
     ): String
 }
 
@@ -40,6 +43,7 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
 ) : AwgBoxConfigGenerator {
     private companion object {
         val IPV4_LITERAL = Regex("^(?:\\d{1,3}\\.){3}\\d{1,3}$")
+        const val TOR_FALLBACK_DNS = "1.1.1.1"
     }
 
     private val json = Json { prettyPrint = true; encodeDefaults = false }
@@ -60,11 +64,18 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
         obfuscationParams: AmneziaVpnManager.ObfuscationParams,
         proxyChainConfig: String?,
         netShieldRuleSets: List<NetShieldRuleSet>,
-        proxyServerOverrides: Map<String, String>
+        proxyServerOverrides: Map<String, String>,
+        torModeEnabled: Boolean,
+        torDataDirectory: String?,
+        torExecutablePath: String?
     ): String {
         require(port in 1..65535) { "Invalid AWG port: $port" }
         require(targetIp.isNotBlank()) { "AWG endpoint is empty" }
         require(IPV4_LITERAL.matches(targetIp)) { "AWG endpoint must be an IPv4 address" }
+        val torDataDir = torDataDirectory?.trim()?.takeIf(String::isNotEmpty)
+        val torExecutable = torExecutablePath?.trim()?.takeIf(String::isNotEmpty)
+        require(!torModeEnabled || torDataDir != null) { "Tor data directory is required" }
+        require(!torModeEnabled || torExecutable != null) { "Tor executable path is required" }
 
         val localPrefix = ipSubnetCalculator.normalizeIp(localIp)
         val proxyChain = proxyChainConfig?.takeIf(String::isNotBlank)
@@ -83,6 +94,7 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
         val domainSuffixes = SplitTunnelingDomainRule.domainSuffixes(selectedDomains)
         val hasDomainRules = exactDomains.isNotEmpty() || domainSuffixes.isNotEmpty()
         val includeUsesDomainRouting = isIncludeMode && hasDomainRules
+        val tunnelOutbound = if (torModeEnabled) "tor" else "proton-awg"
         val routeAddresses = when {
             includeUsesDomainRouting -> listOf("0.0.0.0/0")
             isIncludeMode && selectedIps.isNotEmpty() -> selectedIps.sorted()
@@ -150,7 +162,7 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
             }
         }
 
-        val domainRuleOutbound = if (isIncludeMode) "proton-awg" else "direct"
+        val domainRuleOutbound = if (isIncludeMode) tunnelOutbound else "direct"
         val routeRules = buildList {
             add(JsonObject(mapOf(
                 "ip_version" to JsonPrimitive(6),
@@ -162,29 +174,51 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                 "action" to JsonPrimitive("hijack-dns")
             )))
             if (exactDomains.isNotEmpty()) {
-                add(JsonObject(mapOf(
-                    "domain" to strings(exactDomains),
-                    "action" to JsonPrimitive("route"),
-                    "outbound" to JsonPrimitive(domainRuleOutbound)
-                )))
+                add(JsonObject(buildMap {
+                    put("domain", strings(exactDomains))
+                    if (torModeEnabled && isIncludeMode) put("network", strings(listOf("tcp")))
+                    put("action", JsonPrimitive("route"))
+                    put("outbound", JsonPrimitive(domainRuleOutbound))
+                }))
             }
             if (domainSuffixes.isNotEmpty()) {
-                add(JsonObject(mapOf(
-                    "domain_suffix" to strings(domainSuffixes),
-                    "action" to JsonPrimitive("route"),
-                    "outbound" to JsonPrimitive(domainRuleOutbound)
-                )))
+                add(JsonObject(buildMap {
+                    put("domain_suffix", strings(domainSuffixes))
+                    if (torModeEnabled && isIncludeMode) put("network", strings(listOf("tcp")))
+                    put("action", JsonPrimitive("route"))
+                    put("outbound", JsonPrimitive(domainRuleOutbound))
+                }))
             }
             if (includeUsesDomainRouting && selectedIps.isNotEmpty()) {
+                add(JsonObject(buildMap {
+                    put("ip_cidr", strings(selectedIps.sorted()))
+                    if (torModeEnabled) put("network", strings(listOf("tcp")))
+                    put("action", JsonPrimitive("route"))
+                    put("outbound", JsonPrimitive(tunnelOutbound))
+                }))
+            }
+            if (torModeEnabled) {
                 add(JsonObject(mapOf(
-                    "ip_cidr" to strings(selectedIps.sorted()),
-                    "action" to JsonPrimitive("route"),
-                    "outbound" to JsonPrimitive("proton-awg")
+                    "network" to strings(listOf("udp")),
+                    "action" to JsonPrimitive("reject")
                 )))
             }
         }
         val outbounds = buildList {
             addAll(proxyChain.map(ProxyLinkParser.ParsedProxy::outbound))
+            if (torModeEnabled) {
+                add(JsonObject(mapOf(
+                    "type" to JsonPrimitive("tor"),
+                    "tag" to JsonPrimitive("tor"),
+                    "data_directory" to JsonPrimitive(requireNotNull(torDataDir)),
+                    "executable_path" to JsonPrimitive(requireNotNull(torExecutable)),
+                    "detour" to JsonPrimitive("proton-awg"),
+                    "torrc" to JsonObject(mapOf(
+                        "ClientOnly" to JsonPrimitive("1"),
+                        "SafeLogging" to JsonPrimitive("1")
+                    ))
+                )))
+            }
             if (hasDomainRules) {
                 add(JsonObject(mapOf(
                     "type" to JsonPrimitive("direct"),
@@ -193,6 +227,7 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
             }
         }
 
+        val selectedDnsServer = if (torModeEnabled && isPrivateIpv4(dnsServer)) TOR_FALLBACK_DNS else dnsServer
         val config = JsonObject(mapOf(
             "log" to JsonObject(mapOf(
                 "level" to JsonPrimitive(if (netShieldRuleSets.isEmpty()) "info" else "debug"),
@@ -207,11 +242,11 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                         "server_port" to JsonPrimitive(53)
                     )))
                     add(JsonObject(mapOf(
-                        "type" to JsonPrimitive("udp"),
+                        "type" to JsonPrimitive(if (torModeEnabled) "tcp" else "udp"),
                         "tag" to JsonPrimitive("proton-dns"),
-                        "server" to JsonPrimitive(dnsServer),
+                        "server" to JsonPrimitive(selectedDnsServer),
                         "server_port" to JsonPrimitive(53),
-                        "detour" to JsonPrimitive("proton-awg")
+                        "detour" to JsonPrimitive(tunnelOutbound)
                     )))
                 }))
                 // The bootstrap resolver is only for proxy-host resolution. Without an explicit
@@ -244,9 +279,18 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                         ))
                     }))
                 }
-                put("final", JsonPrimitive(if (includeUsesDomainRouting) "direct" else "proton-awg"))
+                put("final", JsonPrimitive(if (includeUsesDomainRouting) "direct" else tunnelOutbound))
             })
         ))
         return json.encodeToString(JsonObject.serializer(), config)
+    }
+
+    private fun isPrivateIpv4(address: String): Boolean {
+        val parts = address.split('.').mapNotNull(String::toIntOrNull)
+        if (parts.size != 4 || parts.any { it !in 0..255 }) return false
+        return parts[0] == 10 ||
+            (parts[0] == 172 && parts[1] in 16..31) ||
+            (parts[0] == 192 && parts[1] == 168) ||
+            parts[0] == 127
     }
 }

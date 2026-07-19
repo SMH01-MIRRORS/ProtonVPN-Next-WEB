@@ -58,6 +58,7 @@ import ru.protonmod.next.utils.coroutines.DispatcherProvider
 import ru.protonmod.next.utils.crypto.CryptoWrapper
 import ru.protonmod.next.utils.system.SystemContextWrapper
 import java.io.ByteArrayInputStream
+import java.io.File
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import javax.inject.Inject
@@ -764,9 +765,10 @@ class AmneziaVpnManager @Inject constructor(
             val isObfuscationEnabled = !proxyChainEnabled &&
                 (overrideObfuscation ?: settingsManager.obfuscationEnabled.first())
 
+            val torModeEnabled = settingsManager.torModeEnabled.first()
             ProtonLogger.i(
                 TAG,
-                "Connection parameters: Port=$selectedPort, AWG obfuscation=$isObfuscationEnabled, proxy chain=$proxyChainEnabled"
+                "Connection parameters: Port=$selectedPort, AWG obfuscation=$isObfuscationEnabled, proxy chain=$proxyChainEnabled, Tor=$torModeEnabled"
             )
 
             val params = if (isObfuscationEnabled) {
@@ -812,7 +814,10 @@ class AmneziaVpnManager @Inject constructor(
                 obfuscationParams = params,
                 proxyChainConfig = proxyChainConfig.takeIf { proxyChainEnabled },
                 netShieldRuleSets = localNetShield.activeRuleSets(settingsManager.netShieldLevel.first()),
-                proxyServerOverrides = proxyServerOverrides
+                proxyServerOverrides = proxyServerOverrides,
+                torModeEnabled = torModeEnabled,
+                torDataDirectory = File(context.noBackupFilesDir, "tor").absolutePath,
+                torExecutablePath = File(context.applicationInfo.nativeLibraryDir, "libtor.so").absolutePath
             )
             
             ProtonLogger.d(TAG, "Generated awgbox config (length=${configStr.length}, endpoint=$targetIp:$selectedPort)")

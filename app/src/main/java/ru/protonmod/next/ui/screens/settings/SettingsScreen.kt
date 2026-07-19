@@ -117,6 +117,7 @@ fun SettingsScreen(
                 onNotificationsChange = viewModel::setNotifications,
                 onLogout = viewModel::logout,
                 onAllowLanChange = viewModel::setAllowLanEnabled,
+                onTorModeChange = viewModel::setTorModeEnabled,
                 onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
                 onNavigateToProtocol = onNavigateToProtocol,
                 onNavigateToKillSwitch = onNavigateToKillSwitch,
@@ -149,6 +150,7 @@ fun SettingsContent(
     onAutoConnectChange: (Boolean) -> Unit,
     onNotificationsChange: (Boolean) -> Unit,
     onAllowLanChange: (Boolean) -> Unit,
+    onTorModeChange: (Boolean) -> Unit,
     onLogout: () -> Unit,
     onOtaFrequencyChange: (String) -> Unit,
     onCheckForUpdates: () -> Unit,
@@ -243,6 +245,7 @@ fun SettingsContent(
                             onNavigateToNetShield = onNavigateToNetShield,
                             onNavigateToConnectionVerification = onNavigateToConnectionVerification,
                             onAllowLanChange = onAllowLanChange,
+                            onTorModeChange = onTorModeChange,
                             onNotificationsChange = onNotificationsChange
                         )
 
@@ -310,7 +313,8 @@ fun SettingsContent(
                     onNavigateToErrorReporting = onNavigateToErrorReporting,
                     onNavigateToNetShield = onNavigateToNetShield,
                     onNavigateToConnectionVerification = onNavigateToConnectionVerification,
-                    onAllowLanChange = onAllowLanChange
+                    onAllowLanChange = onAllowLanChange,
+                    onTorModeChange = onTorModeChange
                 )
             }
 
@@ -541,6 +545,7 @@ private fun PrivacySettingsSection(
     state: SettingsUiState,
     onNotificationsChange: (Boolean) -> Unit,
     onAllowLanChange: (Boolean) -> Unit,
+    onTorModeChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     onNavigateToCustomDns: (() -> Unit)? = null,
     onNavigateToCountrySpoofing: (() -> Unit)? = null,
@@ -587,6 +592,14 @@ private fun PrivacySettingsSection(
             title = stringResource(R.string.settings_kill_switch),
             subtitle = stringResource(R.string.settings_kill_switch_desc),
             onClick = onNavigateToKillSwitch
+        )
+
+        SettingToggleRow(
+            icon = Icons.Rounded.Hub,
+            title = stringResource(R.string.settings_tor_mode),
+            subtitle = stringResource(R.string.settings_tor_mode_desc),
+            checked = state.torModeEnabled,
+            onCheckedChange = onTorModeChange
         )
 
         if (BuildConfig.SENTRY_ENABLED) {
