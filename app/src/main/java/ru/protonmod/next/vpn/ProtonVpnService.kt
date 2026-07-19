@@ -31,14 +31,19 @@ import io.nekohasekai.libbox.Libbox
 import io.nekohasekai.libbox.OverrideOptions
 import io.nekohasekai.libbox.SetupOptions
 import io.nekohasekai.libbox.SystemProxyStatus
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
@@ -104,11 +109,13 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private val engineMutex = Mutex()
     private lateinit var platform: AwgBoxPlatform
     private var commandServer: CommandServer? = null
     private var tunDescriptor: ParcelFileDescriptor? = null
     private var statsJob: Job? = null
     private var reconnectJob: Job? = null
+    private var engineJob: Job? = null
     private var state = VpnTunnelState.DOWN
     private var connecting = false
     private var verified = false
@@ -217,25 +224,39 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         sendState(null)
 
         reconnectJob?.cancel()
-        scope.launch(Dispatchers.IO) {
-            runCatching {
-                closeEngine()
-                val server = CommandServer(this@ProtonVpnService, platform).also { it.start() }
-                server.checkConfig(config)
-                server.startOrReloadService(config, OverrideOptions())
-                commandServer = server
-            }.onSuccess {
-                withContext(Dispatchers.Main) {
-                    state = VpnTunnelState.UP
-                    connecting = false
-                    resetTransportFailures()
-                    sendState(VpnTunnelState.UP)
-                    updateNotification(VpnTunnelState.UP.name)
-                    startTrafficUpdates()
+        engineJob?.cancel()
+        engineJob = scope.launch(Dispatchers.IO) {
+            engineMutex.withLock {
+                var candidate: CommandServer? = null
+                runCatching {
+                    closeEngine()
+                    currentCoroutineContext().ensureActive()
+                    val server = CommandServer(this@ProtonVpnService, platform).also { it.start() }
+                    candidate = server
+                    server.checkConfig(config)
+                    server.startOrReloadService(config, OverrideOptions())
+                    commandServer = server
+                    candidate = null
+                }.onSuccess {
+                    withContext(Dispatchers.Main) {
+                        state = VpnTunnelState.UP
+                        connecting = false
+                        resetTransportFailures()
+                        sendState(VpnTunnelState.UP)
+                        updateNotification(VpnTunnelState.UP.name)
+                        startTrafficUpdates()
+                    }
+                }.onFailure { error ->
+                    // A failed or cancelled native start is not registered in commandServer yet.
+                    // Always close that candidate so Tor and its control/SOCKS sockets cannot
+                    // survive into the next, possibly non-Tor, connection attempt.
+                    runCatching { candidate?.closeService() }
+                    runCatching { candidate?.close() }
+                    candidate = null
+                    if (error is CancellationException) return@onFailure
+                    ProtonLogger.e(TAG, "Failed to start amnezia-box tunnel", error)
+                    withContext(Dispatchers.Main) { handleEngineFailure() }
                 }
-            }.onFailure { error ->
-                ProtonLogger.e(TAG, "Failed to start amnezia-box tunnel", error)
-                withContext(Dispatchers.Main) { handleEngineFailure() }
             }
         }
     }
@@ -292,11 +313,12 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     private fun stopTunnel(manual: Boolean) {
         manualDisconnect = manual
         reconnectJob?.cancel()
+        engineJob?.cancel()
         connecting = false
         verified = false
         scope.launch(Dispatchers.IO) {
             localNetShield.finishSessionStats()
-            closeEngine()
+            engineMutex.withLock { closeEngine() }
             withContext(Dispatchers.Main) {
                 state = VpnTunnelState.DOWN
                 sendState(VpnTunnelState.DOWN)
@@ -541,6 +563,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     override fun onDestroy() {
         runCatching { unregisterReceiver(settingsReceiver) }
         reconnectJob?.cancel()
+        engineJob?.cancel()
         stopTrafficUpdates()
         closeEngine()
         scope.cancel()
