@@ -273,6 +273,11 @@ android {
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
+            packaging {
+                jniLibs {
+                    useLegacyPackaging = true
+                }
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
