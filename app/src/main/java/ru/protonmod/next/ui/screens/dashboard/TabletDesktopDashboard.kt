@@ -394,6 +394,12 @@ private fun DesktopMapPanel(
                     BatteryOptimizationBanner()
                 }
             }
+            state.connectionWarning?.let { warning ->
+                Spacer(Modifier.height(8.dp))
+                Box(modifier = Modifier.widthIn(max = 360.dp)) {
+                    ConnectionWarningBanner(warning = warning)
+                }
+            }
         }
         val location = if (state.isConnected) state.vpnLocationText else state.originalLocationText
         if (location != null) {

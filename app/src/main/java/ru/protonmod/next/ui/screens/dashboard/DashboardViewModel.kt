@@ -89,6 +89,7 @@ sealed class DashboardUiState {
         val trafficRx: String? = null,
         val trafficTx: String? = null,
         val isBatteryOptimized: Boolean = false,
+        val connectionWarning: AmneziaVpnManager.ConnectionWarning? = null,
         val pauseEndTime: Long = 0
     ) : DashboardUiState()
     data class Error(val message: String, val isSessionError: Boolean = false) : DashboardUiState()
@@ -147,6 +148,7 @@ class DashboardViewModel @Inject constructor(
         amneziaVpnManager.speed,
         amneziaVpnManager.trafficRx,
         amneziaVpnManager.trafficTx,
+        amneziaVpnManager.connectionWarning,
         settingsManager.pauseEndTime
     ) { args: Array<Any?> ->
         @Suppress("UNCHECKED_CAST")
@@ -169,7 +171,8 @@ class DashboardViewModel @Inject constructor(
         val speed = args[14] as String?
         val trafficRx = args[15] as String?
         val trafficTx = args[16] as String?
-        val pauseEndTime = args[17] as Long
+        val connectionWarning = args[17] as AmneziaVpnManager.ConnectionWarning?
+        val pauseEndTime = args[18] as Long
 
         if (isUpdating && servers.isEmpty()) {
             DashboardUiState.Loading
@@ -207,6 +210,7 @@ class DashboardViewModel @Inject constructor(
                 trafficRx = trafficRx,
                 trafficTx = trafficTx,
                 isBatteryOptimized = isBatteryOptimized,
+                connectionWarning = connectionWarning,
                 pauseEndTime = pauseEndTime
             )
         }

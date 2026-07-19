@@ -160,6 +160,7 @@ class DashboardViewModelTest {
         whenever(amneziaVpnManager.speed).thenReturn(speedFlow)
         whenever(amneziaVpnManager.trafficRx).thenReturn(trafficRxFlow)
         whenever(amneziaVpnManager.trafficTx).thenReturn(trafficTxFlow)
+        whenever(amneziaVpnManager.connectionWarning).thenReturn(MutableStateFlow(null))
         whenever(amneziaVpnManager.tunnelState).thenReturn(tunnelStateFlow)
         
         whenever(connectedServerState.connectedServer).thenReturn(connectedServerFlow)

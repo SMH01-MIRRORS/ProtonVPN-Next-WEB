@@ -158,6 +158,15 @@ internal fun PhoneDashboardLayout(
             }
         }
 
+        state.connectionWarning?.let { warning ->
+            item(contentType = "ConnectionWarning") {
+                ConnectionWarningBanner(
+                    warning = warning,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+        }
+
         if (state.pauseEndTime > System.currentTimeMillis()) {
             item(contentType = "PauseBanner") {
                 PauseBanner(

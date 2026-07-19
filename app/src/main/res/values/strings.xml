@@ -595,6 +595,12 @@
     <string name="battery_optimization_desc">Android may disconnect the VPN to save power. Please disable optimization for this app.</string>
     <string name="btn_fix">Fix</string>
 
+    <!-- Connection warnings -->
+    <string name="ipv6_blocked_title">IPv6 connection blocked</string>
+    <string name="ipv6_blocked_desc">This server is only reachable over IPv6. IPv6 is disabled to prevent traffic leaks. Please choose another server or try again.</string>
+    <string name="proxy_config_invalid_title">Proxy configuration needs attention</string>
+    <string name="proxy_config_invalid_desc">Proxy chaining is enabled, but the VLESS or VMess link is invalid. Fix the link in Settings and reconnect.</string>
+
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">UNOFFICIAL BUILD DETECTED!</string>
     <string name="tamper_warning_desc">This version of Proton VPN-Next has been modified by an unknown third party. Your security, privacy, and data are at HIGH RISK.</string>

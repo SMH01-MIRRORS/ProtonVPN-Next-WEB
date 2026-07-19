@@ -41,6 +41,7 @@ import ru.protonmod.next.utils.coroutines.DispatcherProvider
 import ru.protonmod.next.utils.crypto.CryptoWrapper
 import ru.protonmod.next.utils.crypto.VpnKeyPair
 import ru.protonmod.next.utils.system.SystemContextWrapper
+import java.net.Inet4Address
 import java.net.InetAddress
 import org.mockito.Mockito
 import ru.protonmod.next.vpn.VpnTunnelState
@@ -104,9 +105,11 @@ class AmneziaVpnManagerTest {
             mockedInetAddress = Mockito.mockStatic(InetAddress::class.java)
             mockedCertFactory = Mockito.mockStatic(CertificateFactory::class.java)
             
-            val mockAddress = Mockito.mock(InetAddress::class.java)
+            val mockAddress = Mockito.mock(Inet4Address::class.java)
             whenever(mockAddress.hostAddress).thenReturn("1.2.3.4")
             mockedInetAddress.`when`<InetAddress> { InetAddress.getByName(any()) }.thenReturn(mockAddress)
+            mockedInetAddress.`when`<Array<InetAddress>> { InetAddress.getAllByName(any()) }
+                .thenReturn(arrayOf(mockAddress))
             
             val mockCf = Mockito.mock(CertificateFactory::class.java)
             val mockCert = Mockito.mock(X509Certificate::class.java)

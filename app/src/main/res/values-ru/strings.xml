@@ -501,6 +501,11 @@
     <string name="battery_optimization_title">Оптимизация батареи активна</string>
     <string name="battery_optimization_desc">Android может отключать VPN для экономии энергии. Пожалуйста, отключите оптимизацию для этого приложения.</string>
     <string name="btn_fix">Исправить</string>
+    <!-- Connection warnings -->
+    <string name="ipv6_blocked_title">IPv6-подключение заблокировано</string>
+    <string name="ipv6_blocked_desc">Этот сервер доступен только по IPv6. IPv6 отключён для предотвращения утечек трафика. Выберите другой сервер или повторите попытку.</string>
+    <string name="proxy_config_invalid_title">Проверьте настройки прокси</string>
+    <string name="proxy_config_invalid_desc">Цепочка прокси включена, но ссылка VLESS или VMess некорректна. Исправьте ссылку в настройках и подключитесь снова.</string>
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">ОБНАРУЖЕНА НЕОФИЦИАЛЬНАЯ СБОРКА!</string>
     <string name="tamper_warning_desc">Эта версия Proton VPN-Next была модифицирована неизвестной третьей стороной. Ваша безопасность, конфиденциальность и данные находятся под ВЫСОКИМ РИСКОМ.</string>

@@ -45,6 +45,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import ru.protonmod.next.vpn.VpnTunnelState
+import java.net.Inet4Address
 import java.net.InetAddress
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.local.SessionEntity
@@ -103,6 +104,19 @@ class AmneziaVpnManager @Inject constructor(
 
     private val _certState = MutableStateFlow<CertificateState>(CertificateState.Valid)
     val certState: StateFlow<CertificateState> = _certState.asStateFlow()
+
+    sealed interface ConnectionWarning {
+        data object Ipv6OnlyEndpoint : ConnectionWarning
+        data object InvalidProxyConfiguration : ConnectionWarning
+    }
+
+    private class ExpectedConnectionException(
+        val warning: ConnectionWarning,
+        message: String
+    ) : IllegalArgumentException(message)
+
+    private val _connectionWarning = MutableStateFlow<ConnectionWarning?>(null)
+    val connectionWarning: StateFlow<ConnectionWarning?> = _connectionWarning.asStateFlow()
 
     data class ObfuscationParams(
         val jc: Int, val jmin: Int, val jmax: Int,
@@ -532,7 +546,8 @@ class AmneziaVpnManager @Inject constructor(
 
             connectionJob?.cancel()
             verificationJob?.cancel()
-            
+
+            _connectionWarning.value = null
             updateVpnState(VpnState.CONNECTING)
             _isConnecting.value = true
             
@@ -552,6 +567,12 @@ class AmneziaVpnManager @Inject constructor(
             }
         }
     }
+
+    private fun normalizeIpv4Address(address: String): String? = runCatching {
+        InetAddress.getByName(address)
+            .takeIf { it is Inet4Address }
+            ?.hostAddress
+    }.getOrNull()
 
     private suspend fun connectInternal(
         logicalServerId: String,
@@ -590,11 +611,16 @@ class AmneziaVpnManager @Inject constructor(
             var targetIp: String? = null
 
             if (forceFallback) {
-                // Skip DNS entirely and jump straight to the exitIp fallback
-                val fallbackIp = server.exitIp
-                if (!fallbackIp.isNullOrEmpty()) {
-                    ProtonLogger.i(TAG, "forceFallback=true: skipping DNS resolution, using exitIp: $fallbackIp")
-                    targetIp = fallbackIp
+                // Skip DNS entirely and use exitIp only when it is IPv4.
+                val fallbackIp = server.exitIp?.takeIf(String::isNotBlank)
+                targetIp = fallbackIp?.let(::normalizeIpv4Address)
+                if (targetIp != null) {
+                    ProtonLogger.i(TAG, "forceFallback=true: skipping DNS resolution, using IPv4 exitIp: $targetIp")
+                } else if (fallbackIp != null) {
+                    throw ExpectedConnectionException(
+                        ConnectionWarning.Ipv6OnlyEndpoint,
+                        "The fallback endpoint is not reachable over IPv4"
+                    )
                 } else {
                     _isConnecting.value = false
                     _tunnelState.value = VpnTunnelState.DOWN
@@ -603,27 +629,37 @@ class AmneziaVpnManager @Inject constructor(
                     }
                 }
             } else {
-                // DNS resolution with improved retry and logging
-                ProtonLogger.d(TAG, "Resolving domain ${server.domain} (Max retries: $DNS_RETRY_COUNT)")
+                // Resolve every answer and explicitly select IPv4. Passing an IPv6 endpoint to
+                // amnezia-box is intentionally forbidden to avoid traffic leaks in sing-box cores.
+                ProtonLogger.d(TAG, "Resolving IPv4 for ${server.domain} (Max retries: $DNS_RETRY_COUNT)")
                 for (i in 1..DNS_RETRY_COUNT) {
                     if (!isActive) break
                     try {
-                        targetIp = InetAddress.getByName(server.domain).hostAddress
+                        targetIp = InetAddress.getAllByName(server.domain)
+                            .filterIsInstance<Inet4Address>()
+                            .firstOrNull()
+                            ?.hostAddress
                         if (targetIp != null) {
-                            ProtonLogger.i(TAG, "DNS resolved ${server.domain} to $targetIp on attempt $i")
+                            ProtonLogger.i(TAG, "DNS resolved ${server.domain} to IPv4 $targetIp on attempt $i")
                             break
                         }
+                        ProtonLogger.w(TAG, "DNS retry $i returned no IPv4 address for ${server.domain}")
                     } catch (e: Exception) {
                         ProtonLogger.w(TAG, "DNS retry $i failed for ${server.domain}: ${e.message}")
-                        if (i < DNS_RETRY_COUNT) delay(DNS_RETRY_DELAY_MS * i) // Exponential-ish backoff
                     }
+                    if (i < DNS_RETRY_COUNT) delay(DNS_RETRY_DELAY_MS * i)
                 }
 
                 if (targetIp == null) {
-                    val fallbackIp = server.exitIp
-                    if (!fallbackIp.isNullOrEmpty()) {
-                        ProtonLogger.w(TAG, "DNS resolution failed for ${server.domain} after $DNS_RETRY_COUNT attempts, falling back to exitIp: $fallbackIp")
-                        targetIp = fallbackIp
+                    val fallbackIp = server.exitIp?.takeIf(String::isNotBlank)
+                    targetIp = fallbackIp?.let(::normalizeIpv4Address)
+                    if (targetIp != null) {
+                        ProtonLogger.w(TAG, "DNS returned no IPv4 for ${server.domain}; using IPv4 exitIp: $targetIp")
+                    } else if (fallbackIp != null) {
+                        throw ExpectedConnectionException(
+                            ConnectionWarning.Ipv6OnlyEndpoint,
+                            "The selected VPN server is only reachable over IPv6"
+                        )
                     } else {
                         _isConnecting.value = false
                         _tunnelState.value = VpnTunnelState.DOWN
@@ -677,8 +713,11 @@ class AmneziaVpnManager @Inject constructor(
             }
             val proxyChainEnabled = settingsManager.proxyChainEnabled.first()
             val proxyChainConfig = settingsManager.proxyChainConfig.first().trim()
-            require(!proxyChainEnabled || ProxyLinkParser.isValid(proxyChainConfig)) {
-                "Proxy chain is enabled but its vless:// or vmess:// configuration is invalid"
+            if (proxyChainEnabled && !ProxyLinkParser.isValid(proxyChainConfig)) {
+                throw ExpectedConnectionException(
+                    ConnectionWarning.InvalidProxyConfiguration,
+                    "Proxy chain is enabled but its vless:// or vmess:// configuration is invalid"
+                )
             }
             val isObfuscationEnabled = !proxyChainEnabled &&
                 (overrideObfuscation ?: settingsManager.obfuscationEnabled.first())
@@ -707,12 +746,9 @@ class AmneziaVpnManager @Inject constructor(
 
             // Retrieve Custom DNS IP or fallback to Proton Assigned/Default
             val userDns = settingsManager.customDns.first().trim()
-            val isValidDns = userDns.isNotEmpty() && try {
-                InetAddress.getByName(userDns)
-                true
-            } catch (e: Exception) {
-                ProtonLogger.w(TAG, "Invalid custom DNS value '$userDns', falling back to default: ${e.message}")
-                false
+            val isValidDns = userDns.isNotEmpty() && normalizeIpv4Address(userDns) != null
+            if (userDns.isNotEmpty() && !isValidDns) {
+                ProtonLogger.w(TAG, "Custom DNS is not a numeric IPv4 address; falling back to the Proton DNS server")
             }
             val activeDns = if (isValidDns) userDns else fallbackDns
             ProtonLogger.i(TAG, "Using DNS Server: $activeDns, Client IP: $localIp")
@@ -754,6 +790,17 @@ class AmneziaVpnManager @Inject constructor(
             ProtonLogger.recordCount("vpn_connection_success", 1.0)
             
             Result.success(Unit)
+        } catch (e: ExpectedConnectionException) {
+            // This is an expected, actionable configuration/network condition. Keep it out of
+            // Sentry and expose it to the dashboard as a warning instead of reporting a crash.
+            ProtonLogger.w(TAG, "VPN connection blocked: ${e.message}")
+            _connectionWarning.value = e.warning
+            _isConnecting.value = false
+            _tunnelState.value = VpnTunnelState.DOWN
+            updateVpnState(VpnState.DISCONNECTED)
+            connectedServerState.setConnectedServer(null)
+            currentServerId = null
+            Result.failure(e)
         } catch (e: Exception) {
             ProtonLogger.e(TAG, "Failed to connect to VPN", e)
             ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Failed: ${e.message}", "ERROR", "vpn.error")
@@ -799,7 +846,8 @@ class AmneziaVpnManager @Inject constructor(
 
             connectionJob?.cancel()
             verificationJob?.cancel()
-            
+
+            _connectionWarning.value = null
             updateVpnState(VpnState.CONNECTING)
             _isConnecting.value = true
 

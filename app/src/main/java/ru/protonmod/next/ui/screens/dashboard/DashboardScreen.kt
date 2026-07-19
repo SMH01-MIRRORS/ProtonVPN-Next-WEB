@@ -1047,6 +1047,52 @@ fun ConnectionStatusCard(
 }
 
 @Composable
+fun ConnectionWarningBanner(
+    warning: AmneziaVpnManager.ConnectionWarning,
+    modifier: Modifier = Modifier
+) {
+    val colors = ProtonNextTheme.colors
+    val (title, description) = when (warning) {
+        AmneziaVpnManager.ConnectionWarning.Ipv6OnlyEndpoint ->
+            stringResource(R.string.ipv6_blocked_title) to stringResource(R.string.ipv6_blocked_desc)
+        AmneziaVpnManager.ConnectionWarning.InvalidProxyConfiguration ->
+            stringResource(R.string.proxy_config_invalid_title) to stringResource(R.string.proxy_config_invalid_desc)
+    }
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = colors.notificationWarning.copy(alpha = 0.1f)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Warning,
+                contentDescription = null,
+                tint = colors.notificationWarning,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = colors.notificationWarning,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.notificationWarning
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun BatteryOptimizationBanner(
     modifier: Modifier = Modifier
 ) {

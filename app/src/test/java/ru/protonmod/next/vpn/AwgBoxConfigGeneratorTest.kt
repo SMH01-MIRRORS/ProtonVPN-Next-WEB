@@ -66,7 +66,11 @@ class AwgBoxConfigGeneratorTest {
         assertEquals("<r 8>", awg.getValue("i2").jsonPrimitive.content)
         assertEquals("192.0.2.10", peer.getValue("address").jsonPrimitive.content)
         assertEquals("443", peer.getValue("port").jsonPrimitive.content)
-        assertEquals("proton-awg", root.getValue("route").jsonObject.getValue("final").jsonPrimitive.content)
+        val route = root.getValue("route").jsonObject
+        val ipv6Rule = route.getValue("rules").jsonArray.first().jsonObject
+        assertEquals("6", ipv6Rule.getValue("ip_version").jsonPrimitive.content)
+        assertEquals("reject", ipv6Rule.getValue("action").jsonPrimitive.content)
+        assertEquals("proton-awg", route.getValue("final").jsonPrimitive.content)
     }
 
     @Test

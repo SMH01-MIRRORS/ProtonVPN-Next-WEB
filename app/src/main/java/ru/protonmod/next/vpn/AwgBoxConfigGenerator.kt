@@ -34,6 +34,10 @@ interface AwgBoxConfigGenerator {
 class AwgBoxConfigGeneratorImpl @Inject constructor(
     private val ipSubnetCalculator: IpSubnetCalculator
 ) : AwgBoxConfigGenerator {
+    private companion object {
+        val IPV4_LITERAL = Regex("^(?:\\d{1,3}\\.){3}\\d{1,3}$")
+    }
+
     private val json = Json { prettyPrint = true; encodeDefaults = false }
 
     override fun buildConfig(
@@ -53,6 +57,7 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
     ): String {
         require(port in 1..65535) { "Invalid AWG port: $port" }
         require(targetIp.isNotBlank()) { "AWG endpoint is empty" }
+        require(IPV4_LITERAL.matches(targetIp)) { "AWG endpoint must be an IPv4 address" }
 
         val localPrefix = ipSubnetCalculator.normalizeIp(localIp)
         val proxyChain = proxyChainConfig?.takeIf(String::isNotBlank)
@@ -153,6 +158,10 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
             "route" to JsonObject(mapOf(
                 "auto_detect_interface" to JsonPrimitive(true),
                 "rules" to JsonArray(listOf(
+                    JsonObject(mapOf(
+                        "ip_version" to JsonPrimitive(6),
+                        "action" to JsonPrimitive("reject")
+                    )),
                     JsonObject(mapOf("action" to JsonPrimitive("sniff"))),
                     JsonObject(mapOf("protocol" to strings(listOf("dns")), "action" to JsonPrimitive("hijack-dns")))
                 )),
