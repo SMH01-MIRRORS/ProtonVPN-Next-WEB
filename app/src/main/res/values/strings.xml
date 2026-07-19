@@ -722,6 +722,7 @@
     <string name="netshield_title">NetShield</string>
     <string name="netshield_settings_subtitle">Local malware, ad and tracker blocking</string>
     <string name="netshield_description">NetShield blocks unwanted domains locally in the VPN tunnel. No DNS history is stored.</string>
+    <string name="netshield_protection_level_title">Protection level</string>
     <string name="netshield_level_off">Off</string>
     <string name="netshield_level_off_desc">Do not filter DNS requests</string>
     <string name="netshield_level_malware">Block malware</string>

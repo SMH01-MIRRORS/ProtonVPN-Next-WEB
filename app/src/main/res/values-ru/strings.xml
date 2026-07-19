@@ -622,6 +622,7 @@
     <string name="netshield_title">NetShield</string>
     <string name="netshield_settings_subtitle">Локальная блокировка вредоносных сайтов, рекламы и трекеров</string>
     <string name="netshield_description">NetShield локально блокирует нежелательные домены внутри VPN-туннеля. История DNS-запросов не сохраняется.</string>
+    <string name="netshield_protection_level_title">Уровень защиты</string>
     <string name="netshield_level_off">Выключено</string>
     <string name="netshield_level_off_desc">Не фильтровать DNS-запросы</string>
     <string name="netshield_level_malware">Блокировать вредоносные сайты</string>
