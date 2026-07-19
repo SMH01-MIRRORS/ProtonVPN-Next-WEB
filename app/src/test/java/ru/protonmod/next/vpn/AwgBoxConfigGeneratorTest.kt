@@ -73,7 +73,7 @@ class AwgBoxConfigGeneratorTest {
         assertEquals("proton-awg", route.getValue("final").jsonPrimitive.content)
         assertFalse(root.getValue("dns").jsonObject.getValue("servers").jsonArray
             .map { it.jsonObject }
-            .any { it.getValue("type").jsonPrimitive.content == "fakeip" })
+            .any { it.getValue("tag").jsonPrimitive.content == "tor-dns" })
     }
 
     @Test
@@ -256,12 +256,13 @@ class AwgBoxConfigGeneratorTest {
         val dnsConfig = root.getValue("dns").jsonObject
         val dnsServers = dnsConfig.getValue("servers").jsonArray.map { it.jsonObject }
         val dns = dnsServers.single { it.getValue("tag").jsonPrimitive.content == "proton-dns" }
-        val fakeIpDns = dnsServers.single { it.getValue("tag").jsonPrimitive.content == "tor-fakeip" }
+        val torDns = dnsServers.single { it.getValue("tag").jsonPrimitive.content == "tor-dns" }
         val onionDnsRule = dnsConfig.getValue("rules").jsonArray.map { it.jsonObject }
             .single { "domain_suffix" in it }
-        val onionRouteRule = rules.single {
-            it["domain_suffix"]?.jsonArray?.any { suffix -> suffix.jsonPrimitive.content == "onion" } == true
+        val torVirtualAddressRule = rules.single {
+            it["ip_cidr"]?.jsonArray?.any { cidr -> cidr.jsonPrimitive.content == "198.18.0.0/15" } == true
         }
+        val torrc = tor.getValue("torrc").jsonObject
         assertEquals("tor", route.getValue("final").jsonPrimitive.content)
         assertEquals("proton-awg", tor.getValue("detour").jsonPrimitive.content)
         assertEquals("/data/app/lib/arm64/libtor.so", tor.getValue("executable_path").jsonPrimitive.content)
@@ -273,10 +274,14 @@ class AwgBoxConfigGeneratorTest {
         assertEquals("tcp", dns.getValue("type").jsonPrimitive.content)
         assertEquals("1.1.1.1", dns.getValue("server").jsonPrimitive.content)
         assertEquals("tor", dns.getValue("detour").jsonPrimitive.content)
-        assertEquals("fakeip", fakeIpDns.getValue("type").jsonPrimitive.content)
-        assertEquals("198.18.0.0/15", fakeIpDns.getValue("inet4_range").jsonPrimitive.content)
-        assertEquals("tor-fakeip", onionDnsRule.getValue("server").jsonPrimitive.content)
-        assertEquals("tor", onionRouteRule.getValue("outbound").jsonPrimitive.content)
+        assertEquals("udp", torDns.getValue("type").jsonPrimitive.content)
+        assertEquals("127.0.0.1", torDns.getValue("server").jsonPrimitive.content)
+        assertEquals("19053", torDns.getValue("server_port").jsonPrimitive.content)
+        assertEquals("tor-dns", onionDnsRule.getValue("server").jsonPrimitive.content)
+        assertEquals("tor", torVirtualAddressRule.getValue("outbound").jsonPrimitive.content)
+        assertEquals("127.0.0.1:19053", torrc.getValue("DNSPort").jsonPrimitive.content)
+        assertEquals("1", torrc.getValue("AutomapHostsOnResolve").jsonPrimitive.content)
+        assertEquals("198.18.0.0/15", torrc.getValue("VirtualAddrNetworkIPv4").jsonPrimitive.content)
     }
 
     @Test(expected = IllegalArgumentException::class)

@@ -44,7 +44,8 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
     private companion object {
         val IPV4_LITERAL = Regex("^(?:\\d{1,3}\\.){3}\\d{1,3}$")
         const val TOR_FALLBACK_DNS = "1.1.1.1"
-        const val TOR_FAKEIP_RANGE = "198.18.0.0/15"
+        const val TOR_VIRTUAL_ADDR_RANGE = "198.18.0.0/15"
+        const val TOR_DNS_PORT = 19053
     }
 
     private val json = Json { prettyPrint = true; encodeDefaults = false }
@@ -175,8 +176,11 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                 "action" to JsonPrimitive("hijack-dns")
             )))
             if (torModeEnabled) {
+                // Tor's DNSPort maps .onion names into this virtual range. Sending those
+                // addresses back to the same Tor instance preserves its internal hostname map
+                // and avoids asking public DNS or relying on sing-box FakeIP domain recovery.
                 add(JsonObject(mapOf(
-                    "domain_suffix" to strings(listOf("onion")),
+                    "ip_cidr" to strings(listOf(TOR_VIRTUAL_ADDR_RANGE)),
                     "network" to strings(listOf("tcp")),
                     "action" to JsonPrimitive("route"),
                     "outbound" to JsonPrimitive("tor")
@@ -224,7 +228,10 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                     "detour" to JsonPrimitive("proton-awg"),
                     "torrc" to JsonObject(mapOf(
                         "ClientOnly" to JsonPrimitive("1"),
-                        "SafeLogging" to JsonPrimitive("1")
+                        "SafeLogging" to JsonPrimitive("1"),
+                        "DNSPort" to JsonPrimitive("127.0.0.1:$TOR_DNS_PORT"),
+                        "AutomapHostsOnResolve" to JsonPrimitive("1"),
+                        "VirtualAddrNetworkIPv4" to JsonPrimitive(TOR_VIRTUAL_ADDR_RANGE)
                     ))
                 )))
             }
@@ -251,9 +258,10 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                         "server_port" to JsonPrimitive(53)
                     )))
                     if (torModeEnabled) add(JsonObject(mapOf(
-                        "type" to JsonPrimitive("fakeip"),
-                        "tag" to JsonPrimitive("tor-fakeip"),
-                        "inet4_range" to JsonPrimitive(TOR_FAKEIP_RANGE)
+                        "type" to JsonPrimitive("udp"),
+                        "tag" to JsonPrimitive("tor-dns"),
+                        "server" to JsonPrimitive("127.0.0.1"),
+                        "server_port" to JsonPrimitive(TOR_DNS_PORT)
                     )))
                     add(JsonObject(mapOf(
                         "type" to JsonPrimitive(if (torModeEnabled) "tcp" else "udp"),
@@ -272,7 +280,7 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                         add(JsonObject(mapOf(
                             "domain_suffix" to strings(listOf("onion")),
                             "action" to JsonPrimitive("route"),
-                            "server" to JsonPrimitive("tor-fakeip")
+                            "server" to JsonPrimitive("tor-dns")
                         )))
                     }
                     addAll(netShieldRuleSets.map { ruleSet ->
