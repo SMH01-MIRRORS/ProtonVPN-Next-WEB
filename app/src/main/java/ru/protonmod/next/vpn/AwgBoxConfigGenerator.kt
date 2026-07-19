@@ -28,7 +28,8 @@ interface AwgBoxConfigGenerator {
         certificate: String? = null,
         obfuscationParams: AmneziaVpnManager.ObfuscationParams,
         proxyChainConfig: String? = null,
-        netShieldRuleSets: List<NetShieldRuleSet> = emptyList()
+        netShieldRuleSets: List<NetShieldRuleSet> = emptyList(),
+        proxyServerOverrides: Map<String, String> = emptyMap()
     ): String
 }
 
@@ -56,7 +57,8 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
         certificate: String?,
         obfuscationParams: AmneziaVpnManager.ObfuscationParams,
         proxyChainConfig: String?,
-        netShieldRuleSets: List<NetShieldRuleSet>
+        netShieldRuleSets: List<NetShieldRuleSet>,
+        proxyServerOverrides: Map<String, String>
     ): String {
         require(port in 1..65535) { "Invalid AWG port: $port" }
         require(targetIp.isNotBlank()) { "AWG endpoint is empty" }
@@ -66,6 +68,15 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
         val proxyChain = proxyChainConfig?.takeIf(String::isNotBlank)
             ?.let(ProxyLinkParser::parseChain)
             .orEmpty()
+            .map { proxy ->
+                val server = proxy.outbound["server"] as? JsonPrimitive
+                val override = server?.content?.let(proxyServerOverrides::get)
+                if (override == null) proxy else proxy.copy(
+                    outbound = JsonObject(
+                        (proxy.outbound - "domain_resolver") + ("server" to JsonPrimitive(override))
+                    )
+                )
+            }
         val routeAddresses = when {
             isIncludeMode && selectedIps.isNotEmpty() -> selectedIps.sorted()
             else -> listOf("0.0.0.0/0")

@@ -611,6 +611,22 @@ class AmneziaVpnManager @Inject constructor(
                 ProtonLogger.e(TAG, "Critical: VPN Private Key is null in session data")
             }
             var targetIp: String? = null
+            val proxyChainEnabled = settingsManager.proxyChainEnabled.first()
+            val proxyChainConfig = settingsManager.proxyChainConfig.first().trim()
+            if (proxyChainEnabled && !ProxyLinkParser.isValid(proxyChainConfig)) {
+                throw ExpectedConnectionException(
+                    ConnectionWarning.InvalidProxyConfiguration,
+                    "Proxy chain is enabled but its vless:// or vmess:// configuration is invalid"
+                )
+            }
+
+            // Resolve and probe over the physical network before VpnService creates/reloads TUN.
+            // This prevents server switching from routing the next endpoint lookup into the old VPN.
+            val preflight = if (forceFallback) null else vpnNetworkMonitor.prepareUnderlyingConnection(
+                endpointHost = server.domain,
+                proxyChainConfig = proxyChainConfig.takeIf { proxyChainEnabled },
+            )
+            val proxyServerOverrides = preflight?.proxyServerOverrides.orEmpty()
 
             if (forceFallback) {
                 // Skip DNS entirely and use exitIp only when it is IPv4.
@@ -631,25 +647,31 @@ class AmneziaVpnManager @Inject constructor(
                     }
                 }
             } else {
-                // Resolve every answer and explicitly select IPv4. Passing an IPv6 endpoint to
-                // amnezia-box is intentionally forbidden to avoid traffic leaks in sing-box cores.
-                ProtonLogger.d(TAG, "Resolving IPv4 for ${server.domain} (Max retries: $DNS_RETRY_COUNT)")
-                for (i in 1..DNS_RETRY_COUNT) {
-                    if (!isActive) break
-                    try {
-                        targetIp = InetAddress.getAllByName(server.domain)
-                            .filterIsInstance<Inet4Address>()
-                            .firstOrNull()
-                            ?.hostAddress
-                        if (targetIp != null) {
-                            ProtonLogger.i(TAG, "DNS resolved ${server.domain} to IPv4 $targetIp on attempt $i")
-                            break
+                if (preflight != null) {
+                    targetIp = preflight.endpointIpv4
+                    ProtonLogger.i(TAG, "Connection preflight resolved ${server.domain} to IPv4 $targetIp on the underlying network")
+                } else {
+                    // Compatibility fallback for environments where a physical Network is not exposed.
+                    ProtonLogger.d(TAG, "Resolving IPv4 for ${server.domain} (Max retries: $DNS_RETRY_COUNT)")
+                    for (i in 1..DNS_RETRY_COUNT) {
+                        if (!isActive) break
+                        try {
+                            targetIp = InetAddress.getAllByName(server.domain)
+                                .filterIsInstance<Inet4Address>()
+                                .firstOrNull()
+                                ?.hostAddress
+                            if (targetIp != null) {
+                                ProtonLogger.i(TAG, "DNS resolved ${server.domain} to IPv4 $targetIp on attempt $i")
+                                break
+                            }
+                            ProtonLogger.w(TAG, "DNS retry $i returned no IPv4 address for ${server.domain}")
+                        } catch (cancellation: CancellationException) {
+                            throw cancellation
+                        } catch (e: Exception) {
+                            ProtonLogger.w(TAG, "DNS retry $i failed for ${server.domain}: ${e.message}")
                         }
-                        ProtonLogger.w(TAG, "DNS retry $i returned no IPv4 address for ${server.domain}")
-                    } catch (e: Exception) {
-                        ProtonLogger.w(TAG, "DNS retry $i failed for ${server.domain}: ${e.message}")
+                        if (i < DNS_RETRY_COUNT) delay(DNS_RETRY_DELAY_MS * i)
                     }
-                    if (i < DNS_RETRY_COUNT) delay(DNS_RETRY_DELAY_MS * i)
                 }
 
                 if (targetIp == null) {
@@ -665,9 +687,7 @@ class AmneziaVpnManager @Inject constructor(
                     } else {
                         _isConnecting.value = false
                         _tunnelState.value = VpnTunnelState.DOWN
-                        throw Exception("DNS resolution failed for ${server.domain} after $DNS_RETRY_COUNT attempts").also {
-                            ProtonLogger.e(TAG, it.message!!)
-                        }
+                        throw Exception("DNS resolution failed for ${server.domain} after $DNS_RETRY_COUNT attempts")
                     }
                 }
             }
@@ -692,13 +712,14 @@ class AmneziaVpnManager @Inject constructor(
                 ProtonLogger.i(TAG, "Resolving ${selectedDomains.size} split-tunneling domains...")
                 selectedDomains.forEach { domain ->
                     try {
-                        val addresses = InetAddress.getAllByName(domain)
-                        addresses.filterIsInstance<java.net.Inet4Address>().forEach { addr ->
-                            val ip = addr.hostAddress
-                            if (ip != null) {
-                                selectedIps.add("$ip/32")
-                                ProtonLogger.v(TAG, "Split-tunnel domain $domain resolved to $ip")
-                            }
+                        val underlayIp = vpnNetworkMonitor.resolveIpv4OnUnderlying(domain)
+                        val addresses = underlayIp?.let(::listOf)
+                            ?: InetAddress.getAllByName(domain)
+                                .filterIsInstance<java.net.Inet4Address>()
+                                .mapNotNull(InetAddress::getHostAddress)
+                        addresses.forEach { ip ->
+                            selectedIps.add("$ip/32")
+                            ProtonLogger.v(TAG, "Split-tunnel domain $domain resolved to $ip")
                         }
                     } catch (e: Exception) {
                         ProtonLogger.w(TAG, "Failed to resolve split-tunneling domain $domain: ${e.message}")
@@ -712,14 +733,6 @@ class AmneziaVpnManager @Inject constructor(
                     ProtonLogger.d(TAG, "Auto-port selected: $p")
                     p
                 } else port
-            }
-            val proxyChainEnabled = settingsManager.proxyChainEnabled.first()
-            val proxyChainConfig = settingsManager.proxyChainConfig.first().trim()
-            if (proxyChainEnabled && !ProxyLinkParser.isValid(proxyChainConfig)) {
-                throw ExpectedConnectionException(
-                    ConnectionWarning.InvalidProxyConfiguration,
-                    "Proxy chain is enabled but its vless:// or vmess:// configuration is invalid"
-                )
             }
             val isObfuscationEnabled = !proxyChainEnabled &&
                 (overrideObfuscation ?: settingsManager.obfuscationEnabled.first())
@@ -770,7 +783,8 @@ class AmneziaVpnManager @Inject constructor(
                 certificate = currentSession.wgCertificate,
                 obfuscationParams = params,
                 proxyChainConfig = proxyChainConfig.takeIf { proxyChainEnabled },
-                netShieldRuleSets = localNetShield.activeRuleSets(settingsManager.netShieldLevel.first())
+                netShieldRuleSets = localNetShield.activeRuleSets(settingsManager.netShieldLevel.first()),
+                proxyServerOverrides = proxyServerOverrides
             )
             
             ProtonLogger.d(TAG, "Generated awgbox config (length=${configStr.length}, endpoint=$targetIp:$selectedPort)")
@@ -793,6 +807,9 @@ class AmneziaVpnManager @Inject constructor(
             ProtonLogger.recordCount("vpn_connection_success", 1.0)
             
             Result.success(Unit)
+        } catch (cancellation: CancellationException) {
+            ProtonLogger.d(TAG, "VPN connection preparation cancelled")
+            throw cancellation
         } catch (e: ExpectedConnectionException) {
             // This is an expected, actionable configuration/network condition. Keep it out of
             // Sentry and expose it to the dashboard as a warning instead of reporting a crash.

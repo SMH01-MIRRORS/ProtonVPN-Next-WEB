@@ -19,3 +19,10 @@
 ## Privacy and statistics
 
 Only aggregate counters are kept for the active VPN session. Queried domain names are never persisted. Saved bytes are explicitly presented as an estimate because blocked responses are not downloaded and their exact size cannot be measured.
+
+## Follow-up: preflight connection sequencing
+
+- [x] Reproduce and map the reconnect/DNS race while an existing VPN service is active.
+- [x] Add an underlying-network preflight that resolves and validates the endpoint before starting the VPN service.
+- [x] Ensure cancellation during disconnect is treated as expected and is not reported as a connection failure.
+- [x] Add regression tests, run focused tests and a debug build, then commit.

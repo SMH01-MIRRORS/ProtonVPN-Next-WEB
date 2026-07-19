@@ -114,7 +114,8 @@ class AwgBoxConfigGeneratorTest {
                 jc = 10, jmin = 20, jmax = 30, s1 = 40, s2 = 50,
                 h1 = "1", h2 = "2", h3 = "3", h4 = "4", i1 = "junk"
             ),
-            proxyChainConfig = "vless://123e4567-e89b-12d3-a456-426614174000@192.0.2.10:443?encryption=none"
+            proxyChainConfig = "vless://123e4567-e89b-12d3-a456-426614174000@proxy.example:443?encryption=none",
+            proxyServerOverrides = mapOf("proxy.example" to "192.0.2.10")
         )
         val root = Json.parseToJsonElement(config).jsonObject
         val awg = root.getValue("endpoints").jsonArray.single().jsonObject
@@ -128,6 +129,8 @@ class AwgBoxConfigGeneratorTest {
         assertFalse("i1" in awg)
         assertEquals(1, outbounds.size)
         assertEquals("vless", proxy.getValue("type").jsonPrimitive.content)
+        assertEquals("192.0.2.10", proxy.getValue("server").jsonPrimitive.content)
+        assertFalse("domain_resolver" in proxy)
         assertEquals("xudp", proxy.getValue("packet_encoding").jsonPrimitive.content)
         assertEquals("1.1.1.1", bootstrapDns.getValue("server").jsonPrimitive.content)
         assertFalse("detour" in bootstrapDns)

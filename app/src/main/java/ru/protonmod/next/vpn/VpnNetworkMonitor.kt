@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import ru.protonmod.next.utils.ProtonLogger
+import java.net.Inet4Address
 import java.net.InetSocketAddress
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
@@ -42,6 +43,11 @@ class VpnNetworkMonitor @Inject constructor(
     data class VerificationCycle internal constructor(
         internal val id: Long,
         internal val baselineHandles: Set<Long>
+    )
+
+    data class ConnectionPreflight(
+        val endpointIpv4: String,
+        val proxyServerOverrides: Map<String, String> = emptyMap(),
     )
 
     private data class TrackedNetwork(
@@ -82,6 +88,52 @@ class VpnNetworkMonitor @Inject constructor(
         } catch (error: Exception) {
             ProtonLogger.e(TAG, "Failed to register VPN network callback", error)
         }
+    }
+
+    /**
+     * Resolves and validates everything that would otherwise need DNS after the TUN is created.
+     * The lookup and probes are explicitly bound to a physical, non-VPN Network, so switching
+     * servers cannot recursively send the next endpoint lookup through the old VPN tunnel.
+     * A nullable return is kept for test doubles; the production implementation either succeeds
+     * or throws a descriptive error.
+     */
+    suspend fun prepareUnderlyingConnection(
+        endpointHost: String,
+        proxyChainConfig: String? = null,
+    ): ConnectionPreflight? = withContext(Dispatchers.IO) {
+        val network = awaitUnderlyingNetwork()
+            ?: error("No usable underlying network is available")
+        check(probeNetwork(network)) { "Underlying network connectivity probe failed" }
+
+        val endpointIpv4 = resolveIpv4(network, endpointHost)
+            ?: error("No IPv4 address found for $endpointHost on the underlying network")
+
+        val proxyLinks = proxyChainConfig.orEmpty().lineSequence()
+            .map(String::trim)
+            .filter(String::isNotEmpty)
+            .toList()
+        val proxyInfo = proxyLinks.map(ProxyLinkParser::inspectLink)
+        val overrides = proxyInfo.mapNotNull { info ->
+            if (info.server.none(Char::isLetter)) return@mapNotNull null
+            val address = resolveIpv4(network, info.server)
+                ?: error("No IPv4 address found for proxy ${info.server}")
+            info.server to address
+        }.toMap()
+
+        // The last configured outbound is the physical-network-facing hop because each previous
+        // outbound detours to the next one. Validate that TCP endpoint before starting VpnService.
+        proxyInfo.lastOrNull()?.let { proxy ->
+            val address = overrides[proxy.server] ?: proxy.server
+            check(probeTcp(network, address, proxy.port)) {
+                "Proxy endpoint ${proxy.server}:${proxy.port} is unreachable"
+            }
+        }
+
+        ConnectionPreflight(endpointIpv4, overrides)
+    }
+
+    suspend fun resolveIpv4OnUnderlying(host: String): String? = withContext(Dispatchers.IO) {
+        awaitUnderlyingNetwork()?.let { resolveIpv4(it, host) }
     }
 
     /** Call once when a fresh connection attempt enters CONNECTING. */
@@ -137,6 +189,41 @@ class VpnNetworkMonitor @Inject constructor(
         false
     } ?: false
 
+    private suspend fun awaitUnderlyingNetwork(): Network? = withTimeoutOrNull(UNDERLYING_TIMEOUT_MS) {
+        while (true) {
+            val candidates = connectivityManager.allNetworks.mapNotNull { network ->
+                val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return@mapNotNull null
+                if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) ||
+                    !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ||
+                    !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
+                ) return@mapNotNull null
+                network to capabilities
+            }
+            candidates.firstOrNull { (_, capabilities) ->
+                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+            }?.first?.let { return@withTimeoutOrNull it }
+            candidates.firstOrNull()?.first?.let { return@withTimeoutOrNull it }
+            delay(DEFAULT_RETRY_DELAY_MS)
+        }
+        @Suppress("UNREACHABLE_CODE")
+        null
+    }
+
+    private fun resolveIpv4(network: Network, host: String): String? = runCatching {
+        network.getAllByName(host).filterIsInstance<Inet4Address>().firstOrNull()?.hostAddress
+    }.getOrNull()
+
+    private fun probeNetwork(network: Network): Boolean = PROBE_TARGETS.any { target ->
+        probeTcp(network, target, PROBE_PORT)
+    }
+
+    private fun probeTcp(network: Network, host: String, port: Int): Boolean = runCatching {
+        network.socketFactory.createSocket().use { socket ->
+            socket.connect(InetSocketAddress(host, port), PREFLIGHT_CONNECT_TIMEOUT_MS)
+        }
+        true
+    }.getOrDefault(false)
+
     private suspend fun probeVpnNetwork(network: Network): Boolean = withContext(Dispatchers.IO) {
         PROBE_TARGETS.any { target ->
             runCatching {
@@ -172,6 +259,8 @@ class VpnNetworkMonitor @Inject constructor(
         const val DEFAULT_RETRY_DELAY_MS = 200L
         const val PROBE_PORT = 443
         const val PROBE_CONNECT_TIMEOUT_MS = 750
+        const val PREFLIGHT_CONNECT_TIMEOUT_MS = 1_500
+        const val UNDERLYING_TIMEOUT_MS = 8_000L
         val PROBE_TARGETS = listOf("1.1.1.1", "8.8.8.8")
     }
 }
