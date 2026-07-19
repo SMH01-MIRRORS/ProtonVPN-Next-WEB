@@ -122,7 +122,9 @@ class AwgBoxConfigGeneratorTest {
         val outbounds = root.getValue("outbounds").jsonArray.map { it.jsonObject }
         val proxy = outbounds.first { it.getValue("tag").jsonPrimitive.content == "proxy-1" }
         val dnsServers = root.getValue("dns").jsonObject.getValue("servers").jsonArray.map { it.jsonObject }
+        val dns = root.getValue("dns").jsonObject
         val bootstrapDns = dnsServers.first { it.getValue("tag").jsonPrimitive.content == "bootstrap-dns" }
+        val selectedDns = dnsServers.first { it.getValue("tag").jsonPrimitive.content == "proton-dns" }
 
         assertEquals("proxy-1", awg.getValue("detour").jsonPrimitive.content)
         assertFalse("jc" in awg)
@@ -134,7 +136,35 @@ class AwgBoxConfigGeneratorTest {
         assertEquals("xudp", proxy.getValue("packet_encoding").jsonPrimitive.content)
         assertEquals("1.1.1.1", bootstrapDns.getValue("server").jsonPrimitive.content)
         assertFalse("detour" in bootstrapDns)
+        assertEquals("10.2.0.1", selectedDns.getValue("server").jsonPrimitive.content)
+        assertEquals("proton-dns", dns.getValue("final").jsonPrimitive.content)
         assertEquals(2, dnsServers.size)
+    }
+
+    @Test
+    fun `uses selected resolver as final DNS server`() {
+        listOf("8.8.8.8", "94.140.14.14", "10.2.0.1").forEach { resolver ->
+            val config = generator.buildConfig(
+                serverPublicKey = "PUBLIC_KEY",
+                privateKey = "PRIVATE_KEY",
+                localIp = "10.2.0.2",
+                dnsServer = resolver,
+                targetIp = "198.51.100.1",
+                port = 51820,
+                obfuscationParams = AmneziaVpnManager.ObfuscationParams(
+                    jc = 0, jmin = 0, jmax = 0, s1 = 0, s2 = 0,
+                    h1 = "", h2 = "", h3 = "", h4 = "", i1 = ""
+                )
+            )
+
+            val dns = Json.parseToJsonElement(config).jsonObject.getValue("dns").jsonObject
+            val selectedDns = dns.getValue("servers").jsonArray
+                .map { it.jsonObject }
+                .first { it.getValue("tag").jsonPrimitive.content == "proton-dns" }
+
+            assertEquals(resolver, selectedDns.getValue("server").jsonPrimitive.content)
+            assertEquals("proton-dns", dns.getValue("final").jsonPrimitive.content)
+        }
     }
 
     @Test(expected = IllegalArgumentException::class)

@@ -164,6 +164,10 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                         "detour" to JsonPrimitive("proton-awg")
                     )))
                 }))
+                // The bootstrap resolver is only for proxy-host resolution. Without an explicit
+                // final server sing-box selects the first entry, which made Cloudflare handle all
+                // DNS traffic whenever a proxy chain was enabled.
+                put("final", JsonPrimitive("proton-dns"))
                 if (netShieldRuleSets.isNotEmpty()) {
                     put("rules", JsonArray(netShieldRuleSets.map { ruleSet ->
                         JsonObject(mapOf(
