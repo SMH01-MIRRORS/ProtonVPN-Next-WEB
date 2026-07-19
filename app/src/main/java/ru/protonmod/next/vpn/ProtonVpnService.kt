@@ -365,13 +365,11 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         stopTrafficUpdates()
         updateNotification(VpnTunnelState.DOWN.name)
 
-        val pendingStart = startingCommandServer
         val previousShutdown = shutdownJob
         shutdownJob = scope.launch(Dispatchers.IO) {
-            // Tor bootstrap is a blocking native call. Close its candidate from another
-            // coroutine before waiting for the lifecycle mutex so disconnect is prompt.
-            closeCommandServer(pendingStart)
-            if (startingCommandServer === pendingStart) startingCommandServer = null
+            // libbox StartOrReloadService is blocking and CloseService is not safe to call
+            // concurrently with it. Cancellation marks the attempt stale; after native startup
+            // returns, that same engine coroutine closes its candidate before releasing the mutex.
             previousShutdown?.join()
             localNetShield.finishSessionStats()
             engineMutex.withLock { closeEngine() }
@@ -660,7 +658,8 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         reconnectJob?.cancel()
         engineJob?.cancel()
         shutdownJob?.cancel()
-        closeCommandServer(startingCommandServer)
+        // Never race CloseService against blocking StartOrReloadService; process teardown will
+        // release a still-starting native candidate.
         startingCommandServer = null
         stopTrafficUpdates()
         removeNotification()
