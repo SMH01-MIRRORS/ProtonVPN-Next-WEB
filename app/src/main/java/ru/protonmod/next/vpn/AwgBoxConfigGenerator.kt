@@ -44,6 +44,7 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
     private companion object {
         val IPV4_LITERAL = Regex("^(?:\\d{1,3}\\.){3}\\d{1,3}$")
         const val TOR_FALLBACK_DNS = "1.1.1.1"
+        const val TOR_FAKEIP_RANGE = "198.18.0.0/15"
     }
 
     private val json = Json { prettyPrint = true; encodeDefaults = false }
@@ -173,6 +174,14 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                 "protocol" to strings(listOf("dns")),
                 "action" to JsonPrimitive("hijack-dns")
             )))
+            if (torModeEnabled) {
+                add(JsonObject(mapOf(
+                    "domain_suffix" to strings(listOf("onion")),
+                    "network" to strings(listOf("tcp")),
+                    "action" to JsonPrimitive("route"),
+                    "outbound" to JsonPrimitive("tor")
+                )))
+            }
             if (exactDomains.isNotEmpty()) {
                 add(JsonObject(buildMap {
                     put("domain", strings(exactDomains))
@@ -241,6 +250,11 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                         "server" to JsonPrimitive("1.1.1.1"),
                         "server_port" to JsonPrimitive(53)
                     )))
+                    if (torModeEnabled) add(JsonObject(mapOf(
+                        "type" to JsonPrimitive("fakeip"),
+                        "tag" to JsonPrimitive("tor-fakeip"),
+                        "inet4_range" to JsonPrimitive(TOR_FAKEIP_RANGE)
+                    )))
                     add(JsonObject(mapOf(
                         "type" to JsonPrimitive(if (torModeEnabled) "tcp" else "udp"),
                         "tag" to JsonPrimitive("proton-dns"),
@@ -253,14 +267,22 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                 // final server sing-box selects the first entry, which made Cloudflare handle all
                 // DNS traffic whenever a proxy chain was enabled.
                 put("final", JsonPrimitive("proton-dns"))
-                if (netShieldRuleSets.isNotEmpty()) {
-                    put("rules", JsonArray(netShieldRuleSets.map { ruleSet ->
+                val dnsRules = buildList {
+                    if (torModeEnabled) {
+                        add(JsonObject(mapOf(
+                            "domain_suffix" to strings(listOf("onion")),
+                            "action" to JsonPrimitive("route"),
+                            "server" to JsonPrimitive("tor-fakeip")
+                        )))
+                    }
+                    addAll(netShieldRuleSets.map { ruleSet ->
                         JsonObject(mapOf(
                             "rule_set" to strings(listOf(ruleSet.tag)),
                             "action" to JsonPrimitive("reject")
                         ))
-                    }))
+                    })
                 }
+                if (dnsRules.isNotEmpty()) put("rules", JsonArray(dnsRules))
                 put("strategy", JsonPrimitive("ipv4_only"))
             }),
             "inbounds" to JsonArray(listOf(JsonObject(tun))),

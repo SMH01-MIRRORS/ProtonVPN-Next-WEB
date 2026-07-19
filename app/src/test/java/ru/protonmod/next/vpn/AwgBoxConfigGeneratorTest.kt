@@ -71,6 +71,9 @@ class AwgBoxConfigGeneratorTest {
         assertEquals("6", ipv6Rule.getValue("ip_version").jsonPrimitive.content)
         assertEquals("reject", ipv6Rule.getValue("action").jsonPrimitive.content)
         assertEquals("proton-awg", route.getValue("final").jsonPrimitive.content)
+        assertFalse(root.getValue("dns").jsonObject.getValue("servers").jsonArray
+            .map { it.jsonObject }
+            .any { it.getValue("type").jsonPrimitive.content == "fakeip" })
     }
 
     @Test
@@ -250,16 +253,30 @@ class AwgBoxConfigGeneratorTest {
         val rules = route.getValue("rules").jsonArray.map { it.jsonObject }
         val tor = root.getValue("outbounds").jsonArray.map { it.jsonObject }
             .single { it.getValue("tag").jsonPrimitive.content == "tor" }
-        val dns = root.getValue("dns").jsonObject.getValue("servers").jsonArray.map { it.jsonObject }
-            .single { it.getValue("tag").jsonPrimitive.content == "proton-dns" }
+        val dnsConfig = root.getValue("dns").jsonObject
+        val dnsServers = dnsConfig.getValue("servers").jsonArray.map { it.jsonObject }
+        val dns = dnsServers.single { it.getValue("tag").jsonPrimitive.content == "proton-dns" }
+        val fakeIpDns = dnsServers.single { it.getValue("tag").jsonPrimitive.content == "tor-fakeip" }
+        val onionDnsRule = dnsConfig.getValue("rules").jsonArray.map { it.jsonObject }
+            .single { "domain_suffix" in it }
+        val onionRouteRule = rules.single {
+            it["domain_suffix"]?.jsonArray?.any { suffix -> suffix.jsonPrimitive.content == "onion" } == true
+        }
         assertEquals("tor", route.getValue("final").jsonPrimitive.content)
         assertEquals("proton-awg", tor.getValue("detour").jsonPrimitive.content)
         assertEquals("/data/app/lib/arm64/libtor.so", tor.getValue("executable_path").jsonPrimitive.content)
-        assertEquals("direct", rules.single { "domain_suffix" in it }.getValue("outbound").jsonPrimitive.content)
+        val excludedDomainRule = rules.single {
+            it["domain_suffix"]?.jsonArray?.any { suffix -> suffix.jsonPrimitive.content == "ru" } == true
+        }
+        assertEquals("direct", excludedDomainRule.getValue("outbound").jsonPrimitive.content)
         assertTrue(rules.any { it["action"]?.jsonPrimitive?.content == "reject" && "network" in it })
         assertEquals("tcp", dns.getValue("type").jsonPrimitive.content)
         assertEquals("1.1.1.1", dns.getValue("server").jsonPrimitive.content)
         assertEquals("tor", dns.getValue("detour").jsonPrimitive.content)
+        assertEquals("fakeip", fakeIpDns.getValue("type").jsonPrimitive.content)
+        assertEquals("198.18.0.0/15", fakeIpDns.getValue("inet4_range").jsonPrimitive.content)
+        assertEquals("tor-fakeip", onionDnsRule.getValue("server").jsonPrimitive.content)
+        assertEquals("tor", onionRouteRule.getValue("outbound").jsonPrimitive.content)
     }
 
     @Test(expected = IllegalArgumentException::class)
