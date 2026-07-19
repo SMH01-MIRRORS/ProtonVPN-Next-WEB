@@ -40,3 +40,9 @@ Only aggregate counters are kept for the active VPN session. Queried domain name
 - [x] Keep the engine callback active in release builds without persisting queried domains.
 - [x] Add regression coverage for the real DNS rule-match log format.
 - [x] Run focused tests and an Android debug build, then commit.
+
+## Follow-up: dashboard card redesign
+
+- [x] Align the NetShield statistics card with the dashboard liquid-glass visual language.
+- [x] Add a subtle level-aware gradient and accent treatment.
+- [x] Build the Android debug variant and commit the redesign.

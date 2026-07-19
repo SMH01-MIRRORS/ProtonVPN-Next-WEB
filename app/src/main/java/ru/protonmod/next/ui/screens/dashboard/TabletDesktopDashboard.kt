@@ -420,7 +420,11 @@ private fun DesktopMapPanel(
                 PauseBanner(endTime = state.pauseEndTime, onResume = onResume)
             }
             if (state.netShieldLevel.enabled) {
-                NetShieldStatsCard(stats = state.netShieldStats, compact = true)
+                NetShieldStatsCard(
+                    stats = state.netShieldStats,
+                    level = state.netShieldLevel,
+                    compact = true,
+                )
             }
         }
     }

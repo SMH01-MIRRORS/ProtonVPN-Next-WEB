@@ -218,6 +218,7 @@ internal fun PhoneDashboardLayout(
             item(contentType = "NetShieldStats") {
                 NetShieldStatsCard(
                     stats = state.netShieldStats,
+                    level = state.netShieldLevel,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }
