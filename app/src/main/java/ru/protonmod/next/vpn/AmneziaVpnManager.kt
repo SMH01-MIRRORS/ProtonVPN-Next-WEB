@@ -941,6 +941,7 @@ class AmneziaVpnManager @Inject constructor(
         connectionJob?.cancel()
         verificationJob?.cancel()
         pauseJob?.cancel()
+        _isConnecting.value = false
         isPaused = false
         applicationScope.launch { settingsManager.setPauseEndTime(0) }
 

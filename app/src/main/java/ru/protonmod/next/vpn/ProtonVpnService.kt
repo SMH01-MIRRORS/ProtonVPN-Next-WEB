@@ -1,7 +1,20 @@
 /*
  * Copyright (C) 2026 SMH01
- * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package ru.protonmod.next.vpn
 
 import ru.protonmod.next.netshield.LocalNetShield
@@ -51,8 +64,11 @@ import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.data.local.ConnectionVerificationMode
 import ru.protonmod.next.utils.ProtonLogger
 import java.io.File
+import java.util.Collections
+import java.util.IdentityHashMap
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
@@ -106,6 +122,10 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         private const val FULL_CONFIG_LOG_TAG = "ProtonVpnConfig"
         private const val LOGCAT_CHUNK_SIZE = 3_500
         private val libboxInitialized = AtomicBoolean(false)
+
+        internal fun shouldShowNotification(stateName: String, enabled: Boolean): Boolean {
+            return enabled && stateName != VpnTunnelState.DOWN.name
+        }
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -116,6 +136,14 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     private var statsJob: Job? = null
     private var reconnectJob: Job? = null
     private var engineJob: Job? = null
+    private var shutdownJob: Job? = null
+    private val lifecycleGeneration = AtomicLong(0)
+    private val closingCommandServer = AtomicBoolean(false)
+    private val closedCommandServers = Collections.newSetFromMap(
+        IdentityHashMap<CommandServer, Boolean>()
+    )
+    @Volatile private var startingCommandServer: CommandServer? = null
+    private var foregroundStarted = false
     private var state = VpnTunnelState.DOWN
     private var connecting = false
     private var verified = false
@@ -200,7 +228,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
             ACTION_QUERY_STATE -> sendState(if (connecting) null else state)
             else -> return START_NOT_STICKY
         }
-        return START_STICKY
+        return if (state == VpnTunnelState.DOWN && !connecting) START_NOT_STICKY else START_STICKY
     }
 
     private fun startTunnel(intent: Intent) {
@@ -218,44 +246,59 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         lastConfig = config
         logFullConfigToLogcat(config)
         manualDisconnect = false
+        val generation = lifecycleGeneration.incrementAndGet()
         verified = verificationMode == ConnectionVerificationMode.DISABLED || !verificationRequired
         connecting = true
-        updateNotification(STATE_CONNECTING)
+        updateNotification(STATE_CONNECTING, ensureForeground = true)
         sendState(null)
 
         reconnectJob?.cancel()
         engineJob?.cancel()
+        val pendingShutdown = shutdownJob
         engineJob = scope.launch(Dispatchers.IO) {
-            engineMutex.withLock {
-                var candidate: CommandServer? = null
-                runCatching {
-                    closeEngine()
+            try {
+                pendingShutdown?.join()
+                currentCoroutineContext().ensureActive()
+                if (lifecycleGeneration.get() != generation) return@launch
+
+                engineMutex.withLock {
                     currentCoroutineContext().ensureActive()
+                    if (lifecycleGeneration.get() != generation) return@withLock
+                    closeEngine()
+
                     val server = CommandServer(this@ProtonVpnService, platform).also { it.start() }
-                    candidate = server
-                    server.checkConfig(config)
-                    server.startOrReloadService(config, OverrideOptions())
-                    commandServer = server
-                    candidate = null
-                }.onSuccess {
-                    withContext(Dispatchers.Main) {
-                        state = VpnTunnelState.UP
-                        connecting = false
-                        resetTransportFailures()
-                        sendState(VpnTunnelState.UP)
-                        updateNotification(VpnTunnelState.UP.name)
-                        startTrafficUpdates()
+                    startingCommandServer = server
+                    var adopted = false
+                    try {
+                        server.checkConfig(config)
+                        server.startOrReloadService(config, OverrideOptions())
+                        currentCoroutineContext().ensureActive()
+                        if (lifecycleGeneration.get() != generation) return@withLock
+
+                        commandServer = server
+                        startingCommandServer = null
+                        adopted = true
+                        withContext(Dispatchers.Main) {
+                            if (lifecycleGeneration.get() != generation || !connecting) return@withContext
+                            state = VpnTunnelState.UP
+                            connecting = false
+                            resetTransportFailures()
+                            sendState(VpnTunnelState.UP)
+                            updateNotification(VpnTunnelState.UP.name)
+                            startTrafficUpdates()
+                        }
+                    } finally {
+                        if (!adopted) closeCommandServer(server)
+                        if (startingCommandServer === server) startingCommandServer = null
                     }
-                }.onFailure { error ->
-                    // A failed or cancelled native start is not registered in commandServer yet.
-                    // Always close that candidate so Tor and its control/SOCKS sockets cannot
-                    // survive into the next, possibly non-Tor, connection attempt.
-                    runCatching { candidate?.closeService() }
-                    runCatching { candidate?.close() }
-                    candidate = null
-                    if (error is CancellationException) return@onFailure
-                    ProtonLogger.e(TAG, "Failed to start amnezia-box tunnel", error)
-                    withContext(Dispatchers.Main) { handleEngineFailure() }
+                }
+            } catch (_: CancellationException) {
+                // A newer connect or disconnect owns the lifecycle now.
+            } catch (error: Exception) {
+                if (lifecycleGeneration.get() != generation) return@launch
+                ProtonLogger.e(TAG, "Failed to start amnezia-box tunnel", error)
+                withContext(Dispatchers.Main) {
+                    if (lifecycleGeneration.get() == generation) handleEngineFailure()
                 }
             }
         }
@@ -312,29 +355,56 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
 
     private fun stopTunnel(manual: Boolean) {
         manualDisconnect = manual
+        val generation = lifecycleGeneration.incrementAndGet()
         reconnectJob?.cancel()
         engineJob?.cancel()
         connecting = false
         verified = false
-        scope.launch(Dispatchers.IO) {
+        state = VpnTunnelState.DOWN
+        sendState(VpnTunnelState.DOWN)
+        stopTrafficUpdates()
+        updateNotification(VpnTunnelState.DOWN.name)
+
+        val pendingStart = startingCommandServer
+        val previousShutdown = shutdownJob
+        shutdownJob = scope.launch(Dispatchers.IO) {
+            // Tor bootstrap is a blocking native call. Close its candidate from another
+            // coroutine before waiting for the lifecycle mutex so disconnect is prompt.
+            closeCommandServer(pendingStart)
+            if (startingCommandServer === pendingStart) startingCommandServer = null
+            previousShutdown?.join()
             localNetShield.finishSessionStats()
             engineMutex.withLock { closeEngine() }
             withContext(Dispatchers.Main) {
-                state = VpnTunnelState.DOWN
-                sendState(VpnTunnelState.DOWN)
-                stopTrafficUpdates()
-                stopForeground(STOP_FOREGROUND_REMOVE)
-                if (manual || !killSwitchEnabled) stopSelf()
+                // A new connect may already be waiting for this shutdown to finish. Do not
+                // stop the service underneath that connection attempt.
+                if (lifecycleGeneration.get() == generation &&
+                    (manual || !killSwitchEnabled) && !connecting
+                ) {
+                    stopSelf()
+                }
             }
         }
     }
 
     private fun closeEngine() {
-        runCatching { commandServer?.closeService() }
-        runCatching { commandServer?.close() }
+        val server = commandServer
         commandServer = null
+        closeCommandServer(server)
         runCatching { tunDescriptor?.close() }
         tunDescriptor = null
+    }
+
+    @Synchronized
+    private fun closeCommandServer(server: CommandServer?) {
+        if (server == null || !closedCommandServers.add(server)) return
+        closingCommandServer.set(true)
+        try {
+            runCatching { server.closeService() }
+            runCatching { server.close() }
+        } finally {
+            closingCommandServer.set(false)
+        }
     }
 
     private fun applySettings(intent: Intent) {
@@ -455,16 +525,40 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
             .build()
     }
 
-    private fun updateNotification(stateName: String) {
-        val notification = createNotification(stateName)
+    private fun updateNotification(stateName: String, ensureForeground: Boolean = false) {
+        if (!shouldShowNotification(stateName, notificationsEnabled)) {
+            // startForegroundService() still requires one foreground promotion. Satisfy it for
+            // a disabled notification setting, then remove the notification completely.
+            if (ensureForeground && !foregroundStarted) {
+                startForegroundNotification(createNotification(stateName))
+            }
+            removeNotification()
+            return
+        }
+        startForegroundNotification(createNotification(stateName))
+    }
+
+    private fun startForegroundNotification(notification: Notification) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
         } else {
             startForeground(NOTIFICATION_ID, notification)
         }
+        foregroundStarted = true
     }
 
-    override fun serviceStop() { stopTunnel(manual = false) }
+    private fun removeNotification() {
+        if (foregroundStarted) stopForeground(STOP_FOREGROUND_REMOVE)
+        foregroundStarted = false
+        (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).cancel(NOTIFICATION_ID)
+    }
+
+    override fun serviceStop() {
+        if (closingCommandServer.get()) return
+        scope.launch {
+            if (!closingCommandServer.get()) stopTunnel(manual = false)
+        }
+    }
     override fun serviceReload() = Unit
     override fun getSystemProxyStatus() = SystemProxyStatus().apply { available = false; enabled = false }
     override fun setSystemProxyEnabled(isEnabled: Boolean) = Unit
@@ -562,9 +656,14 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
 
     override fun onDestroy() {
         runCatching { unregisterReceiver(settingsReceiver) }
+        lifecycleGeneration.incrementAndGet()
         reconnectJob?.cancel()
         engineJob?.cancel()
+        shutdownJob?.cancel()
+        closeCommandServer(startingCommandServer)
+        startingCommandServer = null
         stopTrafficUpdates()
+        removeNotification()
         closeEngine()
         scope.cancel()
         super.onDestroy()
