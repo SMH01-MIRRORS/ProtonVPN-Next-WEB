@@ -68,6 +68,16 @@ fun SplitTunnelingDomainsScreen(
     val focusManager = LocalFocusManager.current
     val isTablet = isTablet()
 
+    fun submitDomainRule() {
+        if (viewModel.addDomain(inputValue)) {
+            inputValue = ""
+            inputError = false
+            focusManager.clearFocus()
+        } else {
+            inputError = true
+        }
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
@@ -204,15 +214,7 @@ fun SplitTunnelingDomainsScreen(
                                             keyboardType = KeyboardType.Uri
                                         ),
                                         keyboardActions = KeyboardActions(
-                                            onDone = {
-                                                if (inputValue.isNotBlank()) {
-                                                    viewModel.addDomain(inputValue)
-                                                    inputValue = ""
-                                                    focusManager.clearFocus()
-                                                } else {
-                                                    inputError = true
-                                                }
-                                            }
+                                            onDone = { submitDomainRule() }
                                         ),
                                         colors = TextFieldDefaults.colors(
                                             focusedContainerColor = colors.backgroundSecondary.copy(alpha = 0.5f),
@@ -240,9 +242,7 @@ fun SplitTunnelingDomainsScreen(
                                                 else colors.backgroundSecondary.copy(alpha = 0.3f)
                                             )
                                             .clickable(enabled = inputValue.isNotBlank()) {
-                                                viewModel.addDomain(inputValue)
-                                                inputValue = ""
-                                                focusManager.clearFocus()
+                                                submitDomainRule()
                                             },
                                         contentAlignment = Alignment.Center
                                     ) {

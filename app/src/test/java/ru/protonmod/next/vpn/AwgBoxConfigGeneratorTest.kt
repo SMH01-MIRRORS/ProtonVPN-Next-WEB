@@ -167,6 +167,68 @@ class AwgBoxConfigGeneratorTest {
         }
     }
 
+    @Test
+    fun `exclude mode routes wildcard domains outside VPN`() {
+        val config = generator.buildConfig(
+            serverPublicKey = "PUBLIC_KEY",
+            privateKey = "PRIVATE_KEY",
+            localIp = "10.2.0.2",
+            dnsServer = "10.2.0.1",
+            targetIp = "198.51.100.1",
+            selectedDomains = setOf("*.ru", "example.com"),
+            obfuscationParams = AmneziaVpnManager.ObfuscationParams(
+                jc = 0, jmin = 0, jmax = 0, s1 = 0, s2 = 0,
+                h1 = "", h2 = "", h3 = "", h4 = "", i1 = ""
+            )
+        )
+
+        val root = Json.parseToJsonElement(config).jsonObject
+        val route = root.getValue("route").jsonObject
+        val rules = route.getValue("rules").jsonArray.map { it.jsonObject }
+        val exactRule = rules.first { "domain" in it }
+        val suffixRule = rules.first { "domain_suffix" in it }
+        val directOutbound = root.getValue("outbounds").jsonArray
+            .map { it.jsonObject }
+            .single { it.getValue("tag").jsonPrimitive.content == "direct" }
+
+        assertEquals(listOf("example.com"), exactRule.getValue("domain").jsonArray.map { it.jsonPrimitive.content })
+        assertEquals(listOf("ru"), suffixRule.getValue("domain_suffix").jsonArray.map { it.jsonPrimitive.content })
+        assertEquals("direct", exactRule.getValue("outbound").jsonPrimitive.content)
+        assertEquals("direct", suffixRule.getValue("outbound").jsonPrimitive.content)
+        assertEquals("direct", directOutbound.getValue("type").jsonPrimitive.content)
+        assertEquals("proton-awg", route.getValue("final").jsonPrimitive.content)
+    }
+
+    @Test
+    fun `include mode captures wildcard domains and bypasses unmatched traffic`() {
+        val config = generator.buildConfig(
+            serverPublicKey = "PUBLIC_KEY",
+            privateKey = "PRIVATE_KEY",
+            localIp = "10.2.0.2",
+            dnsServer = "10.2.0.1",
+            targetIp = "198.51.100.1",
+            isIncludeMode = true,
+            selectedIps = setOf("8.8.8.8/32"),
+            selectedDomains = setOf("*.ru"),
+            obfuscationParams = AmneziaVpnManager.ObfuscationParams(
+                jc = 0, jmin = 0, jmax = 0, s1 = 0, s2 = 0,
+                h1 = "", h2 = "", h3 = "", h4 = "", i1 = ""
+            )
+        )
+
+        val root = Json.parseToJsonElement(config).jsonObject
+        val tun = root.getValue("inbounds").jsonArray.single().jsonObject
+        val route = root.getValue("route").jsonObject
+        val rules = route.getValue("rules").jsonArray.map { it.jsonObject }
+        val suffixRule = rules.first { "domain_suffix" in it }
+        val ipRule = rules.first { "ip_cidr" in it }
+
+        assertEquals(listOf("0.0.0.0/0"), tun.getValue("route_address").jsonArray.map { it.jsonPrimitive.content })
+        assertEquals("proton-awg", suffixRule.getValue("outbound").jsonPrimitive.content)
+        assertEquals("proton-awg", ipRule.getValue("outbound").jsonPrimitive.content)
+        assertEquals("direct", route.getValue("final").jsonPrimitive.content)
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun `rejects invalid endpoint port`() {
         generator.buildConfig(

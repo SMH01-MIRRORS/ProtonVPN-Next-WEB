@@ -382,7 +382,7 @@
     <string name="st_no_ips_added">No IP addresses added yet</string>
     <string name="st_remove_ip_desc">Remove IP</string>
 
-    <string name="st_domain_hint">e.g., example.com</string>
+    <string name="st_domain_hint">e.g., example.com or *.ru</string>
     <string name="st_add_domain_desc">Add Domain</string>
     <string name="st_invalid_domain_error">Invalid domain format</string>
     <string name="st_excluded_domains_header">Excluded Domains (%1$d)</string>

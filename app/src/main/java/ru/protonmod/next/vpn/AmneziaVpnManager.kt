@@ -737,7 +737,7 @@ class AmneziaVpnManager @Inject constructor(
             // Resolve split tunneling domains
             if (splitTunnelingEnabled && selectedDomains.isNotEmpty()) {
                 ProtonLogger.i(TAG, "Resolving ${selectedDomains.size} split-tunneling domains...")
-                selectedDomains.forEach { domain ->
+                SplitTunnelingDomainRule.exactDomains(selectedDomains).forEach { domain ->
                     try {
                         val underlayIp = vpnNetworkMonitor.resolveIpv4OnUnderlying(domain)
                         val addresses = underlayIp?.let(::listOf)
@@ -806,6 +806,7 @@ class AmneziaVpnManager @Inject constructor(
                 allowLan = allowLan,
                 selectedApps = selectedApps,
                 selectedIps = selectedIps,
+                selectedDomains = selectedDomains,
                 port = selectedPort,
                 certificate = currentSession.wgCertificate,
                 obfuscationParams = params,

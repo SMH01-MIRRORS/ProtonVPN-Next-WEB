@@ -24,6 +24,7 @@ interface AwgBoxConfigGenerator {
         allowLan: Boolean = false,
         selectedApps: Set<String> = emptySet(),
         selectedIps: Set<String> = emptySet(),
+        selectedDomains: Set<String> = emptySet(),
         port: Int = 1194,
         certificate: String? = null,
         obfuscationParams: AmneziaVpnManager.ObfuscationParams,
@@ -53,6 +54,7 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
         allowLan: Boolean,
         selectedApps: Set<String>,
         selectedIps: Set<String>,
+        selectedDomains: Set<String>,
         port: Int,
         certificate: String?,
         obfuscationParams: AmneziaVpnManager.ObfuscationParams,
@@ -77,7 +79,12 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                     )
                 )
             }
+        val exactDomains = SplitTunnelingDomainRule.exactDomains(selectedDomains)
+        val domainSuffixes = SplitTunnelingDomainRule.domainSuffixes(selectedDomains)
+        val hasDomainRules = exactDomains.isNotEmpty() || domainSuffixes.isNotEmpty()
+        val includeUsesDomainRouting = isIncludeMode && hasDomainRules
         val routeAddresses = when {
+            includeUsesDomainRouting -> listOf("0.0.0.0/0")
             isIncludeMode && selectedIps.isNotEmpty() -> selectedIps.sorted()
             else -> listOf("0.0.0.0/0")
         }
@@ -143,6 +150,49 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
             }
         }
 
+        val domainRuleOutbound = if (isIncludeMode) "proton-awg" else "direct"
+        val routeRules = buildList {
+            add(JsonObject(mapOf(
+                "ip_version" to JsonPrimitive(6),
+                "action" to JsonPrimitive("reject")
+            )))
+            add(JsonObject(mapOf("action" to JsonPrimitive("sniff"))))
+            add(JsonObject(mapOf(
+                "protocol" to strings(listOf("dns")),
+                "action" to JsonPrimitive("hijack-dns")
+            )))
+            if (exactDomains.isNotEmpty()) {
+                add(JsonObject(mapOf(
+                    "domain" to strings(exactDomains),
+                    "action" to JsonPrimitive("route"),
+                    "outbound" to JsonPrimitive(domainRuleOutbound)
+                )))
+            }
+            if (domainSuffixes.isNotEmpty()) {
+                add(JsonObject(mapOf(
+                    "domain_suffix" to strings(domainSuffixes),
+                    "action" to JsonPrimitive("route"),
+                    "outbound" to JsonPrimitive(domainRuleOutbound)
+                )))
+            }
+            if (includeUsesDomainRouting && selectedIps.isNotEmpty()) {
+                add(JsonObject(mapOf(
+                    "ip_cidr" to strings(selectedIps.sorted()),
+                    "action" to JsonPrimitive("route"),
+                    "outbound" to JsonPrimitive("proton-awg")
+                )))
+            }
+        }
+        val outbounds = buildList {
+            addAll(proxyChain.map(ProxyLinkParser.ParsedProxy::outbound))
+            if (hasDomainRules) {
+                add(JsonObject(mapOf(
+                    "type" to JsonPrimitive("direct"),
+                    "tag" to JsonPrimitive("direct")
+                )))
+            }
+        }
+
         val config = JsonObject(mapOf(
             "log" to JsonObject(mapOf(
                 "level" to JsonPrimitive(if (netShieldRuleSets.isEmpty()) "info" else "debug"),
@@ -180,17 +230,10 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
             }),
             "inbounds" to JsonArray(listOf(JsonObject(tun))),
             "endpoints" to JsonArray(listOf(JsonObject(awg))),
-            "outbounds" to JsonArray(proxyChain.map(ProxyLinkParser.ParsedProxy::outbound)),
+            "outbounds" to JsonArray(outbounds),
             "route" to JsonObject(buildMap {
                 put("auto_detect_interface", JsonPrimitive(true))
-                put("rules", JsonArray(listOf(
-                    JsonObject(mapOf(
-                        "ip_version" to JsonPrimitive(6),
-                        "action" to JsonPrimitive("reject")
-                    )),
-                    JsonObject(mapOf("action" to JsonPrimitive("sniff"))),
-                    JsonObject(mapOf("protocol" to strings(listOf("dns")), "action" to JsonPrimitive("hijack-dns")))
-                )))
+                put("rules", JsonArray(routeRules))
                 if (netShieldRuleSets.isNotEmpty()) {
                     put("rule_set", JsonArray(netShieldRuleSets.map { ruleSet ->
                         JsonObject(mapOf(
@@ -201,7 +244,7 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                         ))
                     }))
                 }
-                put("final", JsonPrimitive("proton-awg"))
+                put("final", JsonPrimitive(if (includeUsesDomainRouting) "direct" else "proton-awg"))
             })
         ))
         return json.encodeToString(JsonObject.serializer(), config)

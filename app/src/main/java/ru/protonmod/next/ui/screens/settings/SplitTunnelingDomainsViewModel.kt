@@ -21,9 +21,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.vpn.SplitTunnelingDomainRule
 import javax.inject.Inject
 
 data class DomainEntry(
@@ -56,29 +58,21 @@ class SplitTunnelingDomainsViewModel @Inject constructor(
         initialValue = SplitTunnelingDomainsUiState()
     )
 
-    fun addDomain(domain: String) {
-        val trimmedDomain = domain.trim().lowercase()
-        if (isValidDomain(trimmedDomain)) {
-            viewModelScope.launch {
-                val current = settingsManager.excludedDomains.stateIn(viewModelScope).value
-                if (trimmedDomain !in current) {
-                    settingsManager.setExcludedDomains(current + trimmedDomain)
-                }
+    fun addDomain(domain: String): Boolean {
+        val normalizedRule = SplitTunnelingDomainRule.normalize(domain) ?: return false
+        viewModelScope.launch {
+            val current = settingsManager.excludedDomains.first()
+            if (normalizedRule !in current) {
+                settingsManager.setExcludedDomains(current + normalizedRule)
             }
         }
+        return true
     }
 
     fun removeDomain(domain: String) {
         viewModelScope.launch {
-            val current = settingsManager.excludedDomains.stateIn(viewModelScope).value
+            val current = settingsManager.excludedDomains.first()
             settingsManager.setExcludedDomains(current - domain)
         }
-    }
-
-    private fun isValidDomain(domain: String): Boolean {
-        if (domain.isEmpty()) return false
-        // Basic domain validation regex
-        val domainPattern = Regex("^([a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}$")
-        return domainPattern.matches(domain)
     }
 }
