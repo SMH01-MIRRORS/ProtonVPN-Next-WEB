@@ -28,6 +28,12 @@ class NetShieldSettingsViewModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val localNetShield: LocalNetShield,
 ) : ViewModel() {
+    init {
+        if (localNetShield.needsListUpdate) {
+            viewModelScope.launch { localNetShield.updateLists() }
+        }
+    }
+
     val uiState: StateFlow<NetShieldSettingsUiState> = combine(
         settingsManager.netShieldLevel,
         localNetShield.listState,

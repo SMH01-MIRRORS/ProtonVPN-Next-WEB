@@ -6,11 +6,17 @@ package ru.protonmod.next.netshield
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -20,15 +26,20 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.di.ApplicationScope
 import java.io.File
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class LocalNetShield @Inject constructor(
     @ApplicationContext context: Context,
+    private val settingsManager: SettingsManager,
+    @ApplicationScope private val applicationScope: CoroutineScope,
 ) {
     private data class Source(val category: NetShieldCategory, val url: String, val fileName: String)
 
@@ -39,10 +50,18 @@ class LocalNetShield @Inject constructor(
         .readTimeout(45, TimeUnit.SECONDS)
         .build()
     private val updateMutex = Mutex()
+    private val statsFlushMutex = Mutex()
+    private val pendingAds = AtomicLong(0)
+    private val pendingTrackers = AtomicLong(0)
+    private val pendingSavedBytes = AtomicLong(0)
+    private var statsPublishJob: Job? = null
 
     @Volatile private var domains = loadDomains()
-    private val _stats = MutableStateFlow(NetShieldStats())
-    val stats: StateFlow<NetShieldStats> = _stats.asStateFlow()
+    val stats: StateFlow<NetShieldStats> = settingsManager.netShieldStats.stateIn(
+        applicationScope,
+        SharingStarted.Eagerly,
+        NetShieldStats(),
+    )
     private val _listState = MutableStateFlow(
         NetShieldListState(
             lastUpdatedAt = preferences.getLong(KEY_UPDATED_AT, 0),
@@ -50,8 +69,28 @@ class LocalNetShield @Inject constructor(
         )
     )
     val listState: StateFlow<NetShieldListState> = _listState.asStateFlow()
+    val needsListUpdate: Boolean
+        get() = preferences.getInt(KEY_SOURCE_VERSION, 0) < SOURCE_VERSION
 
-    fun resetSessionStats() { _stats.value = NetShieldStats() }
+    fun beginSessionStats() {
+        pendingAds.set(0)
+        pendingTrackers.set(0)
+        pendingSavedBytes.set(0)
+        statsPublishJob?.cancel()
+        statsPublishJob = applicationScope.launch {
+            settingsManager.resetNetShieldStats()
+            while (true) {
+                delay(STATS_PUBLISH_INTERVAL_MS)
+                flushPendingStats()
+            }
+        }
+    }
+
+    suspend fun finishSessionStats() {
+        statsPublishJob?.cancel()
+        statsPublishJob = null
+        flushPendingStats()
+    }
 
     fun activeRuleSets(level: NetShieldLevel): List<NetShieldRuleSet> {
         val categories = when (level) {
@@ -80,14 +119,26 @@ class LocalNetShield @Inject constructor(
                         response.body.string()
                     }
                     val parsed = NetShieldDomainParser.parse(body)
+                        .filterNot { domain -> source.category in COMPATIBILITY_FILTERED_CATEGORIES && blocksProtectedDomain(domain) }
+                        .toSet()
                     check(parsed.isNotEmpty()) { "${source.category}: empty rule list" }
                     source.category to parsed
-                }
+                }.toMutableMap()
+
+                // AdAway already includes a small number of analytics entries. Keep category
+                // counters deterministic by assigning overlaps to ads and only the remainder to trackers.
+                updated[NetShieldCategory.TRACKERS] = updated.getValue(NetShieldCategory.TRACKERS) -
+                    updated.getValue(NetShieldCategory.ADS)
+
                 SOURCES.forEach { source -> writeRuleSet(source, updated.getValue(source.category)) }
                 domains = updated
                 val count = updated.values.sumOf(Set<String>::size)
                 val now = System.currentTimeMillis()
-                preferences.edit().putLong(KEY_UPDATED_AT, now).putInt(KEY_DOMAIN_COUNT, count).apply()
+                preferences.edit()
+                    .putLong(KEY_UPDATED_AT, now)
+                    .putInt(KEY_DOMAIN_COUNT, count)
+                    .putInt(KEY_SOURCE_VERSION, SOURCE_VERSION)
+                    .apply()
                 _listState.value = NetShieldListState(lastUpdatedAt = now, domainCount = count)
                 count
             }.onFailure { error ->
@@ -97,22 +148,36 @@ class LocalNetShield @Inject constructor(
     }
 
     fun recordEngineLog(message: String) {
-        val match = REJECTED_DNS.find(message) ?: return
-        val host = match.groupValues[1].trimEnd('.').lowercase(Locale.ROOT)
-        val category = classify(host) ?: return
-        _stats.update { current ->
-            when (category) {
-                NetShieldCategory.ADS -> current.copy(
-                    adsBlocked = current.adsBlocked + 1,
-                    savedBytes = current.savedBytes + ESTIMATED_AD_BYTES,
-                )
-                NetShieldCategory.TRACKERS -> current.copy(
-                    trackersBlocked = current.trackersBlocked + 1,
-                    savedBytes = current.savedBytes + ESTIMATED_TRACKER_BYTES,
-                )
-                NetShieldCategory.MALWARE, NetShieldCategory.ADULT -> current
+        val directCategory = categoryFromRuleSetLog(message)
+        val category = directCategory ?: run {
+            val match = REJECTED_DNS.find(message) ?: return
+            val host = match.groupValues[1].trimEnd('.').lowercase(Locale.ROOT)
+            classify(host)
+        } ?: return
+        when (category) {
+            NetShieldCategory.ADS -> {
+                pendingAds.incrementAndGet()
+                pendingSavedBytes.addAndGet(ESTIMATED_AD_BYTES)
             }
+            NetShieldCategory.TRACKERS -> {
+                pendingTrackers.incrementAndGet()
+                pendingSavedBytes.addAndGet(ESTIMATED_TRACKER_BYTES)
+            }
+            NetShieldCategory.MALWARE, NetShieldCategory.ADULT -> Unit
         }
+    }
+
+    private suspend fun flushPendingStats() = statsFlushMutex.withLock {
+        val ads = pendingAds.getAndSet(0)
+        val trackers = pendingTrackers.getAndSet(0)
+        val savedBytes = pendingSavedBytes.getAndSet(0)
+        runCatching { settingsManager.addNetShieldStats(ads, trackers, savedBytes) }
+            .onFailure {
+                // Restore deltas so a transient multi-process DataStore failure cannot lose counts.
+                pendingAds.addAndGet(ads)
+                pendingTrackers.addAndGet(trackers)
+                pendingSavedBytes.addAndGet(savedBytes)
+            }
     }
 
     private fun classify(host: String): NetShieldCategory? {
@@ -145,17 +210,52 @@ class LocalNetShield @Inject constructor(
         check(domainTmp.renameTo(domainFile) || domainTmp.copyTo(domainFile, overwrite = true).let { domainTmp.delete(); true })
     }
 
-
-    private companion object {
+    internal companion object {
         const val KEY_UPDATED_AT = "updated_at"
         const val KEY_DOMAIN_COUNT = "domain_count"
+        const val KEY_SOURCE_VERSION = "source_version"
+        const val SOURCE_VERSION = 2
+        const val STATS_PUBLISH_INTERVAL_MS = 5 * 60 * 1000L
         const val ESTIMATED_AD_BYTES = 150_000L
         const val ESTIMATED_TRACKER_BYTES = 4_000L
+        val RULE_SET_REJECT = Regex("rule_set=netshield-(ads|trackers)\\b.*=>\\s*reject", RegexOption.IGNORE_CASE)
         val REJECTED_DNS = Regex("rejected\\s+(?:A|AAAA|HTTPS|SVCB)\\s+([^\\s]+)", RegexOption.IGNORE_CASE)
-        val SOURCES = listOf(
+        val COMPATIBILITY_FILTERED_CATEGORIES = setOf(NetShieldCategory.ADS, NetShieldCategory.TRACKERS)
+        internal fun categoryFromRuleSetLog(message: String): NetShieldCategory? =
+            RULE_SET_REJECT.find(message)?.groupValues?.get(1)?.let { value ->
+                when (value.lowercase(Locale.ROOT)) {
+                    "ads" -> NetShieldCategory.ADS
+                    "trackers" -> NetShieldCategory.TRACKERS
+                    else -> null
+                }
+            }
+
+        internal fun blocksProtectedDomain(blockedDomain: String): Boolean = PROTECTED_SERVICE_DOMAINS.any { protected ->
+            protected == blockedDomain || protected.endsWith(".$blockedDomain")
+        }
+
+        val PROTECTED_SERVICE_DOMAINS = setOf(
+            "accounts.google.com",
+            "android.clients.google.com",
+            "clients3.google.com",
+            "firebase.googleapis.com",
+            "firebaseinstallations.googleapis.com",
+            "gemini.google.com",
+            "generativelanguage.googleapis.com",
+            "googleapis.com",
+            "googleusercontent.com",
+            "gstatic.com",
+            "gvt1.com",
+            "gvt2.com",
+            "mtalk.google.com",
+            "oauth2.googleapis.com",
+            "play-fe.googleapis.com",
+            "play.googleapis.com",
+        )
+        private val SOURCES = listOf(
             Source(NetShieldCategory.MALWARE, "https://urlhaus.abuse.ch/downloads/hostfile/", "malware"),
-            Source(NetShieldCategory.ADS, "https://easylist.to/easylist/easylist.txt", "ads"),
-            Source(NetShieldCategory.TRACKERS, "https://easylist.to/easylist/easyprivacy.txt", "trackers"),
+            Source(NetShieldCategory.ADS, "https://adaway.org/hosts.txt", "ads"),
+            Source(NetShieldCategory.TRACKERS, "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/light.txt", "trackers"),
             Source(NetShieldCategory.ADULT, "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn/hosts", "adult"),
         )
     }

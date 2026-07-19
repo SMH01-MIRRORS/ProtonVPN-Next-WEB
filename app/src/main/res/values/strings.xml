@@ -736,7 +736,7 @@
     <string name="netshield_lists_never_updated">Lists have not been downloaded yet</string>
     <string name="netshield_lists_error">Could not update lists: %1$s</string>
     <string name="netshield_update_lists">Update lists</string>
-    <string name="netshield_saved_estimate_note">Data saved is an estimate based on blocked ad and tracker requests.</string>
+    <string name="netshield_saved_estimate_note">Statistics update every five minutes. Data saved is an estimate based on blocked ad and tracker requests.</string>
     <string name="netshield_ads_blocked">Ads blocked</string>
     <string name="netshield_trackers_blocked">Trackers stopped</string>
     <string name="netshield_data_saved">Data saved</string>

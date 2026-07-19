@@ -188,7 +188,9 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     }
 
     private fun startTunnel(intent: Intent) {
-        localNetShield.resetSessionStats()
+        if (!intent.getBooleanExtra(EXTRA_IS_RECONNECTING, false)) {
+            localNetShield.beginSessionStats()
+        }
         val config = intent.getStringExtra(EXTRA_CONFIG) ?: run {
             ProtonLogger.e(TAG, "Missing awgbox configuration")
             return
@@ -262,10 +264,12 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
                     putExtra(EXTRA_LOGICAL_SERVER_ID, logicalServerId)
                     putExtra(EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
                     putExtra(EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
+                    putExtra(EXTRA_IS_RECONNECTING, true)
                 }
                 startTunnel(retry)
             }
         } else {
+            scope.launch(Dispatchers.IO) { localNetShield.finishSessionStats() }
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         }
@@ -277,6 +281,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         connecting = false
         verified = false
         scope.launch(Dispatchers.IO) {
+            localNetShield.finishSessionStats()
             closeEngine()
             withContext(Dispatchers.Main) {
                 state = VpnTunnelState.DOWN
@@ -485,6 +490,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
             putExtra(EXTRA_LOGICAL_SERVER_ID, logicalServerId)
             putExtra(EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
             putExtra(EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
+            putExtra(EXTRA_IS_RECONNECTING, true)
         }
         startTunnel(retry)
     }

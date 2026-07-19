@@ -145,7 +145,7 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
 
         val config = JsonObject(mapOf(
             "log" to JsonObject(mapOf(
-                "level" to JsonPrimitive("info"),
+                "level" to JsonPrimitive(if (netShieldRuleSets.isEmpty()) "info" else "debug"),
                 "timestamp" to JsonPrimitive(true)
             )),
             "dns" to JsonObject(buildMap {

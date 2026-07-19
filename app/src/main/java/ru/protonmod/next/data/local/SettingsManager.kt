@@ -44,6 +44,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.netshield.NetShieldLevel
+import ru.protonmod.next.netshield.NetShieldStats
 import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.utils.system.SystemUtils
 import javax.inject.Inject
@@ -133,6 +134,9 @@ class SettingsManager @Inject constructor(
         private val ANALYTICS_ENABLED = booleanPreferencesKey("analytics_enabled")
         private val TRAFFIC_STATS_ENABLED = booleanPreferencesKey("traffic_stats_enabled")
         private val NETSHIELD_LEVEL = stringPreferencesKey("netshield_level")
+        private val NETSHIELD_ADS_BLOCKED = longPreferencesKey("netshield_ads_blocked")
+        private val NETSHIELD_TRACKERS_BLOCKED = longPreferencesKey("netshield_trackers_blocked")
+        private val NETSHIELD_SAVED_BYTES = longPreferencesKey("netshield_saved_bytes")
         private val CRASH_REPORTS_ENABLED = booleanPreferencesKey("crash_reports_enabled")
         private val SENTRY_PERFORMANCE_ENABLED = booleanPreferencesKey("sentry_performance_enabled")
         private val SENTRY_NON_FATAL_ENABLED = booleanPreferencesKey("sentry_non_fatal_enabled")
@@ -302,6 +306,14 @@ class SettingsManager @Inject constructor(
             .getOrDefault(NetShieldLevel.DISABLED)
     }
 
+    val netShieldStats: Flow<NetShieldStats> = dataStore.data.map { preferences ->
+        NetShieldStats(
+            adsBlocked = preferences[NETSHIELD_ADS_BLOCKED] ?: 0L,
+            trackersBlocked = preferences[NETSHIELD_TRACKERS_BLOCKED] ?: 0L,
+            savedBytes = preferences[NETSHIELD_SAVED_BYTES] ?: 0L,
+        )
+    }
+
     val pauseEndTime: Flow<Long> = dataStore.data.map { it[PAUSE_END_TIME] ?: 0L }
 
     val policyAcceptedVersion: Flow<Int> = dataStore.data.map { it[POLICY_ACCEPTED_VERSION] ?: 0 }
@@ -368,6 +380,23 @@ class SettingsManager @Inject constructor(
 
     suspend fun setNetShieldLevel(level: NetShieldLevel) {
         dataStore.edit { it[NETSHIELD_LEVEL] = level.name }
+    }
+
+    suspend fun resetNetShieldStats() {
+        dataStore.edit {
+            it[NETSHIELD_ADS_BLOCKED] = 0L
+            it[NETSHIELD_TRACKERS_BLOCKED] = 0L
+            it[NETSHIELD_SAVED_BYTES] = 0L
+        }
+    }
+
+    suspend fun addNetShieldStats(ads: Long, trackers: Long, savedBytes: Long) {
+        if (ads == 0L && trackers == 0L && savedBytes == 0L) return
+        dataStore.edit {
+            it[NETSHIELD_ADS_BLOCKED] = (it[NETSHIELD_ADS_BLOCKED] ?: 0L) + ads
+            it[NETSHIELD_TRACKERS_BLOCKED] = (it[NETSHIELD_TRACKERS_BLOCKED] ?: 0L) + trackers
+            it[NETSHIELD_SAVED_BYTES] = (it[NETSHIELD_SAVED_BYTES] ?: 0L) + savedBytes
+        }
     }
 
     suspend fun setAutoConnect(enabled: Boolean) {

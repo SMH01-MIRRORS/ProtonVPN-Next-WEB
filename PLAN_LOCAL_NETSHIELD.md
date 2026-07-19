@@ -26,3 +26,10 @@ Only aggregate counters are kept for the active VPN session. Queried domain name
 - [x] Add an underlying-network preflight that resolves and validates the endpoint before starting the VPN service.
 - [x] Ensure cancellation during disconnect is treated as expected and is not reported as a connection failure.
 - [x] Add regression tests, run focused tests and a debug build, then commit.
+
+## Follow-up: compatible lists and cross-process statistics
+
+- [x] Replace aggressive ad/tracker sources with compatibility-focused lists and protect critical Google Play/Gemini domains.
+- [x] Detect DNS reject log formats produced by amnezia-box reliably.
+- [x] Persist aggregate counters across the dedicated VPN process and publish updates every five minutes.
+- [x] Add regression tests, run focused tests and a debug build, then commit.
