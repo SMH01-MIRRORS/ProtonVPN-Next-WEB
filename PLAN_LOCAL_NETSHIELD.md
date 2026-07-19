@@ -33,3 +33,10 @@ Only aggregate counters are kept for the active VPN session. Queried domain name
 - [x] Detect DNS reject log formats produced by amnezia-box reliably.
 - [x] Persist aggregate counters across the dedicated VPN process and publish updates every five minutes.
 - [x] Add regression tests, run focused tests and a debug build, then commit.
+
+## Follow-up: Android block statistics not updating
+
+- [x] Trace the Android engine log path and reproduce why blocked requests are not counted.
+- [x] Keep the engine callback active in release builds without persisting queried domains.
+- [x] Add regression coverage for the real DNS rule-match log format.
+- [x] Run focused tests and an Android debug build, then commit.

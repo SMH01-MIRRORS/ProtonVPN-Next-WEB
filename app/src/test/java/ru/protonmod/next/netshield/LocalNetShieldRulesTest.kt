@@ -21,7 +21,8 @@ class LocalNetShieldRulesTest {
         assertEquals(
             NetShieldCategory.TRACKERS,
             LocalNetShield.categoryFromRuleSetLog(
-                "DEBUG dns: match[1] rule_set=netshield-trackers => reject"
+                "+0300 2026-07-19 10:42:11 DEBUG [184729103 0ms] dns: " +
+                    "match[3] rule_set=netshield-trackers => reject"
             )
         )
     }

@@ -165,7 +165,10 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
             workingPath = workingDir.absolutePath
             tempPath = cacheDir.absolutePath
             logMaxLines = 2_000
-            debug = BuildConfig.DEBUG
+            // libbox only invokes CommandServerHandler.writeDebugMessage when this flag is on.
+            // NetShield counts DNS rule matches through that callback in every build type; raw
+            // engine messages are still written to Logcat only in debug builds below.
+            debug = true
             fixAndroidStack = true
         }
         Libbox.setup(options)
@@ -445,7 +448,9 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     override fun setSystemProxyEnabled(isEnabled: Boolean) = Unit
     override fun writeDebugMessage(message: String?) {
         val logMessage = message.orEmpty()
-        ProtonLogger.d("awgbox", logMessage)
+        if (BuildConfig.DEBUG) {
+            ProtonLogger.d("awgbox", logMessage)
+        }
         localNetShield.recordEngineLog(logMessage)
         observeTransportHealth(logMessage)
     }
