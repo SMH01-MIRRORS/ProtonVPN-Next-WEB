@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -75,6 +76,7 @@ fun SettingsScreen(
     onNavigateToCountrySpoofing: (() -> Unit)? = null,
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
     onNavigateToCertSettings: (() -> Unit)? = null,
+    onNavigateToNetShield: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
@@ -128,6 +130,7 @@ fun SettingsScreen(
                 onNavigateToCountrySpoofing = onNavigateToCountrySpoofing,
                 onNavigateToPortSelection = onNavigateToPortSelection,
                 onNavigateToCertSettings = onNavigateToCertSettings,
+                onNavigateToNetShield = onNavigateToNetShield,
                 onOtaFrequencyChange = viewModel::setOtaUpdateFrequency,
                 onCheckForUpdates = viewModel::checkForUpdates,
                 modifier = Modifier
@@ -162,7 +165,8 @@ fun SettingsContent(
     onNavigateToCustomDns: (() -> Unit)? = null,
     onNavigateToCountrySpoofing: (() -> Unit)? = null,
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
-    onNavigateToCertSettings: (() -> Unit)? = null
+    onNavigateToCertSettings: (() -> Unit)? = null,
+    onNavigateToNetShield: (() -> Unit)? = null
 ) {
     LazyColumn(
         modifier = modifier,
@@ -233,6 +237,7 @@ fun SettingsContent(
                             onNavigateToCountrySpoofing = onNavigateToCountrySpoofing,
                             onNavigateToKillSwitch = onNavigateToKillSwitch,
                             onNavigateToErrorReporting = onNavigateToErrorReporting,
+                            onNavigateToNetShield = onNavigateToNetShield,
                             onAllowLanChange = onAllowLanChange,
                             onNotificationsChange = onNotificationsChange
                         )
@@ -299,6 +304,7 @@ fun SettingsContent(
                     onNavigateToCountrySpoofing = onNavigateToCountrySpoofing,
                     onNavigateToKillSwitch = onNavigateToKillSwitch,
                     onNavigateToErrorReporting = onNavigateToErrorReporting,
+                    onNavigateToNetShield = onNavigateToNetShield,
                     onAllowLanChange = onAllowLanChange
                 )
             }
@@ -534,12 +540,20 @@ private fun PrivacySettingsSection(
     onNavigateToCustomDns: (() -> Unit)? = null,
     onNavigateToCountrySpoofing: (() -> Unit)? = null,
     onNavigateToKillSwitch: (() -> Unit)? = null,
-    onNavigateToErrorReporting: (() -> Unit)? = null
+    onNavigateToErrorReporting: (() -> Unit)? = null,
+    onNavigateToNetShield: (() -> Unit)? = null
 ) {
     SettingsCategory(modifier = modifier, title = stringResource(R.string.settings_privacy)) {
         val currentDnsSubtitle = state.customDns.ifBlank {
             stringResource(R.string.settings_custom_dns_default)
         }
+
+        SettingRowWithIcon(
+            icon = ImageVector.vectorResource(R.drawable.ic_proton_netshield),
+            title = stringResource(R.string.netshield_title),
+            subtitle = stringResource(R.string.netshield_settings_subtitle),
+            onClick = onNavigateToNetShield
+        )
 
         SettingRowWithIcon(
             icon = Icons.Rounded.Dns,

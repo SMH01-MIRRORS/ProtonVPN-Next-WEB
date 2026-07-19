@@ -4,6 +4,7 @@
  */
 package ru.protonmod.next.vpn
 
+import ru.protonmod.next.netshield.LocalNetShield
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -59,6 +60,7 @@ import kotlin.time.Duration.Companion.seconds
 class ProtonVpnService : VpnService(), CommandServerHandler {
     @Inject lateinit var connectedServerState: ConnectedServerState
     @Inject lateinit var trafficStatsRecorder: TrafficStatsRecorder
+    @Inject lateinit var localNetShield: LocalNetShield
 
     companion object {
         private const val TAG = "ProtonVpnService"
@@ -186,6 +188,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     }
 
     private fun startTunnel(intent: Intent) {
+        localNetShield.resetSessionStats()
         val config = intent.getStringExtra(EXTRA_CONFIG) ?: run {
             ProtonLogger.e(TAG, "Missing awgbox configuration")
             return
@@ -412,6 +415,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     override fun writeDebugMessage(message: String?) {
         val logMessage = message.orEmpty()
         ProtonLogger.d("awgbox", logMessage)
+        localNetShield.recordEngineLog(logMessage)
         observeTransportHealth(logMessage)
     }
 

@@ -214,6 +214,15 @@ internal fun PhoneDashboardLayout(
             )
         }
 
+        if (state.netShieldLevel.enabled) {
+            item(contentType = "NetShieldStats") {
+                NetShieldStatsCard(
+                    stats = state.netShieldStats,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+        }
+
         // Statistics card (port of the desktop stats slider).
         item(contentType = "StatsCard") {
             StatsCard(

@@ -33,6 +33,8 @@ import org.mockito.kotlin.*
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.netshield.LocalNetShield
+import ru.protonmod.next.netshield.NetShieldLevel
 import ru.protonmod.next.data.network.CreateCertificateResponse
 import ru.protonmod.next.data.network.PhysicalServer
 import ru.protonmod.next.data.repository.VpnRepository
@@ -77,6 +79,9 @@ class AmneziaVpnManagerTest {
     
     @Mock
     private lateinit var awgBoxConfigGenerator: AwgBoxConfigGenerator
+
+    @Mock
+    private lateinit var localNetShield: LocalNetShield
 
     @Mock
     private lateinit var nextVpnManager: NextVpnManager
@@ -128,6 +133,8 @@ class AmneziaVpnManagerTest {
             whenever(settingsManager.proxyChainEnabled).thenReturn(flowOf(false))
             whenever(settingsManager.proxyChainConfig).thenReturn(flowOf(""))
             whenever(settingsManager.customDns).thenReturn(flowOf(""))
+            whenever(settingsManager.netShieldLevel).thenReturn(flowOf(NetShieldLevel.DISABLED))
+            whenever(localNetShield.activeRuleSets(NetShieldLevel.DISABLED)).thenReturn(emptyList())
             whenever(settingsManager.pauseEndTime).thenReturn(flowOf(0L))
             whenever(settingsManager.allowLanEnabled).thenReturn(flowOf(false))
             whenever(settingsManager.splitTunnelingMode).thenReturn(flowOf("exclude"))
@@ -158,7 +165,7 @@ class AmneziaVpnManagerTest {
             whenever(vpnRepository.getCachedServers()).thenReturn(emptyList())
             
             whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(VpnKeyPair("pub", "priv"))
-            whenever(awgBoxConfigGenerator.buildConfig(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), isNull()))
+            whenever(awgBoxConfigGenerator.buildConfig(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), isNull(), any()))
                 .thenReturn("mock_config")
             val verificationCycle = VpnNetworkMonitor.VerificationCycle(1, emptySet())
             whenever(vpnNetworkMonitor.beginVerificationCycle()).thenReturn(verificationCycle)
@@ -173,6 +180,7 @@ class AmneziaVpnManagerTest {
                 systemContextWrapper,
                 cryptoWrapper,
                 awgBoxConfigGenerator,
+                localNetShield,
                 nextVpnManager,
                 vpnNetworkMonitor,
                 testDispatcherProvider,
@@ -310,7 +318,7 @@ class AmneziaVpnManagerTest {
         verify(awgBoxConfigGenerator).buildConfig(
             any(), any(), any(), any(), any(), any(), 
             eq(true), // allowLan should be true
-            any(), any(), any(), any(), any(), isNull()
+            any(), any(), any(), any(), any(), isNull(), any()
         )
     }
 }

@@ -8,6 +8,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import ru.protonmod.next.netshield.NetShieldRuleSet
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -26,7 +27,8 @@ interface AwgBoxConfigGenerator {
         port: Int = 1194,
         certificate: String? = null,
         obfuscationParams: AmneziaVpnManager.ObfuscationParams,
-        proxyChainConfig: String? = null
+        proxyChainConfig: String? = null,
+        netShieldRuleSets: List<NetShieldRuleSet> = emptyList()
     ): String
 }
 
@@ -53,7 +55,8 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
         port: Int,
         certificate: String?,
         obfuscationParams: AmneziaVpnManager.ObfuscationParams,
-        proxyChainConfig: String?
+        proxyChainConfig: String?,
+        netShieldRuleSets: List<NetShieldRuleSet>
     ): String {
         require(port in 1..65535) { "Invalid AWG port: $port" }
         require(targetIp.isNotBlank()) { "AWG endpoint is empty" }
@@ -134,8 +137,8 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                 "level" to JsonPrimitive("info"),
                 "timestamp" to JsonPrimitive(true)
             )),
-            "dns" to JsonObject(mapOf(
-                "servers" to JsonArray(buildList {
+            "dns" to JsonObject(buildMap {
+                put("servers", JsonArray(buildList {
                     if (proxyChain.isNotEmpty()) add(JsonObject(mapOf(
                         "type" to JsonPrimitive("udp"),
                         "tag" to JsonPrimitive("bootstrap-dns"),
@@ -149,24 +152,42 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                         "server_port" to JsonPrimitive(53),
                         "detour" to JsonPrimitive("proton-awg")
                     )))
-                }),
-                "strategy" to JsonPrimitive("ipv4_only")
-            )),
+                }))
+                if (netShieldRuleSets.isNotEmpty()) {
+                    put("rules", JsonArray(netShieldRuleSets.map { ruleSet ->
+                        JsonObject(mapOf(
+                            "rule_set" to strings(listOf(ruleSet.tag)),
+                            "action" to JsonPrimitive("reject")
+                        ))
+                    }))
+                }
+                put("strategy", JsonPrimitive("ipv4_only"))
+            }),
             "inbounds" to JsonArray(listOf(JsonObject(tun))),
             "endpoints" to JsonArray(listOf(JsonObject(awg))),
             "outbounds" to JsonArray(proxyChain.map(ProxyLinkParser.ParsedProxy::outbound)),
-            "route" to JsonObject(mapOf(
-                "auto_detect_interface" to JsonPrimitive(true),
-                "rules" to JsonArray(listOf(
+            "route" to JsonObject(buildMap {
+                put("auto_detect_interface", JsonPrimitive(true))
+                put("rules", JsonArray(listOf(
                     JsonObject(mapOf(
                         "ip_version" to JsonPrimitive(6),
                         "action" to JsonPrimitive("reject")
                     )),
                     JsonObject(mapOf("action" to JsonPrimitive("sniff"))),
                     JsonObject(mapOf("protocol" to strings(listOf("dns")), "action" to JsonPrimitive("hijack-dns")))
-                )),
-                "final" to JsonPrimitive("proton-awg")
-            ))
+                )))
+                if (netShieldRuleSets.isNotEmpty()) {
+                    put("rule_set", JsonArray(netShieldRuleSets.map { ruleSet ->
+                        JsonObject(mapOf(
+                            "type" to JsonPrimitive("local"),
+                            "tag" to JsonPrimitive(ruleSet.tag),
+                            "format" to JsonPrimitive("source"),
+                            "path" to JsonPrimitive(ruleSet.path)
+                        ))
+                    }))
+                }
+                put("final", JsonPrimitive("proton-awg"))
+            })
         ))
         return json.encodeToString(JsonObject.serializer(), config)
     }

@@ -52,6 +52,9 @@ import ru.protonmod.next.data.local.TrafficStatsDao
 import ru.protonmod.next.data.local.TrafficStatsEntity
 import ru.protonmod.next.data.local.VpnProfileEntity
 import ru.protonmod.next.data.model.ObfuscationProfile
+import ru.protonmod.next.netshield.LocalNetShield
+import ru.protonmod.next.netshield.NetShieldLevel
+import ru.protonmod.next.netshield.NetShieldStats
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.ui.utils.CountryUtils
@@ -90,7 +93,9 @@ sealed class DashboardUiState {
         val trafficTx: String? = null,
         val isBatteryOptimized: Boolean = false,
         val connectionWarning: AmneziaVpnManager.ConnectionWarning? = null,
-        val pauseEndTime: Long = 0
+        val pauseEndTime: Long = 0,
+        val netShieldLevel: NetShieldLevel = NetShieldLevel.DISABLED,
+        val netShieldStats: NetShieldStats = NetShieldStats()
     ) : DashboardUiState()
     data class Error(val message: String, val isSessionError: Boolean = false) : DashboardUiState()
 }
@@ -106,7 +111,8 @@ class DashboardViewModel @Inject constructor(
     private val connectedServerState: ConnectedServerState,
     private val profileDao: ProfileDao,
     private val recentConnectionDao: ru.protonmod.next.data.local.RecentConnectionDao,
-    private val trafficStatsDao: TrafficStatsDao
+    private val trafficStatsDao: TrafficStatsDao,
+    private val localNetShield: LocalNetShield
 ) : ViewModel() {
 
     // Shared OkHttpClient instances — created once, reused for every IP fetch, shut down in onCleared().
@@ -149,7 +155,9 @@ class DashboardViewModel @Inject constructor(
         amneziaVpnManager.trafficRx,
         amneziaVpnManager.trafficTx,
         amneziaVpnManager.connectionWarning,
-        settingsManager.pauseEndTime
+        settingsManager.pauseEndTime,
+        settingsManager.netShieldLevel,
+        localNetShield.stats
     ) { args: Array<Any?> ->
         @Suppress("UNCHECKED_CAST")
         val servers = args[0] as List<LogicalServer>
@@ -173,6 +181,8 @@ class DashboardViewModel @Inject constructor(
         val trafficTx = args[16] as String?
         val connectionWarning = args[17] as AmneziaVpnManager.ConnectionWarning?
         val pauseEndTime = args[18] as Long
+        val netShieldLevel = args[19] as NetShieldLevel
+        val netShieldStats = args[20] as NetShieldStats
 
         if (isUpdating && servers.isEmpty()) {
             DashboardUiState.Loading
@@ -211,7 +221,9 @@ class DashboardViewModel @Inject constructor(
                 trafficTx = trafficTx,
                 isBatteryOptimized = isBatteryOptimized,
                 connectionWarning = connectionWarning,
-                pauseEndTime = pauseEndTime
+                pauseEndTime = pauseEndTime,
+                netShieldLevel = netShieldLevel,
+                netShieldStats = netShieldStats
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.Loading)

@@ -718,4 +718,26 @@
     <string name="proxy_chain_drag">Reorder proxy</string>
     <string name="proxy_chain_proton_server">Proton server</string>
     <string name="proxy_chain_proton_server_desc">The encrypted AWG tunnel is established here.</string>
+
+    <string name="netshield_title">NetShield</string>
+    <string name="netshield_settings_subtitle">Local malware, ad and tracker blocking</string>
+    <string name="netshield_description">NetShield blocks unwanted domains locally in the VPN tunnel. No DNS history is stored.</string>
+    <string name="netshield_level_off">Off</string>
+    <string name="netshield_level_off_desc">Do not filter DNS requests</string>
+    <string name="netshield_level_malware">Block malware</string>
+    <string name="netshield_level_malware_desc">Block known malicious domains</string>
+    <string name="netshield_level_extended">Block malware, ads and trackers</string>
+    <string name="netshield_level_extended_desc">Extended protection with ad and tracker blocking</string>
+    <string name="netshield_level_adult">Block malware, ads, trackers and adult content</string>
+    <string name="netshield_level_adult_desc">Extended protection plus adult-content filtering</string>
+    <string name="netshield_lists_title">Filter lists</string>
+    <string name="netshield_lists_updating">Updating filter lists…</string>
+    <string name="netshield_lists_updated">Updated %1$s · %2$d domains</string>
+    <string name="netshield_lists_never_updated">Lists have not been downloaded yet</string>
+    <string name="netshield_lists_error">Could not update lists: %1$s</string>
+    <string name="netshield_update_lists">Update lists</string>
+    <string name="netshield_saved_estimate_note">Data saved is an estimate based on blocked ad and tracker requests.</string>
+    <string name="netshield_ads_blocked">Ads blocked</string>
+    <string name="netshield_trackers_blocked">Trackers stopped</string>
+    <string name="netshield_data_saved">Data saved</string>
 </resources>

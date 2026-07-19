@@ -34,6 +34,7 @@ import ru.protonmod.next.ui.screens.LoginViewModel
 import ru.protonmod.next.ui.screens.LoginUiState
 import ru.protonmod.next.ui.screens.profiles.*
 import ru.protonmod.next.ui.screens.settings.*
+import ru.protonmod.next.ui.screens.netshield.NetShieldSettingsScreen
 
 sealed class Screen(val route: String) {
     data object Home : Screen("home")
@@ -41,6 +42,7 @@ sealed class Screen(val route: String) {
     data object CountrySpoofing : Screen("country_spoofing")
     data object ByeDpiTest : Screen("byedpi_test")
     data object Settings : Screen("settings")
+    data object NetShield : Screen("netshield")
     data object Profiles : Screen("profiles")
     data object EditProfile : Screen("edit_profile?profileId={profileId}") {
         fun createRoute(profileId: String? = null) = if (profileId != null) "edit_profile?profileId=$profileId" else "edit_profile"
@@ -138,8 +140,15 @@ fun NavGraphBuilder.appNavGraph(
             },
             onNavigateToCertSettings = {
                 navController.navigate(Screen.CertSettings.route)
+            },
+            onNavigateToNetShield = {
+                navController.navigate(Screen.NetShield.route)
             }
         )
+    }
+
+    composable(Screen.NetShield.route) {
+        NetShieldSettingsScreen(onBack = { navController.popBackStack() })
     }
 
     composable(Screen.CertSettings.route) {

@@ -419,6 +419,9 @@ private fun DesktopMapPanel(
             if (state.pauseEndTime > System.currentTimeMillis()) {
                 PauseBanner(endTime = state.pauseEndTime, onResume = onResume)
             }
+            if (state.netShieldLevel.enabled) {
+                NetShieldStatsCard(stats = state.netShieldStats, compact = true)
+            }
         }
     }
 }

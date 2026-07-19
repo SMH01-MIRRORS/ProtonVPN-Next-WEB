@@ -48,6 +48,9 @@ import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.local.TrafficStatsDao
 import ru.protonmod.next.data.local.VpnProfileEntity
 import ru.protonmod.next.data.model.ObfuscationProfile
+import ru.protonmod.next.netshield.LocalNetShield
+import ru.protonmod.next.netshield.NetShieldLevel
+import ru.protonmod.next.netshield.NetShieldStats
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.network.PhysicalServer
 import ru.protonmod.next.data.repository.VpnRepository
@@ -97,6 +100,9 @@ class DashboardViewModelTest {
 
     @Mock
     private lateinit var trafficStatsDao: TrafficStatsDao
+
+    @Mock
+    private lateinit var localNetShield: LocalNetShield
 
     @Mock
     private lateinit var powerManager: android.os.PowerManager
@@ -178,6 +184,8 @@ class DashboardViewModelTest {
         whenever(settingsManager.isIpHidden).thenReturn(isIpHiddenFlow)
         whenever(settingsManager.pauseEndTime).thenReturn(pauseEndTimeFlow)
         whenever(settingsManager.trafficStatsEnabled).thenReturn(flowOf(true))
+        whenever(settingsManager.netShieldLevel).thenReturn(flowOf(NetShieldLevel.DISABLED))
+        whenever(localNetShield.stats).thenReturn(MutableStateFlow(NetShieldStats()))
         
         
         val testSession = SessionEntity(
@@ -201,7 +209,8 @@ class DashboardViewModelTest {
             connectedServerState,
             profileDao,
             recentConnectionDao,
-            trafficStatsDao
+            trafficStatsDao,
+            localNetShield
         )
     }
 

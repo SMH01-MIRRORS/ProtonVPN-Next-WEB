@@ -43,6 +43,7 @@ import kotlinx.serialization.json.Json
 import org.json.JSONArray
 import org.json.JSONObject
 import ru.protonmod.next.data.model.ObfuscationProfile
+import ru.protonmod.next.netshield.NetShieldLevel
 import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.utils.system.SystemUtils
 import javax.inject.Inject
@@ -131,6 +132,7 @@ class SettingsManager @Inject constructor(
 
         private val ANALYTICS_ENABLED = booleanPreferencesKey("analytics_enabled")
         private val TRAFFIC_STATS_ENABLED = booleanPreferencesKey("traffic_stats_enabled")
+        private val NETSHIELD_LEVEL = stringPreferencesKey("netshield_level")
         private val CRASH_REPORTS_ENABLED = booleanPreferencesKey("crash_reports_enabled")
         private val SENTRY_PERFORMANCE_ENABLED = booleanPreferencesKey("sentry_performance_enabled")
         private val SENTRY_NON_FATAL_ENABLED = booleanPreferencesKey("sentry_non_fatal_enabled")
@@ -150,9 +152,9 @@ class SettingsManager @Inject constructor(
         const val CURRENT_POLICY_VERSION = 20260625
 
         private val SETUP_STEP = stringPreferencesKey("setup_step")
-        
+
         private val ALLOW_LAN_CONNECTIONS = booleanPreferencesKey("allow_lan_connections")
-        
+
         private val AWG_JC = intPreferencesKey("awg_jc")
         private val AWG_JMIN = intPreferencesKey("awg_jmin")
         private val AWG_JMAX = intPreferencesKey("awg_jmax")
@@ -259,7 +261,7 @@ class SettingsManager @Inject constructor(
 
     /** Synchronous check for app startup initializers to avoid ANR from runBlocking */
     fun isAnalyticsEnabledSync(): Boolean = prefs.getBoolean("analytics_enabled", false)
-    
+
     /** Synchronous check for app startup initializers to avoid ANR from runBlocking */
     fun isCrashReportsEnabledSync(): Boolean = prefs.getBoolean("crash_reports_enabled", true)
 
@@ -294,6 +296,11 @@ class SettingsManager @Inject constructor(
 
     /** Dashboard traffic statistics collection toggle (mirrors desktop traffic_stats_enabled). */
     val trafficStatsEnabled: Flow<Boolean> = dataStore.data.map { it[TRAFFIC_STATS_ENABLED] ?: true }
+
+    val netShieldLevel: Flow<NetShieldLevel> = dataStore.data.map { preferences ->
+        runCatching { NetShieldLevel.valueOf(preferences[NETSHIELD_LEVEL] ?: NetShieldLevel.DISABLED.name) }
+            .getOrDefault(NetShieldLevel.DISABLED)
+    }
 
     val pauseEndTime: Flow<Long> = dataStore.data.map { it[PAUSE_END_TIME] ?: 0L }
 
@@ -357,6 +364,10 @@ class SettingsManager @Inject constructor(
 
     suspend fun setKillSwitch(enabled: Boolean) {
         dataStore.edit { it[KILL_SWITCH] = enabled }
+    }
+
+    suspend fun setNetShieldLevel(level: NetShieldLevel) {
+        dataStore.edit { it[NETSHIELD_LEVEL] = level.name }
     }
 
     suspend fun setAutoConnect(enabled: Boolean) {
@@ -552,7 +563,7 @@ class SettingsManager @Inject constructor(
     }
 
     suspend fun setQuickConnectStrategy(strategy: String, targetId: String? = null) {
-        dataStore.edit { 
+        dataStore.edit {
             it[QUICK_CONNECT_STRATEGY] = strategy
             if (targetId != null) {
                 it[QUICK_CONNECT_TARGET_ID] = targetId
@@ -656,17 +667,17 @@ class SettingsManager @Inject constructor(
         dataStore.edit { settings ->
             preferences.forEach { (keyName, value) ->
                 val key = findKey(keyName) ?: return@forEach
-                
+
                 // Manually handle each key based on its known type
                 when (keyName) {
-                    KILL_SWITCH.name, AUTO_CONNECT.name, NOTIFICATIONS.name, 
+                    KILL_SWITCH.name, AUTO_CONNECT.name, NOTIFICATIONS.name,
                     SPLIT_TUNNELING_ENABLED.name, ST_SHOW_SYSTEM_APPS.name,
-                    API_BYPASS_ENABLED.name, SPOOF_COUNTRY_ENABLED.name, 
-                    SPOOF_COUNTRY_NULL.name, OBFUSCATION_ENABLED.name, 
-                    OBFUSCATION_ADVANCED_MODE.name, ANALYTICS_ENABLED.name, 
-                    CRASH_REPORTS_ENABLED.name, SENTRY_PERFORMANCE_ENABLED.name, 
-                    SENTRY_NON_FATAL_ENABLED.name, SENTRY_SESSION_REPLAY_ENABLED.name, 
-                    SENTRY_ANR_ENABLED.name, SENTRY_METRICS_ENABLED.name, 
+                    API_BYPASS_ENABLED.name, SPOOF_COUNTRY_ENABLED.name,
+                    SPOOF_COUNTRY_NULL.name, OBFUSCATION_ENABLED.name,
+                    OBFUSCATION_ADVANCED_MODE.name, ANALYTICS_ENABLED.name,
+                    CRASH_REPORTS_ENABLED.name, SENTRY_PERFORMANCE_ENABLED.name,
+                    SENTRY_NON_FATAL_ENABLED.name, SENTRY_SESSION_REPLAY_ENABLED.name,
+                    SENTRY_ANR_ENABLED.name, SENTRY_METRICS_ENABLED.name,
                     SENTRY_LOGS_ENABLED.name,
                     IP_HIDDEN.name -> {
                         val boolValue = value.toBoolean()
@@ -674,37 +685,37 @@ class SettingsManager @Inject constructor(
                         settings[key as Preferences.Key<Boolean>] = boolValue
                         prefs.edit { putBoolean(keyName, boolValue) }
                     }
-                    
-                    VPN_PORT.name, API_PROXY_PORT.name, POLICY_ACCEPTED_VERSION.name, 
-                    AWG_JC.name, AWG_JMIN.name, AWG_JMAX.name, AWG_S1.name, AWG_S2.name, 
+
+                    VPN_PORT.name, API_PROXY_PORT.name, POLICY_ACCEPTED_VERSION.name,
+                    AWG_JC.name, AWG_JMIN.name, AWG_JMAX.name, AWG_S1.name, AWG_S2.name,
                     AWG_S3.name, AWG_S4.name, AWG_JUNK_LEVEL.name -> {
                         val intValue = value.toIntOrNull() ?: return@forEach
                         @Suppress("UNCHECKED_CAST")
                         settings[key as Preferences.Key<Int>] = intValue
                         prefs.edit { putInt(keyName, intValue) }
                     }
-                    
+
                     OTA_LAST_CHECK_TIME.name, PAUSE_END_TIME.name -> {
                         val longValue = value.toLongOrNull() ?: return@forEach
                         @Suppress("UNCHECKED_CAST")
                         settings[key as Preferences.Key<Long>] = longValue
                         prefs.edit { putLong(keyName, longValue) }
                     }
-                    
-                    OTA_UPDATE_FREQUENCY.name, APP_THEME.name, 
-                    SERVER_LOAD_DISPLAY_MODE.name, SPLIT_TUNNELING_MODE.name, CUSTOM_DNS.name, 
-                    API_BYPASS_STRATEGY.name, BYEDPI_FLAGS.name, BYEDPI_SNI.name, 
-                    API_PROXY_HOST.name, API_PROXY_TYPE.name, API_PROXY_USERNAME.name, 
-                    API_PROXY_PASSWORD.name, SPOOF_COUNTRY_CODE.name, SELECTED_PROFILE_ID.name, 
-                    CUSTOM_PROFILES.name, QUICK_CONNECT_STRATEGY.name, 
-                    QUICK_CONNECT_TARGET_ID.name, SETUP_STEP.name, AWG_H1.name, 
-                    AWG_H2.name, AWG_H3.name, AWG_H4.name, AWG_I1.name, AWG_I2.name, 
+
+                    OTA_UPDATE_FREQUENCY.name, APP_THEME.name,
+                    SERVER_LOAD_DISPLAY_MODE.name, SPLIT_TUNNELING_MODE.name, CUSTOM_DNS.name,
+                    API_BYPASS_STRATEGY.name, BYEDPI_FLAGS.name, BYEDPI_SNI.name,
+                    API_PROXY_HOST.name, API_PROXY_TYPE.name, API_PROXY_USERNAME.name,
+                    API_PROXY_PASSWORD.name, SPOOF_COUNTRY_CODE.name, SELECTED_PROFILE_ID.name,
+                    CUSTOM_PROFILES.name, NETSHIELD_LEVEL.name, QUICK_CONNECT_STRATEGY.name,
+                    QUICK_CONNECT_TARGET_ID.name, SETUP_STEP.name, AWG_H1.name,
+                    AWG_H2.name, AWG_H3.name, AWG_H4.name, AWG_I1.name, AWG_I2.name,
                     AWG_I3.name, AWG_I4.name, AWG_I5.name -> {
                         @Suppress("UNCHECKED_CAST")
                         settings[key as Preferences.Key<String>] = value
                         prefs.edit { putString(keyName, value) }
                     }
-                    
+
                     EXCLUDED_APPS.name, EXCLUDED_IPS.name, EXCLUDED_DOMAINS.name -> {
                         try {
                             val set = Json.decodeFromString<Set<String>>(value)
@@ -752,6 +763,7 @@ class SettingsManager @Inject constructor(
             OBFUSCATION_ADVANCED_MODE.name -> OBFUSCATION_ADVANCED_MODE
             SELECTED_PROFILE_ID.name -> SELECTED_PROFILE_ID
             CUSTOM_PROFILES.name -> CUSTOM_PROFILES
+            NETSHIELD_LEVEL.name -> NETSHIELD_LEVEL
             ANALYTICS_ENABLED.name -> ANALYTICS_ENABLED
             CRASH_REPORTS_ENABLED.name -> CRASH_REPORTS_ENABLED
             SENTRY_PERFORMANCE_ENABLED.name -> SENTRY_PERFORMANCE_ENABLED

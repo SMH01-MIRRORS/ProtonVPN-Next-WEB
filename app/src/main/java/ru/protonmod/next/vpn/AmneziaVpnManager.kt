@@ -48,6 +48,7 @@ import ru.protonmod.next.vpn.VpnTunnelState
 import java.net.Inet4Address
 import java.net.InetAddress
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.netshield.LocalNetShield
 import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.network.LogicalServer
@@ -75,6 +76,7 @@ class AmneziaVpnManager @Inject constructor(
     private val systemContextWrapper: SystemContextWrapper,
     private val cryptoWrapper: CryptoWrapper,
     private val awgBoxConfigGenerator: AwgBoxConfigGenerator,
+    private val localNetShield: LocalNetShield,
     private val nextVpnManager: NextVpnManager,
     private val vpnNetworkMonitor: VpnNetworkMonitor,
     private val dispatcherProvider: DispatcherProvider,
@@ -767,7 +769,8 @@ class AmneziaVpnManager @Inject constructor(
                 port = selectedPort,
                 certificate = currentSession.wgCertificate,
                 obfuscationParams = params,
-                proxyChainConfig = proxyChainConfig.takeIf { proxyChainEnabled }
+                proxyChainConfig = proxyChainConfig.takeIf { proxyChainEnabled },
+                netShieldRuleSets = localNetShield.activeRuleSets(settingsManager.netShieldLevel.first())
             )
             
             ProtonLogger.d(TAG, "Generated awgbox config (length=${configStr.length}, endpoint=$targetIp:$selectedPort)")
