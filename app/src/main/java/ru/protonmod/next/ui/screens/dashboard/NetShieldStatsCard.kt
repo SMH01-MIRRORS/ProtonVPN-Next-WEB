@@ -146,27 +146,37 @@ fun NetShieldStatsCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp),
             ) {
-                Stat(
-                    value = stats.adsBlocked.toString(),
-                    label = stringResource(R.string.netshield_ads_blocked),
-                    accent = accentColors.first,
-                    compact = compact,
-                    modifier = Modifier.weight(1f),
-                )
-                Stat(
-                    value = stats.trackersBlocked.toString(),
-                    label = stringResource(R.string.netshield_trackers_blocked),
-                    accent = accentColors.second,
-                    compact = compact,
-                    modifier = Modifier.weight(1f),
-                )
-                Stat(
-                    value = formatBytes(stats.savedBytes),
-                    label = stringResource(R.string.netshield_data_saved),
-                    accent = colors.notificationSuccess,
-                    compact = compact,
-                    modifier = Modifier.weight(1f),
-                )
+                if (level == NetShieldLevel.MALWARE) {
+                    Stat(
+                        value = stats.malwareBlocked.toString(),
+                        label = stringResource(R.string.netshield_malware_blocked),
+                        accent = accentColors.first,
+                        compact = compact,
+                        modifier = Modifier.weight(1f),
+                    )
+                } else {
+                    Stat(
+                        value = stats.adsBlocked.toString(),
+                        label = stringResource(R.string.netshield_ads_blocked),
+                        accent = accentColors.first,
+                        compact = compact,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Stat(
+                        value = stats.trackersBlocked.toString(),
+                        label = stringResource(R.string.netshield_trackers_blocked),
+                        accent = accentColors.second,
+                        compact = compact,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Stat(
+                        value = formatBytes(stats.savedBytes),
+                        label = stringResource(R.string.netshield_data_saved),
+                        accent = colors.notificationSuccess,
+                        compact = compact,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         }
     }

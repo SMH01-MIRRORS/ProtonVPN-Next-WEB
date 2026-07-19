@@ -626,7 +626,8 @@
     <string name="netshield_lists_never_updated">لیست ها هنوز دانلود نشده اند</string>
     <string name="netshield_lists_error">لیست‌ها به‌روزرسانی نشد: %1$s</string>
     <string name="netshield_update_lists">به روز رسانی لیست ها</string>
-    <string name="netshield_saved_estimate_note">آمار هر پنج دقیقه به روز می شود. داده‌های ذخیره‌شده تخمینی بر اساس آگهی مسدود شده و درخواست‌های ردیاب است.</string>
+    <string name="netshield_saved_estimate_note">آمار به‌طور خودکار به‌روزرسانی می‌شود. داده‌های ذخیره‌شده تخمینی بر اساس درخواست‌های مسدودشده تبلیغات و ردیاب‌ها است.</string>
+    <string name="netshield_malware_blocked">دامنه‌های مخرب مسدودشده</string>
     <string name="netshield_ads_blocked">تبلیغات مسدود شده است</string>
     <string name="netshield_trackers_blocked">ردیاب ها متوقف شدند</string>
     <string name="netshield_data_saved">داده ها ذخیره شد</string>

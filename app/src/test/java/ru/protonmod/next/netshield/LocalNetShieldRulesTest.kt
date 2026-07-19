@@ -11,7 +11,14 @@ import org.junit.Test
 
 class LocalNetShieldRulesTest {
     @Test
-    fun `recognizes ads and tracker reject logs emitted by dns router`() {
+    fun `recognizes block logs emitted by dns router`() {
+        assertEquals(
+            NetShieldCategory.MALWARE,
+            LocalNetShield.categoryFromRuleSetLog(
+                "DEBUG[0293] [970217929 25ms] dns: " +
+                    "match[1] rule_set=netshield-malware => reject"
+            )
+        )
         assertEquals(
             NetShieldCategory.ADS,
             LocalNetShield.categoryFromRuleSetLog(

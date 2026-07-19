@@ -623,7 +623,8 @@
     <string name="netshield_lists_never_updated">列表尚未下载</string>
     <string name="netshield_lists_error">无法更新列表：%1$s</string>
     <string name="netshield_update_lists">更新列表</string>
-    <string name="netshield_saved_estimate_note">统计数据每五分钟更新一次。保存的数据是根据阻止的广告和跟踪器请求进行的估计。</string>
+    <string name="netshield_saved_estimate_note">统计数据会自动更新。节省的数据量是根据被阻止的广告和跟踪器请求估算的。</string>
+    <string name="netshield_malware_blocked">已阻止恶意域名</string>
     <string name="netshield_ads_blocked">广告被屏蔽</string>
     <string name="netshield_trackers_blocked">追踪器停止了</string>
     <string name="netshield_data_saved">数据已保存</string>

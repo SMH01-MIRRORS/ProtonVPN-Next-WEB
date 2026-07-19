@@ -16,6 +16,7 @@ enum class NetShieldLevel {
 enum class NetShieldCategory { MALWARE, ADS, TRACKERS, ADULT }
 
 data class NetShieldStats(
+    val malwareBlocked: Long = 0,
     val adsBlocked: Long = 0,
     val trackersBlocked: Long = 0,
     val savedBytes: Long = 0,

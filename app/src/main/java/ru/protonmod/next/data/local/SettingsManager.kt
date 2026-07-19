@@ -139,6 +139,7 @@ class SettingsManager @Inject constructor(
         private val ANALYTICS_ENABLED = booleanPreferencesKey("analytics_enabled")
         private val TRAFFIC_STATS_ENABLED = booleanPreferencesKey("traffic_stats_enabled")
         private val NETSHIELD_LEVEL = stringPreferencesKey("netshield_level")
+        private val NETSHIELD_MALWARE_BLOCKED = longPreferencesKey("netshield_malware_blocked")
         private val NETSHIELD_ADS_BLOCKED = longPreferencesKey("netshield_ads_blocked")
         private val NETSHIELD_TRACKERS_BLOCKED = longPreferencesKey("netshield_trackers_blocked")
         private val NETSHIELD_SAVED_BYTES = longPreferencesKey("netshield_saved_bytes")
@@ -332,6 +333,7 @@ class SettingsManager @Inject constructor(
 
     val netShieldStats: Flow<NetShieldStats> = dataStore.data.map { preferences ->
         NetShieldStats(
+            malwareBlocked = preferences[NETSHIELD_MALWARE_BLOCKED] ?: 0L,
             adsBlocked = preferences[NETSHIELD_ADS_BLOCKED] ?: 0L,
             trackersBlocked = preferences[NETSHIELD_TRACKERS_BLOCKED] ?: 0L,
             savedBytes = preferences[NETSHIELD_SAVED_BYTES] ?: 0L,
@@ -408,15 +410,17 @@ class SettingsManager @Inject constructor(
 
     suspend fun resetNetShieldStats() {
         dataStore.edit {
+            it[NETSHIELD_MALWARE_BLOCKED] = 0L
             it[NETSHIELD_ADS_BLOCKED] = 0L
             it[NETSHIELD_TRACKERS_BLOCKED] = 0L
             it[NETSHIELD_SAVED_BYTES] = 0L
         }
     }
 
-    suspend fun addNetShieldStats(ads: Long, trackers: Long, savedBytes: Long) {
-        if (ads == 0L && trackers == 0L && savedBytes == 0L) return
+    suspend fun addNetShieldStats(malware: Long, ads: Long, trackers: Long, savedBytes: Long) {
+        if (malware == 0L && ads == 0L && trackers == 0L && savedBytes == 0L) return
         dataStore.edit {
+            it[NETSHIELD_MALWARE_BLOCKED] = (it[NETSHIELD_MALWARE_BLOCKED] ?: 0L) + malware
             it[NETSHIELD_ADS_BLOCKED] = (it[NETSHIELD_ADS_BLOCKED] ?: 0L) + ads
             it[NETSHIELD_TRACKERS_BLOCKED] = (it[NETSHIELD_TRACKERS_BLOCKED] ?: 0L) + trackers
             it[NETSHIELD_SAVED_BYTES] = (it[NETSHIELD_SAVED_BYTES] ?: 0L) + savedBytes

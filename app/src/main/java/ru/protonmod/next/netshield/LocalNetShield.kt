@@ -51,6 +51,7 @@ class LocalNetShield @Inject constructor(
         .build()
     private val updateMutex = Mutex()
     private val statsFlushMutex = Mutex()
+    private val pendingMalware = AtomicLong(0)
     private val pendingAds = AtomicLong(0)
     private val pendingTrackers = AtomicLong(0)
     private val pendingSavedBytes = AtomicLong(0)
@@ -73,6 +74,7 @@ class LocalNetShield @Inject constructor(
         get() = preferences.getInt(KEY_SOURCE_VERSION, 0) < SOURCE_VERSION
 
     fun beginSessionStats() {
+        pendingMalware.set(0)
         pendingAds.set(0)
         pendingTrackers.set(0)
         pendingSavedBytes.set(0)
@@ -155,6 +157,7 @@ class LocalNetShield @Inject constructor(
             classify(host)
         } ?: return
         when (category) {
+            NetShieldCategory.MALWARE -> pendingMalware.incrementAndGet()
             NetShieldCategory.ADS -> {
                 pendingAds.incrementAndGet()
                 pendingSavedBytes.addAndGet(ESTIMATED_AD_BYTES)
@@ -163,17 +166,19 @@ class LocalNetShield @Inject constructor(
                 pendingTrackers.incrementAndGet()
                 pendingSavedBytes.addAndGet(ESTIMATED_TRACKER_BYTES)
             }
-            NetShieldCategory.MALWARE, NetShieldCategory.ADULT -> Unit
+            NetShieldCategory.ADULT -> Unit
         }
     }
 
     private suspend fun flushPendingStats() = statsFlushMutex.withLock {
+        val malware = pendingMalware.getAndSet(0)
         val ads = pendingAds.getAndSet(0)
         val trackers = pendingTrackers.getAndSet(0)
         val savedBytes = pendingSavedBytes.getAndSet(0)
-        runCatching { settingsManager.addNetShieldStats(ads, trackers, savedBytes) }
+        runCatching { settingsManager.addNetShieldStats(malware, ads, trackers, savedBytes) }
             .onFailure {
                 // Restore deltas so a transient multi-process DataStore failure cannot lose counts.
+                pendingMalware.addAndGet(malware)
                 pendingAds.addAndGet(ads)
                 pendingTrackers.addAndGet(trackers)
                 pendingSavedBytes.addAndGet(savedBytes)
@@ -215,17 +220,19 @@ class LocalNetShield @Inject constructor(
         const val KEY_DOMAIN_COUNT = "domain_count"
         const val KEY_SOURCE_VERSION = "source_version"
         const val SOURCE_VERSION = 2
-        const val STATS_PUBLISH_INTERVAL_MS = 5 * 60 * 1000L
+        const val STATS_PUBLISH_INTERVAL_MS = 2_000L
         const val ESTIMATED_AD_BYTES = 150_000L
         const val ESTIMATED_TRACKER_BYTES = 4_000L
-        val RULE_SET_REJECT = Regex("rule_set=netshield-(ads|trackers)\\b.*=>\\s*reject", RegexOption.IGNORE_CASE)
+        val RULE_SET_REJECT = Regex("rule_set=netshield-(malware|ads|trackers|adult)\\b.*=>\\s*reject", RegexOption.IGNORE_CASE)
         val REJECTED_DNS = Regex("rejected\\s+(?:A|AAAA|HTTPS|SVCB)\\s+([^\\s]+)", RegexOption.IGNORE_CASE)
         val COMPATIBILITY_FILTERED_CATEGORIES = setOf(NetShieldCategory.ADS, NetShieldCategory.TRACKERS)
         internal fun categoryFromRuleSetLog(message: String): NetShieldCategory? =
             RULE_SET_REJECT.find(message)?.groupValues?.get(1)?.let { value ->
                 when (value.lowercase(Locale.ROOT)) {
+                    "malware" -> NetShieldCategory.MALWARE
                     "ads" -> NetShieldCategory.ADS
                     "trackers" -> NetShieldCategory.TRACKERS
+                    "adult" -> NetShieldCategory.ADULT
                     else -> null
                 }
             }
