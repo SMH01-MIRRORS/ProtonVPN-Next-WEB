@@ -340,7 +340,7 @@ tasks.register("generateSecurityMetadata") {
     val officialLibs = listOf(
         "libbox.so",
         "libandroidx.graphics.path.so", "libdatastore_shared_counter.so",
-        "libbyedpi.so", "libnext.so"
+        "libbyedpi.so", "libnext.so", "libtor.so"
     )
     val sentryLibs = listOf("libsentry-android.so", "libsentry.so")
     
