@@ -300,7 +300,7 @@
     <string name="st_included_ips_header">Қосылған IP-лер (%1$d)</string>
     <string name="st_no_ips_added">Әзірге IP мекенжайлары қосылмаған</string>
     <string name="st_remove_ip_desc">IP-ді алып тастау</string>
-    <string name="st_domain_hint">мысалы, example.com немесе *.ru</string>
+    <string name="st_domain_hint">мысалы, example.com немесе *.ru, *.рф</string>
     <string name="st_add_domain_desc">Домен қосу</string>
     <string name="st_invalid_domain_error">Домен форматы жарамсыз</string>
     <string name="st_excluded_domains_header">Алып тасталған домендер (%1$d)</string>

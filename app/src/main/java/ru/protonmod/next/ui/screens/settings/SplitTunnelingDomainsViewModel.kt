@@ -30,6 +30,7 @@ import javax.inject.Inject
 
 data class DomainEntry(
     val domain: String,
+    val displayDomain: String = domain,
     val isValid: Boolean = true
 )
 
@@ -48,8 +49,13 @@ class SplitTunnelingDomainsViewModel @Inject constructor(
         settingsManager.splitTunnelingMode
     ) { excludedDomains, mode ->
         SplitTunnelingDomainsUiState(
-            domains = excludedDomains.map { DomainEntry(domain = it, isValid = true) }
-                .sortedBy { it.domain },
+            domains = excludedDomains.map {
+                DomainEntry(
+                    domain = it,
+                    displayDomain = SplitTunnelingDomainRule.toDisplay(it),
+                    isValid = true
+                )
+            }.sortedBy { it.displayDomain },
             splitTunnelingMode = mode
         )
     }.stateIn(

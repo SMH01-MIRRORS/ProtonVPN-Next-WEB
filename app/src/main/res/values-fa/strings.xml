@@ -300,7 +300,7 @@
     <string name="st_included_ips_header">IPهای گنجانده شده (%1$d)</string>
     <string name="st_no_ips_added">هنوز هیچ آدرس IP اضافه نشده است</string>
     <string name="st_remove_ip_desc">حذف IP</string>
-    <string name="st_domain_hint">مثلاً example.com یا *.ru</string>
+    <string name="st_domain_hint">مثلاً example.com یا *.ru, *.рф</string>
     <string name="st_add_domain_desc">افزودن دامنه</string>
     <string name="st_invalid_domain_error">فرمت دامنه نامعتبر است</string>
     <string name="st_excluded_domains_header">دامنه‌های حذف شده (%1$d)</string>

@@ -306,7 +306,7 @@
     <string name="st_included_ips_header">Уключаныя IP (%1$d)</string>
     <string name="st_no_ips_added">IP-адрасы пакуль не дададзены</string>
     <string name="st_remove_ip_desc">Выдаліць IP</string>
-    <string name="st_domain_hint">напрыклад, example.com ці *.ru</string>
+    <string name="st_domain_hint">напрыклад, example.com ці *.ru, *.рф</string>
     <string name="st_add_domain_desc">Дадаць дамен</string>
     <string name="st_invalid_domain_error">Памылковы фармат дамена</string>
     <string name="st_excluded_domains_header">Выключаныя дамены (%1$d)</string>

@@ -14,6 +14,10 @@ class SplitTunnelingDomainRuleTest {
         assertEquals("example.com", SplitTunnelingDomainRule.normalize(" Example.COM. "))
         assertEquals("*.ru", SplitTunnelingDomainRule.normalize(" *.RU "))
         assertEquals("*.example.com", SplitTunnelingDomainRule.normalize("*.Example.COM."))
+        assertEquals("*.xn--p1ai", SplitTunnelingDomainRule.normalize("*.РФ"))
+        assertEquals("*.xn--p1ai", SplitTunnelingDomainRule.normalize(".рф"))
+        assertEquals("xn--e1afmkfd.xn--p1ai", SplitTunnelingDomainRule.normalize("пример.рф"))
+        assertEquals("*.рф", SplitTunnelingDomainRule.toDisplay("*.xn--p1ai"))
     }
 
     @Test

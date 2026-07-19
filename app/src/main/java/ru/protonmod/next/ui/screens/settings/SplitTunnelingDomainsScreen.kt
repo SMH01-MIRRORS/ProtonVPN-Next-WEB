@@ -283,7 +283,7 @@ fun SplitTunnelingDomainsScreen(
 
                         items(uiState.domains, key = { it.domain }, contentType = { "Domain" }) { domainEntry ->
                             DomainListItem(
-                                domain = domainEntry.domain,
+                                domain = domainEntry.displayDomain,
                                 onRemove = { viewModel.removeDomain(domainEntry.domain) },
                                 modifier = Modifier.padding(horizontal = 16.dp)
                             )

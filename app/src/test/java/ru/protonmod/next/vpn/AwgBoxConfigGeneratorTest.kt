@@ -175,7 +175,7 @@ class AwgBoxConfigGeneratorTest {
             localIp = "10.2.0.2",
             dnsServer = "10.2.0.1",
             targetIp = "198.51.100.1",
-            selectedDomains = setOf("*.ru", "example.com"),
+            selectedDomains = setOf("*.ru", "*.рф", "example.com"),
             obfuscationParams = AmneziaVpnManager.ObfuscationParams(
                 jc = 0, jmin = 0, jmax = 0, s1 = 0, s2 = 0,
                 h1 = "", h2 = "", h3 = "", h4 = "", i1 = ""
@@ -192,7 +192,10 @@ class AwgBoxConfigGeneratorTest {
             .single { it.getValue("tag").jsonPrimitive.content == "direct" }
 
         assertEquals(listOf("example.com"), exactRule.getValue("domain").jsonArray.map { it.jsonPrimitive.content })
-        assertEquals(listOf("ru"), suffixRule.getValue("domain_suffix").jsonArray.map { it.jsonPrimitive.content })
+        assertEquals(
+            listOf("ru", "xn--p1ai"),
+            suffixRule.getValue("domain_suffix").jsonArray.map { it.jsonPrimitive.content }
+        )
         assertEquals("direct", exactRule.getValue("outbound").jsonPrimitive.content)
         assertEquals("direct", suffixRule.getValue("outbound").jsonPrimitive.content)
         assertEquals("direct", directOutbound.getValue("type").jsonPrimitive.content)
