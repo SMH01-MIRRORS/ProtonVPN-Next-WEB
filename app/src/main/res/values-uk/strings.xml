@@ -636,4 +636,27 @@
     <string name="netshield_ads_blocked">Оголошення заблоковано</string>
     <string name="netshield_trackers_blocked">Трекери зупинилися</string>
     <string name="netshield_data_saved">Дані збережено</string>
+
+    <string name="verification_title">Перевірка підключення</string>
+    <string name="verification_settings_subtitle">Зонди, виявлення збоїв і автоматичне повторне підключення</string>
+    <string name="verification_description">Керуйте тим, як програма перевіряє новий тунель, виявляє збої підключення та автоматично повторює підключення.</string>
+    <string name="verification_mode_title">Перевірка агресивності</string>
+    <string name="verification_mode_disabled">Вимкнено</string>
+    <string name="verification_mode_disabled_desc">Не запускайте активні тунельні зонди або автоматичне виявлення збоїв</string>
+    <string name="verification_mode_relaxed">Розслаблений</string>
+    <string name="verification_mode_relaxed_desc">Менше зондів і більше терпимості до нестабільних мереж</string>
+    <string name="verification_mode_balanced">Збалансований</string>
+    <string name="verification_mode_balanced_desc">Рекомендований баланс між швидкістю реагування та помилковими спрацюваннями</string>
+    <string name="verification_mode_aggressive">Агресивний</string>
+    <string name="verification_mode_aggressive_desc">Швидко виявляйте збої та повторюйте спробу з короткими затримками</string>
+    <string name="verification_behavior_title">Поведінка підключення</string>
+    <string name="verification_require_title">Дочекайтеся перевірки</string>
+    <string name="verification_require_desc">Зберігайте з’єднання в стані перевірки, доки не завершиться початковий тест</string>
+    <string name="verification_preflight_title">Вимагати передпольотних перевірок</string>
+    <string name="verification_preflight_desc">Блокувати з’єднання, якщо не вдається перевірити фізичну мережу</string>
+    <string name="verification_failure_detection_title">Виявлення збоїв у тунелях</string>
+    <string name="verification_failure_detection_desc">Відстежуйте помилки двигуна та зупинену транспортну діяльність</string>
+    <string name="verification_auto_reconnect_title">Автоматичне повторне підключення</string>
+    <string name="verification_auto_reconnect_desc">Перезапустіть тунель після виявлення збою</string>
+    <string name="verification_note">Вимкнення перевірки не вимикає шифрування VPN. Він пропускає лише активні зонди підключення та повторне підключення на основі справності.</string>
 </resources>

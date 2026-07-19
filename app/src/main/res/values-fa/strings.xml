@@ -630,4 +630,27 @@
     <string name="netshield_ads_blocked">تبلیغات مسدود شده است</string>
     <string name="netshield_trackers_blocked">ردیاب ها متوقف شدند</string>
     <string name="netshield_data_saved">داده ها ذخیره شد</string>
+
+    <string name="verification_title">تأیید اتصال</string>
+    <string name="verification_settings_subtitle">پروب ها، تشخیص شکست و اتصال مجدد خودکار</string>
+    <string name="verification_description">کنترل کنید که برنامه چگونه یک تونل جدید را تأیید می کند، خرابی های اتصال را تشخیص می دهد و به طور خودکار دوباره وصل می شود.</string>
+    <string name="verification_mode_title">پرخاشگری تأیید</string>
+    <string name="verification_mode_disabled">از کار افتاده است</string>
+    <string name="verification_mode_disabled_desc">پروب های تونل فعال یا تشخیص خودکار خرابی را اجرا نکنید</string>
+    <string name="verification_mode_relaxed">آرام</string>
+    <string name="verification_mode_relaxed_desc">پروب های کمتر و تحمل بیشتر برای شبکه های ناپایدار</string>
+    <string name="verification_mode_balanced">متعادل</string>
+    <string name="verification_mode_balanced_desc">تعادل توصیه شده بین پاسخگویی و مثبت کاذب</string>
+    <string name="verification_mode_aggressive">تهاجمی</string>
+    <string name="verification_mode_aggressive_desc">خرابی ها را سریع تشخیص دهید و با تاخیرهای کوتاه دوباره امتحان کنید</string>
+    <string name="verification_behavior_title">رفتار اتصال</string>
+    <string name="verification_require_title">منتظر تأیید باشید</string>
+    <string name="verification_require_desc">اتصال را تا پایان پروب اولیه در حالت تأیید نگه دارید</string>
+    <string name="verification_preflight_title">نیاز به بررسی قبل از پرواز</string>
+    <string name="verification_preflight_desc">هنگامی که پروب فیزیکی شبکه از کار می افتد، اتصال را مسدود کنید</string>
+    <string name="verification_failure_detection_title">تشخیص خرابی تونل</string>
+    <string name="verification_failure_detection_desc">نظارت بر خطاهای موتور و توقف فعالیت حمل و نقل</string>
+    <string name="verification_auto_reconnect_title">اتصال مجدد خودکار</string>
+    <string name="verification_auto_reconnect_desc">پس از شناسایی خرابی، تونل را دوباره راه اندازی کنید</string>
+    <string name="verification_note">غیرفعال کردن تأیید، رمزگذاری VPN را غیرفعال نمی کند. این فقط از کاوشگرهای اتصال فعال و اتصال مجدد مبتنی بر سلامت چشم پوشی می کند.</string>
 </resources>

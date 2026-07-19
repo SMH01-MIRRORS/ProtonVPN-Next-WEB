@@ -1,0 +1,237 @@
+/*
+ * Copyright (C) 2026 SMH01
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+package ru.protonmod.next.ui.screens.settings
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.HealthAndSafety
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ru.protonmod.next.R
+import ru.protonmod.next.data.local.ConnectionVerificationMode
+import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.theme.liquidGlass
+import ru.protonmod.next.ui.utils.isTablet
+
+@Composable
+fun ConnectionVerificationSettingsScreen(
+    onBack: () -> Unit,
+    viewModel: ConnectionVerificationSettingsViewModel = hiltViewModel(),
+) {
+    val colors = ProtonNextTheme.colors
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val tablet = isTablet()
+
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        containerColor = colors.backgroundNorm,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+    ) { padding ->
+        Box(Modifier.fillMaxSize().padding(padding)) {
+            Box(
+                Modifier.fillMaxSize().background(
+                    Brush.verticalGradient(
+                        listOf(
+                            colors.brandNorm.copy(alpha = 0.25f),
+                            colors.backgroundNorm.copy(alpha = 0.1f),
+                            colors.backgroundNorm,
+                        )
+                    )
+                )
+            )
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().statusBarsPadding(),
+                horizontalAlignment = if (tablet) Alignment.CenterHorizontally else Alignment.Start,
+                contentPadding = PaddingValues(bottom = 48.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+            ) {
+                val content = if (tablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
+                item {
+                    NavigationHeader(stringResource(R.string.verification_title), onBack)
+                    Box(content.padding(top = 24.dp, bottom = 20.dp), contentAlignment = Alignment.Center) {
+                        Box(
+                            Modifier.size(104.dp).clip(CircleShape)
+                                .background(colors.brandNorm.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                Icons.Rounded.HealthAndSafety,
+                                contentDescription = null,
+                                tint = colors.brandNorm,
+                                modifier = Modifier.size(58.dp),
+                            )
+                        }
+                    }
+                    Text(
+                        stringResource(R.string.verification_title),
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                        color = colors.textNorm,
+                        textAlign = TextAlign.Center,
+                        modifier = content.padding(horizontal = 16.dp),
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        stringResource(R.string.verification_description),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.textWeak,
+                        textAlign = TextAlign.Center,
+                        modifier = content.padding(horizontal = 32.dp),
+                    )
+                }
+                item {
+                    SettingsSection(content, stringResource(R.string.verification_mode_title)) {
+                        ConnectionVerificationMode.entries.forEachIndexed { index, mode ->
+                            ModeRow(mode, state.mode == mode) { viewModel.setMode(mode) }
+                            if (index != ConnectionVerificationMode.entries.lastIndex) {
+                                HorizontalDivider(
+                                    Modifier.padding(horizontal = 16.dp),
+                                    color = colors.separatorNorm.copy(alpha = 0.5f),
+                                )
+                            }
+                        }
+                    }
+                }
+                item {
+                    AnimatedVisibility(
+                        visible = state.mode != ConnectionVerificationMode.DISABLED,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically(),
+                    ) {
+                        SettingsSection(content, stringResource(R.string.verification_behavior_title)) {
+                            VerificationToggle(
+                                R.string.verification_require_title,
+                                R.string.verification_require_desc,
+                                state.requireVerification,
+                                viewModel::setRequireVerification,
+                            )
+                            Divider()
+                            VerificationToggle(
+                                R.string.verification_preflight_title,
+                                R.string.verification_preflight_desc,
+                                state.requirePreflight,
+                                viewModel::setRequirePreflight,
+                            )
+                            Divider()
+                            VerificationToggle(
+                                R.string.verification_failure_detection_title,
+                                R.string.verification_failure_detection_desc,
+                                state.detectFailures,
+                                viewModel::setDetectFailures,
+                            )
+                            Divider()
+                            VerificationToggle(
+                                R.string.verification_auto_reconnect_title,
+                                R.string.verification_auto_reconnect_desc,
+                                state.autoReconnect,
+                                viewModel::setAutoReconnect,
+                            )
+                        }
+                    }
+                }
+                item {
+                    Text(
+                        stringResource(R.string.verification_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.textWeak,
+                        modifier = content.padding(horizontal = 24.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingsSection(modifier: Modifier, title: String, content: @Composable ColumnScope.() -> Unit) {
+    val colors = ProtonNextTheme.colors
+    Column(modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            title.uppercase(),
+            style = MaterialTheme.typography.labelMedium,
+            color = colors.textWeak,
+            modifier = Modifier.padding(start = 8.dp),
+        )
+        Column(
+            Modifier.fillMaxWidth().liquidGlass(
+                shape = RoundedCornerShape(20.dp),
+                alpha = 0.4f,
+                shadowElevation = 0.dp,
+            ).padding(vertical = 4.dp),
+            content = content,
+        )
+    }
+}
+
+@Composable
+private fun ModeRow(mode: ConnectionVerificationMode, selected: Boolean, onClick: () -> Unit) {
+    val colors = ProtonNextTheme.colors
+    val title = when (mode) {
+        ConnectionVerificationMode.DISABLED -> R.string.verification_mode_disabled
+        ConnectionVerificationMode.RELAXED -> R.string.verification_mode_relaxed
+        ConnectionVerificationMode.BALANCED -> R.string.verification_mode_balanced
+        ConnectionVerificationMode.AGGRESSIVE -> R.string.verification_mode_aggressive
+    }
+    val description = when (mode) {
+        ConnectionVerificationMode.DISABLED -> R.string.verification_mode_disabled_desc
+        ConnectionVerificationMode.RELAXED -> R.string.verification_mode_relaxed_desc
+        ConnectionVerificationMode.BALANCED -> R.string.verification_mode_balanced_desc
+        ConnectionVerificationMode.AGGRESSIVE -> R.string.verification_mode_aggressive_desc
+    }
+    Row(
+        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(title), color = colors.textNorm, fontWeight = FontWeight.Medium)
+            Text(stringResource(description), style = MaterialTheme.typography.bodySmall, color = colors.textWeak)
+        }
+        RadioButton(selected, onClick = null, colors = RadioButtonDefaults.colors(selectedColor = colors.brandNorm))
+    }
+}
+
+@Composable
+private fun VerificationToggle(title: Int, description: Int, checked: Boolean, onChange: (Boolean) -> Unit) {
+    val colors = ProtonNextTheme.colors
+    Row(
+        Modifier.fillMaxWidth().clickable { onChange(!checked) }.padding(horizontal = 16.dp, vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(title), color = colors.textNorm, fontWeight = FontWeight.Medium)
+            Text(stringResource(description), style = MaterialTheme.typography.bodySmall, color = colors.textWeak)
+        }
+        Switch(checked, onCheckedChange = onChange)
+    }
+}
+
+@Composable
+private fun Divider() {
+    HorizontalDivider(
+        Modifier.padding(horizontal = 16.dp),
+        color = ProtonNextTheme.colors.separatorNorm.copy(alpha = 0.5f),
+    )
+}

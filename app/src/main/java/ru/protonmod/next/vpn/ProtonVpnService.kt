@@ -43,6 +43,7 @@ import kotlinx.coroutines.withContext
 import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
 import ru.protonmod.next.data.state.ConnectedServerState
+import ru.protonmod.next.data.local.ConnectionVerificationMode
 import ru.protonmod.next.utils.ProtonLogger
 import java.io.File
 import java.util.Locale
@@ -87,15 +88,16 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         const val EXTRA_SESSION_ID = "session_id"
         const val EXTRA_IS_RECONNECTING = "is_reconnecting"
         const val EXTRA_VERIFIED = "verified"
+        const val EXTRA_VERIFICATION_MODE = "verification_mode"
+        const val EXTRA_VERIFICATION_REQUIRED = "verification_required"
+        const val EXTRA_FAILURE_DETECTION_ENABLED = "failure_detection_enabled"
+        const val EXTRA_AUTO_RECONNECT_ENABLED = "auto_reconnect_enabled"
         const val STATE_CONNECTING = "CONNECTING"
         const val TUNNEL_NAME = "proton_awgbox"
 
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "vpn_status_channel"
         private const val CHANNEL_SILENT_ID = "vpn_status_channel_silent"
-        private const val TRANSPORT_FAILURE_THRESHOLD = 2
-        private const val TRANSPORT_FAILURE_WINDOW_MS = 15_000L
-        private const val HEALTH_RECONNECT_COOLDOWN_MS = 15_000L
         private const val FULL_CONFIG_LOG_TAG = "ProtonVpnConfig"
         private const val LOGCAT_CHUNK_SIZE = 3_500
         private val libboxInitialized = AtomicBoolean(false)
@@ -113,6 +115,10 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     private var manualDisconnect = false
     private var notificationsEnabled = true
     private var killSwitchEnabled = false
+    private var verificationMode = ConnectionVerificationMode.BALANCED
+    private var verificationRequired = false
+    private var failureDetectionEnabled = true
+    private var autoReconnectEnabled = true
     private var logicalServerId: String? = null
     private var lastConfig: String? = null
     private var lastRx = 0L
@@ -198,10 +204,11 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         logicalServerId = intent.getStringExtra(EXTRA_LOGICAL_SERVER_ID)
         notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, true)
         killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, false)
+        readHealthSettings(intent)
         lastConfig = config
         logFullConfigToLogcat(config)
         manualDisconnect = false
-        verified = false
+        verified = verificationMode == ConnectionVerificationMode.DISABLED || !verificationRequired
         connecting = true
         updateNotification(STATE_CONNECTING)
         sendState(null)
@@ -254,7 +261,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         verified = false
         sendState(VpnTunnelState.DOWN)
         updateNotification(VpnTunnelState.DOWN.name)
-        if (killSwitchEnabled && !manualDisconnect && !lastConfig.isNullOrBlank()) {
+        if (killSwitchEnabled && autoReconnectEnabled && !manualDisconnect && !lastConfig.isNullOrBlank()) {
             reconnectJob?.cancel()
             reconnectJob = scope.launch {
                 delay(3.seconds)
@@ -265,6 +272,10 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
                     putExtra(EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
                     putExtra(EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
                     putExtra(EXTRA_IS_RECONNECTING, true)
+                    putExtra(EXTRA_VERIFICATION_MODE, verificationMode.name)
+                    putExtra(EXTRA_VERIFICATION_REQUIRED, verificationRequired)
+                    putExtra(EXTRA_FAILURE_DETECTION_ENABLED, failureDetectionEnabled)
+                    putExtra(EXTRA_AUTO_RECONNECT_ENABLED, autoReconnectEnabled)
                 }
                 startTunnel(retry)
             }
@@ -310,7 +321,22 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         if (intent.hasExtra(EXTRA_ANALYTICS_ENABLED)) {
             ProtonLogger.isAnalyticsEnabled = intent.getBooleanExtra(EXTRA_ANALYTICS_ENABLED, true)
         }
+        readHealthSettings(intent)
         updateNotification(if (connecting) STATE_CONNECTING else state.name)
+    }
+
+    private fun readHealthSettings(intent: Intent) {
+        if (intent.hasExtra(EXTRA_VERIFICATION_MODE)) {
+            verificationMode = runCatching {
+                ConnectionVerificationMode.valueOf(intent.getStringExtra(EXTRA_VERIFICATION_MODE).orEmpty())
+            }.getOrDefault(ConnectionVerificationMode.BALANCED)
+        }
+        verificationRequired = intent.getBooleanExtra(EXTRA_VERIFICATION_REQUIRED, verificationRequired)
+        failureDetectionEnabled = intent.getBooleanExtra(EXTRA_FAILURE_DETECTION_ENABLED, failureDetectionEnabled)
+        autoReconnectEnabled = intent.getBooleanExtra(EXTRA_AUTO_RECONNECT_ENABLED, autoReconnectEnabled)
+        if (!failureDetectionEnabled || verificationMode == ConnectionVerificationMode.DISABLED) {
+            resetTransportFailures()
+        }
     }
 
     private fun sendState(explicitState: VpnTunnelState?) {
@@ -425,6 +451,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     }
 
     private fun observeTransportHealth(message: String) {
+        if (!failureDetectionEnabled || verificationMode == ConnectionVerificationMode.DISABLED) return
         val normalized = message.lowercase(Locale.ROOT)
         when {
             isSuccessfulTransportActivity(normalized) -> scope.launch { resetTransportFailures() }
@@ -455,18 +482,19 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         if (state != VpnTunnelState.UP || connecting || manualDisconnect) return
 
         val now = SystemClock.elapsedRealtime()
-        if (now - lastTransportFailureAt > TRANSPORT_FAILURE_WINDOW_MS) {
+        if (now - lastTransportFailureAt > verificationMode.failureWindowMs) {
             transportFailureCount = 0
         }
         lastTransportFailureAt = now
         transportFailureCount++
         ProtonLogger.w(
             TAG,
-            "Tunnel transport health failure $transportFailureCount/$TRANSPORT_FAILURE_THRESHOLD"
+            "Tunnel transport health failure $transportFailureCount/${verificationMode.failureThreshold}"
         )
 
-        if (transportFailureCount < TRANSPORT_FAILURE_THRESHOLD) return
-        if (lastHealthReconnectAt != 0L && now - lastHealthReconnectAt < HEALTH_RECONNECT_COOLDOWN_MS) return
+        if (transportFailureCount < verificationMode.failureThreshold) return
+        if (!autoReconnectEnabled) return
+        if (lastHealthReconnectAt != 0L && now - lastHealthReconnectAt < verificationMode.reconnectCooldownMs) return
 
         lastHealthReconnectAt = now
         transportFailureCount = 0

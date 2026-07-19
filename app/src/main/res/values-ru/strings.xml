@@ -644,4 +644,27 @@
 
     <string name="vpn_session_name">Proton VPN-Next (AWGBox)</string>
     <string name="notification_channel_silent_name">Статус VPN (без звука)</string>
+
+    <string name="verification_title">Проверка подключения</string>
+    <string name="verification_settings_subtitle">Проверки, обнаружение отвалов и автореконнекты</string>
+    <string name="verification_description">Настройте проверку нового туннеля, обнаружение обрывов подключения и автоматические переподключения.</string>
+    <string name="verification_mode_title">Агрессивность проверки</string>
+    <string name="verification_mode_disabled">Отключено</string>
+    <string name="verification_mode_disabled_desc">Не выполнять активные проверки туннеля и автоматическое обнаружение отвалов</string>
+    <string name="verification_mode_relaxed">Щадящий режим</string>
+    <string name="verification_mode_relaxed_desc">Меньше проверок и больше терпимости к нестабильным сетям</string>
+    <string name="verification_mode_balanced">Сбалансированный режим</string>
+    <string name="verification_mode_balanced_desc">Рекомендуемый баланс между скоростью реакции и ложными срабатываниями</string>
+    <string name="verification_mode_aggressive">Агрессивный режим</string>
+    <string name="verification_mode_aggressive_desc">Быстро обнаруживать отвалы и повторять попытки с короткими задержками</string>
+    <string name="verification_behavior_title">Поведение подключения</string>
+    <string name="verification_require_title">Ожидать завершения проверки</string>
+    <string name="verification_require_desc">Оставлять подключение в состоянии проверки до завершения первого теста</string>
+    <string name="verification_preflight_title">Требовать предварительную проверку</string>
+    <string name="verification_preflight_desc">Не подключаться, если проверка физической сети завершилась неудачно</string>
+    <string name="verification_failure_detection_title">Обнаруживать отвалы туннеля</string>
+    <string name="verification_failure_detection_desc">Отслеживать ошибки ядра и зависание передачи данных</string>
+    <string name="verification_auto_reconnect_title">Автоматическое переподключение</string>
+    <string name="verification_auto_reconnect_desc">Перезапускать туннель после обнаруженного отвала</string>
+    <string name="verification_note">Отключение проверки не отключает шифрование VPN. Оно лишь пропускает активные проверки доступности и переподключения по состоянию туннеля.</string>
 </resources>

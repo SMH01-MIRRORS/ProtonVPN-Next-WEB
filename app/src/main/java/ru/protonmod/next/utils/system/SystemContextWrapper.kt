@@ -21,6 +21,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.content.ContextCompat
 import ru.protonmod.next.vpn.ProtonVpnService
+import ru.protonmod.next.data.local.ConnectionVerificationMode
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -35,6 +36,10 @@ class SystemContextWrapper @Inject constructor(
         sessionId: Long,
         notificationsEnabled: Boolean,
         killSwitchEnabled: Boolean,
+        verificationMode: ConnectionVerificationMode,
+        verificationRequired: Boolean,
+        failureDetectionEnabled: Boolean,
+        autoReconnectEnabled: Boolean,
         excludedApps: Set<String>,
         excludedIps: Set<String>
     ) {
@@ -45,6 +50,10 @@ class SystemContextWrapper @Inject constructor(
             putExtra(ProtonVpnService.EXTRA_SESSION_ID, sessionId)
             putExtra(ProtonVpnService.EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
             putExtra(ProtonVpnService.EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
+            putExtra(ProtonVpnService.EXTRA_VERIFICATION_MODE, verificationMode.name)
+            putExtra(ProtonVpnService.EXTRA_VERIFICATION_REQUIRED, verificationRequired)
+            putExtra(ProtonVpnService.EXTRA_FAILURE_DETECTION_ENABLED, failureDetectionEnabled)
+            putExtra(ProtonVpnService.EXTRA_AUTO_RECONNECT_ENABLED, autoReconnectEnabled)
             putStringArrayListExtra(ProtonVpnService.EXTRA_EXCLUDED_APPS, ArrayList(excludedApps))
             putStringArrayListExtra(ProtonVpnService.EXTRA_EXCLUDED_IPS, ArrayList(excludedIps))
         }
@@ -61,13 +70,26 @@ class SystemContextWrapper @Inject constructor(
         context.sendBroadcast(intent)
     }
 
-    fun updateVpnSettings(notificationsEnabled: Boolean, killSwitchEnabled: Boolean, nonFatalEnabled: Boolean, analyticsEnabled: Boolean) {
+    fun updateVpnSettings(
+        notificationsEnabled: Boolean,
+        killSwitchEnabled: Boolean,
+        nonFatalEnabled: Boolean,
+        analyticsEnabled: Boolean,
+        verificationMode: ConnectionVerificationMode,
+        verificationRequired: Boolean,
+        failureDetectionEnabled: Boolean,
+        autoReconnectEnabled: Boolean,
+    ) {
         val intent = Intent(ProtonVpnService.ACTION_UPDATE_SETTINGS).apply {
             setPackage(context.packageName)
             putExtra(ProtonVpnService.EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
             putExtra(ProtonVpnService.EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
             putExtra(ProtonVpnService.EXTRA_NON_FATAL_ENABLED, nonFatalEnabled)
             putExtra(ProtonVpnService.EXTRA_ANALYTICS_ENABLED, analyticsEnabled)
+            putExtra(ProtonVpnService.EXTRA_VERIFICATION_MODE, verificationMode.name)
+            putExtra(ProtonVpnService.EXTRA_VERIFICATION_REQUIRED, verificationRequired)
+            putExtra(ProtonVpnService.EXTRA_FAILURE_DETECTION_ENABLED, failureDetectionEnabled)
+            putExtra(ProtonVpnService.EXTRA_AUTO_RECONNECT_ENABLED, autoReconnectEnabled)
         }
         context.sendBroadcast(intent)
     }

@@ -21,22 +21,20 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.net.Uri
 import androidx.core.net.toUri
 import ru.protonmod.next.utils.ProtonLogger
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -44,10 +42,10 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
-import ru.protonmod.next.vpn.VpnTunnelState
 import java.net.Inet4Address
 import java.net.InetAddress
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.data.local.ConnectionVerificationMode
 import ru.protonmod.next.netshield.LocalNetShield
 import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.local.SessionDao
@@ -65,6 +63,7 @@ import java.security.cert.X509Certificate
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.milliseconds
 
 @Singleton
 class AmneziaVpnManager @Inject constructor(
@@ -220,9 +219,10 @@ class AmneziaVpnManager @Inject constructor(
                             when (newState) {
                                 VpnTunnelState.UP -> when {
                                     serviceVerified -> {
-                                        verificationJob?.cancel()
-                                        verificationCycle = null
                                         updateVpnState(VpnState.CONNECTED)
+                                        if (previousState != VpnTunnelState.UP) {
+                                            startTunnelVerification()
+                                        }
                                     }
                                     previousState != VpnTunnelState.UP ||
                                         _vpnState.value == VpnState.CONNECTING -> {
@@ -269,20 +269,23 @@ class AmneziaVpnManager @Inject constructor(
         // We use a single coroutine with a small initial delay to avoid competing 
         // with the main thread during critical app boot/injection window.
         applicationScope.launch {
-            delay(1000)
-            combine(
-                settingsManager.notificationsEnabled,
-                settingsManager.killSwitchEnabled,
-                settingsManager.sentryNonFatalEnabled,
-                settingsManager.analyticsEnabled
-            ) { _, _, _, _ -> }
-                .collectLatest {
-                    updateServiceSettings()
-                }
+            delay(1000.milliseconds)
+            merge(
+                settingsManager.notificationsEnabled.map { Unit },
+                settingsManager.killSwitchEnabled.map { Unit },
+                settingsManager.sentryNonFatalEnabled.map { Unit },
+                settingsManager.analyticsEnabled.map { Unit },
+                settingsManager.connectionVerificationMode.map { Unit },
+                settingsManager.connectionVerificationRequired.map { Unit },
+                settingsManager.connectionFailureDetection.map { Unit },
+                settingsManager.connectionAutoReconnect.map { Unit },
+            ).collectLatest {
+                updateServiceSettings()
+            }
         }
 
         applicationScope.launch {
-            delay(1500) // Staggered initialization
+            delay(1500.milliseconds) // Staggered initialization
             val session = sessionDao.getSession()
             if (session != null) {
                 updateCertificateState(session.wgCertificate)
@@ -327,15 +330,29 @@ class AmneziaVpnManager @Inject constructor(
             return
         }
 
-        val cycle = verificationCycle ?: vpnNetworkMonitor.beginVerificationCycle().also {
-            verificationCycle = it
-        }
         verificationJob = applicationScope.launch {
-            updateVpnState(VpnState.VERIFYING)
-            ProtonLogger.d(TAG, "Waiting for a usable VPN network")
+            val mode = settingsManager.connectionVerificationMode.first()
+            val required = settingsManager.connectionVerificationRequired.first()
+            if (mode == ConnectionVerificationMode.DISABLED) {
+                verificationCycle = null
+                updateVpnState(VpnState.CONNECTED)
+                systemContextWrapper.setVpnVerified()
+                return@launch
+            }
+
+            val cycle = verificationCycle ?: vpnNetworkMonitor.beginVerificationCycle().also {
+                verificationCycle = it
+            }
+            if (required) updateVpnState(VpnState.VERIFYING)
+            else updateVpnState(VpnState.CONNECTED)
+            ProtonLogger.d(TAG, "Checking VPN usability (${mode.name.lowercase()}, required=$required)")
 
             try {
-                val usable = vpnNetworkMonitor.awaitUsable(cycle)
+                val usable = vpnNetworkMonitor.awaitUsable(
+                    cycle = cycle,
+                    timeoutMs = mode.verificationTimeoutMs,
+                    retryDelayMs = mode.verificationRetryDelayMs,
+                )
                 if (_tunnelState.value != VpnTunnelState.UP) return@launch
 
                 if (usable) {
@@ -462,7 +479,7 @@ class AmneziaVpnManager @Inject constructor(
 
                 if (_certState.value is CertificateState.Valid) {
                     // All good, check again in 2 hours
-                    delay(PERIODIC_REFRESH_MS)
+                    delay(PERIODIC_REFRESH_MS.milliseconds)
                     currentRetryDelay = 5000L
                     continue
                 }
@@ -470,7 +487,7 @@ class AmneziaVpnManager @Inject constructor(
                 // If VPN is inactive, we only refresh certificate when connecting or already connected.
                 if (!isConnected && !_isConnecting.value) {
                     ProtonLogger.d(TAG, "Proactive refresh: VPN inactive. Skipping background periodic refresh.")
-                    delay(PERIODIC_REFRESH_MS)
+                    delay(PERIODIC_REFRESH_MS.milliseconds)
                     continue
                 }
 
@@ -479,12 +496,12 @@ class AmneziaVpnManager @Inject constructor(
                 
                 if (result.isSuccess) {
                     currentRetryDelay = 5000L
-                    delay(PERIODIC_REFRESH_MS)
+                    delay(PERIODIC_REFRESH_MS.milliseconds)
                 } else {
                     // API access is expected to be preserved, so we retry with backoff.
                     // This covers cases where internet is temporarily down.
                     ProtonLogger.w(TAG, "Proactive refresh failed, retrying in ${currentRetryDelay}ms")
-                    delay(currentRetryDelay)
+                    delay(currentRetryDelay.milliseconds)
                     currentRetryDelay = (currentRetryDelay * 2).coerceAtMost(RETRY_DELAY_MS)
                 }
             }
@@ -515,7 +532,11 @@ class AmneziaVpnManager @Inject constructor(
             notificationsEnabled = settingsManager.notificationsEnabled.first(),
             killSwitchEnabled = settingsManager.killSwitchEnabled.first(),
             nonFatalEnabled = settingsManager.sentryNonFatalEnabled.first(),
-            analyticsEnabled = settingsManager.analyticsEnabled.first()
+            analyticsEnabled = settingsManager.analyticsEnabled.first(),
+            verificationMode = settingsManager.connectionVerificationMode.first(),
+            verificationRequired = settingsManager.connectionVerificationRequired.first(),
+            failureDetectionEnabled = settingsManager.connectionFailureDetection.first(),
+            autoReconnectEnabled = settingsManager.connectionAutoReconnect.first(),
         )
     }
 
@@ -622,10 +643,16 @@ class AmneziaVpnManager @Inject constructor(
 
             // Resolve and probe over the physical network before VpnService creates/reloads TUN.
             // This prevents server switching from routing the next endpoint lookup into the old VPN.
-            val preflight = if (forceFallback) null else vpnNetworkMonitor.prepareUnderlyingConnection(
-                endpointHost = server.domain,
-                proxyChainConfig = proxyChainConfig.takeIf { proxyChainEnabled },
-            )
+            val preflight = if (forceFallback) null else runCatching {
+                vpnNetworkMonitor.prepareUnderlyingConnection(
+                    endpointHost = server.domain,
+                    proxyChainConfig = proxyChainConfig.takeIf { proxyChainEnabled },
+                )
+            }.getOrElse { error ->
+                if (settingsManager.connectionPreflightRequired.first()) throw error
+                ProtonLogger.w(TAG, "Connection preflight failed but is optional: ${error.message}")
+                null
+            }
             val proxyServerOverrides = preflight?.proxyServerOverrides.orEmpty()
 
             if (forceFallback) {
@@ -670,7 +697,7 @@ class AmneziaVpnManager @Inject constructor(
                         } catch (e: Exception) {
                             ProtonLogger.w(TAG, "DNS retry $i failed for ${server.domain}: ${e.message}")
                         }
-                        if (i < DNS_RETRY_COUNT) delay(DNS_RETRY_DELAY_MS * i)
+                        if (i < DNS_RETRY_COUNT) delay((DNS_RETRY_DELAY_MS * i).milliseconds)
                     }
                 }
 
@@ -715,7 +742,7 @@ class AmneziaVpnManager @Inject constructor(
                         val underlayIp = vpnNetworkMonitor.resolveIpv4OnUnderlying(domain)
                         val addresses = underlayIp?.let(::listOf)
                             ?: InetAddress.getAllByName(domain)
-                                .filterIsInstance<java.net.Inet4Address>()
+                                .filterIsInstance<Inet4Address>()
                                 .mapNotNull(InetAddress::getHostAddress)
                         addresses.forEach { ip ->
                             selectedIps.add("$ip/32")
@@ -797,6 +824,10 @@ class AmneziaVpnManager @Inject constructor(
                 sessionId = sessionId,
                 notificationsEnabled = settingsManager.notificationsEnabled.first(),
                 killSwitchEnabled = settingsManager.killSwitchEnabled.first(),
+                verificationMode = settingsManager.connectionVerificationMode.first(),
+                verificationRequired = settingsManager.connectionVerificationRequired.first(),
+                failureDetectionEnabled = settingsManager.connectionFailureDetection.first(),
+                autoReconnectEnabled = settingsManager.connectionAutoReconnect.first(),
                 excludedApps = selectedApps,
                 excludedIps = selectedIps
             )
@@ -885,12 +916,12 @@ class AmneziaVpnManager @Inject constructor(
 
                     disconnectInternal()
                     try {
-                        withTimeout(5000) {
+                        withTimeout(5000.milliseconds) {
                             _rawTunnelState.first { it == VpnTunnelState.DOWN }
                         }
                     } catch (_: Exception) {
                     }
-                    delay(500)
+                    delay(500.milliseconds)
                     connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams, forceFallback)
                 } finally {
                     isReconnecting = false
@@ -964,9 +995,9 @@ class AmneziaVpnManager @Inject constructor(
             ProtonLogger.d(TAG, "Connect & Go: Waiting for tunnel UP to open URL: $targetUrl")
             try {
                 // Initial delay to allow the connection attempt to start and set isConnecting=true
-                delay(1500)
+                delay(1500.milliseconds)
 
-                withTimeout(40000) {
+                withTimeout(40000.milliseconds) {
                     // 1. If we are currently in the middle of connecting, wait for it to finish
                     if (_isConnecting.value) {
                         ProtonLogger.d(TAG, "Connect & Go: VPN is connecting, waiting...")
@@ -980,7 +1011,7 @@ class AmneziaVpnManager @Inject constructor(
 
                 // 3. Extra delay to ensure routing and DNS are fully established and browser can reach the site
                 ProtonLogger.d(TAG, "Connect & Go: Tunnel is UP, waiting for routing stabilization...")
-                delay(3000)
+                delay(3000.milliseconds)
 
                 if (_tunnelState.value == VpnTunnelState.UP) {
                     val intent = Intent(Intent.ACTION_VIEW, targetUrl.toUri()).apply {

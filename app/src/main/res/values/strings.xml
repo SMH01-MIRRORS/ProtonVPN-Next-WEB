@@ -741,4 +741,27 @@
     <string name="netshield_ads_blocked">Ads blocked</string>
     <string name="netshield_trackers_blocked">Trackers stopped</string>
     <string name="netshield_data_saved">Data saved</string>
+
+    <string name="verification_title">Connection verification</string>
+    <string name="verification_settings_subtitle">Probes, failure detection and automatic reconnects</string>
+    <string name="verification_description">Control how the app verifies a new tunnel, detects connection failures and automatically reconnects.</string>
+    <string name="verification_mode_title">Verification aggressiveness</string>
+    <string name="verification_mode_disabled">Disabled</string>
+    <string name="verification_mode_disabled_desc">Do not run active tunnel probes or automatic failure detection</string>
+    <string name="verification_mode_relaxed">Relaxed</string>
+    <string name="verification_mode_relaxed_desc">Fewer probes and more tolerance for unstable networks</string>
+    <string name="verification_mode_balanced">Balanced</string>
+    <string name="verification_mode_balanced_desc">Recommended balance between responsiveness and false positives</string>
+    <string name="verification_mode_aggressive">Aggressive</string>
+    <string name="verification_mode_aggressive_desc">Detect failures quickly and retry with short delays</string>
+    <string name="verification_behavior_title">Connection behavior</string>
+    <string name="verification_require_title">Wait for verification</string>
+    <string name="verification_require_desc">Keep the connection in verifying state until the initial probe finishes</string>
+    <string name="verification_preflight_title">Require preflight checks</string>
+    <string name="verification_preflight_desc">Block connection when the physical-network probe fails</string>
+    <string name="verification_failure_detection_title">Detect tunnel failures</string>
+    <string name="verification_failure_detection_desc">Monitor engine errors and stalled transport activity</string>
+    <string name="verification_auto_reconnect_title">Automatic reconnect</string>
+    <string name="verification_auto_reconnect_desc">Restart the tunnel after a detected failure</string>
+    <string name="verification_note">Disabling verification does not disable VPN encryption. It only skips active connectivity probes and health-based reconnects.</string>
 </resources>

@@ -630,4 +630,27 @@
     <string name="netshield_ads_blocked">Жарнамалар бұғатталған</string>
     <string name="netshield_trackers_blocked">Трекерлер тоқтады</string>
     <string name="netshield_data_saved">Деректер сақталды</string>
+
+    <string name="verification_title">Қосылымды тексеру</string>
+    <string name="verification_settings_subtitle">Зондтар, ақауларды анықтау және автоматты қайта қосу</string>
+    <string name="verification_description">Қолданбаның жаңа туннельді қалай тексеретінін, қосылым ақауларын анықтайтынын және автоматты түрде қайта қосылатынын басқарыңыз.</string>
+    <string name="verification_mode_title">Тексеру агрессивтілігі</string>
+    <string name="verification_mode_disabled">Өшірілген</string>
+    <string name="verification_mode_disabled_desc">Белсенді туннель зондтарын немесе ақаулықты автоматты түрде анықтауды іске қоспаңыз</string>
+    <string name="verification_mode_relaxed">Босаңсып қалды</string>
+    <string name="verification_mode_relaxed_desc">Аз зондтар және тұрақсыз желілерге көбірек төзімділік</string>
+    <string name="verification_mode_balanced">Теңдестірілген</string>
+    <string name="verification_mode_balanced_desc">Жауаптылық пен жалған позитивтер арасындағы ұсынылатын теңгерім</string>
+    <string name="verification_mode_aggressive">Агрессивті</string>
+    <string name="verification_mode_aggressive_desc">Сәтсіздіктерді тез анықтап, қысқа кідірістермен қайталап көріңіз</string>
+    <string name="verification_behavior_title">Қосылым әрекеті</string>
+    <string name="verification_require_title">Тексеруді күтіңіз</string>
+    <string name="verification_require_desc">Бастапқы тексеру аяқталғанша қосылымды растау күйінде ұстаңыз</string>
+    <string name="verification_preflight_title">Ұшу алдындағы тексерулерді талап етеді</string>
+    <string name="verification_preflight_desc">Физикалық желі зонды сәтсіз болғанда қосылымды блоктау</string>
+    <string name="verification_failure_detection_title">Туннель ақауларын анықтау</string>
+    <string name="verification_failure_detection_desc">Қозғалтқыш қателерін және тоқтап қалған көлік әрекетін бақылаңыз</string>
+    <string name="verification_auto_reconnect_title">Автоматты қайта қосу</string>
+    <string name="verification_auto_reconnect_desc">Анықталған ақаулықтан кейін туннельді қайта іске қосыңыз</string>
+    <string name="verification_note">Растауды өшіру VPN шифрлауын өшірмейді. Ол тек белсенді қосылым тексерулерін және денсаулыққа негізделген қайта қосылымдарды өткізіп жібереді.</string>
 </resources>

@@ -43,6 +43,7 @@ sealed class Screen(val route: String) {
     data object ByeDpiTest : Screen("byedpi_test")
     data object Settings : Screen("settings")
     data object NetShield : Screen("netshield")
+    data object ConnectionVerification : Screen("connection_verification")
     data object Profiles : Screen("profiles")
     data object EditProfile : Screen("edit_profile?profileId={profileId}") {
         fun createRoute(profileId: String? = null) = if (profileId != null) "edit_profile?profileId=$profileId" else "edit_profile"
@@ -143,12 +144,19 @@ fun NavGraphBuilder.appNavGraph(
             },
             onNavigateToNetShield = {
                 navController.navigate(Screen.NetShield.route)
+            },
+            onNavigateToConnectionVerification = {
+                navController.navigate(Screen.ConnectionVerification.route)
             }
         )
     }
 
     composable(Screen.NetShield.route) {
         NetShieldSettingsScreen(onBack = { navController.popBackStack() })
+    }
+
+    composable(Screen.ConnectionVerification.route) {
+        ConnectionVerificationSettingsScreen(onBack = { navController.popBackStack() })
     }
 
     composable(Screen.CertSettings.route) {

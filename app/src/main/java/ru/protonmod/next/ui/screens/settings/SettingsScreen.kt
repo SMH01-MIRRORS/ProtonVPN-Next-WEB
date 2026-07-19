@@ -77,6 +77,7 @@ fun SettingsScreen(
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
     onNavigateToCertSettings: (() -> Unit)? = null,
     onNavigateToNetShield: (() -> Unit)? = null,
+    onNavigateToConnectionVerification: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
@@ -131,6 +132,7 @@ fun SettingsScreen(
                 onNavigateToPortSelection = onNavigateToPortSelection,
                 onNavigateToCertSettings = onNavigateToCertSettings,
                 onNavigateToNetShield = onNavigateToNetShield,
+                onNavigateToConnectionVerification = onNavigateToConnectionVerification,
                 onOtaFrequencyChange = viewModel::setOtaUpdateFrequency,
                 onCheckForUpdates = viewModel::checkForUpdates,
                 modifier = Modifier
@@ -166,7 +168,8 @@ fun SettingsContent(
     onNavigateToCountrySpoofing: (() -> Unit)? = null,
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
     onNavigateToCertSettings: (() -> Unit)? = null,
-    onNavigateToNetShield: (() -> Unit)? = null
+    onNavigateToNetShield: (() -> Unit)? = null,
+    onNavigateToConnectionVerification: (() -> Unit)? = null
 ) {
     LazyColumn(
         modifier = modifier,
@@ -238,6 +241,7 @@ fun SettingsContent(
                             onNavigateToKillSwitch = onNavigateToKillSwitch,
                             onNavigateToErrorReporting = onNavigateToErrorReporting,
                             onNavigateToNetShield = onNavigateToNetShield,
+                            onNavigateToConnectionVerification = onNavigateToConnectionVerification,
                             onAllowLanChange = onAllowLanChange,
                             onNotificationsChange = onNotificationsChange
                         )
@@ -305,6 +309,7 @@ fun SettingsContent(
                     onNavigateToKillSwitch = onNavigateToKillSwitch,
                     onNavigateToErrorReporting = onNavigateToErrorReporting,
                     onNavigateToNetShield = onNavigateToNetShield,
+                    onNavigateToConnectionVerification = onNavigateToConnectionVerification,
                     onAllowLanChange = onAllowLanChange
                 )
             }
@@ -541,7 +546,8 @@ private fun PrivacySettingsSection(
     onNavigateToCountrySpoofing: (() -> Unit)? = null,
     onNavigateToKillSwitch: (() -> Unit)? = null,
     onNavigateToErrorReporting: (() -> Unit)? = null,
-    onNavigateToNetShield: (() -> Unit)? = null
+    onNavigateToNetShield: (() -> Unit)? = null,
+    onNavigateToConnectionVerification: (() -> Unit)? = null
 ) {
     SettingsCategory(modifier = modifier, title = stringResource(R.string.settings_privacy)) {
         val currentDnsSubtitle = state.customDns.ifBlank {
@@ -553,6 +559,13 @@ private fun PrivacySettingsSection(
             title = stringResource(R.string.netshield_title),
             subtitle = stringResource(R.string.netshield_settings_subtitle),
             onClick = onNavigateToNetShield
+        )
+
+        SettingRowWithIcon(
+            icon = Icons.Rounded.HealthAndSafety,
+            title = stringResource(R.string.verification_title),
+            subtitle = stringResource(R.string.verification_settings_subtitle),
+            onClick = onNavigateToConnectionVerification
         )
 
         SettingRowWithIcon(

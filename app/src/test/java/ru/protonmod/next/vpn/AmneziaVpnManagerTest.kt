@@ -33,6 +33,7 @@ import org.mockito.kotlin.*
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.data.local.ConnectionVerificationMode
 import ru.protonmod.next.netshield.LocalNetShield
 import ru.protonmod.next.netshield.NetShieldLevel
 import ru.protonmod.next.data.network.CreateCertificateResponse
@@ -143,6 +144,11 @@ class AmneziaVpnManagerTest {
             whenever(settingsManager.excludedDomains).thenReturn(flowOf(emptySet()))
             whenever(settingsManager.sentryNonFatalEnabled).thenReturn(flowOf(true))
             whenever(settingsManager.analyticsEnabled).thenReturn(flowOf(true))
+            whenever(settingsManager.connectionVerificationMode).thenReturn(flowOf(ConnectionVerificationMode.BALANCED))
+            whenever(settingsManager.connectionVerificationRequired).thenReturn(flowOf(false))
+            whenever(settingsManager.connectionPreflightRequired).thenReturn(flowOf(false))
+            whenever(settingsManager.connectionFailureDetection).thenReturn(flowOf(true))
+            whenever(settingsManager.connectionAutoReconnect).thenReturn(flowOf(true))
             
             whenever(settingsManager.awgJc).thenReturn(flowOf(3))
             whenever(settingsManager.awgJmin).thenReturn(flowOf(1))
@@ -269,6 +275,10 @@ class AmneziaVpnManagerTest {
             sessionId = any(),
             notificationsEnabled = any(),
             killSwitchEnabled = any(),
+            verificationMode = eq(ConnectionVerificationMode.BALANCED),
+            verificationRequired = eq(false),
+            failureDetectionEnabled = eq(true),
+            autoReconnectEnabled = eq(true),
             excludedApps = any(),
             excludedIps = any()
         )
@@ -288,6 +298,7 @@ class AmneziaVpnManagerTest {
 
     @Test
     fun `cancelled verification is not converted into a connected state`() = runTest(testDispatcher) {
+        whenever(settingsManager.connectionVerificationRequired).thenReturn(flowOf(true))
         whenever(vpnNetworkMonitor.awaitUsable(any(), any(), any())).thenAnswer {
             throw kotlinx.coroutines.CancellationException("test cancellation")
         }

@@ -86,6 +86,11 @@ class SettingsManager @Inject constructor(
         private val KILL_SWITCH = booleanPreferencesKey("kill_switch")
         private val AUTO_CONNECT = booleanPreferencesKey("auto_connect")
         private val NOTIFICATIONS = booleanPreferencesKey("notifications")
+        private val CONNECTION_VERIFICATION_MODE = stringPreferencesKey("connection_verification_mode")
+        private val CONNECTION_VERIFICATION_REQUIRED = booleanPreferencesKey("connection_verification_required")
+        private val CONNECTION_PREFLIGHT_REQUIRED = booleanPreferencesKey("connection_preflight_required")
+        private val CONNECTION_FAILURE_DETECTION = booleanPreferencesKey("connection_failure_detection")
+        private val CONNECTION_AUTO_RECONNECT = booleanPreferencesKey("connection_auto_reconnect")
 
         private val OTA_UPDATE_FREQUENCY = stringPreferencesKey("ota_update_frequency") // "hourly", "daily", "weekly", "monthly", "disabled"
         private val OTA_LAST_CHECK_TIME = androidx.datastore.preferences.core.longPreferencesKey("ota_last_check_time_v2")
@@ -183,6 +188,25 @@ class SettingsManager @Inject constructor(
     val killSwitchEnabled: Flow<Boolean> = dataStore.data.map { it[KILL_SWITCH] ?: false }
     val autoConnectEnabled: Flow<Boolean> = dataStore.data.map { it[AUTO_CONNECT] ?: false }
     val notificationsEnabled: Flow<Boolean> = dataStore.data.map { it[NOTIFICATIONS] ?: true }
+    val connectionVerificationMode: Flow<ConnectionVerificationMode> = dataStore.data.map { preferences ->
+        runCatching {
+            ConnectionVerificationMode.valueOf(
+                preferences[CONNECTION_VERIFICATION_MODE] ?: ConnectionVerificationMode.BALANCED.name
+            )
+        }.getOrDefault(ConnectionVerificationMode.BALANCED)
+    }
+    val connectionVerificationRequired: Flow<Boolean> = dataStore.data.map {
+        it[CONNECTION_VERIFICATION_REQUIRED] ?: false
+    }
+    val connectionPreflightRequired: Flow<Boolean> = dataStore.data.map {
+        it[CONNECTION_PREFLIGHT_REQUIRED] ?: false
+    }
+    val connectionFailureDetection: Flow<Boolean> = dataStore.data.map {
+        it[CONNECTION_FAILURE_DETECTION] ?: true
+    }
+    val connectionAutoReconnect: Flow<Boolean> = dataStore.data.map {
+        it[CONNECTION_AUTO_RECONNECT] ?: true
+    }
 
     val defaultTheme: AppTheme
         get() = if (SystemUtils.isNothingDevice()) AppTheme.NOTHING else AppTheme.SYSTEM
@@ -405,6 +429,26 @@ class SettingsManager @Inject constructor(
 
     suspend fun setNotifications(enabled: Boolean) {
         dataStore.edit { it[NOTIFICATIONS] = enabled }
+    }
+
+    suspend fun setConnectionVerificationMode(mode: ConnectionVerificationMode) {
+        dataStore.edit { it[CONNECTION_VERIFICATION_MODE] = mode.name }
+    }
+
+    suspend fun setConnectionVerificationRequired(required: Boolean) {
+        dataStore.edit { it[CONNECTION_VERIFICATION_REQUIRED] = required }
+    }
+
+    suspend fun setConnectionPreflightRequired(required: Boolean) {
+        dataStore.edit { it[CONNECTION_PREFLIGHT_REQUIRED] = required }
+    }
+
+    suspend fun setConnectionFailureDetection(enabled: Boolean) {
+        dataStore.edit { it[CONNECTION_FAILURE_DETECTION] = enabled }
+    }
+
+    suspend fun setConnectionAutoReconnect(enabled: Boolean) {
+        dataStore.edit { it[CONNECTION_AUTO_RECONNECT] = enabled }
     }
 
     suspend fun setOtaUpdateFrequency(frequency: String) {
