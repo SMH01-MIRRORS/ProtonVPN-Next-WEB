@@ -7,6 +7,7 @@
 - [x] Add official-style statistics to the phone dashboard and a compact map overlay on tablet/desktop.
 - [x] Add a NetShield settings entry and screen with level selection and manual list updates.
 - [x] Add focused tests and run a debug build.
+- [x] Fix URLhaus malware hosts parsing for tab-separated entries.
 
 ## Levels
 

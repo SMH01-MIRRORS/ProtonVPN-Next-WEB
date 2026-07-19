@@ -79,7 +79,7 @@ class LocalNetShield @Inject constructor(
                         check(response.isSuccessful) { "${source.category}: HTTP ${response.code}" }
                         response.body.string()
                     }
-                    val parsed = parseDomains(body)
+                    val parsed = NetShieldDomainParser.parse(body)
                     check(parsed.isNotEmpty()) { "${source.category}: empty rule list" }
                     source.category to parsed
                 }
@@ -145,23 +145,12 @@ class LocalNetShield @Inject constructor(
         check(domainTmp.renameTo(domainFile) || domainTmp.copyTo(domainFile, overwrite = true).let { domainTmp.delete(); true })
     }
 
-    internal fun parseDomains(content: String): Set<String> = content.lineSequence().mapNotNull { raw ->
-        val line = raw.trim()
-        when {
-            line.isBlank() || line.startsWith('!') || line.startsWith('#') || line.startsWith("@@") -> null
-            line.startsWith("||") -> line.removePrefix("||").substringBefore('^').substringBefore('$')
-            line.startsWith("0.0.0.0 ") || line.startsWith("127.0.0.1 ") -> line.substringAfter(' ').trim().substringBefore(' ')
-            DOMAIN.matches(line) -> line
-            else -> null
-        }?.lowercase(Locale.ROOT)?.trimEnd('.')?.takeIf { DOMAIN.matches(it) && it != "localhost" }
-    }.toSet()
 
     private companion object {
         const val KEY_UPDATED_AT = "updated_at"
         const val KEY_DOMAIN_COUNT = "domain_count"
         const val ESTIMATED_AD_BYTES = 150_000L
         const val ESTIMATED_TRACKER_BYTES = 4_000L
-        val DOMAIN = Regex("^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,63}$")
         val REJECTED_DNS = Regex("rejected\\s+(?:A|AAAA|HTTPS|SVCB)\\s+([^\\s]+)", RegexOption.IGNORE_CASE)
         val SOURCES = listOf(
             Source(NetShieldCategory.MALWARE, "https://urlhaus.abuse.ch/downloads/hostfile/", "malware"),
