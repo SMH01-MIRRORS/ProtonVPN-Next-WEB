@@ -6,130 +6,145 @@
 
 ## English
 
-This document provides a comprehensive technical guide to the Proton VPN API, reverse-engineered and implemented in this project. Since official documentation is unavailable, this serves as a primary reference for the networking layer.
+This document provides a comprehensive technical guide to the Proton VPN API, reverse-engineered and implemented in the ProtonVPN-Next project. It covers authentication, infrastructure, tunnel management, and censorship resistance.
 
 ### 1. Infrastructure & Base URLs
 
-Proton uses several domains for its API. In case of censorship, the app can switch between them.
+Proton utilizes multiple domains to ensure service availability. The app dynamically switches between them based on connectivity and censorship.
 
 - **Primary:** `https://vpn-api.proton.me/`
 - **Secondary:** `https://api.protonmail.ch/`
 - **Alternative:** `https://api.protonvpn.ch/`
 
-### 2. Networking Layer (`NetworkModule`)
+#### Censorship Resistance (DoH Fallback)
+If all primary domains are blocked, the client uses **DNS-over-HTTPS** to discover alternative API hosts.
+- **Query Method:** TXT record lookup via Google/Cloudflare DoH.
+- **Domain Pattern:** `[session_id.]d[base32_host].protonpro.xyz`
+- **Example:** A query for `dvpn-api.proton.me.protonpro.xyz` returns a list of hidden mirrors (e.g., Netlify or Cloudfront endpoints).
 
-Proton's backend is highly sensitive to headers. If they are missing or incorrect, the server returns `403 Forbidden` or `422 Unprocessable Entity`.
+### 2. Networking Layer & Security
 
-#### Headers Implementation
-All requests must be intercepted to include these mandatory headers:
+Proton's backend strictly validates client identity via headers and SSL parameters.
 
-```kotlin
-val headerInterceptor = Interceptor { chain ->
-    val userAgent = "ProtonVPN/5.15.95.5 (Android XX; MODEL XXX-XXX)"
-    val request = chain.request().newBuilder()
-        .addHeader("User-Agent", userAgent)
-        .addHeader("x-pm-appversion", "android-vpn@5.15.95.5-dev+play")
-        .addHeader("x-pm-apiversion", "4")
-        .addHeader("Accept", "application/vnd.protonmail.v1+json")
-        .build()
-    chain.proceed(request)
-}
-```
+#### Mandatory Headers
+Every request must include the following headers, or the server will return `403 Forbidden`.
+
+| Header | Example Value | Description |
+| :--- | :--- | :--- |
+| `User-Agent` | `ProtonVPN/5.15.x (Android ...)` | Identifies the client platform and version. |
+| `x-pm-appversion` | `android-vpn@5.15.95.5-dev+play` | Specific build identifier. |
+| `x-pm-apiversion` | `4` | API version (v4 is standard for core/auth). |
+| `Accept` | `application/vnd.protonmail.v1+json` | Content negation. |
+| `x-pm-uid` | `SESSION_ID` | Required for authenticated requests. |
+
+#### Certificate Pinning (SPKI)
+The app implements strict certificate pinning using SHA-256 SPKI hashes for all known Proton domains and fallback mirrors to prevent MITM attacks in hostile network environments.
 
 ### 3. Authentication Flow
 
-#### A. Standard Login (SRP Protocol)
-Proton uses **Secure Remote Password (SRP)**. This allows authentication without ever sending the password to the server.
+#### A. Standard Login (SRP-6a)
+Proton uses the **Secure Remote Password (SRP)** protocol, ensuring the password is never sent to the server.
 
-1. **Get Auth Info (`POST /auth/v4/info`):** Retrieves the server's SRP parameters (Modulus, Salt, ServerEphemeral).
-2. **Perform Login (`POST /auth/v4`):** The client computes the `ClientProof` (M2) locally and sends it along with the `ClientEphemeral` (A).
-3. **2FA (`POST /auth/v4/2fa`):** If enabled, requires a TOTP code.
+1.  **Get Auth Info (`POST /auth/v4/info`):**
+    - **Body:** `{"Username": "...", "Intent": "Auto"}`
+    - **Returns:** `Modulus`, `ServerEphemeral`, `Salt`, `SRPSession`.
+2.  **Perform Login (`POST /auth/v4`):**
+    - **Body:** Includes `ClientEphemeral` and `ClientProof` (computed locally).
+    - **Returns:** `AccessToken`, `RefreshToken`, `UID` (Session ID).
+3.  **Two-Factor Auth (`POST /auth/v4/2fa`):**
+    - Required if `Code` 8003 is returned.
+4.  **Session Refresh (`POST /auth/v4/refresh`):**
+    - Uses a short-lived `AccessToken` and a long-lived `RefreshToken`.
 
 #### B. Loginless / Guest Authentication
-Allows users to connect to free servers without creating a permanent account or providing credentials.
+For free users without accounts, the app uses a multi-step "credentialless" flow.
 
-1. **Anonymous Session (`POST /auth/v4/sessions`):**
-   - **Body:** Requires a `challengePayload` (JSON containing device info and integrity hashes).
-   - **Headers:** Supports CAPTCHA via `x-pm-human-verification-token`.
-   - **Returns:** An anonymous `AccessToken` and `UID`.
-
-2. **Credentialless Upgrade (`POST /auth/v4/credentialless`):**
-   - **Auth:** Uses the anonymous token as `Authorization: Bearer <token>`.
-   - **Body:** Same `challengePayload`.
-   - **Returns:** Full session tokens (`AccessToken`, `RefreshToken`, `UID`) for VPN usage.
+1.  **Create Anonymous Session (`POST /auth/v4/sessions`):**
+    - Requires a `challengePayload` (device integrity data).
+    - Returns a temporary `AccessToken`.
+2.  **Credentialless Upgrade (`POST /auth/v4/credentialless`):**
+    - Exchanges the anonymous token for a full VPN session.
+    - Uses the same `challengePayload` for verification.
 
 ### 4. VPN & Tunnel Management
 
-#### A. Fetching Logical Servers (`GET /vpn/v2/logicals`)
-Returns the hierarchy of locations. Supports delta updates via `If-Modified-Since`.
-- **Query Params:**
-    - `WithEntriesForProtocols=wireguard`: Only fetch servers supporting WireGuard.
-    - `WithState=true`: Include current maintenance/online status.
-- **Key Field:** `X25519PublicKey` – The server's public key for WireGuard.
+#### A. Logical Servers (`GET /vpn/v2/logicals`)
+Retrieves the complete server list. Supports incremental updates via `If-Modified-Since`.
 
-#### B. Server Loads (`GET /vpn/v1/loads`)
-Returns current load data for all servers.
+- **Parameters:**
+    - `WithEntriesForProtocols=wireguard`: Filters for WireGuard support.
+    - `WithState=true`: Includes real-time status (Online/Maintenance).
+- **Structure:** `LogicalServer` -> `PhysicalServer`.
+- **Key Field:** `X25519PublicKey` – The server's public key for the handshake.
 
-#### C. Registering WireGuard Keys (`POST /vpn/v1/certificate`)
-This endpoint is used to register your local public key on the Proton backend.
-- **Request:** `{"ClientPublicKey": "YOUR_BASE64_PUBLIC_KEY"}`
-- **Response:** Returns the internal IP (`10.x.x.x`) assigned to your tunnel and DNS settings.
+#### B. Certificate & Key Registration (`POST /vpn/v1/certificate`)
+This endpoint "activates" a client's public key on the backend to allow a VPN connection.
 
-#### D. Location Info (`GET /vpn/v1/location`)
-Retrieves the client's current public IP and geographic location.
+- **Request:**
+  ```json
+  {
+    "ClientPublicKey": "BASE64_ED25519_KEY",
+    "Mode": "persistent" 
+  }
+  ```
+- **Certificate Modes:**
+    - **Standard (Ephemeral):** Default. The registration is short-lived.
+    - **Persistent (Extended):** Requested via `Mode: "persistent"`. Used for "Always-on" or stable connections where the key shouldn't rotate frequently.
+- **Response:**
+    - `IPv4` / `IPv6`: Internal tunnel IPs (e.g., `10.2.0.2`).
+    - `DNS`: List of internal DNS servers.
+    - `RefreshTime`: When the client should renew the registration.
+
+#### C. User VPN Status (`GET /vpn/v2`)
+Returns the user's subscription tier (`MaxTier`), concurrent connection limits (`MaxConnect`), and VPN-specific credentials.
+
+### 5. Localized Data
+- **City Names (`GET /vpn/v1/cities/names`):** Fetches localized translations for server locations based on `x-pm-locale`.
 
 ---
 
 ## Русский
 
-Это самое полное техническое руководство по API Proton VPN, воссозданное в процессе разработки этого клиента.
+Данный документ представляет собой техническое руководство по API Proton VPN, разработанное в рамках проекта ProtonVPN-Next.
 
-### 1. Инфраструктура и Базовые URL
+### 1. Инфраструктура
 
-- **Основной:** `https://vpn-api.proton.me/`
-- **Дополнительный:** `https://api.protonmail.ch/`
+- **Основные домены:** `vpn-api.proton.me`, `api.protonmail.ch`.
+- **Обход блокировок (DoH):** В случае блокировки доменов, приложение использует DNS-over-HTTPS для поиска зеркал через TXT-записи домена `protonpro.xyz`.
 
-### 2. Сетевой уровень (`NetworkModule`)
+### 2. Сетевой уровень
 
-Бэкенд Proton требует специфические заголовки `User-Agent`, `x-pm-appversion` и `x-pm-apiversion`. Без них сервер вернет `403`.
+Для успешных запросов обязательны заголовки:
+- `x-pm-appversion`: Версия приложения.
+- `x-pm-apiversion`: `4`.
+- `User-Agent`: Специфическая строка ProtonVPN.
 
-### 3. Процесс аутентификации
+Безопасность обеспечивается через **Certificate Pinning** (SPKI) для всех узлов API.
 
-#### A. Стандартный вход (SRP Протокол)
-Используется **Secure Remote Password (SRP)**, что исключает передачу пароля в открытом или зашифрованном виде.
+### 3. Аутентификация
 
-1. **Auth Info (`POST /auth/v4/info`):** Получение соли и параметров сервера.
-2. **Perform Login (`POST /auth/v4`):** Передача доказательства владения паролем (`ClientProof`).
-3. **2FA (`POST /auth/v4/2fa`):** Проверка двухфакторного кода.
+#### A. SRP (Secure Remote Password)
+Протокол исключает передачу пароля. Клиент доказывает владение паролем локально, обмениваясь эфемерными ключами с сервером (`auth/v4/info` и `auth/v4`).
 
-#### B. Вход без учетных данных (Loginless / Guest)
-Позволяет подключаться к бесплатным серверам без регистрации.
+#### B. Вход без регистрации (Loginless)
+Метод для новых пользователей, позволяющий получить доступ к бесплатным серверам без создания аккаунта, используя проверку целостности устройства (`challengePayload`).
 
-1. **Анонимная сессия (`POST /auth/v4/sessions`):**
-   - **Тело:** Требует `challengePayload` (JSON с данными об устройстве и хешами целостности).
-   - **Капча:** Поддерживается через заголовки `x-pm-human-verification-token`.
-   - **Результат:** Временный анонимный `AccessToken` и `UID`.
+### 4. Управление VPN
 
-2. **Апгрейд до VPN-сессии (`POST /auth/v4/credentialless`):**
-   - **Авторизация:** Используется полученный анонимный токен в заголовке `Authorization: Bearer <token>`.
-   - **Тело:** Тот же `challengePayload`.
-   - **Результат:** Полноценные токены сессии (`AccessToken`, `RefreshToken`) для работы с VPN.
+#### A. Список серверов (`vpn/v2/logicals`)
+Иерархический список локаций. Важное поле: `X25519PublicKey` — публичный ключ сервера для WireGuard.
 
-### 4. Управление VPN и Туннелем
+#### B. Типы сертификатов (`vpn/v1/certificate`)
+При регистрации публичного ключа клиента можно указать режим:
+- **Стандартный (Ephemeral):** Краткосрочная привязка ключа.
+- **Персистентный (Persistent):** Режим «расширенного сертификата», предотвращающий частую ротацию ключей и обеспечивающий стабильность при «Always-on» VPN.
 
-#### A. Список серверов (`GET /vpn/v2/logicals`)
-Иерархия локаций. Поддерживает инкрементальные обновления через `If-Modified-Since`.
-- **Важное поле:** `X25519PublicKey` – Публичный ключ сервера для WireGuard.
+#### C. Ответ сервера при регистрации:
+- **IPv4/IPv6:** Внутренние IP-адреса туннеля (обычно подсеть `10.2.0.0/16`).
+- **DNS:** Список защищенных DNS-серверов Proton.
 
-#### B. Загрузка серверов (`GET /vpn/v1/loads`)
-Процент нагрузки серверов для динамического выбора наименее загруженного.
-
-#### C. Регистрация ключей WireGuard (`POST /vpn/v1/certificate`)
-"Привязка" вашего публичного ключа.
-- **Результат:** Внутренний IP (`10.x.x.x`) и DNS.
-
-#### D. Информация о местоположении (`GET /vpn/v1/location`)
-Текущий публичный IP и геопозиция клиента.
+### 5. Локализация
+Эндпоинт `vpn/v1/cities/names` возвращает переводы названий городов для отображения в интерфейсе в соответствии с заголовком `x-pm-locale`.
 
 ---
 
