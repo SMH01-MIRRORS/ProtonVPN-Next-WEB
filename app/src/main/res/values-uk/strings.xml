@@ -660,4 +660,14 @@
     <string name="verification_auto_reconnect_title">Автоматичне повторне підключення</string>
     <string name="verification_auto_reconnect_desc">Перезапустіть тунель після виявлення збою</string>
     <string name="verification_note">Вимкнення перевірки не вимикає шифрування VPN. Він пропускає лише активні зонди підключення та повторне підключення на основі справності.</string>
+
+    <string name="reconnect_required_title">Потрібне перепідключення</string>
+    <string name="reconnect_required_message">Налаштування підключення змінено, поки VPN активний. Нова конфігурація застосується після перепідключення.</string>
+    <string name="reconnect_required_message_manual">Налаштування підключення змінено, поки VPN активний. Нова конфігурація застосується після відключення та повторного підключення.</string>
+    <string name="reconnect_required_action">Перепідключитися</string>
+    <string name="reconnect_required_later">Пізніше</string>
+    <string name="reconnect_required_understood">Зрозуміло</string>
+    <string name="reconnect_required_dont_show_again">Більше не показувати</string>
+    <string name="settings_reconnect_hint">Нагадування про перепідключення</string>
+    <string name="settings_reconnect_hint_desc">Попереджати, що змінені налаштування підключення застосовуються лише після перепідключення</string>
 </resources>

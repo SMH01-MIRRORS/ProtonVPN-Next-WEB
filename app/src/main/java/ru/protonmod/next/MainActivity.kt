@@ -65,6 +65,7 @@ import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.local.SetupStep
 import ru.protonmod.next.ota.OTAUpdateScreen
 import ru.protonmod.next.ui.components.LiquidGlassBottomBar
+import ru.protonmod.next.ui.components.ReconnectRequiredDialog
 import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.nav.Screen
 import ru.protonmod.next.ui.nav.appNavGraph
@@ -73,15 +74,25 @@ import ru.protonmod.next.ui.screens.settings.PolicyAcceptanceScreen
 import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.ProvideDeviceType
+import ru.protonmod.next.vpn.ReconnectPromptManager
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val sessionDao: SessionDao,
-    private val settingsManager: SettingsManager
+    private val settingsManager: SettingsManager,
+    private val reconnectPromptManager: ReconnectPromptManager
 ) : ViewModel() {
     private val _startDestination = MutableStateFlow("")
     val startDestination: StateFlow<String> = _startDestination.asStateFlow()
+
+    val reconnectPrompt: StateFlow<ReconnectPromptManager.State> = reconnectPromptManager.state
+
+    fun postponeReconnect() = reconnectPromptManager.postpone()
+
+    fun reconnectNow() = reconnectPromptManager.reconnectNow()
+
+    fun disableReconnectPrompt() = reconnectPromptManager.disablePrompt()
 
     val session = sessionDao.getSessionFlow()
         .stateIn(
@@ -196,6 +207,16 @@ class MainActivity : ComponentActivity() {
 
                         val otaViewModel: ru.protonmod.next.ota.OTAUpdateViewModel = hiltViewModel()
                         OTAUpdateOverlay(viewModel = otaViewModel)
+
+                        val reconnectPrompt by viewModel.reconnectPrompt.collectAsStateWithLifecycle()
+                        if (reconnectPrompt.isVisible) {
+                            ReconnectRequiredDialog(
+                                canReconnect = reconnectPrompt.canReconnect,
+                                onPostpone = viewModel::postponeReconnect,
+                                onReconnect = viewModel::reconnectNow,
+                                onDisablePrompt = viewModel::disableReconnectPrompt
+                            )
+                        }
                     }
                 }
             }

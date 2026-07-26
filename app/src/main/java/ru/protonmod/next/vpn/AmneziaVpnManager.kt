@@ -159,6 +159,19 @@ class AmneziaVpnManager @Inject constructor(
     val tunnelState: StateFlow<VpnTunnelState> = _tunnelState
 
     private val _rawTunnelState = MutableStateFlow(VpnTunnelState.DOWN)
+
+    /** Parameters of the last connection attempt, replayed by [reconnectCurrent]. */
+    private data class LastConnectionRequest(
+        val logicalServerId: String,
+        val server: PhysicalServer,
+        val overridePort: Int?,
+        val overrideObfuscation: Boolean?,
+        val obfuscationParams: ObfuscationParams?
+    )
+
+    @Volatile
+    private var lastConnectionRequest: LastConnectionRequest? = null
+
     private var isReconnecting = false
     private var isPaused = false
     private var pauseJob: Job? = null
@@ -608,6 +621,14 @@ class AmneziaVpnManager @Inject constructor(
         forceFallback: Boolean = false
     ): Result<Unit> = withContext(dispatcherProvider.io()) {
         try {
+            lastConnectionRequest = LastConnectionRequest(
+                logicalServerId = logicalServerId,
+                server = server,
+                overridePort = overridePort,
+                overrideObfuscation = overrideObfuscation,
+                obfuscationParams = obfuscationParams
+            )
+
             val serverLogInfo = "${server.id} (Domain: ${server.domain}, LogicalID: $logicalServerId)"
             ProtonLogger.i(TAG, "Initiating connection to server: $serverLogInfo")
             ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: Start ($serverLogInfo)", "INFO", "vpn.connect")
@@ -933,6 +954,40 @@ class AmneziaVpnManager @Inject constructor(
                     isReconnecting = false
                 }
             }
+        }
+    }
+
+    /**
+     * True when the current tunnel was established by this process, so its parameters (server,
+     * profile port and obfuscation overrides) can be replayed by [reconnectCurrent].
+     */
+    fun canReconnectCurrent(): Boolean = lastConnectionRequest != null
+
+    /**
+     * Re-establishes the active tunnel with the same target and overrides, picking up connection
+     * settings that were changed after it was established.
+     */
+    fun reconnectCurrent() {
+        val request = lastConnectionRequest ?: run {
+            ProtonLogger.w(TAG, "Reconnect requested, but no previous connection is known")
+            return
+        }
+
+        applicationScope.launch {
+            val session = sessionDao.getSession() ?: run {
+                ProtonLogger.w(TAG, "Reconnect requested without an active session")
+                return@launch
+            }
+            ProtonLogger.action(TAG, "Reconnecting to apply changed connection settings")
+            reconnect(
+                logicalServerId = request.logicalServerId,
+                server = request.server,
+                session = session,
+                overridePort = request.overridePort,
+                overrideObfuscation = request.overrideObfuscation,
+                obfuscationParams = request.obfuscationParams,
+                logicalServer = connectedServerState.connectedServer.value
+            )
         }
     }
 

@@ -670,4 +670,14 @@
     <string name="verification_note">Отключение проверки не отключает шифрование VPN. Оно лишь пропускает активные проверки доступности и переподключения по состоянию туннеля.</string>
     <string name="settings_tor_mode">Режим Tor</string>
     <string name="settings_tor_mode_desc">Направлять трафик VPN через Tor. Пока режим активен, UDP-трафик блокируется.</string>
+
+    <string name="reconnect_required_title">Нужно переподключение</string>
+    <string name="reconnect_required_message">Настройки подключения изменены во время активного VPN. Новая конфигурация применится после переподключения.</string>
+    <string name="reconnect_required_message_manual">Настройки подключения изменены во время активного VPN. Новая конфигурация применится после отключения и повторного подключения.</string>
+    <string name="reconnect_required_action">Переподключиться</string>
+    <string name="reconnect_required_later">Позже</string>
+    <string name="reconnect_required_understood">Понятно</string>
+    <string name="reconnect_required_dont_show_again">Больше не показывать</string>
+    <string name="settings_reconnect_hint">Напоминание о переподключении</string>
+    <string name="settings_reconnect_hint_desc">Предупреждать, что изменённые настройки подключения применяются только после переподключения</string>
 </resources>

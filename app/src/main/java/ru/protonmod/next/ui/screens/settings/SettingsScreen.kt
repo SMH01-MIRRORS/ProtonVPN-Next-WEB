@@ -114,6 +114,7 @@ fun SettingsScreen(
                 state = uiState,
                 isTablet = isTablet,
                 onAutoConnectChange = viewModel::setAutoConnect,
+                onReconnectHintChange = viewModel::setReconnectHintEnabled,
                 onNotificationsChange = viewModel::setNotifications,
                 onLogout = viewModel::logout,
                 onAllowLanChange = viewModel::setAllowLanEnabled,
@@ -148,6 +149,7 @@ fun SettingsScreen(
 fun SettingsContent(
     state: SettingsUiState,
     onAutoConnectChange: (Boolean) -> Unit,
+    onReconnectHintChange: (Boolean) -> Unit,
     onNotificationsChange: (Boolean) -> Unit,
     onAllowLanChange: (Boolean) -> Unit,
     onTorModeChange: (Boolean) -> Unit,
@@ -222,6 +224,7 @@ fun SettingsContent(
                         ConnectionSettingsSection(
                             state = state,
                             onAutoConnectChange = onAutoConnectChange,
+                            onReconnectHintChange = onReconnectHintChange,
                             onNavigateToApiBypass = onNavigateToApiBypass,
                             onNavigateToPortSelection = onNavigateToPortSelection,
                             onNavigateToCertSettings = onNavigateToCertSettings
@@ -286,6 +289,7 @@ fun SettingsContent(
                 ConnectionSettingsSection(
                     state = state,
                     onAutoConnectChange = onAutoConnectChange,
+                    onReconnectHintChange = onReconnectHintChange,
                     modifier = contentModifier,
                     onNavigateToApiBypass = onNavigateToApiBypass,
                     onNavigateToPortSelection = onNavigateToPortSelection,
@@ -455,6 +459,7 @@ private fun WidgetSettingsSection(modifier: Modifier = Modifier) {
 private fun ConnectionSettingsSection(
     state: SettingsUiState,
     onAutoConnectChange: (Boolean) -> Unit,
+    onReconnectHintChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     onNavigateToApiBypass: (() -> Unit)? = null,
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
@@ -467,6 +472,14 @@ private fun ConnectionSettingsSection(
             subtitle = stringResource(R.string.settings_auto_connect_desc),
             checked = state.autoConnectEnabled,
             onCheckedChange = onAutoConnectChange
+        )
+
+        SettingToggleRow(
+            icon = Icons.Rounded.NotificationImportant,
+            title = stringResource(R.string.settings_reconnect_hint),
+            subtitle = stringResource(R.string.settings_reconnect_hint_desc),
+            checked = state.reconnectHintEnabled,
+            onCheckedChange = onReconnectHintChange
         )
 
         SettingRowWithIcon(

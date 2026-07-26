@@ -654,4 +654,14 @@
     <string name="verification_auto_reconnect_title">اتصال مجدد خودکار</string>
     <string name="verification_auto_reconnect_desc">پس از شناسایی خرابی، تونل را دوباره راه اندازی کنید</string>
     <string name="verification_note">غیرفعال کردن تأیید، رمزگذاری VPN را غیرفعال نمی کند. این فقط از کاوشگرهای اتصال فعال و اتصال مجدد مبتنی بر سلامت چشم پوشی می کند.</string>
+
+    <string name="reconnect_required_title">برای اعمال تغییرات دوباره وصل شوید</string>
+    <string name="reconnect_required_message">تنظیمات اتصال در حالی که VPN متصل است تغییر کرد. پیکربندی جدید پس از اتصال مجدد اعمال می‌شود.</string>
+    <string name="reconnect_required_message_manual">تنظیمات اتصال در حالی که VPN متصل است تغییر کرد. پیکربندی جدید پس از قطع و وصل دوباره اعمال می‌شود.</string>
+    <string name="reconnect_required_action">اتصال مجدد</string>
+    <string name="reconnect_required_later">بعداً</string>
+    <string name="reconnect_required_understood">متوجه شدم</string>
+    <string name="reconnect_required_dont_show_again">دیگر نمایش نده</string>
+    <string name="settings_reconnect_hint">یادآوری اتصال مجدد</string>
+    <string name="settings_reconnect_hint_desc">هشدار بده که تنظیمات تغییریافتهٔ اتصال فقط پس از اتصال مجدد اعمال می‌شوند</string>
 </resources>

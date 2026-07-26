@@ -25,6 +25,10 @@ import androidx.datastore.preferences.core.Preferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -166,6 +170,8 @@ class SettingsManager @Inject constructor(
 
         private val ALLOW_LAN_CONNECTIONS = booleanPreferencesKey("allow_lan_connections")
 
+        private val RECONNECT_HINT_ENABLED = booleanPreferencesKey("reconnect_hint_enabled")
+
         private val AWG_JC = intPreferencesKey("awg_jc")
         private val AWG_JMIN = intPreferencesKey("awg_jmin")
         private val AWG_JMAX = intPreferencesKey("awg_jmax")
@@ -185,6 +191,30 @@ class SettingsManager @Inject constructor(
         private val AWG_JUNK_LEVEL = intPreferencesKey("awg_junk_level")
 
         const val DEFAULT_I1 = "<b 0xce000000010897a297ecc34cd6dd000044d0ec2e2e1ea2991f467ace4222129b5a098823784694b4897b9986ae0b7280135fa85e196d9ad980b150122129ce2a9379531b0fd3e871ca5fdb883c369832f730e272d7b8b74f393f9f0fa43f11e510ecb2219a52984410c204cf875585340c62238e14ad04dff382f2c200e0ee22fe743b9c6b8b043121c5710ec289f471c91ee414fca8b8be8419ae8ce7ffc53837f6ade262891895f3f4cecd31bc93ac5599e18e4f01b472362b8056c3172b513051f8322d1062997ef4a383b01706598d08d48c221d30e74c7ce000cdad36b706b1bf9b0607c32ec4b3203a4ee21ab64df336212b9758280803fcab14933b0e7ee1e04a7becce3e2633f4852585c567894a5f9efe9706a151b615856647e8b7dba69ab357b3982f554549bef9256111b2d67afde0b496f16962d4957ff654232aa9e845b61463908309cfd9de0a6abf5f425f577d7e5f6440652aa8da5f73588e82e9470f3b21b27b28c649506ae1a7f5f15b876f56abc4615f49911549b9bb39dd804fde182bd2dcec0c33bad9b138ca07d4a4a1650a2c2686acea05727e2a78962a840ae428f55627516e73c83dd8893b02358e81b524b4d99fda6df52b3a8d7a5291326e7ac9d773c5b43b8444554ef5aea104a738ed650aa979674bbed38da58ac29d87c29d387d80b526065baeb073ce65f075ccb56e47533aef357dceaa8293a523c5f6f790be90e4731123d3c6152a70576e90b4ab5bc5ead01576c68ab633ff7d36dcde2a0b2c68897e1acfc4d6483aaaeb635dd63c96b2b6a7a2bfe042f6aed82e5363aa850aace12ee3b1a93f30d8ab9537df483152a5527faca21efc9981b304f11fc95336f5b9637b174c5a0659e2b22e159a9fed4b8e93047371175b1d6d9cc8ab745f3b2281537d1c75fb9451871864efa5d184c38c185fd203de206751b92620f7c369e031d2041e152040920ac2c5ab5340bfc9d0561176abf10a147287ea90758575ac6a9f5ac9f390d0d5b23ee12af583383d994e22c0cf42383834bcd3ada1b3825a0664d8f3fb678261d57601ddf94a8a68a7c273a18c08aa99c7ad8c6c42eab67718843597ec9930457359dfdfbce024afc2dcf9348579a57d8d3490b2fa99f278f1c37d87dad9b221acd575192ffae1784f8e60ec7cee4068b6b988f0433d96d6a1b1865f4e155e9fe020279f434f3bf1bd117b717b92f6cd1cc9bea7d45978bcc3f24bda631a36910110a6ec06da35f8966c9279d130347594f13e9e07514fa370754d1424c0a1545c5070ef9fb2acd14233e8a50bfc5978b5bdf8bc1714731f798d21e2004117c61f2989dd44f0cf027b27d4019e81ed4b5c31db347c4a3a4d85048d7093cf16753d7b0d15e078f5c7a5205dc2f87e330a1f716738dce1c6180e9d02869b5546f1c4d2748f8c90d9693cba4e0079297d22fd61402dea32ff0eb69ebd65a5d0b687d87e3a8b2c42b648aa723c7c7daf37abcc4bb85caea2ee8f55bec20e913b3324ab8f5c3304f820d42ad1b9f2ffc1a3af9927136b4419e1e579ab4c2ae3c776d293d397d575df181e6cae0a4ada5d67ecea171cca3288d57c7bbdaee3befe745fb7d634f70386d873b90c4d6c6596bb65af68f9e5121e67ebf0d89d3c909ceedfb32ce9575a7758ff080724e1ab5d5f43074ecb53a479af21ed03d7b6899c36631c0166f9d47e5e1d4528a5d3d3f744029c4b1c190cbfbad06f5f83f7ad0429fa9a2719c56ffe3783460e166de2d8>"
+    }
+
+    /**
+     * Emits whenever a setting that is only consumed while a tunnel is being established changes.
+     * Settings pushed to a running service (kill switch, notifications, verification) never emit,
+     * because those apply without a reconnect.
+     */
+    private val _connectionConfigChanged = MutableSharedFlow<Unit>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val connectionConfigChanged: SharedFlow<Unit> = _connectionConfigChanged.asSharedFlow()
+
+    /**
+     * Stores a connection-time setting and signals [connectionConfigChanged] only when the stored
+     * value really differs, so screens that rewrite their current values on entry stay silent.
+     */
+    private suspend fun <T> editConnectionSetting(key: Preferences.Key<T>, default: T, value: T) {
+        var changed = false
+        dataStore.edit { preferences ->
+            changed = (preferences[key] ?: default) != value
+            preferences[key] = value
+        }
+        if (changed) _connectionConfigChanged.tryEmit(Unit)
     }
 
     val killSwitchEnabled: Flow<Boolean> = dataStore.data.map { it[KILL_SWITCH] ?: false }
@@ -278,6 +308,9 @@ class SettingsManager @Inject constructor(
     }
 
     val allowLanEnabled: Flow<Boolean> = dataStore.data.map { it[ALLOW_LAN_CONNECTIONS] ?: false }
+
+    /** Whether the "changes apply after reconnect" notice is shown while the tunnel is up. */
+    val reconnectHintEnabled: Flow<Boolean> = dataStore.data.map { it[RECONNECT_HINT_ENABLED] ?: true }
 
     // Privacy-first defaults: only crash reports and handled errors are enabled.
     // All optional telemetry requires an explicit user opt-in.
@@ -407,7 +440,7 @@ class SettingsManager @Inject constructor(
     }
 
     suspend fun setNetShieldLevel(level: NetShieldLevel) {
-        dataStore.edit { it[NETSHIELD_LEVEL] = level.name }
+        editConnectionSetting(NETSHIELD_LEVEL, NetShieldLevel.DISABLED.name, level.name)
     }
 
     suspend fun resetNetShieldStats() {
@@ -474,23 +507,23 @@ class SettingsManager @Inject constructor(
     }
 
     suspend fun setSplitTunnelingEnabled(enabled: Boolean) {
-        dataStore.edit { it[SPLIT_TUNNELING_ENABLED] = enabled }
+        editConnectionSetting(SPLIT_TUNNELING_ENABLED, false, enabled)
     }
 
     suspend fun setSplitTunnelingMode(mode: String) {
-        dataStore.edit { it[SPLIT_TUNNELING_MODE] = mode }
+        editConnectionSetting(SPLIT_TUNNELING_MODE, "exclude", mode)
     }
 
     suspend fun setExcludedApps(apps: Set<String>) {
-        dataStore.edit { it[EXCLUDED_APPS] = apps }
+        editConnectionSetting(EXCLUDED_APPS, emptySet(), apps)
     }
 
     suspend fun setExcludedIps(ips: Set<String>) {
-        dataStore.edit { it[EXCLUDED_IPS] = ips }
+        editConnectionSetting(EXCLUDED_IPS, emptySet(), ips)
     }
 
     suspend fun setExcludedDomains(domains: Set<String>) {
-        dataStore.edit { it[EXCLUDED_DOMAINS] = domains }
+        editConnectionSetting(EXCLUDED_DOMAINS, emptySet(), domains)
     }
 
     suspend fun setStShowSystemApps(enabled: Boolean) {
@@ -498,11 +531,11 @@ class SettingsManager @Inject constructor(
     }
 
     suspend fun setVpnPort(port: Int) {
-        dataStore.edit { it[VPN_PORT] = port }
+        editConnectionSetting(VPN_PORT, 0, port)
     }
 
     suspend fun setCustomDns(dnsIp: String) {
-        dataStore.edit { it[CUSTOM_DNS] = dnsIp }
+        editConnectionSetting(CUSTOM_DNS, "", dnsIp)
     }
 
     suspend fun setApiBypassEnabled(enabled: Boolean) {
@@ -567,7 +600,7 @@ class SettingsManager @Inject constructor(
     }
 
     suspend fun setObfuscationEnabled(enabled: Boolean) {
-        dataStore.edit { it[OBFUSCATION_ENABLED] = enabled }
+        editConnectionSetting(OBFUSCATION_ENABLED, false, enabled)
     }
 
     suspend fun setObfuscationAdvancedMode(enabled: Boolean) {
@@ -575,22 +608,32 @@ class SettingsManager @Inject constructor(
     }
 
     suspend fun setProxyChainEnabled(enabled: Boolean) {
+        var changed = false
         dataStore.edit {
+            changed = (it[PROXY_CHAIN_ENABLED] ?: false) != enabled
             it[PROXY_CHAIN_ENABLED] = enabled
-            if (enabled) it[OBFUSCATION_ENABLED] = false
+            if (enabled) {
+                changed = changed || (it[OBFUSCATION_ENABLED] ?: false)
+                it[OBFUSCATION_ENABLED] = false
+            }
         }
+        if (changed) _connectionConfigChanged.tryEmit(Unit)
     }
 
     suspend fun setProxyChainConfig(config: String) {
-        dataStore.edit { it[PROXY_CHAIN_CONFIG] = config.trim() }
+        editConnectionSetting(PROXY_CHAIN_CONFIG, "", config.trim())
     }
 
     suspend fun setTorModeEnabled(enabled: Boolean) {
-        dataStore.edit { it[TOR_MODE_ENABLED] = enabled }
+        editConnectionSetting(TOR_MODE_ENABLED, false, enabled)
     }
 
     suspend fun setAllowLanEnabled(enabled: Boolean) {
-        dataStore.edit { it[ALLOW_LAN_CONNECTIONS] = enabled }
+        editConnectionSetting(ALLOW_LAN_CONNECTIONS, false, enabled)
+    }
+
+    suspend fun setReconnectHintEnabled(enabled: Boolean) {
+        dataStore.edit { it[RECONNECT_HINT_ENABLED] = enabled }
     }
 
     suspend fun setSelectedProfileId(id: String) {
@@ -708,25 +751,32 @@ class SettingsManager @Inject constructor(
         i1: String, i2: String = "", i3: String = "", i4: String = "", i5: String = "",
         junkLevel: Int = 3
     ) {
+        var changed = false
         dataStore.edit {
-            it[AWG_JC] = jc
-            it[AWG_JMIN] = jmin
-            it[AWG_JMAX] = jmax
-            it[AWG_S1] = s1
-            it[AWG_S2] = s2
-            it[AWG_S3] = s3
-            it[AWG_S4] = s4
-            it[AWG_H1] = h1
-            it[AWG_H2] = h2
-            it[AWG_H3] = h3
-            it[AWG_H4] = h4
-            it[AWG_I1] = i1
-            it[AWG_I2] = i2
-            it[AWG_I3] = i3
-            it[AWG_I4] = i4
-            it[AWG_I5] = i5
+            // junkLevel is a UI-only marker for the selected preset, so it is not compared here.
+            fun <T> put(key: Preferences.Key<T>, default: T, value: T) {
+                changed = changed || (it[key] ?: default) != value
+                it[key] = value
+            }
+            put(AWG_JC, 3, jc)
+            put(AWG_JMIN, 1, jmin)
+            put(AWG_JMAX, 3, jmax)
+            put(AWG_S1, 0, s1)
+            put(AWG_S2, 0, s2)
+            put(AWG_S3, 0, s3)
+            put(AWG_S4, 0, s4)
+            put(AWG_H1, "1", h1)
+            put(AWG_H2, "2", h2)
+            put(AWG_H3, "3", h3)
+            put(AWG_H4, "4", h4)
+            put(AWG_I1, DEFAULT_I1, i1)
+            put(AWG_I2, "", i2)
+            put(AWG_I3, "", i3)
+            put(AWG_I4, "", i4)
+            put(AWG_I5, "", i5)
             it[AWG_JUNK_LEVEL] = junkLevel
         }
+        if (changed) _connectionConfigChanged.tryEmit(Unit)
     }
 
     suspend fun clearAll() {
@@ -761,7 +811,7 @@ class SettingsManager @Inject constructor(
                     CRASH_REPORTS_ENABLED.name, SENTRY_PERFORMANCE_ENABLED.name,
                     SENTRY_NON_FATAL_ENABLED.name, SENTRY_SESSION_REPLAY_ENABLED.name,
                     SENTRY_ANR_ENABLED.name, SENTRY_METRICS_ENABLED.name,
-                    SENTRY_LOGS_ENABLED.name,
+                    SENTRY_LOGS_ENABLED.name, RECONNECT_HINT_ENABLED.name,
                     IP_HIDDEN.name -> {
                         val boolValue = value.toBoolean()
                         @Suppress("UNCHECKED_CAST")
@@ -861,6 +911,7 @@ class SettingsManager @Inject constructor(
             PAUSE_END_TIME.name -> PAUSE_END_TIME
             POLICY_ACCEPTED_VERSION.name -> POLICY_ACCEPTED_VERSION
             SETUP_STEP.name -> SETUP_STEP
+            RECONNECT_HINT_ENABLED.name -> RECONNECT_HINT_ENABLED
             AWG_JC.name -> AWG_JC
             AWG_JMIN.name -> AWG_JMIN
             AWG_JMAX.name -> AWG_JMAX

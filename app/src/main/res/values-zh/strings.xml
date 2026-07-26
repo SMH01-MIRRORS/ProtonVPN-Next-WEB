@@ -651,4 +651,14 @@
     <string name="verification_auto_reconnect_title">自动重新连接</string>
     <string name="verification_auto_reconnect_desc">检测到故障后重新启动隧道</string>
     <string name="verification_note">禁用验证不会禁用 VPN 加密。它仅跳过活动连接探测和基于运行状况的重新连接。</string>
+
+    <string name="reconnect_required_title">重新连接以应用更改</string>
+    <string name="reconnect_required_message">VPN 连接期间修改了连接设置。新配置将在重新连接后生效。</string>
+    <string name="reconnect_required_message_manual">VPN 连接期间修改了连接设置。新配置将在断开并重新连接后生效。</string>
+    <string name="reconnect_required_action">重新连接</string>
+    <string name="reconnect_required_later">稍后</string>
+    <string name="reconnect_required_understood">知道了</string>
+    <string name="reconnect_required_dont_show_again">不再显示</string>
+    <string name="settings_reconnect_hint">重连提醒</string>
+    <string name="settings_reconnect_hint_desc">提醒更改后的连接设置仅在重新连接后生效</string>
 </resources>

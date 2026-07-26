@@ -54,6 +54,7 @@ data class SettingsUiState(
     val autoConnectEnabled: Boolean = false,
     val notificationsEnabled: Boolean = true,
     val allowLanEnabled: Boolean = false,
+    val reconnectHintEnabled: Boolean = true,
 
     // Connection configs
     val splitTunnelingEnabled: Boolean = false,
@@ -261,7 +262,8 @@ class SettingsViewModel @Inject constructor(
         _isUpdateAvailable,
         settingsManager.proxyChainEnabled,
         settingsManager.proxyChainConfig,
-        settingsManager.torModeEnabled
+        settingsManager.torModeEnabled,
+        settingsManager.reconnectHintEnabled
     ) { args: Array<Any?> ->
         SettingsUiState(
             killSwitchEnabled = args[0] as Boolean,
@@ -330,7 +332,8 @@ class SettingsViewModel @Inject constructor(
             proxyChainEnabled = args[63] as Boolean,
             proxyChainConfig = args[64] as String,
             isProxyChainConfigValid = ru.protonmod.next.vpn.ProxyLinkParser.isValid(args[64] as String),
-            torModeEnabled = args[65] as Boolean
+            torModeEnabled = args[65] as Boolean,
+            reconnectHintEnabled = args[66] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -353,6 +356,12 @@ class SettingsViewModel @Inject constructor(
     fun setAllowLanEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setAllowLanEnabled(enabled)
+        }
+    }
+
+    fun setReconnectHintEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setReconnectHintEnabled(enabled)
         }
     }
 

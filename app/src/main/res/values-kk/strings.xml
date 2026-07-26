@@ -654,4 +654,14 @@
     <string name="verification_auto_reconnect_title">Автоматты қайта қосу</string>
     <string name="verification_auto_reconnect_desc">Анықталған ақаулықтан кейін туннельді қайта іске қосыңыз</string>
     <string name="verification_note">Растауды өшіру VPN шифрлауын өшірмейді. Ол тек белсенді қосылым тексерулерін және денсаулыққа негізделген қайта қосылымдарды өткізіп жібереді.</string>
+
+    <string name="reconnect_required_title">Қайта қосылу қажет</string>
+    <string name="reconnect_required_message">VPN қосулы кезде қосылым параметрлері өзгертілді. Жаңа конфигурация қайта қосылғаннан кейін қолданылады.</string>
+    <string name="reconnect_required_message_manual">VPN қосулы кезде қосылым параметрлері өзгертілді. Жаңа конфигурация ажыратып, қайта қосылғаннан кейін қолданылады.</string>
+    <string name="reconnect_required_action">Қайта қосылу</string>
+    <string name="reconnect_required_later">Кейінірек</string>
+    <string name="reconnect_required_understood">Түсінікті</string>
+    <string name="reconnect_required_dont_show_again">Бұдан былай көрсетілмесін</string>
+    <string name="settings_reconnect_hint">Қайта қосылу туралы ескерту</string>
+    <string name="settings_reconnect_hint_desc">Өзгертілген қосылым параметрлері тек қайта қосылғаннан кейін қолданылатынын ескерту</string>
 </resources>

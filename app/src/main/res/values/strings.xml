@@ -767,4 +767,14 @@
     <string name="verification_note">Disabling verification does not disable VPN encryption. It only skips active connectivity probes and health-based reconnects.</string>
     <string name="settings_tor_mode">Tor mode</string>
     <string name="settings_tor_mode_desc">Route VPN traffic through Tor. UDP is blocked while this mode is active.</string>
+
+    <string name="reconnect_required_title">Reconnect to apply changes</string>
+    <string name="reconnect_required_message">Connection settings were changed while the VPN is connected. The new configuration takes effect after a reconnect.</string>
+    <string name="reconnect_required_message_manual">Connection settings were changed while the VPN is connected. The new configuration takes effect after you disconnect and connect again.</string>
+    <string name="reconnect_required_action">Reconnect</string>
+    <string name="reconnect_required_later">Later</string>
+    <string name="reconnect_required_understood">Got it</string>
+    <string name="reconnect_required_dont_show_again">Don’t show again</string>
+    <string name="settings_reconnect_hint">Reconnect notice</string>
+    <string name="settings_reconnect_hint_desc">Warn that changed connection settings apply only after reconnecting</string>
 </resources>

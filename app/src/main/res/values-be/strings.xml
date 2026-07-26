@@ -660,4 +660,14 @@
     <string name="verification_auto_reconnect_title">Аўтаматычнае паўторнае падключэнне</string>
     <string name="verification_auto_reconnect_desc">Перазапусціце тунэль пасля выяўленага збою</string>
     <string name="verification_note">Адключэнне праверкі не адключае шыфраванне VPN. Ён прапускае толькі актыўныя зонды падключэння і паўторнае падключэнне на аснове стану здароўя.</string>
+
+    <string name="reconnect_required_title">Патрэбна перападключэнне</string>
+    <string name="reconnect_required_message">Налады падключэння зменены, пакуль VPN актыўны. Новая канфігурацыя пачне дзейнічаць пасля перападключэння.</string>
+    <string name="reconnect_required_message_manual">Налады падключэння зменены, пакуль VPN актыўны. Новая канфігурацыя пачне дзейнічаць пасля адключэння і паўторнага падключэння.</string>
+    <string name="reconnect_required_action">Перападключыцца</string>
+    <string name="reconnect_required_later">Пазней</string>
+    <string name="reconnect_required_understood">Зразумела</string>
+    <string name="reconnect_required_dont_show_again">Больш не паказваць</string>
+    <string name="settings_reconnect_hint">Нагадванне пра перападключэнне</string>
+    <string name="settings_reconnect_hint_desc">Папярэджваць, што змененыя налады падключэння прымяняюцца толькі пасля перападключэння</string>
 </resources>
