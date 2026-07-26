@@ -34,6 +34,7 @@ import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.local.SetupStep
 import ru.protonmod.next.data.repository.AuthRepository
+import ru.protonmod.next.data.repository.ProtonApiException
 import ru.protonmod.next.data.network.byedpi.ByeDpiStrategyTester
 import ru.protonmod.next.data.network.byedpi.ByeDpiManager
 import ru.protonmod.next.utils.NetworkMonitor
@@ -248,6 +249,13 @@ class LoginViewModel @Inject constructor(
                             _uiState.value = LoginUiState.Error(
                                 "Connection timeout. Please check your internet and try again."
                             )
+                        } else if (exception is ProtonApiException) {
+                            // The API rejected the attempt (wrong credentials, rate limit, expired
+                            // captcha). The user sees why, so it is not a defect worth reporting.
+                            ProtonLogger.w("Login", "Login rejected by API (HTTP ${exception.code})")
+                            _uiState.value = LoginUiState.Error(
+                                exception.localizedMessage ?: "An unexpected authentication error occurred"
+                            )
                         } else {
                             ProtonLogger.e("Login", "Login failed: ${exception.message}", exception)
                             _uiState.value = LoginUiState.Error(
@@ -357,6 +365,9 @@ class LoginViewModel @Inject constructor(
                             _uiState.value = LoginUiState.Error(
                                 "Connection timeout. Please check your internet and try again."
                             )
+                        } else if (exception is ProtonApiException) {
+                            ProtonLogger.w("Login", "Anonymous login rejected by API (HTTP ${exception.code})")
+                            _uiState.value = LoginUiState.Error(exception.localizedMessage ?: "Guest login failed")
                         } else {
                             ProtonLogger.e("Login", "Anonymous login failed: ${exception.message}", exception)
                             _uiState.value = LoginUiState.Error(exception.localizedMessage ?: "Guest login failed")
@@ -414,8 +425,11 @@ class LoginViewModel @Inject constructor(
 
                 ProtonLogger.i("LoginViewModel", "Proxy stable, proceeding to login flow")
                 onComplete()
+            } catch (e: CancellationException) {
+                // The user navigated away or started the login manually; nothing to report.
+                throw e
             } catch (e: Exception) {
-                ProtonLogger.e("LoginViewModel", "Error during auto ByeDPI test: ${e.message}")
+                ProtonLogger.w("LoginViewModel", "Error during auto ByeDPI test: ${e.message}")
                 onComplete()
             } finally {
                 _isByeDpiAutoTesting.value = false

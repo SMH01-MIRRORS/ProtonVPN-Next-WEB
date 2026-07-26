@@ -27,6 +27,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.TrafficStats
 import android.net.VpnService
 import android.os.Build
@@ -168,6 +170,8 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
             when (intent?.action) {
                 ACTION_DISCONNECT -> stopTunnel(manual = true)
                 ACTION_UPDATE_SETTINGS -> applySettings(intent)
+                ACTION_SET_VERIFIED -> markVerified()
+                ACTION_QUERY_STATE -> sendState(if (connecting) null else state)
             }
         }
     }
@@ -186,6 +190,8 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
             IntentFilter().apply {
                 addAction(ACTION_DISCONNECT)
                 addAction(ACTION_UPDATE_SETTINGS)
+                addAction(ACTION_SET_VERIFIED)
+                addAction(ACTION_QUERY_STATE)
             },
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
@@ -221,17 +227,18 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
             ACTION_CONNECT -> startTunnel(intent)
             ACTION_DISCONNECT -> stopTunnel(manual = true)
             ACTION_UPDATE_SETTINGS -> applySettings(intent)
-            ACTION_SET_VERIFIED -> {
-                if (!verified) {
-                    verified = true
-                    connecting = false
-                    updateNotification(VpnTunnelState.UP.name)
-                }
-            }
+            ACTION_SET_VERIFIED -> markVerified()
             ACTION_QUERY_STATE -> sendState(if (connecting) null else state)
             else -> return START_NOT_STICKY
         }
         return if (state == VpnTunnelState.DOWN && !connecting) START_NOT_STICKY else START_STICKY
+    }
+
+    private fun markVerified() {
+        if (verified) return
+        verified = true
+        connecting = false
+        updateNotification(VpnTunnelState.UP.name)
     }
 
     private fun startTunnel(intent: Intent) {
@@ -299,7 +306,13 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
                 // A newer connect or disconnect owns the lifecycle now.
             } catch (error: Exception) {
                 if (lifecycleGeneration.get() != generation) return@launch
-                ProtonLogger.e(TAG, "Failed to start amnezia-box tunnel", error)
+                if (hasUsableUnderlyingNetwork()) {
+                    ProtonLogger.e(TAG, "Failed to start amnezia-box tunnel", error)
+                } else {
+                    // The device lost connectivity between the preflight and the engine start, so
+                    // the engine cannot bind an outbound socket. Transient, and not a defect.
+                    ProtonLogger.w(TAG, "Tunnel start aborted without connectivity: ${error.message}")
+                }
                 withContext(Dispatchers.Main) {
                     if (lifecycleGeneration.get() == generation) handleEngineFailure()
                 }
@@ -324,6 +337,21 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         }
         Log.d(FULL_CONFIG_LOG_TAG, "----- END AWGBOX CONFIG -----")
     }
+
+    /**
+     * True when a non-VPN network that claims internet access is still present. Used to tell an
+     * engine start failure caused by the device going offline apart from a real configuration or
+     * runtime defect.
+     */
+    private fun hasUsableUnderlyingNetwork(): Boolean = runCatching {
+        val manager = getSystemService(ConnectivityManager::class.java) ?: return@runCatching true
+        manager.allNetworks.any { network ->
+            val capabilities = manager.getNetworkCapabilities(network) ?: return@any false
+            !capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) &&
+                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
+        }
+    }.getOrDefault(true)
 
     private fun handleEngineFailure() {
         state = VpnTunnelState.DOWN

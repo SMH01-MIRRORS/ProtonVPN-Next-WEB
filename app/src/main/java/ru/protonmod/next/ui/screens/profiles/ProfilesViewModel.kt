@@ -186,7 +186,9 @@ class ProfilesViewModel @Inject constructor(
 
             val targetServer = findBestServerForProfile(profile, servers)
             if (targetServer == null) {
-                ProtonLogger.e(TAG, "Cannot connect: No suitable server found for profile")
+                // The profile targets a country/city with no server in the current list; the user
+                // needs to pick another profile, so this is not a defect to report.
+                ProtonLogger.w(TAG, "Cannot connect: No suitable server found for profile")
                 return@launch
             }
 

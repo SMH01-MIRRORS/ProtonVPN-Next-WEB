@@ -1086,7 +1086,9 @@ class AmneziaVpnManager @Inject constructor(
                 }
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.TimeoutCancellationException) {
-                    ProtonLogger.e(TAG, "Connect & Go: Timed out waiting for VPN to connect for URL: $targetUrl")
+                    // A connection that never comes up is already surfaced by the tunnel state; the
+                    // unopened URL is a consequence, not a separate defect.
+                    ProtonLogger.w(TAG, "Connect & Go: Timed out waiting for VPN to connect for URL: $targetUrl")
                 } else {
                     ProtonLogger.e(TAG, "Connect & Go: Failed to handle URL: $targetUrl", e)
                 }

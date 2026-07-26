@@ -37,8 +37,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.Dispatchers
@@ -76,8 +78,22 @@ fun CaptchaScreen(
     okHttpClient: OkHttpClient? = null
 ) {
     val colors = ProtonNextTheme.colors
+    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    var isLoading by remember { mutableStateOf(true) }
+
+    // WebView lives in a separate, updatable system package. It can be absent, disabled or
+    // mid-update, in which case the constructor throws MissingWebViewPackageException and used to
+    // take the whole process down from the Compose draw pass. Build it defensively once and render
+    // an explanatory screen instead of crashing when the provider cannot be loaded.
+    val hostWebView = remember(context) {
+        runCatching { WebView(context) }
+            .onFailure { error ->
+                ProtonLogger.w("CaptchaScreen", "WebView provider unavailable: ${error.message}")
+            }
+            .getOrNull()
+    }
+
+    var isLoading by remember { mutableStateOf(hostWebView != null) }
     var progress by remember { mutableIntStateOf(0) }
     var hasSolved by remember { mutableStateOf(false) }
     val isTablet = isTablet()
@@ -243,10 +259,14 @@ fun CaptchaScreen(
                     wv.loadUrl(optimizedUrl, extraHeaders)
                 }
 
-                AndroidView(
+                if (hostWebView == null) {
+                    WebViewUnavailableNotice(onDismiss = onDismiss)
+                }
+
+                if (hostWebView != null) AndroidView(
                     modifier = Modifier.fillMaxSize(),
-                    factory = { context ->
-                        WebView(context).apply {
+                    factory = {
+                        hostWebView.apply {
                             setBackgroundColor(android.graphics.Color.TRANSPARENT)
 
                             settings.javaScriptEnabled = true
@@ -454,6 +474,42 @@ fun CaptchaScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Shown when Android System WebView is missing or being updated, so the security check cannot be
+ * rendered. Without it the CAPTCHA screen would crash the app (ANDROID-22K).
+ */
+@Composable
+private fun WebViewUnavailableNotice(onDismiss: () -> Unit) {
+    val colors = ProtonNextTheme.colors
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.backgroundNorm)
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(id = R.string.captcha_webview_missing_title),
+            style = MaterialTheme.typography.titleMedium,
+            color = colors.textNorm,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = stringResource(id = R.string.captcha_webview_missing_message),
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.textWeak,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(onClick = onDismiss) {
+            Text(text = stringResource(id = R.string.desc_close))
         }
     }
 }

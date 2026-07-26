@@ -23,6 +23,7 @@ import io.sentry.SentryEvent
 import io.sentry.android.core.SentryAndroid
 import retrofit2.HttpException
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.data.repository.ProtonApiException
 import ru.protonmod.next.utils.PiiScrubber
 import ru.protonmod.next.utils.ProtonLogger
 import ru.protonmod.next.utils.SentryCrashReporter
@@ -118,28 +119,45 @@ object FlavorInitializer {
         ProtonLogger.crashReporter = SentryCrashReporter()
     }
 
+    /**
+     * HTTP statuses the Proton API returns for situations the UI already handles and explains:
+     * expired sessions, restricted access, wrong credentials, captcha/human-verification steps and
+     * rate limiting. Reporting them buries real defects under user-driven noise.
+     */
+    private val EXPECTED_HTTP_CODES = setOf(400, 401, 403, 408, 409, 422, 429)
+
+    /** Guards against a self-referencing cause chain. */
+    private const val MAX_CAUSE_DEPTH = 16
+
     @JvmStatic
     private fun shouldFilterNetworkNoise(event: SentryEvent, hint: Hint): Boolean {
-        val throwable = event.throwable ?: return false
+        var throwable = event.throwable ?: return false
 
-        return when (throwable) {
-            is HttpException -> {
-                // 401 Unauthorized and 403 Forbidden are usually session expiry or restricted access,
-                // handled by the app logic, not a bug to report.
-                throwable.code() == 401 || throwable.code() == 403
-            }
-            is SocketTimeoutException,
-            is SocketException,
-            is UnknownHostException,
-            is SSLHandshakeException,
-            is CancellationException,
-            is EOFException -> true
-            is IOException -> {
-                val msg = throwable.message?.lowercase() ?: ""
-                msg.contains("socket") || msg.contains("connection") || msg.contains("reset")
-            }
-            else -> false
+        // Coroutines and Retrofit routinely wrap transport failures and cancellations, so the
+        // interesting type is often a cause rather than the exception that was captured.
+        var depth = 0
+        while (depth++ < MAX_CAUSE_DEPTH) {
+            if (isNetworkNoise(throwable)) return true
+            throwable = throwable.cause ?: return false
         }
+        return false
+    }
+
+    @JvmStatic
+    private fun isNetworkNoise(throwable: Throwable): Boolean = when (throwable) {
+        is HttpException -> throwable.code() in EXPECTED_HTTP_CODES
+        is ProtonApiException -> throwable.code in EXPECTED_HTTP_CODES
+        is SocketTimeoutException,
+        is SocketException,
+        is UnknownHostException,
+        is SSLHandshakeException,
+        is CancellationException,
+        is EOFException -> true
+        is IOException -> {
+            val msg = throwable.message?.lowercase() ?: ""
+            msg.contains("socket") || msg.contains("connection") || msg.contains("reset")
+        }
+        else -> false
     }
 
     @JvmStatic

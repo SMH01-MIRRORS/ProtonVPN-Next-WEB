@@ -242,6 +242,21 @@ object DatabaseModule {
         }
     }
 
+    /**
+     * The tunnel runs in the `:vpn` process and writes traffic statistics while the UI process
+     * writes sessions, servers and profiles. Android's connection pool only serialises writers
+     * inside a single process, so a cross-process write collision surfaces immediately as
+     * SQLITE_BUSY instead of waiting (ANDROID-228). WAL keeps readers unblocked; this handler makes
+     * a writer wait for the other process to commit rather than throwing straight away.
+     */
+    private const val BUSY_TIMEOUT_MS = 5_000
+
+    private val BUSY_TIMEOUT_CALLBACK = object : RoomDatabase.Callback() {
+        override fun onOpen(db: SupportSQLiteDatabase) {
+            db.query("PRAGMA busy_timeout = $BUSY_TIMEOUT_MS").use { it.moveToFirst() }
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -251,6 +266,7 @@ object DatabaseModule {
             "proton_next_db"
         )
         .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
+        .addCallback(BUSY_TIMEOUT_CALLBACK)
         .addMigrations(MIGRATION_4_5)
         .addMigrations(MIGRATION_5_6)
         .addMigrations(MIGRATION_6_7)

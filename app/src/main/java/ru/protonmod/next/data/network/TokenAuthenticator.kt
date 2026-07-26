@@ -94,7 +94,8 @@ class TokenAuthenticator @Inject constructor(
                 .header("Authorization", "Bearer ${updatedSession.accessToken}")
                 .build()
         } else {
-            ProtonLogger.e(TAG, "Refresh request failed. Passing 401 to caller.")
+            // Expected whenever a refresh token is revoked or expired: the caller re-authenticates.
+            ProtonLogger.w(TAG, "Refresh request failed. Passing 401 to caller.")
             null
         }
     }

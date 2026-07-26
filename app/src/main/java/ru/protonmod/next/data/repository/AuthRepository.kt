@@ -45,6 +45,14 @@ import javax.inject.Singleton
 import java.net.SocketTimeoutException
 import java.net.ConnectException
 
+/**
+ * An error response the Proton API returned verbatim.
+ *
+ * Carrying the status code instead of a bare [Exception] lets the UI and the crash reporter tell an
+ * expected outcome (wrong password, captcha needed, rate limit) apart from a genuine defect.
+ */
+class ProtonApiException(val code: Int, message: String) : Exception(message)
+
 @Singleton
 class AuthRepository @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -546,7 +554,9 @@ class AuthRepository @Inject constructor(
                         // because WebView won't have x-pm-uid to bind the token properly.
                         if (pendingUid == null) {
                             clearPendingAuth()
-                            return Result.failure(Exception("Missing session for CAPTCHA. Please try again."))
+                            return Result.failure(
+                                ProtonApiException(code, "Missing session for CAPTCHA. Please try again.")
+                            )
                         }
 
                         ProtonLogger.w(TAG, "CAPTCHA Verification Required. Token extracted. PendingUID: $pendingUid")
@@ -554,12 +564,16 @@ class AuthRepository @Inject constructor(
                     }
                     // 12087 = Captcha validation failed due to payload mismatch or session reset.
                     if (parsedError.code == 12087) {
-                        ProtonLogger.e(TAG, "Captcha validation failed (12087): session invalidated. Forcing fresh restart.")
+                        // Expected whenever a captcha session ages out; the UI recovers on the next
+                        // attempt, so this is a warning rather than a reportable error.
+                        ProtonLogger.w(TAG, "Captcha validation failed (12087): session invalidated. Forcing fresh restart.")
                         clearPendingAuth()
                         // FIX: We must NOT return CaptchaRequiredException here. The session is dead.
                         // Returning a standard exception forces the UI to reset, and the user's next attempt
                         // will cleanly create a new session and hit 9001 again safely.
-                        return Result.failure(Exception("Captcha session expired. Please click Login to try again."))
+                        return Result.failure(
+                            ProtonApiException(code, "Captcha session expired. Please click Login to try again.")
+                        )
                     }
                 } catch (ex: Exception) {
                     ProtonLogger.w(TAG, "Failed to parse 422 error body: ${ex.message}")
@@ -571,9 +585,9 @@ class AuthRepository @Inject constructor(
             }
 
             if (code == 422 && errorBody != null) {
-                return Result.failure(Exception("HTTP 422: $errorBody"))
+                return Result.failure(ProtonApiException(code, "HTTP 422: $errorBody"))
             }
-            return Result.failure(Exception("HTTP $code: ${errorBody ?: e.message()}"))
+            return Result.failure(ProtonApiException(code, "HTTP $code: ${errorBody ?: e.message()}"))
         }
         return Result.failure(e)
     }

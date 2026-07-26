@@ -22,6 +22,7 @@ import android.content.Intent
 import androidx.core.content.ContextCompat
 import ru.protonmod.next.vpn.ProtonVpnService
 import ru.protonmod.next.data.local.ConnectionVerificationMode
+import ru.protonmod.next.utils.ProtonLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -95,16 +96,43 @@ class SystemContextWrapper @Inject constructor(
     }
 
     fun setVpnVerified() {
-        val intent = Intent(context, ProtonVpnService::class.java).apply {
-            action = ProtonVpnService.ACTION_SET_VERIFIED
+        // Broadcast rather than startService(): the tunnel must already be up for verification to
+        // mean anything, and an explicit service start would throw when the platform refuses to
+        // launch the ":vpn" process (see [queryVpnState]).
+        val intent = Intent(ProtonVpnService.ACTION_SET_VERIFIED).apply {
+            setPackage(context.packageName)
         }
-        context.startService(intent)
+        sendQuietly(intent)
     }
 
+    /**
+     * Asks a running tunnel to re-announce its state.
+     *
+     * This used to call startService(), which launched the ":vpn" process purely to ask it a
+     * question. It runs while the Dagger graph is built in Application.onCreate, and the platform
+     * refuses a service start there in several situations - notably "process is bad" right after a
+     * crash - which took the whole app down before its first frame. A broadcast cannot start the
+     * service: when nothing answers, the tunnel is not running and the DOWN default already holds.
+     */
     fun queryVpnState() {
-        val intent = Intent(context, ProtonVpnService::class.java).apply {
-            action = ProtonVpnService.ACTION_QUERY_STATE
+        val intent = Intent(ProtonVpnService.ACTION_QUERY_STATE).apply {
+            setPackage(context.packageName)
         }
-        context.startService(intent)
+        sendQuietly(intent)
+    }
+
+    /**
+     * Fire-and-forget delivery. These intents run during app startup, so a platform refusal must
+     * never escalate into a crash on a path where there is nothing to recover.
+     */
+    private fun sendQuietly(intent: Intent) {
+        runCatching { context.sendBroadcast(intent) }
+            .onFailure { error ->
+                ProtonLogger.w(TAG, "Failed to deliver ${intent.action}: ${error.message}")
+            }
+    }
+
+    private companion object {
+        const val TAG = "SystemContextWrapper"
     }
 }

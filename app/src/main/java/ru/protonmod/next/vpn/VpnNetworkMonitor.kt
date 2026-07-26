@@ -103,7 +103,14 @@ class VpnNetworkMonitor @Inject constructor(
     ): ConnectionPreflight? = withContext(Dispatchers.IO) {
         val network = awaitUnderlyingNetwork()
             ?: error("No usable underlying network is available")
-        check(probeNetwork(network)) { "Underlying network connectivity probe failed" }
+
+        // The probe targets are public resolvers, and some networks block exactly those addresses
+        // while still carrying VPN traffic fine. Treating a failed probe as fatal made connecting
+        // impossible on such networks (ANDROID-22P), so it stays advisory: the endpoint lookup and
+        // the proxy reachability check below are the checks that actually gate the connection.
+        if (!probeNetwork(network)) {
+            ProtonLogger.w(TAG, "Underlying network probe failed; continuing with endpoint checks")
+        }
 
         val endpointIpv4 = resolveIpv4(network, endpointHost)
             ?: error("No IPv4 address found for $endpointHost on the underlying network")
