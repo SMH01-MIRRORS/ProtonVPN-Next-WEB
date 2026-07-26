@@ -8,7 +8,7 @@ possible without replacing Android's VPN lifecycle again.
 
 ## Selected core
 
-The first integration uses `hoaxisr/amnezia-box` `v1.13.13-awg2.1` because it:
+The integration uses `hoaxisr/amnezia-box` `1.14.0-beta.1-awgm.2` because it:
 
 - tracks stable sing-box;
 - embeds `amneziawg-go`;
