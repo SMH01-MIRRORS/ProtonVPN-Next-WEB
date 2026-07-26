@@ -63,7 +63,6 @@ import ru.protonmod.next.R
 import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.data.local.ConnectionVerificationMode
 import ru.protonmod.next.utils.ProtonLogger
-import java.io.File
 import java.util.Collections
 import java.util.IdentityHashMap
 import java.util.Locale
@@ -120,6 +119,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         private const val CHANNEL_ID = "vpn_status_channel"
         private const val CHANNEL_SILENT_ID = "vpn_status_channel_silent"
         private const val FULL_CONFIG_LOG_TAG = "ProtonVpnConfig"
+        private const val CRASH_REPORT_SOURCE = "ProtonVpnService"
         private const val LOGCAT_CHUNK_SIZE = 3_500
         private val libboxInitialized = AtomicBoolean(false)
 
@@ -205,10 +205,13 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
             // engine messages are still written to Logcat only in debug builds below.
             debug = true
             fixAndroidStack = true
+            // Libbox.setup() now owns the stderr redirect that Libbox.redirectStderr() used to
+            // perform; it writes native panics to "CrashReport-$crashReportSource.log" in
+            // workingPath.
+            crashReportSource = CRASH_REPORT_SOURCE
         }
         Libbox.setup(options)
         Libbox.setLocale(Locale.getDefault().toLanguageTag().replace('-', '_'))
-        runCatching { Libbox.redirectStderr(File(workingDir, "awgbox-stderr.log").absolutePath) }
     }
 
     override fun onBind(intent: Intent): IBinder? = super.onBind(intent)
@@ -270,7 +273,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
                     startingCommandServer = server
                     var adopted = false
                     try {
-                        server.checkConfig(config)
+                        Libbox.checkConfig(config)
                         server.startOrReloadService(config, OverrideOptions())
                         currentCoroutineContext().ensureActive()
                         if (lifecycleGeneration.get() != generation) return@withLock
@@ -560,6 +563,15 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     override fun serviceReload() = Unit
     override fun getSystemProxyStatus() = SystemProxyStatus().apply { available = false; enabled = false }
     override fun setSystemProxyEnabled(isEnabled: Boolean) = Unit
+
+    // Only reachable through Tailscale SSH agent forwarding, which this AAR does not build.
+    override fun connectSSHAgent(): Int =
+        throw UnsupportedOperationException("SSH agent forwarding is not supported")
+
+    // A debug-only command from the sing-box GUI clients; deliberately never honoured here.
+    override fun triggerNativeCrash(): Unit =
+        throw UnsupportedOperationException("Native crash trigger is disabled")
+
     override fun writeDebugMessage(message: String?) {
         val logMessage = message.orEmpty()
         if (BuildConfig.DEBUG) {

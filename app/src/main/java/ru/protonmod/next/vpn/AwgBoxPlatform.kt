@@ -28,21 +28,24 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.os.Process
 import android.system.OsConstants
+import io.nekohasekai.libbox.BridgeOptions
+import io.nekohasekai.libbox.BridgeSession
 import io.nekohasekai.libbox.ConnectionOwner
 import io.nekohasekai.libbox.InterfaceUpdateListener
 import io.nekohasekai.libbox.Libbox
 import io.nekohasekai.libbox.LocalDNSTransport
+import io.nekohasekai.libbox.NeighborUpdateListener
 import io.nekohasekai.libbox.NetworkInterfaceIterator
 import io.nekohasekai.libbox.Notification
 import io.nekohasekai.libbox.PlatformInterface
+import io.nekohasekai.libbox.PlatformUser
+import io.nekohasekai.libbox.ShellSession
 import io.nekohasekai.libbox.StringIterator
 import io.nekohasekai.libbox.TunOptions
 import io.nekohasekai.libbox.WIFIState
 import java.net.Inet6Address
 import java.net.InetSocketAddress
 import java.net.NetworkInterface
-import java.security.KeyStore
-import java.util.Base64
 import io.nekohasekai.libbox.NetworkInterface as BoxNetworkInterface
 
 /** Android platform bridge required by libbox. */
@@ -72,7 +75,10 @@ internal class AwgBoxPlatform(
 
         options.inet4Address.forEachRemaining { builder.addAddress(it.address(), it.prefix()) }
         options.inet6Address.forEachRemaining { builder.addAddress(it.address(), it.prefix()) }
-        options.dnsServerAddress?.value?.takeIf { it.isNotBlank() }?.let(builder::addDnsServer)
+        // libbox 1.14 hands over the full DNS server list instead of a single StringBox.
+        options.dnsServerAddress.forEachRemaining { address ->
+            if (address.isNotBlank()) builder.addDnsServer(address)
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             options.inet4RouteAddress.forEachRemaining { builder.addRoute(android.net.IpPrefix(java.net.InetAddress.getByName(it.address()), it.prefix())) }
@@ -187,18 +193,47 @@ internal class AwgBoxPlatform(
         return BoxNetworkIterator(result)
     }
 
-    override fun systemCertificates(): StringIterator {
-        val certificates = mutableListOf<String>()
-        val store = KeyStore.getInstance("AndroidCAStore").apply { load(null) }
-        val aliases = store.aliases()
-        while (aliases.hasMoreElements()) {
-            val certificate = store.getCertificate(aliases.nextElement()) ?: continue
-            certificates += "-----BEGIN CERTIFICATE-----\n" +
-                Base64.getMimeEncoder(64, "\n".toByteArray()).encodeToString(certificate.encoded) +
-                "\n-----END CERTIFICATE-----"
-        }
-        return BoxStringIterator(certificates)
-    }
+    /**
+     * libbox announces the name it gave our TUN so the platform can keep it out of its own
+     * routing decisions. [publishDefaultNetwork] already rejects every VPN transport, so the
+     * name carries no extra information here.
+     */
+    override fun registerMyInterface(name: String) = Unit
+
+    // Neighbour discovery needs the kernel ARP/NDP table, which is unreachable from an
+    // unprivileged Android app. Reporting failure keeps libbox on its own resolver.
+    override fun startNeighborMonitor(listener: NeighborUpdateListener): Unit =
+        throw UnsupportedOperationException("Neighbor table is unavailable on Android")
+
+    override fun closeNeighborMonitor(listener: NeighborUpdateListener) = Unit
+
+    // Tailscale, its SSH server and the platform bridge are all excluded from this AAR;
+    // libbox only reaches the members below when a feature we do not build asks for them.
+    override fun usePlatformShell() = false
+    override fun checkPlatformShell() = Unit
+    override fun tailscaleHostname() = ""
+    override fun usePlatformBridge() = false
+
+    override fun openShellSession(
+        user: PlatformUser,
+        command: String,
+        environ: StringIterator,
+        term: String,
+        rows: Int,
+        cols: Int
+    ): ShellSession = throw UnsupportedOperationException("Platform shell is not supported")
+
+    override fun lookupUser(username: String): PlatformUser =
+        throw UnsupportedOperationException("Platform users are not supported")
+
+    override fun lookupSFTPServer(): String =
+        throw UnsupportedOperationException("SFTP server is not supported")
+
+    override fun readSystemSSHHostKey(): String =
+        throw UnsupportedOperationException("System SSH host key is not available")
+
+    override fun createBridge(options: BridgeOptions): BridgeSession =
+        throw UnsupportedOperationException("Platform bridge is not supported")
 }
 
 internal class BoxStringIterator(values: Collection<String>) : StringIterator {
