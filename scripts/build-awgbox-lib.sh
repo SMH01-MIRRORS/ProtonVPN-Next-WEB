@@ -6,7 +6,7 @@ EXPECTED_COMMIT="${AWGBOX_COMMIT:-b055b349395b49bd485805d52e4fafebd1d70b00}"
 REPO="${AWGBOX_REPO:-https://github.com/hoaxisr/amnezia-box.git}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORK="${AWGBOX_WORK_DIR:-$ROOT/.artifacts/amnezia-box}"
-OUTPUT="$ROOT/app/libs/libbox-awgbox-v1.13.13-awg2.1.aar"
+OUTPUT="$ROOT/app/libs/libbox-awgbox.aar"
 FORCE_REBUILD="${AWGBOX_FORCE_REBUILD:-0}"
 
 output_is_valid() {
@@ -34,9 +34,9 @@ if [[ "$FORCE_REBUILD" != "1" ]] && output_is_valid; then
   exit 0
 fi
 
-if [[ -e "$OUTPUT" ]]; then
-  echo "Removing stale or unverified AWGBox AAR: $OUTPUT"
-  rm -f "$OUTPUT"
+if [[ -d "$(dirname "$OUTPUT")" ]]; then
+  echo "Cleaning up old AWGBox AAR files: $(dirname "$OUTPUT")/libbox-awgbox*.aar"
+  find "$(dirname "$OUTPUT")" -name "libbox-awgbox*.aar" -delete
 fi
 
 : "${ANDROID_HOME:=${ANDROID_SDK_ROOT:-}}"

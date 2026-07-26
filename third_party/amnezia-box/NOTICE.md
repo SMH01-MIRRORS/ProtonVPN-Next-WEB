@@ -1,6 +1,6 @@
 # amnezia-box binary notice
 
-The generated (git-ignored) `app/libs/libbox-awgbox-v1.13.13-awg2.1.aar` is built from
+The generated (git-ignored) `app/libs/libbox-awgbox.aar` is built from
 [hoaxisr/amnezia-box](https://github.com/hoaxisr/amnezia-box), release
 `v1.13.13-awg2.1`, with a minimal mobile feature set: `with_awg`, `with_utls`,
 `with_clash_api`, `badlinkname` and `tfogo_checklinkname0`.

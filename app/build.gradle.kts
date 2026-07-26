@@ -68,7 +68,7 @@ val prepareAwgBoxAar by tasks.registering(Exec::class) {
     workingDir(rootProject.rootDir)
     commandLine("bash", rootProject.file("scripts/build-awgbox-lib.sh").absolutePath)
 }
-val awgBoxAar = files("libs/libbox-awgbox-v1.13.13-awg2.1.aar")
+val awgBoxAar = files("libs/libbox-awgbox.aar")
     .builtBy(prepareAwgBoxAar)
 
 // Only apply Sentry for non-privacy builds to ensure zero dependencies in privacy flavor
