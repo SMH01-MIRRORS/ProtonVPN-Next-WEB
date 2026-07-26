@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REF="${AWGBOX_REF:-v1.13.13-awg2.1}"
-EXPECTED_COMMIT="${AWGBOX_COMMIT:-f40548f91a14582975096d0310e3c6afd44656f8}"
+REF="${AWGBOX_REF:-1.14.0-beta.1-awgm.2}"
+EXPECTED_COMMIT="${AWGBOX_COMMIT:-b055b349395b49bd485805d52e4fafebd1d70b00}"
 REPO="${AWGBOX_REPO:-https://github.com/hoaxisr/amnezia-box.git}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORK="${AWGBOX_WORK_DIR:-$ROOT/.artifacts/amnezia-box}"
