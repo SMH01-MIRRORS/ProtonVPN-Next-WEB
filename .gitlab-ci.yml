@@ -67,14 +67,15 @@ dependency_scanning:
           apk add curl unzip > /dev/null
         fi
         mkdir -p "$ANDROID_HOME/cmdline-tools"
-        curl -sL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o cmdline-tools.zip
+        curl -sL https://dl.google.com/android/repository/commandlinetools-linux-15859902_latest.zip -o cmdline-tools.zip
         unzip -q cmdline-tools.zip -d "$ANDROID_HOME/cmdline-tools"
         mv "$ANDROID_HOME/cmdline-tools/cmdline-tools" "$ANDROID_HOME/cmdline-tools/latest"
         rm cmdline-tools.zip
       fi
     - echo "y" | sdkmanager --licenses > /dev/null || true
-    - echo "Installing SDK components..."
-    - sdkmanager "platforms;android-37" "build-tools;37.0.0"
+    - echo "Updating SDK manager and installing components..."
+    - yes | sdkmanager --update > /dev/null || true
+    - sdkmanager --channel=3 "platforms;android-37" "build-tools;37.0.0"
     - ./gradlew help
 
 .android-setup:
