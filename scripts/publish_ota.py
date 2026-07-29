@@ -13,10 +13,13 @@ R2_ENDPOINT = os.environ.get('R2_ENDPOINT')
 R2_BUCKET = os.environ.get('R2_BUCKET')
 R2_PUBLIC_URL = os.environ.get('R2_PUBLIC_URL', 'https://pub-xxxx.r2.dev')
 
-# Woodpecker environment
-EVENT = os.environ.get('CI_PIPELINE_EVENT', 'push')
+# CI environment (GitLab)
+EVENT = os.environ.get('CI_PIPELINE_SOURCE', 'push')
 TAG = os.environ.get('CI_COMMIT_TAG')
 COMMIT_SHA = os.environ.get('CI_COMMIT_SHA', 'unknown')[:8]
+REPO_URL = os.environ.get('CI_REPOSITORY_URL')
+# Use provided token or fall back to automatic CI_JOB_TOKEN
+GITLAB_TOKEN = os.environ.get('GITLAB_TOKEN') or os.environ.get('CI_JOB_TOKEN')
 
 # Project branches
 WEBSITE_BRANCH = "website"
@@ -101,15 +104,28 @@ def main():
     if os.path.exists("website_repo"):
         subprocess.run("rm -rf website_repo", shell=True)
 
-    token = os.environ.get('CODEBERG_TOKEN')
-    repo_url = os.environ.get('CI_REPO_CLONE_URL')
-    if token and "://" in repo_url:
-        proto, rest = repo_url.split("://", 1)
-        auth_repo_url = f"{proto}://oauth2:{token}@{rest}"
-    else:
-        auth_repo_url = repo_url
+    if GITLAB_TOKEN and REPO_URL and "://" in REPO_URL:
+        proto, rest = REPO_URL.split("://", 1)
+        # Handle cases where REPO_URL already has a token/user
+        if "@" in rest:
+            _, host_path = rest.split("@", 1)
+        else:
+            host_path = rest
 
-    subprocess.run(f"git clone --branch {WEBSITE_BRANCH} {auth_repo_url} website_repo", shell=True)
+        # Use gitlab-ci-token as username for CI_JOB_TOKEN compatibility
+        user = "gitlab-ci-token" if not os.environ.get('GITLAB_TOKEN') else "oauth2"
+        auth_repo_url = f"{proto}://{user}:{GITLAB_TOKEN}@{host_path}"
+    else:
+        auth_repo_url = REPO_URL
+
+    if not auth_repo_url:
+        print("Error: Could not determine repository URL for website update.")
+        return
+
+    clone_res = subprocess.run(f"git clone --branch {WEBSITE_BRANCH} {auth_repo_url} website_repo", shell=True)
+    if clone_res.returncode != 0:
+        print(f"Error: Failed to clone {WEBSITE_BRANCH} branch. Ensure it exists.")
+        return
 
     json_path = "website_repo/public/update.json"
     os.makedirs(os.path.dirname(json_path), exist_ok=True)

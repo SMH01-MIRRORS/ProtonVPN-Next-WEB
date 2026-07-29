@@ -55,7 +55,7 @@ def generate_changelog(history):
     prompt_template = os.environ.get('CHANGELOG_PROMPT')
     if not prompt_template:
         print("Error: CHANGELOG_PROMPT is not set.")
-        return f"AI Generation Failed: CHANGELOG_PROMPT missing. Raw history:\n\n{history}"
+        return f"AI Generation Failed: CHANGELOG_PROMPT missing. Raw history:\n\n{history}"[:1000]
 
     # Replace placeholder [TAG_NAME] if it exists in the custom prompt
     full_prompt = prompt_template.replace('[TAG_NAME]', TAG_NAME)
@@ -64,10 +64,16 @@ def generate_changelog(history):
 
     try:
         response = model.generate_content(full_prompt)
-        return response.text
+        text = response.text.strip()
+
+        # Enforce 1000 character limit and truncation for Telegram compatibility
+        if len(text) > 1000:
+            text = text[:997] + "..."
+
+        return text
     except Exception as e:
         print(f"Error calling Gemini API: {e}")
-        return f"AI Generation Failed. Raw history:\n\n{history}"
+        return f"AI Generation Failed. Raw history:\n\n{history}"[:1000]
 
 def main():
     print(f"Generating AI changelog for {TAG_NAME}...")

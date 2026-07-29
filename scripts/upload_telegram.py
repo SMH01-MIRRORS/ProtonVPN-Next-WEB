@@ -18,12 +18,12 @@ try:
 except ValueError:
     CHAT_ID = TG_CHAT_ID
 
-# Woodpecker default environment variables
+# GitLab CI environment variables
 COMMIT_AUTHOR = os.environ.get('CI_COMMIT_AUTHOR', 'Unknown')
 COMMIT_SHA = os.environ.get('CI_COMMIT_SHA', 'none')[:8]
-REPO_NAME = os.environ.get('CI_REPO', 'ProtonVPN-Next')
+REPO_NAME = os.environ.get('CI_PROJECT_NAME', 'ProtonVPN-Next')
 BRANCH = os.environ.get('CI_COMMIT_BRANCH', 'unknown')
-EVENT = os.environ.get('CI_PIPELINE_EVENT', 'manual')
+EVENT = os.environ.get('CI_PIPELINE_SOURCE', 'manual')
 TAG = os.environ.get('CI_COMMIT_TAG')
 
 def get_commit_summary():
@@ -31,7 +31,7 @@ def get_commit_summary():
     Returns a summary of commits. If it's a push event, it looks at the last 10 commits
     and groups all consecutive commits by the same author to provide a batch summary.
     """
-    event = os.environ.get('CI_PIPELINE_EVENT')
+    event = os.environ.get('CI_PIPELINE_SOURCE')
     author = os.environ.get('CI_COMMIT_AUTHOR')
     full_message = os.environ.get('CI_COMMIT_MESSAGE', 'No message')
     # Default to the first line of the current commit message
@@ -111,14 +111,31 @@ async def main():
 
         tag_str = f"\n🏷️ **Tag:** `{TAG}`" if TAG else ""
 
-        caption = (
-            f"🚀 **New Build ({flavor} {build_type}): {REPO_NAME}**\n\n"
-            f"📝 **{commit_label}:** {commit_summary}\n"
-            f"👤 **Author:** {COMMIT_AUTHOR}\n"
-            f"🌿 **Branch:** `{BRANCH}`{tag_str}\n"
-            f"🔢 **Hash:** `{COMMIT_SHA}`\n"
-            f"⚡ **Event:** `{EVENT.upper()}`"
-        )
+        # Use AI-generated changelog for tags (releases/pre-releases) if available
+        ai_changelog = ""
+        if TAG and os.path.exists('changelog.txt'):
+            try:
+                with open('changelog.txt', 'r', encoding='utf-8') as f:
+                    ai_changelog = f.read().strip()
+            except Exception as e:
+                print(f"Error reading changelog.txt: {e}")
+
+        if TAG and ai_changelog:
+            # Clean AI changelog for Telegram (limit length to stay within 1024 char caption limit)
+            max_len = 1000
+            if len(ai_changelog) > max_len:
+                ai_changelog = ai_changelog[:max_len-3] + "..."
+
+            caption = ai_changelog
+        else:
+            caption = (
+                f"🚀 **New Build ({flavor} {build_type}): {REPO_NAME}**\n\n"
+                f"📝 **{commit_label}:** {commit_summary}\n"
+                f"👤 **Author:** {COMMIT_AUTHOR}\n"
+                f"🌿 **Branch:** `{BRANCH}`{tag_str}\n"
+                f"🔢 **Hash:** `{COMMIT_SHA}`\n"
+                f"⚡ **Event:** `{EVENT.upper()}`"
+            )
 
         try:
             print(f"Uploading {file_name} to {CHAT_ID}...")

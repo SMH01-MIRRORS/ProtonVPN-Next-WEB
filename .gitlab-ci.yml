@@ -291,6 +291,8 @@ publish-external:
   cache: {}
   needs:
     - job: build-apks
+    - job: generate-changelog
+      optional: true
   script:
     - apt-get update && apt-get install -y git
     - pip install boto3 telethon
