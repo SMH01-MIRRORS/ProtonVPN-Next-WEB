@@ -21,6 +21,7 @@ verify-secrets:
   image: python:3.11-slim
   tags:
     - saas-linux-small-amd64
+  cache: {}
   script:
     - apt-get update && apt-get install -y curl
     - pip install boto3 botocore
@@ -223,6 +224,7 @@ generate-changelog:
   tags:
     - saas-linux-small-amd64
   image: python:3.11-slim
+  cache: {}
   script:
     - apt-get update && apt-get install -y git
     - git fetch --tags
@@ -239,6 +241,7 @@ create-official-release:
   tags:
     - saas-linux-small-amd64
   image: registry.gitlab.com/gitlab-org/release-cli:latest
+  cache: {}
   needs:
     - job: build-apks
     - job: generate-changelog
@@ -262,6 +265,7 @@ create-pre-release:
   tags:
     - saas-linux-small-amd64
   image: registry.gitlab.com/gitlab-org/release-cli:latest
+  cache: {}
   needs:
     - job: build-apks
     - job: generate-changelog
@@ -285,6 +289,7 @@ publish-external:
   tags:
     - saas-linux-small-amd64
   image: python:3.11-slim
+  cache: {}
   needs:
     - job: build-apks
   script:
