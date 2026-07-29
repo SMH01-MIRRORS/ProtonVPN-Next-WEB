@@ -29,7 +29,9 @@ include:
 .android-setup:
   image: $ANDROID_SDK_IMAGE
   before_script:
-    - yes | sdkmanager --licenses > /dev/null
+    - set +o pipefail
+    - yes | sdkmanager --licenses > /dev/null || true
+    - set -o pipefail
     - sdkmanager --update
     - sdkmanager "platforms;android-37.0" "build-tools;37.0.0" "ndk;29.0.14206865" "cmake;3.22.1"
     # Install Go for AWGBox
