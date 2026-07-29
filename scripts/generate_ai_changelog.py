@@ -4,7 +4,7 @@ import google.generativeai as genai
 
 # Configuration from environment variables
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
-GEMINI_MODEL = os.environ.get('GEMINI_MODEL', 'gemini-1.5-flash')
+GEMINI_MODEL = os.environ.get('GEMINI_MODEL', 'gemini-3.1-flash-lite')
 TAG_NAME = os.environ.get('CI_COMMIT_TAG', 'Unknown')
 REPO_NAME = os.environ.get('CI_REPO', 'ProtonVPN-Next')
 
