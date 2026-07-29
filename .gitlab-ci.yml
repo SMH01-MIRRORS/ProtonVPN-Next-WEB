@@ -2,6 +2,7 @@
 # Leveraging GitLab Ultimate for Security Scanning
 
 stages:
+  - pre-flight
   - test
   - security
   - build
@@ -11,8 +12,61 @@ variables:
   ANDROID_SDK_IMAGE: "ghcr.io/cirruslabs/android-sdk:36"
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Xmx4g"
   GRADLE_USER_HOME: "${CI_PROJECT_DIR}/.gradle"
-  SECURE_LOG_LEVEL: "debug" # Поможет увидеть детали, если снова упадет
-  DS_SKIP_DEPENDENCY_CHECKING: "true" # Пропускает выполнение Gradle, просто парсит файлы
+  SECURE_LOG_LEVEL: "debug" # Helps debugging failures
+  DS_SKIP_DEPENDENCY_CHECKING: "true" # Skips Gradle execution, just parses files
+
+# Pre-flight check for secrets and external services
+verify-secrets:
+  stage: pre-flight
+  image: python:3.11-slim
+  tags:
+    - saas-linux-small-amd64
+  script:
+    - apt-get update && apt-get install -y curl
+    - pip install boto3 botocore
+    - |
+      echo "Verifying Cloudflare R2 access..."
+      python3 -c "
+      import boto3, os, sys
+      from botocore.config import Config
+      try:
+          s3 = boto3.client('s3',
+              endpoint_url=os.environ['R2_ENDPOINT'],
+              aws_access_key_id=os.environ['R2_ACCESS_KEY'],
+              aws_secret_access_key=os.environ['R2_SECRET_KEY'],
+              config=Config(signature_version='s3v4'),
+              region_name='auto'
+          )
+          s3.head_bucket(Bucket=os.environ['R2_BUCKET'])
+          print('✅ R2 access verified')
+      except Exception as e:
+          print(f'❌ R2 access failed: {e}')
+          sys.exit(1)
+      "
+    - |
+      echo "Verifying Telegram Bot Token..."
+      TG_RESP=$(curl -s "https://api.telegram.org/bot${TG_BOT_TOKEN}/getMe")
+      if echo "$TG_RESP" | grep -q '"ok":true'; then
+        echo "✅ Telegram Bot Token verified"
+      else
+        echo "❌ Telegram Bot Token invalid: $TG_RESP"
+        exit 1
+      fi
+    - |
+      echo "Verifying Sentry Auth Token..."
+      if [ -n "$SENTRY_AUTH_TOKEN" ]; then
+        SENTRY_RESP=$(curl -s -H "Authorization: Bearer $SENTRY_AUTH_TOKEN" "https://sentry.io/api/0/")
+        if echo "$SENTRY_RESP" | grep -q '"user":'; then
+          echo "✅ Sentry Auth Token verified"
+        else
+          echo "❌ Sentry Auth Token invalid or insufficient permissions: $SENTRY_RESP"
+          exit 1
+        fi
+      else
+        echo "⚠️ SENTRY_AUTH_TOKEN not set, skipping..."
+      fi
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "manual"
 
 # Caching for Gradle and Android SDK components
 cache:
@@ -29,7 +83,7 @@ include:
   - template: Security/Secret-Detection.gitlab-ci.yml
   - template: Security/Dependency-Scanning.gitlab-ci.yml
 
-# Настройка Dependency Scanning специально для Android
+# Dependency Scanning configuration specifically for Android
 dependency_scanning:
   tags:
     - saas-linux-medium-amd64
@@ -130,6 +184,7 @@ unit-tests:
     - saas-linux-medium-amd64
   variables:
     GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Xmx8g"
+    SKIP_AWGBOX_BUILD: "true"
   script:
     - ./gradlew testNightlyStandardDebugUnitTest
   rules:
@@ -239,5 +294,6 @@ publish-external:
     - python scripts/upload_telegram.py
   rules:
     - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH == "protonvpn-next-dev" || $CI_COMMIT_BRANCH == "awgbox"
     - if: $CI_PIPELINE_SOURCE == "manual"
       when: manual

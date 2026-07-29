@@ -49,13 +49,13 @@ import kotlin.math.max
 object FlagDimensions {
     val DefaultWidth = 30.dp
     val DefaultHeight = 20.dp
-    val DefaultCornerRadius = 4f // в dp, как в оригинале
+    val DefaultCornerRadius = 4f // in dp, same as original
     val DefaultSize = DpSize(DefaultWidth, DefaultHeight)
 }
 
 /**
- * Флаг с кастомной отрисовкой, повторяющей логику Proton VPN.
- * Обеспечивает идеальное масштабирование (Center Crop) и скругление углов для векторов.
+ * Flag with custom drawing, mirroring the Proton VPN logic.
+ * Ensures perfect scaling (Center Crop) and corner rounding for vectors.
  */
 @Composable
 fun FlagIcon(
@@ -105,23 +105,24 @@ private class FlagDrawScope(
         val drawable = getDrawable(resId) ?: return
         val dstSize = SizeF(size.width.value, size.height.value)
 
-        // Используем Picture для записи отрисовки вектора с его нативными размерами
+        // Use Picture to record vector drawing with its native dimensions
         val picture = Picture()
         val srcWidth = drawable.intrinsicWidth
         val srcHeight = drawable.intrinsicHeight
         
         if (srcWidth <= 0 || srcHeight <= 0) return
 
+        // Use Picture to record the vector drawing at its native dimensions
         picture.record(srcWidth, srcHeight) {
             drawable.setBounds(0, 0, srcWidth, srcHeight)
             drawable.draw(this)
         }
 
-        // Логика Center Crop
+        // Center Crop logic
         val fillScale = max(dstSize.width / srcWidth, dstSize.height / srcHeight)
         val pictureRect = RectF(0f, 0f, srcWidth * fillScale, srcHeight * fillScale)
         
-        // Центрирование
+        // Centering
         pictureRect.offset(
             (dstSize.width - pictureRect.width()) / 2f,
             (dstSize.height - pictureRect.height()) / 2f
