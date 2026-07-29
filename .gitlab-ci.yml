@@ -72,20 +72,20 @@ dependency_scanning:
         mv "$ANDROID_HOME/cmdline-tools/cmdline-tools" "$ANDROID_HOME/cmdline-tools/latest"
         rm cmdline-tools.zip
       fi
-    - echo "y" | sdkmanager --licenses > /dev/null || true
-    - echo "Updating SDK manager and installing components..."
-    - yes | sdkmanager --update > /dev/null || true
-    - sdkmanager --channel=3 "platforms;android-37" "build-tools;37.0.0"
+    - echo "y" | android sdk update --licenses > /dev/null || true
+    - echo "Updating SDK and installing components using Android CLI..."
+    - android sdk update > /dev/null || true
+    - android sdk install platforms/android-37 build-tools/37.0.0
     - ./gradlew help
 
 .android-setup:
   image: $ANDROID_SDK_IMAGE
   before_script:
     - set +o pipefail
-    - yes | sdkmanager --licenses > /dev/null || true
+    - yes | android sdk update --licenses > /dev/null || true
     - set -o pipefail
-    - sdkmanager --update
-    - sdkmanager "platforms;android-37.0" "build-tools;37.0.0" "ndk;29.0.14206865" "cmake;3.22.1"
+    - android sdk update
+    - android sdk install platforms/android-37.0 build-tools/37.0.0 ndk/29.0.14206865 cmake/3.22.1
     # Install Go for AWGBox
     - apt-get update -qq && apt-get install -y -qq curl git python3
     - curl -fsSL "https://go.dev/dl/go1.26.4.linux-amd64.tar.gz" | tar -C /usr/local -xz
