@@ -37,6 +37,25 @@ dependency_scanning:
     DS_SKIP_DEPENDENCY_CHECKING: "true"
     SKIP_AWGBOX_BUILD: "true"
   before_script:
+    - |
+      if [ -z "$JAVA_HOME" ]; then
+        echo "Locating Java..."
+        JAVA_PATH=$(command -v java || true)
+        if [ -n "$JAVA_PATH" ]; then
+          export JAVA_HOME=$(dirname $(dirname $(readlink -f "$JAVA_PATH")))
+          echo "Found JAVA_HOME: $JAVA_HOME"
+        else
+          echo "Java not found in PATH, searching in common locations..."
+          for loc in /opt/java/openjdk /usr/lib/jvm/java-17-openjdk /usr/lib/jvm/adoptopenjdk-17; do
+            if [ -d "$loc" ]; then
+              export JAVA_HOME="$loc"
+              export PATH="$JAVA_HOME/bin:$PATH"
+              echo "Found JAVA_HOME: $JAVA_HOME"
+              break
+            fi
+          done
+        fi
+      fi
     - export ANDROID_HOME="${CI_PROJECT_DIR}/.android-sdk"
     - export PATH="${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
     - |
