@@ -9,7 +9,6 @@
 
 package ru.protonmod.next.ui.screens.dashboard
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
@@ -18,7 +17,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -31,16 +29,16 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -56,7 +54,7 @@ import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -88,7 +86,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.delay
 import ru.protonmod.next.R
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
@@ -112,66 +109,69 @@ internal fun DesktopTabletDashboard(
     onToggleIpVisibility: () -> Unit,
     onChangeQuickConnect: () -> Unit,
     onToggleStats: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var entered by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { entered = true }
 
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val leftWidth = 380.dp.coerceAtMost(maxWidth * 0.42f)
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(20.dp),
-            horizontalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            Column(
-                modifier = Modifier.width(leftWidth).fillMaxHeight(),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+    Box(modifier = modifier) {
+        LaunchedEffect(Unit) { entered = true }
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val leftWidth = 380.dp.coerceAtMost(maxWidth * 0.42f)
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .padding(20.dp),
+                horizontalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                DesktopEnter(visible = entered, delayMillis = 0) {
-                    DesktopConnectionCard(
-                        state = state,
-                        onQuickConnect = onQuickConnect,
-                        onDisconnect = onDisconnect,
-                        onChangeQuickConnect = onChangeQuickConnect
-                    )
+                Column(
+                    modifier = Modifier.width(leftWidth).fillMaxHeight(),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
+                    DesktopEnter(visible = entered, delayMillis = 0) {
+                        DesktopConnectionCard(
+                            state = state,
+                            onQuickConnect = onQuickConnect,
+                            onDisconnect = onDisconnect,
+                            onChangeQuickConnect = onChangeQuickConnect
+                        )
+                    }
+                    DesktopEnter(
+                        visible = entered,
+                        delayMillis = 100,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        RecentConnectionsCard(
+                            recents = state.recentConnections.take(10).toImmutableList(),
+                            connectedServerId = state.connectedServer?.id,
+                            onServerClick = onServerClick,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                    DesktopEnter(visible = entered, delayMillis = 200) {
+                        DesktopStatsCard(
+                            stats = stats,
+                            isConnected = state.isConnected,
+                            liveSpeed = state.speed,
+                            onToggle = onToggleStats,
+                            modifier = Modifier.fillMaxWidth().height(240.dp)
+                        )
+                    }
                 }
+
                 DesktopEnter(
                     visible = entered,
-                    delayMillis = 100,
-                    modifier = Modifier.weight(1f)
+                    delayMillis = 300,
+                    modifier = Modifier.weight(1f).fillMaxHeight()
                 ) {
-                    RecentConnectionsCard(
-                        recents = state.recentConnections.take(10).toImmutableList(),
-                        connectedServerId = state.connectedServer?.id,
-                        onServerClick = onServerClick,
+                    DesktopMapPanel(
+                        state = state,
+                        onToggleIpVisibility = onToggleIpVisibility,
+                        onResume = onResume,
+                        onRefreshCert = onRefreshCert,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
-                DesktopEnter(visible = entered, delayMillis = 200) {
-                    DesktopStatsCard(
-                        stats = stats,
-                        isConnected = state.isConnected,
-                        liveSpeed = state.speed,
-                        onToggle = onToggleStats,
-                        modifier = Modifier.fillMaxWidth().height(240.dp)
-                    )
-                }
-            }
-
-            DesktopEnter(
-                visible = entered,
-                delayMillis = 300,
-                modifier = Modifier.weight(1f).fillMaxHeight()
-            ) {
-                DesktopMapPanel(
-                    state = state,
-                    onToggleIpVisibility = onToggleIpVisibility,
-                    onResume = onResume,
-                    onRefreshCert = onRefreshCert,
-                    modifier = Modifier.fillMaxSize()
-                )
             }
         }
     }
@@ -206,23 +206,35 @@ private fun DesktopConnectionCard(
     val connectedServer = state.connectedServer
     val isBusy = state.isConnecting || state.vpnState == AmneziaVpnManager.VpnState.DISCONNECTING
 
-    val title = when {
-        state.isConnected || state.isConnecting -> connectedServer?.let {
-            CountryUtils.getCountryName(context, it.exitCountry)
-        } ?: stringResource(R.string.status_vpn)
-        state.quickConnectStrategy == "recent" -> stringResource(R.string.title_recent_connections)
-        state.quickConnectStrategy == "profile" -> selectedProfile?.name ?: stringResource(R.string.label_fastest_server)
-        state.quickConnectStrategy == "server" && targetServer != null -> CountryUtils.getCountryName(context, targetServer.exitCountry)
-        else -> stringResource(R.string.label_fastest_server)
+    val vpnStatusStr = stringResource(R.string.status_vpn)
+    val recentConnectionsStr = stringResource(R.string.title_recent_connections)
+    val fastestServerStr = stringResource(R.string.label_fastest_server)
+
+    val title = remember(state.isConnected, state.isConnecting, state.quickConnectStrategy, connectedServer, targetServer, selectedProfile, vpnStatusStr, recentConnectionsStr, fastestServerStr) {
+        when {
+            state.isConnected || state.isConnecting -> connectedServer?.let {
+                CountryUtils.getCountryName(context, it.exitCountry)
+            } ?: vpnStatusStr
+            state.quickConnectStrategy == "recent" -> recentConnectionsStr
+            state.quickConnectStrategy == "profile" -> selectedProfile?.name ?: fastestServerStr
+            state.quickConnectStrategy == "server" && targetServer != null -> CountryUtils.getCountryName(context, targetServer.exitCountry)
+            else -> fastestServerStr
+        }
     }
-    val subtitle = when {
-        state.isConnected || state.isConnecting -> listOfNotNull(
-            connectedServer?.localizedCity ?: connectedServer?.city,
-            connectedServer?.name
-        ).filter { it.isNotBlank() }.joinToString(", ")
-        state.quickConnectStrategy == "recent" -> stringResource(R.string.qc_last_used)
-        state.quickConnectStrategy == "server" && targetServer != null -> listOf(targetServer.localizedCity ?: targetServer.city, targetServer.name).filter { it.isNotBlank() }.joinToString(", ")
-        else -> stringResource(R.string.qc_lowest_load)
+
+    val lastUsedStr = stringResource(R.string.qc_last_used)
+    val lowestLoadStr = stringResource(R.string.qc_lowest_load)
+
+    val subtitle = remember(state.isConnected, state.isConnecting, connectedServer, state.quickConnectStrategy, targetServer, lastUsedStr, lowestLoadStr) {
+        when {
+            state.isConnected || state.isConnecting -> listOfNotNull(
+                connectedServer?.localizedCity ?: connectedServer?.city,
+                connectedServer?.name
+            ).filter { it.isNotBlank() }.joinToString(", ")
+            state.quickConnectStrategy == "recent" -> lastUsedStr
+            state.quickConnectStrategy == "server" && targetServer != null -> listOf(targetServer.localizedCity ?: targetServer.city, targetServer.name).filter { it.isNotBlank() }.joinToString(", ")
+            else -> lowestLoadStr
+        }
     }
     val flagCode = when {
         state.isConnected || state.isConnecting -> connectedServer?.exitCountry
@@ -247,11 +259,11 @@ private fun DesktopConnectionCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .clickable(onClick = onChangeQuickConnect)
                 .padding(top = 12.dp, bottom = 16.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .background(Color.White.copy(alpha = 0.03f))
                 .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
-                .clickable(onClick = onChangeQuickConnect)
                 .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -613,10 +625,8 @@ private fun DesktopChartBlock(label: String, points: ImmutableList<TrafficChartP
 
 @Composable
 private fun DesktopSmoothChart(points: ImmutableList<TrafficChartPoint>, color: Color, modifier: Modifier = Modifier) {
-    val values = remember(points) {
-        val max = points.maxOfOrNull { it.totalBytes }?.coerceAtLeast(1024L)?.toFloat() ?: 1024f
-        points.map { it.totalBytes / max }
-    }
+    val max = remember(points) { points.maxOfOrNull { it.totalBytes }?.coerceAtLeast(1024L)?.toFloat() ?: 1024f }
+    val values = remember(points, max) { points.map { it.totalBytes / max } }
     Canvas(modifier) {
         if (values.size < 2) return@Canvas
         val dx = size.width / (values.size - 1)

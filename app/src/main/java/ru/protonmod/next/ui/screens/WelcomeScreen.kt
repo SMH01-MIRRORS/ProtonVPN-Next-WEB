@@ -351,7 +351,7 @@ fun WelcomeScreen(
                 )
                 SetupStep.CONFIG_TELEMETRY -> {
                     if (BuildConfig.IS_PRIVACY_BUILD) {
-                        LaunchedEffect(Unit) {
+                        LaunchedEffect(viewModel) {
                             viewModel.setSetupStep(SetupStep.COMPLETE)
                             currentStep = SetupStep.COMPLETE
                         }
@@ -974,7 +974,7 @@ private fun StepConfigTelemetry(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            item {
+            item(contentType = "Note") {
                 Text(
                     text = stringResource(R.string.setup_telemetry_default_note),
                     style = MaterialTheme.typography.bodySmall,
@@ -985,7 +985,7 @@ private fun StepConfigTelemetry(
                         .padding(16.dp)
                 )
             }
-            item {
+            item(contentType = "Toggle") {
                 TelemetrySetupToggle(
                     title = stringResource(R.string.settings_crash_reports),
                     subtitle = stringResource(R.string.settings_crash_reports_desc),
@@ -993,7 +993,7 @@ private fun StepConfigTelemetry(
                     onCheckedChange = { settings = settings.copy(crashReports = it) }
                 )
             }
-            item {
+            item(contentType = "Toggle") {
                 TelemetrySetupToggle(
                     title = stringResource(R.string.settings_sentry_non_fatal),
                     subtitle = stringResource(R.string.settings_sentry_non_fatal_desc),
@@ -1001,7 +1001,7 @@ private fun StepConfigTelemetry(
                     onCheckedChange = { settings = settings.copy(nonFatalErrors = it) }
                 )
             }
-            item {
+            item(contentType = "Toggle") {
                 TelemetrySetupToggle(
                     title = stringResource(R.string.settings_sentry_anr),
                     subtitle = stringResource(R.string.settings_sentry_anr_desc),
@@ -1009,7 +1009,7 @@ private fun StepConfigTelemetry(
                     onCheckedChange = { settings = settings.copy(anrDetection = it) }
                 )
             }
-            item {
+            item(contentType = "Toggle") {
                 TelemetrySetupToggle(
                     title = stringResource(R.string.settings_sentry_metrics),
                     subtitle = stringResource(R.string.settings_sentry_metrics_desc),
@@ -1017,7 +1017,7 @@ private fun StepConfigTelemetry(
                     onCheckedChange = { settings = settings.copy(metrics = it) }
                 )
             }
-            item {
+            item(contentType = "Toggle") {
                 TelemetrySetupToggle(
                     title = stringResource(R.string.settings_sentry_logs),
                     subtitle = stringResource(R.string.settings_sentry_logs_desc),
@@ -1025,7 +1025,7 @@ private fun StepConfigTelemetry(
                     onCheckedChange = { settings = settings.copy(logs = it) }
                 )
             }
-            item {
+            item(contentType = "Toggle") {
                 TelemetrySetupToggle(
                     title = stringResource(R.string.settings_sentry_performance),
                     subtitle = stringResource(R.string.settings_sentry_performance_desc),
@@ -1033,7 +1033,7 @@ private fun StepConfigTelemetry(
                     onCheckedChange = { settings = settings.copy(performance = it) }
                 )
             }
-            item {
+            item(contentType = "Toggle") {
                 TelemetrySetupToggle(
                     title = stringResource(R.string.settings_analytics),
                     subtitle = stringResource(R.string.settings_analytics_desc),
@@ -1041,7 +1041,7 @@ private fun StepConfigTelemetry(
                     onCheckedChange = { settings = settings.copy(analytics = it) }
                 )
             }
-            item {
+            item(contentType = "Toggle") {
                 TelemetrySetupToggle(
                     title = stringResource(R.string.settings_sentry_session_replay),
                     subtitle = stringResource(R.string.settings_sentry_session_replay_desc),

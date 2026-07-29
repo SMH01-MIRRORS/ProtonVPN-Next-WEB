@@ -85,10 +85,10 @@ fun ProxyChainEditor(
                 dragOffset = direction * swapThreshold
                 break
             }
-            val reordered = links.toMutableList()
-            val moving = reordered.removeAt(draggedIndex)
-            reordered.add(target, moving)
-            links = reordered
+            links = links.toMutableList().apply {
+                val moving = removeAt(draggedIndex)
+                add(target, moving)
+            }
             draggedIndex = target
             dragOffset -= direction * swapThreshold
             orderChanged = true

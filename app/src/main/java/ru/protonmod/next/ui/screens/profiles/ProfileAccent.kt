@@ -17,9 +17,7 @@
 
 package ru.protonmod.next.ui.screens.profiles
 
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 /**
  * Accent gradient pair for a profile card, derived from the connection target:
@@ -31,21 +29,18 @@ data class ProfileAccent(
     val end: Color,
 )
 
-@Composable
-fun profileAccent(
+fun getProfileAccent(
     targetServerId: String?,
     targetCity: String?,
     targetCountry: String?,
+    brandColor: Color,
 ): ProfileAccent = when {
     // Specific server: metallic gray (silver -> steel).
     targetServerId != null -> ProfileAccent(Color(0xFFB0BEC5), Color(0xFF607D8B))
     // City: red.
     targetCity != null -> ProfileAccent(Color(0xFFEF5350), Color(0xFFC62828))
     // Country only: brand color.
-    targetCountry != null -> ProfileAccent(
-        ProtonNextTheme.colors.brandNorm,
-        ProtonNextTheme.colors.brandNorm,
-    )
+    targetCountry != null -> ProfileAccent(brandColor, brandColor)
     // Fastest connection: green.
     else -> ProfileAccent(Color(0xFF66BB6A), Color(0xFF2E7D32))
 }

@@ -53,6 +53,7 @@ import ru.protonmod.next.ui.utils.isTablet
 @Composable
 fun ConnectionVerificationSettingsScreen(
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: ConnectionVerificationSettingsViewModel = hiltViewModel(),
 ) {
     val colors = ProtonNextTheme.colors
@@ -60,7 +61,7 @@ fun ConnectionVerificationSettingsScreen(
     val tablet = isTablet()
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { padding ->
@@ -83,7 +84,7 @@ fun ConnectionVerificationSettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
                 val content = if (tablet) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
-                item {
+                item(contentType = "Header") {
                     NavigationHeader(stringResource(R.string.verification_title), onBack)
                     Box(content.padding(top = 24.dp, bottom = 20.dp), contentAlignment = Alignment.Center) {
                         Box(
@@ -115,8 +116,8 @@ fun ConnectionVerificationSettingsScreen(
                         modifier = content.padding(horizontal = 32.dp),
                     )
                 }
-                item {
-                    SettingsSection(content, stringResource(R.string.verification_mode_title)) {
+                item(contentType = "ModeSection") {
+                    SettingsSection(stringResource(R.string.verification_mode_title), content) {
                         ConnectionVerificationMode.entries.forEachIndexed { index, mode ->
                             ModeRow(mode, state.mode == mode) { viewModel.setMode(mode) }
                             if (index != ConnectionVerificationMode.entries.lastIndex) {
@@ -128,13 +129,13 @@ fun ConnectionVerificationSettingsScreen(
                         }
                     }
                 }
-                item {
+                item(contentType = "BehaviorSection") {
                     AnimatedVisibility(
                         visible = state.mode != ConnectionVerificationMode.DISABLED,
                         enter = fadeIn() + expandVertically(),
                         exit = fadeOut() + shrinkVertically(),
                     ) {
-                        SettingsSection(content, stringResource(R.string.verification_behavior_title)) {
+                        SettingsSection(stringResource(R.string.verification_behavior_title), content) {
                             VerificationToggle(
                                 R.string.verification_require_title,
                                 R.string.verification_require_desc,
@@ -165,7 +166,7 @@ fun ConnectionVerificationSettingsScreen(
                         }
                     }
                 }
-                item {
+                item(contentType = "Note") {
                     Text(
                         stringResource(R.string.verification_note),
                         style = MaterialTheme.typography.bodySmall,
@@ -179,7 +180,11 @@ fun ConnectionVerificationSettingsScreen(
 }
 
 @Composable
-private fun SettingsSection(modifier: Modifier, title: String, content: @Composable ColumnScope.() -> Unit) {
+private fun SettingsSection(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
     val colors = ProtonNextTheme.colors
     Column(modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(

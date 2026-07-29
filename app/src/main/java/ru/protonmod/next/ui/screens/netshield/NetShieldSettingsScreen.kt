@@ -85,6 +85,7 @@ import java.util.Date
 @Composable
 fun NetShieldSettingsScreen(
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: NetShieldSettingsViewModel = hiltViewModel(),
 ) {
     val colors = ProtonNextTheme.colors
@@ -92,7 +93,7 @@ fun NetShieldSettingsScreen(
     val tablet = isTablet()
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { paddingValues ->
@@ -365,10 +366,10 @@ private fun LevelRow(level: NetShieldLevel, selected: Boolean, onClick: () -> Un
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(horizontal = 4.dp, vertical = 2.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(background)
-            .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),

@@ -150,7 +150,9 @@ fun EditProfileScreen(
         // The editor always renders immediately. If a cold database read is
         // needed, the accent transitions smoothly from the neutral background
         // to the resolved target color instead of hiding the whole screen.
-        val accent = profileAccent(targetServerId, targetCity, targetCountry)
+        val accent = remember(targetServerId, targetCity, targetCountry, colors.brandNorm) {
+            getProfileAccent(targetServerId, targetCity, targetCountry, colors.brandNorm)
+        }
         val animatedBackgroundAccent by animateColorAsState(
             targetValue = if (profileId != null && editingProfile == null) {
                 colors.backgroundNorm
@@ -1213,7 +1215,9 @@ private fun ProfileHeroPreview(
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
-    val accent = profileAccent(targetServerId, targetCity, targetCountry)
+    val accent = remember(targetServerId, targetCity, targetCountry, colors.brandNorm) {
+        getProfileAccent(targetServerId, targetCity, targetCountry, colors.brandNorm)
+    }
 
     Box(
         modifier = modifier

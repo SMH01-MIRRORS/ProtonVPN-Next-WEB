@@ -275,7 +275,9 @@ fun ProfileCardItem(
     val context = LocalContext.current
     // Accent gradient by connection target: fastest = green, city = red,
     // specific server = metallic gray, country-only = brand color.
-    val accent = profileAccent(profile.targetServerId, profile.targetCity, profile.targetCountry)
+    val accent = remember(profile.targetServerId, profile.targetCity, profile.targetCountry, colors.brandNorm) {
+        getProfileAccent(profile.targetServerId, profile.targetCity, profile.targetCountry, colors.brandNorm)
+    }
 
     Box(
         modifier = modifier

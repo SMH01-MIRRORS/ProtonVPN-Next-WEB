@@ -171,7 +171,7 @@ fun ObfuscationSettingsScreen(
                         CategoryHeader(title = stringResource(R.string.obfuscation_protection_mode))
                         ProtectionModeSelector(
                             selectedMode = protectionMode,
-                            onModeSelected = { mode ->
+                            onSelectMode = { mode ->
                                 when (mode) {
                                     ProtectionMode.OFF -> viewModel.setConnectionProtectionMode(
                                         proxyChainEnabled = false,
@@ -695,29 +695,28 @@ private enum class ProtectionMode {
 @Composable
 private fun ProtectionModeSelector(
     selectedMode: ProtectionMode,
-    onModeSelected: (ProtectionMode) -> Unit,
+    onSelectMode: (ProtectionMode) -> Unit,
     modifier: Modifier = Modifier
 ) {
     SettingsCard(modifier = modifier) {
         ProtectionModeOption(
             title = stringResource(R.string.obfuscation_mode_off),
             description = stringResource(R.string.obfuscation_mode_off_desc),
-            selected = selectedMode == ProtectionMode.OFF,
-            onClick = { onModeSelected(ProtectionMode.OFF) }
-        )
+            selected = selectedMode == ProtectionMode.OFF
+        ) { onSelectMode(ProtectionMode.OFF) }
         HorizontalDivider(color = ProtonNextTheme.colors.shade20.copy(alpha = 0.5f))
         ProtectionModeOption(
             title = stringResource(R.string.obfuscation_transport_awg),
             description = stringResource(R.string.obfuscation_mode_awg_desc),
             selected = selectedMode == ProtectionMode.AWG,
-            onClick = { onModeSelected(ProtectionMode.AWG) }
+            onClick = { onSelectMode(ProtectionMode.AWG) }
         )
         HorizontalDivider(color = ProtonNextTheme.colors.shade20.copy(alpha = 0.5f))
         ProtectionModeOption(
             title = stringResource(R.string.obfuscation_transport_proxy_chain),
             description = stringResource(R.string.obfuscation_mode_proxy_desc),
             selected = selectedMode == ProtectionMode.PROXY_CHAIN,
-            onClick = { onModeSelected(ProtectionMode.PROXY_CHAIN) }
+            onClick = { onSelectMode(ProtectionMode.PROXY_CHAIN) }
         )
     }
 }

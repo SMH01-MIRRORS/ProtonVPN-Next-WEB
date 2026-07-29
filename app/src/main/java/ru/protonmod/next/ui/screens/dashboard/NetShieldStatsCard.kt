@@ -58,8 +58,8 @@ import java.util.Locale
 fun NetShieldStatsCard(
     stats: NetShieldStats,
     level: NetShieldLevel,
-    compact: Boolean = false,
     modifier: Modifier = Modifier,
+    compact: Boolean = false,
 ) {
     val colors = ProtonNextTheme.colors
     val shape = RoundedCornerShape(if (compact) 18.dp else 24.dp)
@@ -201,7 +201,7 @@ private fun Stat(
     label: String,
     accent: Color,
     compact: Boolean,
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
 ) {
     val colors = ProtonNextTheme.colors
     val shape = RoundedCornerShape(if (compact) 11.dp else 14.dp)
