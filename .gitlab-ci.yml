@@ -63,13 +63,13 @@ dependency_scanning:
       if [ ! -d "$ANDROID_HOME/cmdline-tools/latest" ]; then
         echo "Installing modern Android CLI (2026)..."
         if command -v apt-get >/dev/null; then
-          apt-get update -qq && apt-get install -y -qq curl unzip git > /dev/null
+          apt-get update -qq && apt-get install -y -qq curl unzip git python3 > /dev/null
         elif command -v microdnf >/dev/null; then
-          microdnf install -y curl unzip git > /dev/null
+          microdnf install -y curl unzip git python3 > /dev/null
         elif command -v yum >/dev/null; then
-          yum install -y curl unzip git > /dev/null
+          yum install -y curl unzip git python3 > /dev/null
         elif command -v apk >/dev/null; then
-          apk add curl unzip git > /dev/null
+          apk add curl unzip git python3 > /dev/null
         fi
         mkdir -p "$ANDROID_HOME/cmdline-tools"
         curl -sL https://dl.google.com/android/repository/commandlinetools-linux-15859902_latest.zip -o cmdline-tools.zip
@@ -77,10 +77,11 @@ dependency_scanning:
         mv "$ANDROID_HOME/cmdline-tools/cmdline-tools" "$ANDROID_HOME/cmdline-tools/latest"
         rm cmdline-tools.zip
       fi
-    - echo "y" | android sdk update --licenses > /dev/null || true
+    - android init --sdk="$ANDROID_HOME" > /dev/null || true
+    - echo "y" | android --sdk="$ANDROID_HOME" sdk update --licenses > /dev/null || true
     - echo "Updating SDK and installing components using Android CLI..."
-    - android sdk update > /dev/null || true
-    - android sdk install platforms/android-37 build-tools/37.0.0
+    - android --sdk="$ANDROID_HOME" sdk update > /dev/null || true
+    - android --sdk="$ANDROID_HOME" sdk install platforms/android-37 build-tools/37.0.0
     - ./gradlew help
 
 .android-setup:
@@ -111,13 +112,13 @@ dependency_scanning:
       if [ ! -d "$ANDROID_HOME/cmdline-tools/latest" ]; then
         echo "Installing modern Android CLI (2026)..."
         if command -v apt-get >/dev/null; then
-          apt-get update -qq && apt-get install -y -qq curl unzip git > /dev/null
+          apt-get update -qq && apt-get install -y -qq curl unzip git python3 > /dev/null
         elif command -v microdnf >/dev/null; then
-          microdnf install -y curl unzip git > /dev/null
+          microdnf install -y curl unzip git python3 > /dev/null
         elif command -v yum >/dev/null; then
-          yum install -y curl unzip git > /dev/null
+          yum install -y curl unzip git python3 > /dev/null
         elif command -v apk >/dev/null; then
-          apk add curl unzip git > /dev/null
+          apk add curl unzip git python3 > /dev/null
         fi
         mkdir -p "$ANDROID_HOME/cmdline-tools"
         curl -sL https://dl.google.com/android/repository/commandlinetools-linux-15859902_latest.zip -o cmdline-tools.zip
@@ -125,11 +126,12 @@ dependency_scanning:
         mv "$ANDROID_HOME/cmdline-tools/cmdline-tools" "$ANDROID_HOME/cmdline-tools/latest"
         rm cmdline-tools.zip
       fi
+    - android init --sdk="$ANDROID_HOME" > /dev/null || true
     - set +o pipefail
-    - echo "y" | android sdk update --licenses > /dev/null || true
+    - echo "y" | android --sdk="$ANDROID_HOME" sdk update --licenses > /dev/null || true
     - set -o pipefail
-    - android sdk update > /dev/null || true
-    - android sdk install platforms/android-37 build-tools/37.0.0 ndk/29.0.14206865 cmake/3.22.1
+    - android --sdk="$ANDROID_HOME" sdk update > /dev/null || true
+    - android --sdk="$ANDROID_HOME" sdk install platforms/android-37 build-tools/37.0.0 ndk/29.0.14206865 cmake/3.22.1
     # Install Go for AWGBox
     - |
       if [ ! -d "/usr/local/go" ]; then
