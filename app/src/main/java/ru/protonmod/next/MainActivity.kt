@@ -42,8 +42,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -52,17 +50,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SettingsManager
-import ru.protonmod.next.data.local.SetupStep
 import ru.protonmod.next.ota.OTAUpdateScreen
 import ru.protonmod.next.ui.components.LiquidGlassBottomBar
 import ru.protonmod.next.ui.components.ReconnectRequiredDialog
@@ -74,92 +66,7 @@ import ru.protonmod.next.ui.screens.settings.PolicyAcceptanceScreen
 import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.ProvideDeviceType
-import ru.protonmod.next.vpn.ReconnectPromptManager
 import javax.inject.Inject
-
-@HiltViewModel
-class MainViewModel @Inject constructor(
-    private val sessionDao: SessionDao,
-    private val settingsManager: SettingsManager,
-    private val reconnectPromptManager: ReconnectPromptManager
-) : ViewModel() {
-    private val _startDestination = MutableStateFlow("")
-    val startDestination: StateFlow<String> = _startDestination.asStateFlow()
-
-    val reconnectPrompt: StateFlow<ReconnectPromptManager.State> = reconnectPromptManager.state
-
-    fun postponeReconnect() = reconnectPromptManager.postpone()
-
-    fun reconnectNow() = reconnectPromptManager.reconnectNow()
-
-    fun disableReconnectPrompt() = reconnectPromptManager.disablePrompt()
-
-    val session = sessionDao.getSessionFlow()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = null
-        )
-
-    val appTheme: StateFlow<AppTheme> = settingsManager.appTheme
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = settingsManager.defaultTheme
-        )
-
-    init {
-        viewModelScope.launch {
-            val acceptedVersion = settingsManager.policyAcceptedVersion.first()
-            val session = sessionDao.getSession()
-            val hasSession = session != null && session.accessToken.isNotEmpty()
-
-            // If the user has a session but hasn't accepted the CURRENT policy, show the acceptance screen.
-            // This target existing users during an update.
-            if (hasSession && acceptedVersion < SettingsManager.CURRENT_POLICY_VERSION) {
-                ru.protonmod.next.utils.ProtonLogger.d("MainViewModel", "Existing user with session needs to accept policy.")
-                _startDestination.value = Screen.PolicyAcceptance.route
-                return@launch
-            }
-
-            // For new users (no session), we automatically mark the policy as accepted 
-            // since they agree to it by continuing from the Welcome screen.
-            if (!hasSession && acceptedVersion < SettingsManager.CURRENT_POLICY_VERSION) {
-                ru.protonmod.next.utils.ProtonLogger.d("MainViewModel", "New user, auto-accepting policy version.")
-                settingsManager.setPolicyAcceptedVersion(SettingsManager.CURRENT_POLICY_VERSION)
-            }
-
-            val step = settingsManager.setupStep.first()
-
-            if (hasSession && step == SetupStep.COMPLETE) {
-                ru.protonmod.next.utils.ProtonLogger.d("MainViewModel", "User logged in and setup complete, going home.")
-                _startDestination.value = Screen.Home.route
-            } else {
-                ru.protonmod.next.utils.ProtonLogger.d("MainViewModel", "No session or setup incomplete, going to welcome.")
-                _startDestination.value = "welcome"
-            }
-        }
-    }
-
-    fun acceptPolicy() {
-        ru.protonmod.next.utils.ProtonLogger.d("MainViewModel", "acceptPolicy() called")
-        viewModelScope.launch {
-            try {
-                settingsManager.setPolicyAcceptedVersion(SettingsManager.CURRENT_POLICY_VERSION)
-                val session = sessionDao.getSession()
-                val nextDestination = if (session != null && session.accessToken.isNotEmpty()) {
-                    Screen.Home.route
-                } else {
-                    "welcome"
-                }
-                ru.protonmod.next.utils.ProtonLogger.d("MainViewModel", "Setting startDestination to: $nextDestination")
-                _startDestination.value = nextDestination
-            } catch (e: Exception) {
-                ru.protonmod.next.utils.ProtonLogger.e("MainViewModel", "Error in acceptPolicy", e)
-            }
-        }
-    }
-}
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
