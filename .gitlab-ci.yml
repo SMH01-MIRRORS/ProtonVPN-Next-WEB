@@ -47,6 +47,9 @@ dependency_scanning:
         elif command -v microdnf >/dev/null; then
           microdnf install -y java-21-openjdk-devel > /dev/null
           export JAVA_HOME="/usr/lib/jvm/java-21"
+        elif command -v yum >/dev/null; then
+          yum install -y java-21-openjdk-devel > /dev/null
+          export JAVA_HOME="/usr/lib/jvm/java-21"
         elif command -v apk >/dev/null; then
           apk add openjdk21-jdk > /dev/null
           export JAVA_HOME="/usr/lib/jvm/java-21-openjdk"
@@ -58,13 +61,15 @@ dependency_scanning:
     - export PATH="${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
     - |
       if [ ! -d "$ANDROID_HOME/cmdline-tools/latest" ]; then
-        echo "Installing Android Command Line Tools..."
+        echo "Installing modern Android CLI (2026)..."
         if command -v apt-get >/dev/null; then
-          apt-get update -qq && apt-get install -y -qq curl unzip > /dev/null
+          apt-get update -qq && apt-get install -y -qq curl unzip git > /dev/null
         elif command -v microdnf >/dev/null; then
-          microdnf install -y curl unzip > /dev/null
+          microdnf install -y curl unzip git > /dev/null
+        elif command -v yum >/dev/null; then
+          yum install -y curl unzip git > /dev/null
         elif command -v apk >/dev/null; then
-          apk add curl unzip > /dev/null
+          apk add curl unzip git > /dev/null
         fi
         mkdir -p "$ANDROID_HOME/cmdline-tools"
         curl -sL https://dl.google.com/android/repository/commandlinetools-linux-15859902_latest.zip -o cmdline-tools.zip
@@ -81,14 +86,56 @@ dependency_scanning:
 .android-setup:
   image: $ANDROID_SDK_IMAGE
   before_script:
+    - |
+      echo "Ensuring JDK 21 is installed..."
+      if ! command -v java >/dev/null || ! java -version 2>&1 | grep -q "21"; then
+        echo "Java 21 not found or incorrect version. Installing openjdk-21-jdk-headless..."
+        if command -v apt-get >/dev/null; then
+          apt-get update -qq && apt-get install -y -qq openjdk-21-jdk-headless > /dev/null
+          export JAVA_HOME="/usr/lib/jvm/java-21-openjdk-amd64"
+        elif command -v microdnf >/dev/null; then
+          microdnf install -y java-21-openjdk-devel > /dev/null
+          export JAVA_HOME="/usr/lib/jvm/java-21"
+        elif command -v yum >/dev/null; then
+          yum install -y java-21-openjdk-devel > /dev/null
+          export JAVA_HOME="/usr/lib/jvm/java-21"
+        elif command -v apk >/dev/null; then
+          apk add openjdk21-jdk > /dev/null
+          export JAVA_HOME="/usr/lib/jvm/java-21-openjdk"
+        fi
+        export PATH="$JAVA_HOME/bin:$PATH"
+      fi
+    - export ANDROID_HOME="${CI_PROJECT_DIR}/.android-sdk"
+    - export PATH="${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
+    - |
+      if [ ! -d "$ANDROID_HOME/cmdline-tools/latest" ]; then
+        echo "Installing modern Android CLI (2026)..."
+        if command -v apt-get >/dev/null; then
+          apt-get update -qq && apt-get install -y -qq curl unzip git > /dev/null
+        elif command -v microdnf >/dev/null; then
+          microdnf install -y curl unzip git > /dev/null
+        elif command -v yum >/dev/null; then
+          yum install -y curl unzip git > /dev/null
+        elif command -v apk >/dev/null; then
+          apk add curl unzip git > /dev/null
+        fi
+        mkdir -p "$ANDROID_HOME/cmdline-tools"
+        curl -sL https://dl.google.com/android/repository/commandlinetools-linux-15859902_latest.zip -o cmdline-tools.zip
+        unzip -q cmdline-tools.zip -d "$ANDROID_HOME/cmdline-tools"
+        mv "$ANDROID_HOME/cmdline-tools/cmdline-tools" "$ANDROID_HOME/cmdline-tools/latest"
+        rm cmdline-tools.zip
+      fi
     - set +o pipefail
-    - yes | android sdk update --licenses > /dev/null || true
+    - echo "y" | android sdk update --licenses > /dev/null || true
     - set -o pipefail
-    - android sdk update
-    - android sdk install platforms/android-37.0 build-tools/37.0.0 ndk/29.0.14206865 cmake/3.22.1
+    - android sdk update > /dev/null || true
+    - android sdk install platforms/android-37 build-tools/37.0.0 ndk/29.0.14206865 cmake/3.22.1
     # Install Go for AWGBox
-    - apt-get update -qq && apt-get install -y -qq curl git python3
-    - curl -fsSL "https://go.dev/dl/go1.26.4.linux-amd64.tar.gz" | tar -C /usr/local -xz
+    - |
+      if [ ! -d "/usr/local/go" ]; then
+        echo "Installing Go..."
+        curl -fsSL "https://go.dev/dl/go1.26.4.linux-amd64.tar.gz" | tar -C /usr/local -xz
+      fi
     - export PATH="/usr/local/go/bin:$PATH"
     - ./scripts/build-awgbox-lib.sh
     # Git metadata
