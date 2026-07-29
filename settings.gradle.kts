@@ -40,6 +40,19 @@ dependencyResolutionManagement {
 
 rootProject.name = "ProtonVpnNext"
 
+// Automatically generate local.properties if it's missing but ANDROID_HOME is set.
+// This ensures that Android Gradle Plugin can find the SDK in CI environments
+// without needing manual local.properties creation.
+val localPropertiesFile = file("local.properties")
+if (!localPropertiesFile.exists()) {
+    val androidHome = providers.environmentVariable("ANDROID_HOME").orNull
+        ?: providers.environmentVariable("ANDROID_SDK_ROOT").orNull
+    if (androidHome != null) {
+        println("Auto-generating local.properties with sdk.dir=$androidHome")
+        localPropertiesFile.writeText("sdk.dir=$androidHome\n")
+    }
+}
+
 // The generated gomobile AAR is intentionally not committed. Settings scripts are evaluated
 // during Android Studio sync as well as regular Gradle invocations, so a fresh checkout prepares
 // the pinned AWGBox core before :app resolves its local file dependency. The shell script exits
