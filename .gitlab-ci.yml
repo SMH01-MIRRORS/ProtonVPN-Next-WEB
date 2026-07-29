@@ -38,31 +38,22 @@ dependency_scanning:
     SKIP_AWGBOX_BUILD: "true"
   before_script:
     - |
-      if [ -z "$JAVA_HOME" ]; then
-        echo "Locating Java..."
-        JAVA_BIN=$(find /usr /opt /usr/local -name java -type f -executable 2>/dev/null | head -n 1)
-        if [ -n "$JAVA_BIN" ]; then
-          export JAVA_HOME=$(dirname $(dirname $(readlink -f "$JAVA_BIN")))
-          export PATH="$(dirname "$JAVA_BIN"):$PATH"
-          echo "Found JAVA_HOME: $JAVA_HOME"
-          java -version
-        else
-          echo "Java not found, attempting to install..."
-          if command -v apt-get >/dev/null; then
-            apt-get update -qq && apt-get install -y -qq openjdk-17-jdk-headless > /dev/null
-          elif command -v microdnf >/dev/null; then
-            microdnf install -y java-17-openjdk-headless > /dev/null
-          elif command -v apk >/dev/null; then
-            apk add openjdk17-jre-headless > /dev/null
-          fi
-          JAVA_BIN=$(find /usr /opt /usr/local -name java -type f -executable 2>/dev/null | head -n 1)
-          if [ -n "$JAVA_BIN" ]; then
-             export JAVA_HOME=$(dirname $(dirname $(readlink -f "$JAVA_BIN")))
-             export PATH="$(dirname "$JAVA_BIN"):$PATH"
-             echo "Installed and set JAVA_HOME: $JAVA_HOME"
-          fi
+      echo "Ensuring JDK 21 is installed..."
+      if ! command -v java >/dev/null || ! java -version 2>&1 | grep -q "21"; then
+        echo "Java 21 not found or incorrect version. Installing openjdk-21-jdk-headless..."
+        if command -v apt-get >/dev/null; then
+          apt-get update -qq && apt-get install -y -qq openjdk-21-jdk-headless > /dev/null
+          export JAVA_HOME="/usr/lib/jvm/java-21-openjdk-amd64"
+        elif command -v microdnf >/dev/null; then
+          microdnf install -y java-21-openjdk-devel > /dev/null
+          export JAVA_HOME="/usr/lib/jvm/java-21"
+        elif command -v apk >/dev/null; then
+          apk add openjdk21-jdk > /dev/null
+          export JAVA_HOME="/usr/lib/jvm/java-21-openjdk"
         fi
+        export PATH="$JAVA_HOME/bin:$PATH"
       fi
+      java -version
     - export ANDROID_HOME="${CI_PROJECT_DIR}/.android-sdk"
     - export PATH="${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
     - |
@@ -72,8 +63,6 @@ dependency_scanning:
           apt-get update -qq && apt-get install -y -qq curl unzip > /dev/null
         elif command -v microdnf >/dev/null; then
           microdnf install -y curl unzip > /dev/null
-        elif command -v yum >/dev/null; then
-          yum install -y curl unzip > /dev/null
         elif command -v apk >/dev/null; then
           apk add curl unzip > /dev/null
         fi
