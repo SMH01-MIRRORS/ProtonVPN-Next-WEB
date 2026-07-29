@@ -58,6 +58,7 @@ dependency_scanning:
       fi
       java -version
     - export ANDROID_HOME="${CI_PROJECT_DIR}/.android-sdk"
+    - export ANDROID_SDK_ROOT="$ANDROID_HOME"
     - mkdir -p "$ANDROID_HOME"
     - export PATH="${HOME}/.local/bin:${PATH}"
     - |
@@ -68,7 +69,8 @@ dependency_scanning:
         fi
         curl -fsSL https://dl.google.com/android/cli/latest/linux_x86_64/install.sh | bash
       fi
-    - android --sdk="$ANDROID_HOME" sdk install platforms/android-37 build-tools/37.0.0
+    - android --sdk="$ANDROID_HOME" init
+    - yes | android --sdk="$ANDROID_HOME" sdk install platforms/android-37 build-tools/37.0.0
     - ./gradlew help
 
 .android-setup:
@@ -94,6 +96,7 @@ dependency_scanning:
         export PATH="$JAVA_HOME/bin:$PATH"
       fi
     - export ANDROID_HOME="${CI_PROJECT_DIR}/.android-sdk"
+    - export ANDROID_SDK_ROOT="$ANDROID_HOME"
     - mkdir -p "$ANDROID_HOME"
     - export PATH="${HOME}/.local/bin:${PATH}"
     - |
@@ -101,7 +104,8 @@ dependency_scanning:
         echo "Installing modern Android CLI (2026)..."
         curl -fsSL https://dl.google.com/android/cli/latest/linux_x86_64/install.sh | bash
       fi
-    - android --sdk="$ANDROID_HOME" sdk install platforms/android-37 build-tools/37.0.0 ndk/29.0.14206865 cmake/3.22.1
+    - android --sdk="$ANDROID_HOME" init
+    - yes | android --sdk="$ANDROID_HOME" sdk install platforms/android-37 build-tools/37.0.0 ndk/29.0.14206865 cmake/3.22.1
     # Install Go for AWGBox
     - |
       if [ ! -d "/usr/local/go" ]; then
