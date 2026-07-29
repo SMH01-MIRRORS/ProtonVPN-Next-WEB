@@ -63,13 +63,11 @@ dependency_scanning:
     - |
       if ! command -v android >/dev/null; then
         echo "Installing modern Android CLI (2026)..."
-        # Ensure dependencies for the installation script
         if command -v apt-get >/dev/null; then
           apt-get update -qq && apt-get install -y -qq curl unzip git > /dev/null
         fi
         curl -fsSL https://dl.google.com/android/cli/latest/linux_x86_64/install.sh | bash
       fi
-    - android init --sdk="$ANDROID_HOME"
     - android --sdk="$ANDROID_HOME" sdk install platforms/android-37 build-tools/37.0.0
     - ./gradlew help
 
@@ -103,7 +101,6 @@ dependency_scanning:
         echo "Installing modern Android CLI (2026)..."
         curl -fsSL https://dl.google.com/android/cli/latest/linux_x86_64/install.sh | bash
       fi
-    - android init --sdk="$ANDROID_HOME"
     - android --sdk="$ANDROID_HOME" sdk install platforms/android-37 build-tools/37.0.0 ndk/29.0.14206865 cmake/3.22.1
     # Install Go for AWGBox
     - |
