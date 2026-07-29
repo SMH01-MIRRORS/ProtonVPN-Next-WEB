@@ -40,20 +40,27 @@ dependency_scanning:
     - |
       if [ -z "$JAVA_HOME" ]; then
         echo "Locating Java..."
-        JAVA_PATH=$(command -v java || true)
-        if [ -n "$JAVA_PATH" ]; then
-          export JAVA_HOME=$(dirname $(dirname $(readlink -f "$JAVA_PATH")))
+        JAVA_BIN=$(find /usr /opt /usr/local -name java -type f -executable 2>/dev/null | head -n 1)
+        if [ -n "$JAVA_BIN" ]; then
+          export JAVA_HOME=$(dirname $(dirname $(readlink -f "$JAVA_BIN")))
+          export PATH="$(dirname "$JAVA_BIN"):$PATH"
           echo "Found JAVA_HOME: $JAVA_HOME"
+          java -version
         else
-          echo "Java not found in PATH, searching in common locations..."
-          for loc in /opt/java/openjdk /usr/lib/jvm/java-17-openjdk /usr/lib/jvm/adoptopenjdk-17; do
-            if [ -d "$loc" ]; then
-              export JAVA_HOME="$loc"
-              export PATH="$JAVA_HOME/bin:$PATH"
-              echo "Found JAVA_HOME: $JAVA_HOME"
-              break
-            fi
-          done
+          echo "Java not found, attempting to install..."
+          if command -v apt-get >/dev/null; then
+            apt-get update -qq && apt-get install -y -qq openjdk-17-jdk-headless > /dev/null
+          elif command -v microdnf >/dev/null; then
+            microdnf install -y java-17-openjdk-headless > /dev/null
+          elif command -v apk >/dev/null; then
+            apk add openjdk17-jre-headless > /dev/null
+          fi
+          JAVA_BIN=$(find /usr /opt /usr/local -name java -type f -executable 2>/dev/null | head -n 1)
+          if [ -n "$JAVA_BIN" ]; then
+             export JAVA_HOME=$(dirname $(dirname $(readlink -f "$JAVA_BIN")))
+             export PATH="$(dirname "$JAVA_BIN"):$PATH"
+             echo "Installed and set JAVA_HOME: $JAVA_HOME"
+          fi
         fi
       fi
     - export ANDROID_HOME="${CI_PROJECT_DIR}/.android-sdk"
