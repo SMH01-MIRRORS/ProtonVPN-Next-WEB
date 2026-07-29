@@ -42,7 +42,15 @@ dependency_scanning:
     - |
       if [ ! -d "$ANDROID_HOME/cmdline-tools/latest" ]; then
         echo "Installing Android Command Line Tools..."
-        apt-get update -qq && apt-get install -y -qq curl unzip > /dev/null
+        if command -v apt-get >/dev/null; then
+          apt-get update -qq && apt-get install -y -qq curl unzip > /dev/null
+        elif command -v microdnf >/dev/null; then
+          microdnf install -y curl unzip > /dev/null
+        elif command -v yum >/dev/null; then
+          yum install -y curl unzip > /dev/null
+        elif command -v apk >/dev/null; then
+          apk add curl unzip > /dev/null
+        fi
         mkdir -p "$ANDROID_HOME/cmdline-tools"
         curl -sL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o cmdline-tools.zip
         unzip -q cmdline-tools.zip -d "$ANDROID_HOME/cmdline-tools"
@@ -51,7 +59,8 @@ dependency_scanning:
       fi
     - echo "y" | sdkmanager --licenses > /dev/null || true
     - echo "Installing SDK components..."
-    - sdkmanager "platforms;android-37" "build-tools;37.0.0" > /dev/null
+    - sdkmanager "platforms;android-37" "build-tools;37.0.0"
+    - ./gradlew help
 
 .android-setup:
   image: $ANDROID_SDK_IMAGE

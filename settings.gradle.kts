@@ -48,9 +48,13 @@ if (!localPropertiesFile.exists()) {
     val androidHome = providers.environmentVariable("ANDROID_HOME").orNull
         ?: providers.environmentVariable("ANDROID_SDK_ROOT").orNull
     if (androidHome != null) {
-        println("Auto-generating local.properties with sdk.dir=$androidHome")
+        println("Settings: Auto-generating local.properties with sdk.dir=$androidHome")
         localPropertiesFile.writeText("sdk.dir=$androidHome\n")
+    } else {
+        println("Settings: local.properties missing and ANDROID_HOME not set. AGP might fail.")
     }
+} else {
+    println("Settings: Using existing local.properties")
 }
 
 // The generated gomobile AAR is intentionally not committed. Settings scripts are evaluated
