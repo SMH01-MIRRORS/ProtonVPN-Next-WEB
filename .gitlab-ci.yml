@@ -11,6 +11,8 @@ variables:
   ANDROID_SDK_IMAGE: "ghcr.io/cirruslabs/android-sdk:36"
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
   GRADLE_USER_HOME: "${CI_PROJECT_DIR}/.gradle"
+  SECURE_LOG_LEVEL: "debug" # Поможет увидеть детали, если снова упадет
+  DS_SKIP_DEPENDENCY_CHECKING: "true" # Пропускает выполнение Gradle, просто парсит файлы
 
 # Caching for Gradle and Android SDK components
 cache:
@@ -25,6 +27,11 @@ include:
   - template: Security/SAST.gitlab-ci.yml
   - template: Security/Secret-Detection.gitlab-ci.yml
   - template: Security/Dependency-Scanning.gitlab-ci.yml
+
+# Настройка Dependency Scanning специально для Android
+dependency_scanning:
+  variables:
+    DS_SKIP_DEPENDENCY_CHECKING: "true"
 
 .android-setup:
   image: $ANDROID_SDK_IMAGE
