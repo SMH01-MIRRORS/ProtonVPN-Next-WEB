@@ -1,0 +1,149 @@
+# GitLab CI/CD for ProtonVPN-Next
+# Leveraging GitLab Ultimate for Security Scanning
+
+stages:
+  - test
+  - security
+  - build
+  - deploy
+
+variables:
+  ANDROID_SDK_IMAGE: "ghcr.io/cirruslabs/android-sdk:36"
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+  GRADLE_USER_HOME: "${CI_PROJECT_DIR}/.gradle"
+
+# Caching for Gradle and Android SDK components
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - .gradle/wrapper
+    - .gradle/caches
+    - .android/
+
+# GitLab Ultimate Security Scans
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+
+.android-setup:
+  image: $ANDROID_SDK_IMAGE
+  before_script:
+    - yes | sdkmanager --licenses > /dev/null
+    - sdkmanager --update
+    - sdkmanager "platforms;android-37.0" "build-tools;37.0.0" "ndk;29.0.14206865" "cmake;3.22.1"
+    # Install Go for AWGBox
+    - apt-get update -qq && apt-get install -y -qq curl git python3
+    - curl -fsSL "https://go.dev/dl/go1.26.4.linux-amd64.tar.gz" | tar -C /usr/local -xz
+    - export PATH="/usr/local/go/bin:$PATH"
+    - ./scripts/build-awgbox-lib.sh
+    # Git metadata
+    - git fetch --unshallow || true
+    - git fetch --tags
+    # Keystore setup
+    - echo "$SIGNING_KEY_BASE64" | base64 -d > app/release.keystore
+    - export SIGNING_KEY_FILE=release.keystore
+    - chmod +x gradlew
+
+unit-tests:
+  extends: .android-setup
+  stage: test
+  script:
+    - ./gradlew testNightlyStandardDebugUnitTest
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "manual"
+
+build-apks:
+  extends: .android-setup
+  stage: build
+  script:
+    - |
+      if [ -n "$CI_COMMIT_TAG" ]; then
+        ./gradlew assembleStableStandardRelease
+        ./gradlew assembleStablePrivacyRelease
+      else
+        ./gradlew assembleNightlyStandardDebug assembleNightlyStandardRelease
+        ./gradlew assembleNightlyPrivacyDebug assembleNightlyPrivacyRelease
+      fi
+    # Generate Checksums
+    - find app/build/outputs/apk/ -name "*.apk" -exec sh -c 'sha256sum "$1" > "$1.sha256"' _ {} \;
+  artifacts:
+    paths:
+      - app/build/outputs/apk/**/*.apk
+      - app/build/outputs/apk/**/*.sha256
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == "protonvpn-next-dev" || $CI_COMMIT_BRANCH == "awgbox"
+    - if: $CI_COMMIT_TAG
+    - if: $CI_PIPELINE_SOURCE == "manual"
+
+generate-changelog:
+  stage: deploy
+  image: python:3.11-slim
+  script:
+    - apt-get update && apt-get install -y git
+    - git fetch --tags
+    - pip install google-generativeai
+    - python scripts/generate_ai_changelog.py
+  artifacts:
+    paths:
+      - changelog.txt
+  rules:
+    - if: $CI_COMMIT_TAG
+
+create-official-release:
+  stage: deploy
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  needs:
+    - job: build-apks
+    - job: generate-changelog
+  script:
+    - echo "Creating official release for $CI_COMMIT_TAG"
+  release:
+    name: 'Official Release $CI_COMMIT_TAG'
+    description: '$(cat changelog.txt)'
+    tag_name: '$CI_COMMIT_TAG'
+    assets:
+      links:
+        - name: 'Standard Release APK'
+          url: '${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/app/build/outputs/apk/stableStandard/release/app-stable-standard-release.apk?job=build-apks'
+        - name: 'Privacy Release APK'
+          url: '${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/app/build/outputs/apk/stablePrivacy/release/app-stable-privacy-release.apk?job=build-apks'
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+$/'
+
+create-pre-release:
+  stage: deploy
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  needs:
+    - job: build-apks
+    - job: generate-changelog
+  script:
+    - echo "Creating pre-release for $CI_COMMIT_TAG"
+  release:
+    name: 'Pre-release $CI_COMMIT_TAG'
+    description: '$(cat changelog.txt)'
+    tag_name: '$CI_COMMIT_TAG'
+    assets:
+      links:
+        - name: 'Standard Pre-release APK'
+          url: '${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/app/build/outputs/apk/stableStandard/release/app-stable-standard-release.apk?job=build-apks'
+        - name: 'Privacy Pre-release APK'
+          url: '${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/app/build/outputs/apk/stablePrivacy/release/app-stable-privacy-release.apk?job=build-apks'
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+-.+$/'
+
+publish-external:
+  stage: deploy
+  image: python:3.11-slim
+  needs:
+    - job: build-apks
+  script:
+    - apt-get update && apt-get install -y git
+    - pip install boto3 telethon
+    - python scripts/publish_ota.py
+    - python scripts/upload_telegram.py
+  rules:
+    - if: $CI_COMMIT_TAG
+    - if: $CI_PIPELINE_SOURCE == "manual"
+      when: manual
