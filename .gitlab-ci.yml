@@ -9,7 +9,7 @@ stages:
 
 variables:
   ANDROID_SDK_IMAGE: "ghcr.io/cirruslabs/android-sdk:36"
-  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Xmx4g"
   GRADLE_USER_HOME: "${CI_PROJECT_DIR}/.gradle"
   SECURE_LOG_LEVEL: "debug" # Поможет увидеть детали, если снова упадет
   DS_SKIP_DEPENDENCY_CHECKING: "true" # Пропускает выполнение Gradle, просто парсит файлы
@@ -30,6 +30,8 @@ include:
 
 # Настройка Dependency Scanning специально для Android
 dependency_scanning:
+  tags:
+    - saas-linux-small-amd64
   variables:
     DS_SKIP_DEPENDENCY_CHECKING: "true"
 
@@ -57,6 +59,10 @@ dependency_scanning:
 unit-tests:
   extends: .android-setup
   stage: test
+  tags:
+    - saas-linux-medium-amd64
+  variables:
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Xmx8g"
   script:
     - ./gradlew testNightlyStandardDebugUnitTest
   rules:
@@ -65,6 +71,10 @@ unit-tests:
 build-apks:
   extends: .android-setup
   stage: build
+  tags:
+    - saas-linux-medium-amd64
+  variables:
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Xmx8g"
   script:
     - |
       if [ -n "$CI_COMMIT_TAG" ]; then
@@ -88,6 +98,8 @@ build-apks:
 
 generate-changelog:
   stage: deploy
+  tags:
+    - saas-linux-small-amd64
   image: python:3.11-slim
   script:
     - apt-get update && apt-get install -y git
@@ -102,6 +114,8 @@ generate-changelog:
 
 create-official-release:
   stage: deploy
+  tags:
+    - saas-linux-small-amd64
   image: registry.gitlab.com/gitlab-org/release-cli:latest
   needs:
     - job: build-apks
@@ -123,6 +137,8 @@ create-official-release:
 
 create-pre-release:
   stage: deploy
+  tags:
+    - saas-linux-small-amd64
   image: registry.gitlab.com/gitlab-org/release-cli:latest
   needs:
     - job: build-apks
@@ -144,6 +160,8 @@ create-pre-release:
 
 publish-external:
   stage: deploy
+  tags:
+    - saas-linux-small-amd64
   image: python:3.11-slim
   needs:
     - job: build-apks
