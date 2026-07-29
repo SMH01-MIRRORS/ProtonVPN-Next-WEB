@@ -70,7 +70,7 @@ dependency_scanning:
         curl -fsSL https://dl.google.com/android/cli/latest/linux_x86_64/install.sh | bash
       fi
     - android --sdk="$ANDROID_HOME" init
-    - android --sdk="$ANDROID_HOME" sdk install "platforms/android-37.0" "build-tools/37.0.0" --canary
+    - android --sdk="$ANDROID_HOME" sdk install "platforms/android-37.0" "platforms/android-24" "build-tools/37.0.0" --canary
     - ./gradlew help
 
 .android-setup:
@@ -105,7 +105,7 @@ dependency_scanning:
         curl -fsSL https://dl.google.com/android/cli/latest/linux_x86_64/install.sh | bash
       fi
     - android --sdk="$ANDROID_HOME" init
-    - android --sdk="$ANDROID_HOME" sdk install "platforms/android-37.0" "build-tools/37.0.0" --canary
+    - android --sdk="$ANDROID_HOME" sdk install "platforms/android-37.0" "platforms/android-24" "build-tools/37.0.0" --canary
     - android --sdk="$ANDROID_HOME" sdk install "ndk/29.0.14206865" "cmake/3.22.1" --canary
     # Install Go for AWGBox
     - |
