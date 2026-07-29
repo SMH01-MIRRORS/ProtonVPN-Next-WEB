@@ -44,16 +44,24 @@ rootProject.name = "ProtonVpnNext"
 // during Android Studio sync as well as regular Gradle invocations, so a fresh checkout prepares
 // the pinned AWGBox core before :app resolves its local file dependency. The shell script exits
 // immediately when the existing artifact matches the committed checksum.
-val prepareAwgBox = ProcessBuilder(
-    "bash",
-    file("scripts/build-awgbox-lib.sh").absolutePath
-)
-    .directory(rootDir)
-    .inheritIO()
-    .start()
-    .waitFor()
-check(prepareAwgBox == 0) {
-    "Unable to prepare the AWGBox AAR. Check Android SDK/NDK, Go, git and python3."
+val shouldSkipAwgBox = providers.gradleProperty("SKIP_AWGBOX_BUILD").orNull == "true" ||
+        providers.environmentVariable("SKIP_AWGBOX_BUILD").orNull == "true" ||
+        startParameter.taskNames.any { it.contains("dependency", ignoreCase = true) }
+
+if (!shouldSkipAwgBox) {
+    val prepareAwgBox = ProcessBuilder(
+        "bash",
+        file("scripts/build-awgbox-lib.sh").absolutePath
+    )
+        .directory(rootDir)
+        .inheritIO()
+        .start()
+        .waitFor()
+    check(prepareAwgBox == 0) {
+        "Unable to prepare the AWGBox AAR. Check Android SDK/NDK, Go, git and python3."
+    }
+} else {
+    println("Skipping AWGBox AAR preparation (requested or dependency scan task detected)")
 }
 
 // Include main application module
