@@ -185,7 +185,6 @@ unit-tests:
     - saas-linux-medium-amd64
   variables:
     GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Xmx8g"
-    SKIP_AWGBOX_BUILD: "true"
   script:
     - ./gradlew testNightlyStandardDebugUnitTest
   rules:

@@ -29,24 +29,6 @@ except (BadZipFile, OSError):
 PY_AAR
 }
 
-if [[ "${SKIP_AWGBOX_BUILD:-0}" == "1" || "${SKIP_AWGBOX_BUILD:-}" == "true" ]]; then
-  if output_is_valid; then
-    echo "AWGBox AAR is already available: $OUTPUT"
-  else
-    echo "Creating stub AWGBox AAR for unit tests..."
-    mkdir -p "$(dirname "$OUTPUT")"
-    STUB_DIR="$(mktemp -d)"
-    mkdir -p "$STUB_DIR/jni/arm64-v8a"
-    echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.nekohasekai.libbox" />' > "$STUB_DIR/AndroidManifest.xml"
-    # Create an empty classes.jar and a dummy .so to satisfy the valid check
-    touch "$STUB_DIR/classes.jar"
-    touch "$STUB_DIR/jni/arm64-v8a/libbox.so"
-    (cd "$STUB_DIR" && zip -q -r "$OUTPUT" .)
-    rm -rf "$STUB_DIR"
-  fi
-  exit 0
-fi
-
 if [[ "$FORCE_REBUILD" != "1" ]] && output_is_valid; then
   echo "AWGBox AAR is already available and verified: $OUTPUT"
   exit 0
@@ -81,24 +63,6 @@ echo "$$" > "$LOCK_DIR/pid"
 trap 'rm -rf "$LOCK_DIR"' EXIT
 
 # Another process may have completed while this process was waiting for the lock.
-if [[ "${SKIP_AWGBOX_BUILD:-0}" == "1" || "${SKIP_AWGBOX_BUILD:-}" == "true" ]]; then
-  if output_is_valid; then
-    echo "AWGBox AAR is already available: $OUTPUT"
-  else
-    echo "Creating stub AWGBox AAR for unit tests..."
-    mkdir -p "$(dirname "$OUTPUT")"
-    STUB_DIR="$(mktemp -d)"
-    mkdir -p "$STUB_DIR/jni/arm64-v8a"
-    echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.nekohasekai.libbox" />' > "$STUB_DIR/AndroidManifest.xml"
-    # Create an empty classes.jar and a dummy .so to satisfy the valid check
-    touch "$STUB_DIR/classes.jar"
-    touch "$STUB_DIR/jni/arm64-v8a/libbox.so"
-    (cd "$STUB_DIR" && zip -q -r "$OUTPUT" .)
-    rm -rf "$STUB_DIR"
-  fi
-  exit 0
-fi
-
 if [[ "$FORCE_REBUILD" != "1" ]] && output_is_valid; then
   echo "AWGBox AAR is already available and verified: $OUTPUT"
   exit 0
