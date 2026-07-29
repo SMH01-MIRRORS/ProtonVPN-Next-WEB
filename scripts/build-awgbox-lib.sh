@@ -34,6 +34,7 @@ if [[ "${SKIP_AWGBOX_BUILD:-0}" == "1" || "${SKIP_AWGBOX_BUILD:-}" == "true" ]];
     echo "AWGBox AAR is already available: $OUTPUT"
   else
     echo "Creating stub AWGBox AAR for unit tests..."
+    mkdir -p "$(dirname "$OUTPUT")"
     STUB_DIR="$(mktemp -d)"
     mkdir -p "$STUB_DIR/jni/arm64-v8a"
     echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.nekohasekai.libbox" />' > "$STUB_DIR/AndroidManifest.xml"
@@ -85,6 +86,7 @@ if [[ "${SKIP_AWGBOX_BUILD:-0}" == "1" || "${SKIP_AWGBOX_BUILD:-}" == "true" ]];
     echo "AWGBox AAR is already available: $OUTPUT"
   else
     echo "Creating stub AWGBox AAR for unit tests..."
+    mkdir -p "$(dirname "$OUTPUT")"
     STUB_DIR="$(mktemp -d)"
     mkdir -p "$STUB_DIR/jni/arm64-v8a"
     echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.nekohasekai.libbox" />' > "$STUB_DIR/AndroidManifest.xml"
