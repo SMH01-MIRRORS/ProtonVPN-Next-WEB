@@ -58,10 +58,15 @@ dependency_scanning:
       fi
       java -version
     - export ANDROID_HOME="${CI_PROJECT_DIR}/.android-sdk"
-    - export PATH="${ANDROID_HOME}/bin:${PATH}"
+    - mkdir -p "$ANDROID_HOME"
+    - export PATH="${HOME}/.local/bin:${PATH}"
     - |
       if ! command -v android >/dev/null; then
         echo "Installing modern Android CLI (2026)..."
+        # Ensure dependencies for the installation script
+        if command -v apt-get >/dev/null; then
+          apt-get update -qq && apt-get install -y -qq curl unzip git > /dev/null
+        fi
         curl -fsSL https://dl.google.com/android/cli/latest/linux_x86_64/install.sh | bash
       fi
     - android init --sdk="$ANDROID_HOME"
@@ -91,7 +96,8 @@ dependency_scanning:
         export PATH="$JAVA_HOME/bin:$PATH"
       fi
     - export ANDROID_HOME="${CI_PROJECT_DIR}/.android-sdk"
-    - export PATH="${ANDROID_HOME}/bin:${PATH}"
+    - mkdir -p "$ANDROID_HOME"
+    - export PATH="${HOME}/.local/bin:${PATH}"
     - |
       if ! command -v android >/dev/null; then
         echo "Installing modern Android CLI (2026)..."
