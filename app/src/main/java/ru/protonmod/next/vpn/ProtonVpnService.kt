@@ -27,7 +27,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
-import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.TrafficStats
 import android.net.VpnService
@@ -84,6 +83,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     @Inject lateinit var connectedServerState: ConnectedServerState
     @Inject lateinit var trafficStatsRecorder: TrafficStatsRecorder
     @Inject lateinit var localNetShield: LocalNetShield
+    @Inject lateinit var vpnNetworkMonitor: VpnNetworkMonitor
 
     companion object {
         private const val TAG = "ProtonVpnService"
@@ -180,7 +180,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         super.onCreate()
         createNotificationChannels()
         initializeLibbox()
-        platform = AwgBoxPlatform(this) { descriptor ->
+        platform = AwgBoxPlatform(this, vpnNetworkMonitor) { descriptor ->
             tunDescriptor?.close()
             tunDescriptor = descriptor
         }
@@ -343,15 +343,16 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
      * engine start failure caused by the device going offline apart from a real configuration or
      * runtime defect.
      */
-    private fun hasUsableUnderlyingNetwork(): Boolean = runCatching {
-        val manager = getSystemService(ConnectivityManager::class.java) ?: return@runCatching true
-        manager.allNetworks.any { network ->
-            val capabilities = manager.getNetworkCapabilities(network) ?: return@any false
+    private fun hasUsableUnderlyingNetwork(): Boolean {
+        val networks = vpnNetworkMonitor.getTrackedNetworks()
+        if (networks.isEmpty()) return true
+        return networks.any { tracked ->
+            val capabilities = tracked.capabilities ?: return@any false
             !capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) &&
                 capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
                 capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
         }
-    }.getOrDefault(true)
+    }
 
     private fun handleEngineFailure() {
         state = VpnTunnelState.DOWN

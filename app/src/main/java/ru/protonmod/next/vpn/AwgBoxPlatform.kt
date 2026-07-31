@@ -51,6 +51,7 @@ import io.nekohasekai.libbox.NetworkInterface as BoxNetworkInterface
 /** Android platform bridge required by libbox. */
 internal class AwgBoxPlatform(
     private val service: VpnService,
+    private val vpnNetworkMonitor: VpnNetworkMonitor,
     private val onTunOpened: (ParcelFileDescriptor) -> Unit
 ) : PlatformInterface {
     private val connectivity = service.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -58,7 +59,7 @@ internal class AwgBoxPlatform(
 
     override fun usePlatformAutoDetectInterfaceControl() = true
     override fun autoDetectInterfaceControl(fd: Int) { service.protect(fd) }
-    override fun useProcFS() = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
+    override fun useProcFS() = false
     override fun underNetworkExtension() = false
     override fun includeAllNetworks() = false
     override fun localDNSTransport(): LocalDNSTransport? = null
@@ -71,7 +72,7 @@ internal class AwgBoxPlatform(
         val builder = service.Builder()
             .setSession(service.getString(ru.protonmod.next.R.string.vpn_session_name))
             .setMtu(options.mtu)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) builder.setMetered(false)
+            .setMetered(false)
 
         options.inet4Address.forEachRemaining { builder.addAddress(it.address(), it.prefix()) }
         options.inet6Address.forEachRemaining { builder.addAddress(it.address(), it.prefix()) }
@@ -109,7 +110,6 @@ internal class AwgBoxPlatform(
         destinationAddress: String,
         destinationPort: Int
     ): ConnectionOwner {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) error("Connection owner API unavailable")
         val uid = connectivity.getConnectionOwnerUid(
             ipProtocol,
             InetSocketAddress(sourceAddress, sourcePort),
@@ -164,9 +164,9 @@ internal class AwgBoxPlatform(
 
     override fun getInterfaces(): NetworkInterfaceIterator {
         val result = mutableListOf<BoxNetworkInterface>()
-        for (network in connectivity.allNetworks) {
-            val properties = connectivity.getLinkProperties(network) ?: continue
-            val capabilities = connectivity.getNetworkCapabilities(network) ?: continue
+        for (tracked in vpnNetworkMonitor.getTrackedNetworks()) {
+            val properties = tracked.linkProperties ?: continue
+            val capabilities = tracked.capabilities ?: continue
             val name = properties.interfaceName ?: continue
             val javaInterface = runCatching { NetworkInterface.getByName(name) }.getOrNull() ?: continue
             result += BoxNetworkInterface().apply {

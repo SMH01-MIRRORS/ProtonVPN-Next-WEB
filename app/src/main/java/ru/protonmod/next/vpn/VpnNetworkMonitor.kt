@@ -10,6 +10,7 @@ package ru.protonmod.next.vpn
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.LinkProperties
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
@@ -50,10 +51,14 @@ class VpnNetworkMonitor @Inject constructor(
         val proxyServerOverrides: Map<String, String> = emptyMap(),
     )
 
-    private data class TrackedNetwork(
+    data class TrackedNetwork(
         val network: Network,
+        val capabilities: NetworkCapabilities? = null,
+        val linkProperties: LinkProperties? = null
+    ) {
         val systemValidated: Boolean
-    )
+            get() = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
+    }
 
     private data class Snapshot(
         val networks: Map<Long, TrackedNetwork> = emptyMap()
@@ -71,6 +76,10 @@ class VpnNetworkMonitor @Inject constructor(
             updateNetwork(network, capabilities)
         }
 
+        override fun onLinkPropertiesChanged(network: Network, linkProperties: LinkProperties) {
+            updateLinkProperties(network, linkProperties)
+        }
+
         override fun onLost(network: Network) {
             val handle = network.networkHandle
             snapshot.update { current ->
@@ -81,14 +90,15 @@ class VpnNetworkMonitor @Inject constructor(
 
     init {
         try {
-            val request = NetworkRequest.Builder()
-                .addTransportType(NetworkCapabilities.TRANSPORT_VPN)
-                .build()
+            val request = NetworkRequest.Builder().build()
             connectivityManager.registerNetworkCallback(request, networkCallback)
         } catch (error: Exception) {
-            ProtonLogger.e(TAG, "Failed to register VPN network callback", error)
+            ProtonLogger.e(TAG, "Failed to register network callback", error)
         }
     }
+
+    /** Returns a snapshot of all currently active networks. */
+    fun getTrackedNetworks(): Collection<TrackedNetwork> = snapshot.value.networks.values
 
     /**
      * Resolves and validates everything that would otherwise need DNS after the TUN is created.
@@ -198,13 +208,13 @@ class VpnNetworkMonitor @Inject constructor(
 
     private suspend fun awaitUnderlyingNetwork(): Network? = withTimeoutOrNull(UNDERLYING_TIMEOUT_MS) {
         while (true) {
-            val candidates = connectivityManager.allNetworks.mapNotNull { network ->
-                val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return@mapNotNull null
+            val candidates = getTrackedNetworks().mapNotNull { tracked ->
+                val capabilities = tracked.capabilities ?: return@mapNotNull null
                 if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) ||
                     !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ||
                     !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
                 ) return@mapNotNull null
-                network to capabilities
+                tracked.network to capabilities
             }
             candidates.firstOrNull { (_, capabilities) ->
                 capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
@@ -243,20 +253,33 @@ class VpnNetworkMonitor @Inject constructor(
     }
 
     private fun refreshNetwork(network: Network) {
-        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return
-        updateNetwork(network, capabilities)
+        val capabilities = connectivityManager.getNetworkCapabilities(network)
+        val properties = connectivityManager.getLinkProperties(network)
+        val handle = network.networkHandle
+        snapshot.update { current ->
+            Snapshot(current.networks + (handle to TrackedNetwork(network, capabilities, properties)))
+        }
     }
 
     private fun updateNetwork(network: Network, capabilities: NetworkCapabilities) {
-        if (!capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) return
         val handle = network.networkHandle
-        val tracked = TrackedNetwork(
-            network = network,
-            systemValidated = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-        )
         snapshot.update { current ->
-            if (current.networks[handle] == tracked) current
-            else Snapshot(current.networks + (handle to tracked))
+            val existing = current.networks[handle]
+            val updated = existing?.copy(capabilities = capabilities)
+                ?: TrackedNetwork(network, capabilities = capabilities)
+            if (existing == updated) current
+            else Snapshot(current.networks + (handle to updated))
+        }
+    }
+
+    private fun updateLinkProperties(network: Network, properties: LinkProperties) {
+        val handle = network.networkHandle
+        snapshot.update { current ->
+            val existing = current.networks[handle]
+            val updated = existing?.copy(linkProperties = properties)
+                ?: TrackedNetwork(network, linkProperties = properties)
+            if (existing == updated) current
+            else Snapshot(current.networks + (handle to updated))
         }
     }
 
