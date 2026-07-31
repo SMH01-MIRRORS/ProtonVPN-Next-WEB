@@ -1,7 +1,7 @@
 [versions]
-agp = "9.4.0-alpha06"
+agp = "9.4.0-alpha07"
 kotlin = "2.4.10"
-ksp = "2.3.9"
+ksp = "2.3.10"
 hilt = "2.60.1"
 room = "2.8.4"
 roomKsp = "2.8.4"
@@ -34,7 +34,7 @@ mockwebserver = "5.4.0"
 androidxJunit = "1.3.0"
 espressoCore = "3.7.0"
 material = "1.14.0"
-composeMaterial3 = "1.5.0-alpha24"
+composeMaterial3 = "1.5.0-alpha25"
 graphicsShapes = "1.1.0"
 graphicsPath = "1.1.0"
 
