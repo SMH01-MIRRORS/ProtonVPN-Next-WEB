@@ -32,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -71,7 +72,8 @@ fun QuickConnectBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         modifier = modifier,
-        containerColor = colors.backgroundNorm,
+        containerColor = colors.backgroundSecondary.copy(alpha = 0.95f),
+        scrimColor = Color.Black.copy(alpha = 0.45f),
         dragHandle = { BottomSheetDefaults.DragHandle(color = colors.iconWeak) },
     ) {
         Column(
@@ -151,6 +153,7 @@ fun QuickConnectBottomSheet(
                             onStrategySelect("server", server.id)
                             onDismiss()
                         },
+                        alpha = 0.6f
                     )
                 }
             }
@@ -175,7 +178,7 @@ private fun StrategyItem(
             .fillMaxWidth()
             .liquidGlass(
                 shape = RoundedCornerShape(24.dp),
-                alpha = if (isSelected) 0.3f else 0.4f,
+                alpha = if (isSelected) 0.6f else 0.5f,
                 shadowElevation = 0.dp,
             )
             .clickable(onClick = onClick),

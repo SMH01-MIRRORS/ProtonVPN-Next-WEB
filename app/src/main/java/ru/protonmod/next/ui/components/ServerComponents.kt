@@ -48,6 +48,7 @@ fun ServerCard(
     modifier: Modifier = Modifier,
     displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     onClick: (() -> Unit)? = null,
+    alpha: Float? = null,
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
@@ -57,7 +58,7 @@ fun ServerCard(
             .fillMaxWidth()
             .liquidGlass(
                 shape = RoundedCornerShape(24.dp),
-                alpha = if (isConnected) 0.3f else 0.4f,
+                alpha = alpha ?: if (isConnected) 0.3f else 0.4f,
                 shadowElevation = 0.dp
             )
             .then(
