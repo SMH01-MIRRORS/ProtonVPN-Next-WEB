@@ -74,6 +74,14 @@ static jstring generateConfig(
     params.jc = getIntField("jc"); params.jmin = getIntField("jmin"); params.jmax = getIntField("jmax"); params.s1 = getIntField("s1"); params.s2 = getIntField("s2"); params.s3 = getIntField("s3"); params.s4 = getIntField("s4");
     params.h1 = getStringField("h1"); params.h2 = getStringField("h2"); params.h3 = getStringField("h3"); params.h4 = getStringField("h4");
     params.i1 = getStringField("i1"); params.i2 = getStringField("i2"); params.i3 = getStringField("i3"); params.i4 = getStringField("i4"); params.i5 = getStringField("i5");
+    params.header_protection_key = getStringField("headerProtectionKey");
+    params.content_padding_addition = getStringField("contentPaddingAddition");
+    params.rekey_after_time = getStringField("rekeyAfterTime");
+    params.rekey_timeout = getStringField("rekeyTimeout");
+    params.reject_after_time = getStringField("rejectAfterTime");
+    params.keepalive_timeout = getStringField("keepaliveTimeout");
+    params.max_handshake_attempts = getStringField("maxHandshakeAttempts");
+    params.persistent_keepalive = getStringField("persistentKeepaliveInterval");
 
     std::string config = next::ConfigGenerator::buildConfig(jstringToString(server_public_key), jstringToString(private_key), jstringToString(local_ip), jstringToString(dns_server), jstringToString(target_ip), (bool)is_include_mode, jobjectArrayToSet(selected_apps), jobjectArrayToSet(selected_ips), (int)port, jstringToString(certificate), params);
     return env->NewStringUTF(config.c_str());

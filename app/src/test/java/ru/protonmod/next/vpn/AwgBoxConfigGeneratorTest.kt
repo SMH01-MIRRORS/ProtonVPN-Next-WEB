@@ -297,6 +297,35 @@ class AwgBoxConfigGeneratorTest {
         assertEquals("198.18.0.0/15", torrc.getValue("VirtualAddrNetworkIPv4").jsonPrimitive.content)
     }
 
+    @Test
+    fun `builds awg3 endpoint with mimicry parameters`() {
+        val config = generator.buildConfig(
+            serverPublicKey = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+            privateKey = "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=",
+            localIp = "10.2.0.2",
+            dnsServer = "10.2.0.1",
+            targetIp = "192.0.2.10",
+            port = 443,
+            obfuscationParams = AmneziaVpnManager.ObfuscationParams(
+                jc = 4, jmin = 40, jmax = 70, s1 = 12, s2 = 12, s3 = 12, s4 = 12,
+                h1 = "1", h2 = "2", h3 = "3", h4 = "4", i1 = "mimic",
+                headerProtectionKey = "dGVzdF9rZXlfMzJfYnl0ZXNfbG9uZ19mb3JfYXdnMw==",
+                contentPaddingAddition = "0-100",
+                rekeyAfterTime = "120-180",
+                persistentKeepalive = "20-30"
+            )
+        )
+
+        val root = Json.parseToJsonElement(config).jsonObject
+        val awg = root.getValue("endpoints").jsonArray.single().jsonObject
+        val peer = awg.getValue("peers").jsonArray.single().jsonObject
+
+        assertEquals("dGVzdF9rZXlfMzJfYnl0ZXNfbG9uZ19mb3JfYXdnMw==", awg.getValue("header_protection_key").jsonPrimitive.content)
+        assertEquals("0-100", awg.getValue("content_padding_addition").jsonPrimitive.content)
+        assertEquals("120-180", awg.getValue("rekey_after_time").jsonPrimitive.content)
+        assertEquals("20-30", peer.getValue("persistent_keepalive_interval").jsonPrimitive.content)
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun `rejects invalid endpoint port`() {
         generator.buildConfig(

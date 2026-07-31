@@ -22,13 +22,18 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import android.util.Base64
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -47,6 +52,9 @@ import ru.protonmod.next.data.network.byedpi.ByeDpiManager
 import ru.protonmod.next.data.network.byedpi.ByeDpiStrategyTester
 import ru.protonmod.next.data.repository.UpdateRepository
 import ru.protonmod.next.data.repository.VpnRepository
+import ru.protonmod.next.vpn.ProxyLinkParser
+import ru.protonmod.next.vpn.SentryConfigurator
+import java.security.SecureRandom
 import javax.inject.Inject
 
 data class SettingsUiState(
@@ -113,6 +121,14 @@ data class SettingsUiState(
     val awgI3: String = "",
     val awgI4: String = "",
     val awgI5: String = "",
+    val awgHeaderProtectionKey: String = "",
+    val awgContentPaddingAddition: String = "",
+    val awgRekeyAfterTime: String = "",
+    val awgRekeyTimeout: String = "",
+    val awgRejectAfterTime: String = "",
+    val awgKeepaliveTimeout: String = "",
+    val awgMaxHandshakeAttempts: String = "",
+    val awgPersistentKeepalive: String = "",
     val awgJunkLevel: Int = 0, // 0: Low, 1: Medium, 2: High, 3: Custom
 
     // States
@@ -162,26 +178,43 @@ class SettingsViewModel @Inject constructor(
     private val _isCheckingForUpdates = MutableStateFlow(false)
     private val _isUpdateAvailable = MutableStateFlow(false)
 
+    private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            _isAnyVpnActive.value = true
+        }
+        override fun onLost(network: Network) {
+            _isAnyVpnActive.value = false
+        }
+    }
+
+    private val awgUpdateFlow = MutableSharedFlow<Pair<String, Any>>(
+        extraBufferCapacity = 64,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+
     init {
         viewModelScope.launch {
             otaUpdateManager.latestUpdate.collect { update ->
                 _isUpdateAvailable.value = update != null
             }
         }
+
+        // Process debounced AWG updates to prevent UI flood and OOM
+        viewModelScope.launch {
+            awgUpdateFlow.collectLatest { (key, value) ->
+                // Short debounce for typing, but immediate for non-text params
+                if (value is String) {
+                    delay(400)
+                }
+                settingsManager.setAwgParam(key, value)
+            }
+        }
+
         // Monitor system networks to automatically detect active VPN connections
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val request = NetworkRequest.Builder()
             .addTransportType(NetworkCapabilities.TRANSPORT_VPN)
             .build()
-
-        val networkCallback = object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                _isAnyVpnActive.value = true
-            }
-            override fun onLost(network: Network) {
-                _isAnyVpnActive.value = false
-            }
-        }
 
         try {
             connectivityManager.registerNetworkCallback(request, networkCallback)
@@ -192,6 +225,15 @@ class SettingsViewModel @Inject constructor(
             _isAnyVpnActive.value = capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
         } catch (e: Exception) {
             // Ignore if missing permissions in some edge cases
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        try {
+            connectivityManager.unregisterNetworkCallback(networkCallback)
+        } catch (e: Exception) {
+            // Ignore
         }
     }
 
@@ -222,6 +264,14 @@ class SettingsViewModel @Inject constructor(
         settingsManager.awgI3,
         settingsManager.awgI4,
         settingsManager.awgI5,
+        settingsManager.awgHeaderProtectionKey,
+        settingsManager.awgContentPaddingAddition,
+        settingsManager.awgRekeyAfterTime,
+        settingsManager.awgRekeyTimeout,
+        settingsManager.awgRejectAfterTime,
+        settingsManager.awgKeepaliveTimeout,
+        settingsManager.awgMaxHandshakeAttempts,
+        settingsManager.awgPersistentKeepalive,
         settingsManager.awgJunkLevel,
         amneziaVpnManager.tunnelState,
         settingsManager.obfuscationEnabled,
@@ -291,49 +341,57 @@ class SettingsViewModel @Inject constructor(
             awgI3 = args[22] as String,
             awgI4 = args[23] as String,
             awgI5 = args[24] as String,
-            awgJunkLevel = args[25] as Int,
-            isVpnConnected = args[26] == VpnTunnelState.UP,
-            isObfuscationEnabled = args[27] as Boolean,
-            isObfuscationAdvancedMode = args[28] as Boolean,
-            customObfuscationProfiles = args[29] as List<ObfuscationProfile>,
-            selectedProfileId = args[30] as String,
-            customDns = args[31] as String,
-            isAnalyticsEnabled = args[32] as Boolean,
-            isCrashReportsEnabled = args[33] as Boolean,
-            isSentryPerformanceEnabled = args[34] as Boolean,
-            isSentryNonFatalEnabled = args[35] as Boolean,
-            isSentrySessionReplayEnabled = args[36] as Boolean,
-            isSentryAnrEnabled = args[37] as Boolean,
-            isSentryMetricsEnabled = args[38] as Boolean,
-            isSentryLogsEnabled = args[39] as Boolean,
-            apiBypassEnabled = args[40] as Boolean,
-            apiBypassStrategy = args[41] as String,
-            apiProxyHost = args[42] as String,
-            apiProxyPort = args[43] as Int,
-            apiProxyType = args[44] as String,
-            apiProxyUsername = args[45] as String,
-            apiProxyPassword = args[46] as String,
-            appTheme = args[47] as AppTheme,
-            serverLoadDisplayMode = args[48] as ServerLoadDisplayMode,
-            spoofCountryEnabled = args[49] as Boolean,
-            spoofCountryNull = args[50] as Boolean,
-            spoofCountryCode = args[51] as String,
-            otaUpdateFrequency = args[52] as String,
-            allowLanEnabled = args[53] as Boolean,
-            byeDpiFlags = args[54] as String,
-            byeDpiSni = args[55] as String,
-            isByeDpiTesting = args[56] as Boolean,
-            byeDpiTestProgress = args[57] as Float,
-            byeDpiCurrentStrategy = args[58] as String,
-            byeDpiResults = args[59] as List<ByeDpiStrategyTester.TestResult>,
-            isAnyVpnActive = args[60] as Boolean,
-            isCheckingForUpdates = args[61] as Boolean,
-            isUpdateAvailable = args[62] as Boolean,
-            proxyChainEnabled = args[63] as Boolean,
-            proxyChainConfig = args[64] as String,
-            isProxyChainConfigValid = ru.protonmod.next.vpn.ProxyLinkParser.isValid(args[64] as String),
-            torModeEnabled = args[65] as Boolean,
-            reconnectHintEnabled = args[66] as Boolean
+            awgHeaderProtectionKey = args[25] as String,
+            awgContentPaddingAddition = args[26] as String,
+            awgRekeyAfterTime = args[27] as String,
+            awgRekeyTimeout = args[28] as String,
+            awgRejectAfterTime = args[29] as String,
+            awgKeepaliveTimeout = args[30] as String,
+            awgMaxHandshakeAttempts = args[31] as String,
+            awgPersistentKeepalive = args[32] as String,
+            awgJunkLevel = args[33] as Int,
+            isVpnConnected = args[34] == VpnTunnelState.UP,
+            isObfuscationEnabled = args[35] as Boolean,
+            isObfuscationAdvancedMode = args[36] as Boolean,
+            customObfuscationProfiles = args[37] as List<ObfuscationProfile>,
+            selectedProfileId = args[38] as String,
+            customDns = args[39] as String,
+            isAnalyticsEnabled = args[40] as Boolean,
+            isCrashReportsEnabled = args[41] as Boolean,
+            isSentryPerformanceEnabled = args[42] as Boolean,
+            isSentryNonFatalEnabled = args[43] as Boolean,
+            isSentrySessionReplayEnabled = args[44] as Boolean,
+            isSentryAnrEnabled = args[45] as Boolean,
+            isSentryMetricsEnabled = args[46] as Boolean,
+            isSentryLogsEnabled = args[47] as Boolean,
+            apiBypassEnabled = args[48] as Boolean,
+            apiBypassStrategy = args[49] as String,
+            apiProxyHost = args[50] as String,
+            apiProxyPort = args[51] as Int,
+            apiProxyType = args[52] as String,
+            apiProxyUsername = args[53] as String,
+            apiProxyPassword = args[54] as String,
+            appTheme = args[55] as AppTheme,
+            serverLoadDisplayMode = args[56] as ServerLoadDisplayMode,
+            spoofCountryEnabled = args[57] as Boolean,
+            spoofCountryNull = args[58] as Boolean,
+            spoofCountryCode = args[59] as String,
+            otaUpdateFrequency = args[60] as String,
+            allowLanEnabled = args[61] as Boolean,
+            byeDpiFlags = args[62] as String,
+            byeDpiSni = args[63] as String,
+            isByeDpiTesting = args[64] as Boolean,
+            byeDpiTestProgress = args[65] as Float,
+            byeDpiCurrentStrategy = args[66] as String,
+            byeDpiResults = args[67] as List<ByeDpiStrategyTester.TestResult>,
+            isAnyVpnActive = args[68] as Boolean,
+            isCheckingForUpdates = args[69] as Boolean,
+            isUpdateAvailable = args[70] as Boolean,
+            proxyChainEnabled = args[71] as Boolean,
+            proxyChainConfig = args[72] as String,
+            isProxyChainConfigValid = ProxyLinkParser.isValid(args[72] as String),
+            torModeEnabled = args[73] as Boolean,
+            reconnectHintEnabled = args[74] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -611,18 +669,30 @@ class SettingsViewModel @Inject constructor(
     fun setSentryLogsEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setSentryLogsEnabled(enabled)
-            ru.protonmod.next.vpn.SentryConfigurator.applySettings(settingsManager)
+            SentryConfigurator.applySettings(settingsManager)
         }
+    }
+
+    fun updateAwgParam(key: String, value: Any) {
+        awgUpdateFlow.tryEmit(key to value)
     }
 
     fun setAwgParams(
         jc: Int, jmin: Int, jmax: Int, s1: Int, s2: Int, s3: Int = 0, s4: Int = 0,
         h1: String, h2: String, h3: String, h4: String,
         i1: String, i2: String = "", i3: String = "", i4: String = "", i5: String = "",
+        headerProtectionKey: String = "",
+        contentPaddingAddition: String = "",
+        rekeyAfterTime: String = "",
+        rekeyTimeout: String = "",
+        rejectAfterTime: String = "",
+        keepaliveTimeout: String = "",
+        maxHandshakeAttempts: String = "",
+        persistentKeepalive: String = "",
         junkLevel: Int = 3
     ) {
         viewModelScope.launch {
-            settingsManager.setAwgParams(jc, jmin, jmax, s1, s2, s3, s4, h1, h2, h3, h4, i1, i2, i3, i4, i5, junkLevel)
+            settingsManager.setAwgParams(jc, jmin, jmax, s1, s2, s3, s4, h1, h2, h3, h4, i1, i2, i3, i4, i5, headerProtectionKey, contentPaddingAddition, rekeyAfterTime, rekeyTimeout, rejectAfterTime, keepaliveTimeout, maxHandshakeAttempts, persistentKeepalive, junkLevel)
         }
     }
 
@@ -634,6 +704,14 @@ class SettingsViewModel @Inject constructor(
                 s1 = profile.s1, s2 = profile.s2, s3 = profile.s3, s4 = profile.s4,
                 h1 = profile.h1, h2 = profile.h2, h3 = profile.h3, h4 = profile.h4,
                 i1 = profile.i1, i2 = profile.i2, i3 = profile.i3, i4 = profile.i4, i5 = profile.i5,
+                headerProtectionKey = profile.headerProtectionKey,
+                contentPaddingAddition = profile.contentPaddingAddition,
+                rekeyAfterTime = profile.rekeyAfterTime,
+                rekeyTimeout = profile.rekeyTimeout,
+                rejectAfterTime = profile.rejectAfterTime,
+                keepaliveTimeout = profile.keepaliveTimeout,
+                maxHandshakeAttempts = profile.maxHandshakeAttempts,
+                persistentKeepalive = profile.persistentKeepaliveInterval,
                 junkLevel = profile.junkLevel
             )
         }
@@ -671,6 +749,14 @@ class SettingsViewModel @Inject constructor(
             s3 = currentState.awgS3, s4 = currentState.awgS4,
             h1 = currentState.awgH1, h2 = currentState.awgH2, h3 = currentState.awgH3, h4 = currentState.awgH4,
             i1 = currentState.awgI1, i2 = currentState.awgI2, i3 = currentState.awgI3, i4 = currentState.awgI4, i5 = currentState.awgI5,
+            headerProtectionKey = currentState.awgHeaderProtectionKey,
+            contentPaddingAddition = currentState.awgContentPaddingAddition,
+            rekeyAfterTime = currentState.awgRekeyAfterTime,
+            rekeyTimeout = currentState.awgRekeyTimeout,
+            rejectAfterTime = currentState.awgRejectAfterTime,
+            keepaliveTimeout = currentState.awgKeepaliveTimeout,
+            maxHandshakeAttempts = currentState.awgMaxHandshakeAttempts,
+            persistentKeepalive = currentState.awgPersistentKeepalive,
             junkLevel = level
         )
     }
@@ -691,6 +777,14 @@ class SettingsViewModel @Inject constructor(
             s1 = currentState.awgS1, s2 = currentState.awgS2, s3 = currentState.awgS3, s4 = currentState.awgS4,
             h1 = currentState.awgH1, h2 = currentState.awgH2, h3 = currentState.awgH3, h4 = currentState.awgH4,
             i1 = randomHex, i2 = currentState.awgI2, i3 = currentState.awgI3, i4 = currentState.awgI4, i5 = currentState.awgI5,
+            headerProtectionKey = currentState.awgHeaderProtectionKey,
+            contentPaddingAddition = currentState.awgContentPaddingAddition,
+            rekeyAfterTime = currentState.awgRekeyAfterTime,
+            rekeyTimeout = currentState.awgRekeyTimeout,
+            rejectAfterTime = currentState.awgRejectAfterTime,
+            keepaliveTimeout = currentState.awgKeepaliveTimeout,
+            maxHandshakeAttempts = currentState.awgMaxHandshakeAttempts,
+            persistentKeepalive = currentState.awgPersistentKeepalive,
             junkLevel = currentState.awgJunkLevel
         )
     }
@@ -704,9 +798,41 @@ class SettingsViewModel @Inject constructor(
                 s1 = currentState.awgS1, s2 = currentState.awgS2, s3 = currentState.awgS3, s4 = currentState.awgS4,
                 h1 = currentState.awgH1, h2 = currentState.awgH2, h3 = currentState.awgH3, h4 = currentState.awgH4,
                 i1 = i1, i2 = currentState.awgI2, i3 = currentState.awgI3, i4 = currentState.awgI4, i5 = currentState.awgI5,
+                headerProtectionKey = currentState.awgHeaderProtectionKey,
+                contentPaddingAddition = currentState.awgContentPaddingAddition,
+                rekeyAfterTime = currentState.awgRekeyAfterTime,
+                rekeyTimeout = currentState.awgRekeyTimeout,
+                rejectAfterTime = currentState.awgRejectAfterTime,
+                keepaliveTimeout = currentState.awgKeepaliveTimeout,
+                maxHandshakeAttempts = currentState.awgMaxHandshakeAttempts,
+                persistentKeepalive = currentState.awgPersistentKeepalive,
                 junkLevel = currentState.awgJunkLevel
             )
         }
+    }
+
+    fun generateHeaderProtectionKey() {
+        val key = SecureRandom().let { sr ->
+            val bytes = ByteArray(32)
+            sr.nextBytes(bytes)
+            Base64.encodeToString(bytes, Base64.NO_WRAP)
+        }
+        val currentState = uiState.value
+        setAwgParams(
+            jc = currentState.awgJc, jmin = currentState.awgJmin, jmax = currentState.awgJmax,
+            s1 = currentState.awgS1, s2 = currentState.awgS2, s3 = currentState.awgS3, s4 = currentState.awgS4,
+            h1 = currentState.awgH1, h2 = currentState.awgH2, h3 = currentState.awgH3, h4 = currentState.awgH4,
+            i1 = currentState.awgI1, i2 = currentState.awgI2, i3 = currentState.awgI3, i4 = currentState.awgI4, i5 = currentState.awgI5,
+            headerProtectionKey = key,
+            contentPaddingAddition = currentState.awgContentPaddingAddition,
+            rekeyAfterTime = currentState.awgRekeyAfterTime,
+            rekeyTimeout = currentState.awgRekeyTimeout,
+            rejectAfterTime = currentState.awgRejectAfterTime,
+            keepaliveTimeout = currentState.awgKeepaliveTimeout,
+            maxHandshakeAttempts = currentState.awgMaxHandshakeAttempts,
+            persistentKeepalive = currentState.awgPersistentKeepalive,
+            junkLevel = currentState.awgJunkLevel
+        )
     }
 
     fun resetToStandard() {

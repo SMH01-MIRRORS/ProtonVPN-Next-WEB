@@ -128,7 +128,15 @@ class AmneziaVpnManager @Inject constructor(
         val jc: Int, val jmin: Int, val jmax: Int,
         val s1: Int, val s2: Int, val s3: Int = 0, val s4: Int = 0,
         val h1: String, val h2: String, val h3: String, val h4: String,
-        val i1: String, val i2: String = "", val i3: String = "", val i4: String = "", val i5: String = ""
+        val i1: String, val i2: String = "", val i3: String = "", val i4: String = "", val i5: String = "",
+        val headerProtectionKey: String = "",
+        val contentPaddingAddition: String = "",
+        val rekeyAfterTime: String = "",
+        val rekeyTimeout: String = "",
+        val rejectAfterTime: String = "",
+        val keepaliveTimeout: String = "",
+        val maxHandshakeAttempts: String = "",
+        val persistentKeepalive: String = ""
     )
 
     private val _isConnecting = MutableStateFlow(false)
@@ -825,10 +833,18 @@ class AmneziaVpnManager @Inject constructor(
                     s1 = settingsManager.awgS1.first(), s2 = settingsManager.awgS2.first(),
                     s3 = settingsManager.awgS3.first(), s4 = settingsManager.awgS4.first(),
                     h1 = settingsManager.awgH1.first(), h2 = settingsManager.awgH2.first(), h3 = settingsManager.awgH3.first(), h4 = settingsManager.awgH4.first(),
-                    i1 = settingsManager.awgI1.first(), i2 = settingsManager.awgI2.first(), i3 = settingsManager.awgI3.first(), i4 = settingsManager.awgI4.first(), i5 = settingsManager.awgI5.first()
+                    i1 = settingsManager.awgI1.first(), i2 = settingsManager.awgI2.first(), i3 = settingsManager.awgI3.first(), i4 = settingsManager.awgI4.first(), i5 = settingsManager.awgI5.first(),
+                    headerProtectionKey = settingsManager.awgHeaderProtectionKey.first(),
+                    contentPaddingAddition = settingsManager.awgContentPaddingAddition.first(),
+                    rekeyAfterTime = settingsManager.awgRekeyAfterTime.first(),
+                    rekeyTimeout = settingsManager.awgRekeyTimeout.first(),
+                    rejectAfterTime = settingsManager.awgRejectAfterTime.first(),
+                    keepaliveTimeout = settingsManager.awgKeepaliveTimeout.first(),
+                    maxHandshakeAttempts = settingsManager.awgMaxHandshakeAttempts.first(),
+                    persistentKeepalive = settingsManager.awgPersistentKeepalive.first()
                 )
             } else {
-                ObfuscationParams(0, 0, 0, 0, 0, 0, 0, "", "", "", "", "", "", "", "", "")
+                ObfuscationParams(0, 0, 0, 0, 0, 0, 0, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "")
             }
 
             // Use assigned IP/DNS from session if available, fallback to defaults.

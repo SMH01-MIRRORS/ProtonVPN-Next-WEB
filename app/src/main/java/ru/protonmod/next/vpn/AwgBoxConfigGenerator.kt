@@ -173,8 +173,24 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                 awgValue(obfuscationParams.i3)?.let { put("i3", it) }
                 awgValue(obfuscationParams.i4)?.let { put("i4", it) }
                 awgValue(obfuscationParams.i5)?.let { put("i5", it) }
+                awgValue(obfuscationParams.headerProtectionKey)?.let { put("header_protection_key", it) }
+                awgValue(obfuscationParams.contentPaddingAddition)?.let { put("content_padding_addition", it) }
+                awgValue(obfuscationParams.rekeyAfterTime)?.let { put("rekey_after_time", it) }
+                awgValue(obfuscationParams.rekeyTimeout)?.let { put("rekey_timeout", it) }
+                awgValue(obfuscationParams.rejectAfterTime)?.let { put("reject_after_time", it) }
+                awgValue(obfuscationParams.keepaliveTimeout)?.let { put("keepalive_timeout", it) }
+                awgValue(obfuscationParams.maxHandshakeAttempts)?.let { put("max_handshake_attempts", it) }
             }
         }
+
+        val peers = JsonArray(listOf(JsonObject(mapOf(
+            "address" to JsonPrimitive(targetIp),
+            "port" to JsonPrimitive(port),
+            "public_key" to JsonPrimitive(serverPublicKey),
+            "allowed_ips" to strings(listOf("0.0.0.0/0")),
+            "persistent_keepalive_interval" to awgValue(obfuscationParams.persistentKeepalive.takeIf { it.isNotBlank() } ?: "25")!!
+        ))))
+        awg["peers"] = peers
 
         val domainRuleOutbound = if (isIncludeMode) tunnelOutbound else "direct"
         val routeRules = buildList {

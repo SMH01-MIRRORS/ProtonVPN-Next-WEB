@@ -277,6 +277,19 @@
     <string name="obfuscation_i3">Special Junk (I3)</string>
     <string name="obfuscation_i4">Special Junk (I4)</string>
     <string name="obfuscation_i5">Special Junk (I5)</string>
+    <string name="obfuscation_hp_key">Header Protection Key</string>
+    <string name="obfuscation_hp_key_desc">Encrypts low-entropy header fields. Requires S1-S4 ≥ 12.</string>
+    <string name="obfuscation_hp_generate">Generate Key</string>
+    <string name="obfuscation_cp_addition">Content Padding Addition</string>
+    <string name="obfuscation_cp_addition_desc">Random noise added to every data packet (supports ranges like 0-100).</string>
+    <string name="obfuscation_rekey_after">Rekey After Time</string>
+    <string name="obfuscation_rekey_timeout">Rekey Timeout</string>
+    <string name="obfuscation_reject_after">Reject After Time</string>
+    <string name="obfuscation_keepalive_timeout">Keepalive Timeout</string>
+    <string name="obfuscation_max_handshake">Max Handshake Attempts</string>
+    <string name="obfuscation_persistent_keepalive">Keepalive Interval</string>
+    <string name="obfuscation_range_hint">Supports ranges (e.g. 20-30)</string>
+    <string name="obfuscation_hp_warning">Header Protection requires S1-S4 padding to be at least 12.</string>
 
     <!-- Obfuscation Modes -->
     <string name="obfuscation_mode_easy">Easy</string>
@@ -306,6 +319,8 @@
     <string name="obfuscation_category_magic">Packet Sizes (Magic)</string>
     <string name="obfuscation_category_headers">Headers</string>
     <string name="obfuscation_category_advanced">Advanced</string>
+    <string name="obfuscation_category_mimicry">Mimicry &amp; Protection</string>
+    <string name="obfuscation_category_timings">Timings (Ranges)</string>
     <string name="custom_config">Custom Config</string>
 
     <!-- About App Screen -->

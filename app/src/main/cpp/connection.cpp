@@ -72,6 +72,14 @@ std::string ConfigGenerator::buildConfig(
     if (!params.i4.empty()) config << "I4 = " << params.i4 << "\n";
     if (!params.i5.empty()) config << "I5 = " << params.i5 << "\n";
 
+    if (!params.header_protection_key.empty()) config << "HeaderProtectionKey = " << params.header_protection_key << "\n";
+    if (!params.content_padding_addition.empty()) config << "ContentPaddingAddition = " << params.content_padding_addition << "\n";
+    if (!params.rekey_after_time.empty()) config << "RekeyAfterTime = " << params.rekey_after_time << "\n";
+    if (!params.rekey_timeout.empty()) config << "RekeyTimeout = " << params.rekey_timeout << "\n";
+    if (!params.reject_after_time.empty()) config << "RejectAfterTime = " << params.reject_after_time << "\n";
+    if (!params.keepalive_timeout.empty()) config << "KeepaliveTimeout = " << params.keepalive_timeout << "\n";
+    if (!params.max_handshake_attempts.empty()) config << "MaxHandshakeAttempts = " << params.max_handshake_attempts << "\n";
+
     if (!selectedApps.empty()) {
         std::string apps;
         for (auto it = selectedApps.begin(); it != selectedApps.end(); ++it) {
@@ -96,7 +104,8 @@ std::string ConfigGenerator::buildConfig(
         }
     }
     config << "\n";
-    config << "PersistentKeepalive = 60\n";
+    if (!params.persistent_keepalive.empty()) config << "PersistentKeepalive = " << params.persistent_keepalive << "\n";
+    else config << "PersistentKeepalive = 60\n";
     return config.str();
 }
 

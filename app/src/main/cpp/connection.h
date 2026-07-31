@@ -24,6 +24,14 @@ struct ObfuscationParams {
     std::string i3;
     std::string i4;
     std::string i5;
+    std::string header_protection_key;
+    std::string content_padding_addition;
+    std::string rekey_after_time;
+    std::string rekey_timeout;
+    std::string reject_after_time;
+    std::string keepalive_timeout;
+    std::string max_handshake_attempts;
+    std::string persistent_keepalive;
 };
 
 class ConfigGenerator {

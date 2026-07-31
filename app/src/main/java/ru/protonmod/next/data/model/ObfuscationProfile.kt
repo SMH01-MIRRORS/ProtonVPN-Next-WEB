@@ -41,6 +41,14 @@ data class ObfuscationProfile(
     val i3: String = "",
     val i4: String = "",
     val i5: String = "",
+    val headerProtectionKey: String = "",
+    val contentPaddingAddition: String = "",
+    val rekeyAfterTime: String = "",
+    val rekeyTimeout: String = "",
+    val rejectAfterTime: String = "",
+    val keepaliveTimeout: String = "",
+    val maxHandshakeAttempts: String = "",
+    val persistentKeepaliveInterval: String = "",
     val junkLevel: Int = 3 // 0: Low, 1: Medium, 2: High, 3: Custom
 ) {
     companion object {
@@ -52,6 +60,14 @@ data class ObfuscationProfile(
             s1 = 0, s2 = 0, s3 = 0, s4 = 0,
             h1 = "1", h2 = "2", h3 = "3", h4 = "4",
             i1 = SettingsManager.DEFAULT_I1,
+            headerProtectionKey = "",
+            contentPaddingAddition = "",
+            rekeyAfterTime = "",
+            rekeyTimeout = "",
+            rejectAfterTime = "",
+            keepaliveTimeout = "",
+            maxHandshakeAttempts = "",
+            persistentKeepaliveInterval = "",
             junkLevel = 0 // Low
         )
 
@@ -63,6 +79,14 @@ data class ObfuscationProfile(
             s1 = 0, s2 = 0, s3 = 0, s4 = 0,
             h1 = "1", h2 = "2", h3 = "3", h4 = "4",
             i1 = SettingsManager.DEFAULT_I1,
+            headerProtectionKey = "",
+            contentPaddingAddition = "",
+            rekeyAfterTime = "",
+            rekeyTimeout = "",
+            rejectAfterTime = "",
+            keepaliveTimeout = "",
+            maxHandshakeAttempts = "",
+            persistentKeepaliveInterval = "",
             junkLevel = 3 // Custom
         )
     }
