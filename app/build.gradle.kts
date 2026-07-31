@@ -62,7 +62,7 @@ plugins {
     alias(libs.plugins.sentry) apply false
 }
 
-val prepareAwgBoxAar by tasks.registering(Exec::class) {
+val prepareAwgBoxAar = tasks.register<Exec>("prepareAwgBoxAar") {
     group = "build setup"
     description = "Builds the pinned AWGBox AAR when it is absent or invalid"
     workingDir(rootProject.rootDir)
@@ -431,7 +431,18 @@ plugins.withId("io.sentry.android.gradle") {
 }
 
 dependencies {
-    implementation("info.guardianproject:tor-android:0.4.9.11")
+    // Apply Compose BOM to all implementation configurations (including tests and flavors)
+    // This avoids duplication and ensures all Compose libraries resolve their versions correctly.
+    val composeBom = platform(libs.compose.bom)
+    configurations.matching { 
+        it.name.endsWith("Implementation") && 
+        !it.name.contains("ksp", true) && 
+        !it.name.contains("androidTestRelease", true) 
+    }.all {
+        add(name, composeBom)
+    }
+
+    implementation(libs.tor.android)
     // AndroidX & Core UI
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -445,8 +456,6 @@ dependencies {
     implementation(libs.androidx.graphics.path)
 
     // Jetpack Compose
-    val composeBom = platform(libs.compose.bom)
-    implementation(composeBom)
     implementation(libs.material)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
@@ -514,7 +523,6 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockwebserver)
 
-    androidTestImplementation(composeBom)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
