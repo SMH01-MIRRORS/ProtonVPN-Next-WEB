@@ -27,6 +27,10 @@ import java.net.InetSocketAddress
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.ConsistentCopyVisibility
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Tracks Android VPN networks independently from the default network.
@@ -41,6 +45,7 @@ import javax.inject.Singleton
 class VpnNetworkMonitor @Inject constructor(
     @ApplicationContext context: Context
 ) {
+    @ConsistentCopyVisibility
     data class VerificationCycle internal constructor(
         internal val id: Long,
         internal val baselineHandles: Set<Long>
@@ -110,7 +115,7 @@ class VpnNetworkMonitor @Inject constructor(
     suspend fun prepareUnderlyingConnection(
         endpointHost: String,
         proxyChainConfig: String? = null,
-    ): ConnectionPreflight? = withContext(Dispatchers.IO) {
+    ): ConnectionPreflight = withContext(Dispatchers.IO) {
         val network = awaitUnderlyingNetwork()
             ?: error("No usable underlying network is available")
 
@@ -170,16 +175,16 @@ class VpnNetworkMonitor @Inject constructor(
      */
     suspend fun awaitUsable(
         cycle: VerificationCycle,
-        timeoutMs: Long = DEFAULT_TIMEOUT_MS,
-        retryDelayMs: Long = DEFAULT_RETRY_DELAY_MS
-    ): Boolean = withTimeoutOrNull(timeoutMs) {
+        timeout: Duration = DEFAULT_TIMEOUT,
+        retryDelay: Duration = DEFAULT_RETRY_DELAY
+    ): Boolean = withTimeoutOrNull(timeout) {
         while (true) {
             val candidate = snapshot.value.networks.entries.firstOrNull { (handle, _) ->
                 handle !in cycle.baselineHandles
             }
 
             if (candidate == null) {
-                delay(retryDelayMs)
+                delay(retryDelay)
                 continue
             }
 
@@ -200,13 +205,13 @@ class VpnNetworkMonitor @Inject constructor(
                 ProtonLogger.d(TAG, "VPN network system-validated during probe for cycle ${cycle.id}")
                 return@withTimeoutOrNull true
             }
-            delay(retryDelayMs)
+            delay(retryDelay)
         }
         @Suppress("UNREACHABLE_CODE")
         false
     } ?: false
 
-    private suspend fun awaitUnderlyingNetwork(): Network? = withTimeoutOrNull(UNDERLYING_TIMEOUT_MS) {
+    private suspend fun awaitUnderlyingNetwork(): Network? = withTimeoutOrNull(UNDERLYING_TIMEOUT) {
         while (true) {
             val candidates = getTrackedNetworks().mapNotNull { tracked ->
                 val capabilities = tracked.capabilities ?: return@mapNotNull null
@@ -220,7 +225,7 @@ class VpnNetworkMonitor @Inject constructor(
                 capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
             }?.first?.let { return@withTimeoutOrNull it }
             candidates.firstOrNull()?.first?.let { return@withTimeoutOrNull it }
-            delay(DEFAULT_RETRY_DELAY_MS)
+            delay(DEFAULT_RETRY_DELAY)
         }
         @Suppress("UNREACHABLE_CODE")
         null
@@ -285,12 +290,12 @@ class VpnNetworkMonitor @Inject constructor(
 
     private companion object {
         const val TAG = "VpnNetworkMonitor"
-        const val DEFAULT_TIMEOUT_MS = 8_000L
-        const val DEFAULT_RETRY_DELAY_MS = 200L
+        val DEFAULT_TIMEOUT = 8.seconds
+        val DEFAULT_RETRY_DELAY = 200.milliseconds
         const val PROBE_PORT = 443
         const val PROBE_CONNECT_TIMEOUT_MS = 750
         const val PREFLIGHT_CONNECT_TIMEOUT_MS = 1_500
-        const val UNDERLYING_TIMEOUT_MS = 8_000L
+        val UNDERLYING_TIMEOUT = 8.seconds
         val PROBE_TARGETS = listOf("1.1.1.1", "8.8.8.8")
     }
 }

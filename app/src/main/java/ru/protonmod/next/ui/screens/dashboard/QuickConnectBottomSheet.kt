@@ -45,7 +45,6 @@ import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.ServerCard
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
-import ru.protonmod.next.ui.utils.CountryUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

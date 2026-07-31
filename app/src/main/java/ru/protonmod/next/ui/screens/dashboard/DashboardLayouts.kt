@@ -17,10 +17,6 @@
 
 package ru.protonmod.next.ui.screens.dashboard
 
-import android.app.Dialog
-import android.content.ContextWrapper
-import android.os.Build
-import android.view.WindowManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -441,68 +437,6 @@ private fun RecentServerRow(
             contentDescription = null,
             tint = colors.iconWeak,
             modifier = Modifier.size(16.dp)
-        )
-    }
-}
-
-/**
- * Desktop-style map overlay: flag + country, "IP ADDRESS" label and the IP in
- * monospace (green when protected, red otherwise). Clicking toggles IP privacy.
- */
-@Composable
-internal fun MapLocationOverlay(
-    locationText: LocationText,
-    isProtected: Boolean,
-    isIpHidden: Boolean,
-    onToggleIpVisibility: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = ProtonNextTheme.colors
-    val context = LocalContext.current
-
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .liquidGlass(shape = RoundedCornerShape(16.dp))
-            .clickable { onToggleIpVisibility() }
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            val code = locationText.countryCode
-            if (code != null) {
-                FlagIcon(
-                    countryFlag = CountryUtils.getFlagResource(context, code),
-                    size = DpSize(22.dp, 16.dp)
-                )
-            }
-            Text(
-                text = locationText.country,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                color = colors.textNorm,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
-        Text(
-            text = stringResource(R.string.dashboard_ip_address).uppercase(),
-            fontSize = 9.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.sp,
-            color = colors.textWeak,
-            modifier = Modifier.padding(top = 8.dp)
-        )
-        val ipText = remember(locationText.ip, isIpHidden) {
-            if (isIpHidden) {
-                locationText.ip.map { ch -> if (ch == '.' || ch == ':') ch else '*' }.joinToString("")
-            } else {
-                locationText.ip
-            }
-        }
-        Text(
-            text = ipText,
-            fontSize = 13.sp,
-            fontFamily = FontFamily.Monospace,
-            color = if (isProtected) colors.notificationSuccess else colors.notificationError
         )
     }
 }

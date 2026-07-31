@@ -115,7 +115,6 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         const val EXTRA_FAILURE_DETECTION_ENABLED = "failure_detection_enabled"
         const val EXTRA_AUTO_RECONNECT_ENABLED = "auto_reconnect_enabled"
         const val STATE_CONNECTING = "CONNECTING"
-        const val TUNNEL_NAME = "proton_awgbox"
 
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "vpn_status_channel"

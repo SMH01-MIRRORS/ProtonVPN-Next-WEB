@@ -38,6 +38,7 @@ import ru.protonmod.next.netshield.LocalNetShield
 import ru.protonmod.next.netshield.NetShieldLevel
 import ru.protonmod.next.data.network.CreateCertificateResponse
 import ru.protonmod.next.data.network.PhysicalServer
+import ru.protonmod.next.data.repository.AuthRepository
 import ru.protonmod.next.data.repository.VpnRepository
 import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.utils.coroutines.DispatcherProvider
@@ -83,6 +84,9 @@ class AmneziaVpnManagerTest {
 
     @Mock
     private lateinit var localNetShield: LocalNetShield
+
+    @Mock
+    private lateinit var authRepository: AuthRepository
 
     @Mock
     private lateinit var nextVpnManager: NextVpnManager
@@ -192,6 +196,7 @@ class AmneziaVpnManagerTest {
                 awgBoxConfigGenerator,
                 localNetShield,
                 nextVpnManager,
+                { authRepository },
                 vpnNetworkMonitor,
                 testDispatcherProvider,
                 testScope

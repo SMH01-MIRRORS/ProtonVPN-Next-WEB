@@ -23,6 +23,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import androidx.core.net.toUri
 import ru.protonmod.next.utils.ProtonLogger
+import retrofit2.HttpException
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
@@ -48,9 +49,11 @@ import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.local.ConnectionVerificationMode
 import ru.protonmod.next.netshield.LocalNetShield
 import ru.protonmod.next.data.local.SessionEntity
+import kotlin.time.Duration.Companion.milliseconds
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.network.PhysicalServer
+import ru.protonmod.next.data.repository.AuthRepository
 import ru.protonmod.next.data.repository.VpnRepository
 import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.di.ApplicationScope
@@ -78,6 +81,7 @@ class AmneziaVpnManager @Inject constructor(
     private val awgBoxConfigGenerator: AwgBoxConfigGenerator,
     private val localNetShield: LocalNetShield,
     private val nextVpnManager: NextVpnManager,
+    private val authRepositoryProvider: Provider<AuthRepository>,
     private val vpnNetworkMonitor: VpnNetworkMonitor,
     private val dispatcherProvider: DispatcherProvider,
     @ApplicationScope private val applicationScope: CoroutineScope
@@ -364,8 +368,8 @@ class AmneziaVpnManager @Inject constructor(
             try {
                 val usable = vpnNetworkMonitor.awaitUsable(
                     cycle = cycle,
-                    timeoutMs = mode.verificationTimeoutMs,
-                    retryDelayMs = mode.verificationRetryDelayMs,
+                    timeout = mode.verificationTimeoutMs.milliseconds,
+                    retryDelay = mode.verificationRetryDelayMs.milliseconds,
                 )
                 if (_tunnelState.value != VpnTunnelState.UP) return@launch
 
@@ -414,7 +418,28 @@ class AmneziaVpnManager @Inject constructor(
         }
     }
 
-    private suspend fun performCertificateRefresh(force: Boolean = false): Result<String> = refreshMutex.withLock {
+    private suspend fun performCertificateRefresh(force: Boolean = false): Result<String> {
+        val result = performCertificateRefreshInternal(force)
+        
+        if (result.isFailure) {
+            val error = result.exceptionOrNull()
+            if (error is HttpException && error.code() == 401) {
+                ProtonLogger.w(TAG, "Certificate refresh failed with 401. Attempting session refresh.")
+                val session = sessionDao.getSession()
+                if (session != null) {
+                    val authResult = authRepositoryProvider.get().refreshSession(session.sessionId, session.refreshToken)
+                    if (authResult.isSuccess) {
+                        ProtonLogger.i(TAG, "Session refreshed successfully. Retrying certificate refresh.")
+                        return performCertificateRefreshInternal(force)
+                    }
+                }
+            }
+        }
+        
+        return result
+    }
+
+    private suspend fun performCertificateRefreshInternal(force: Boolean = false): Result<String> = refreshMutex.withLock {
         val currentSession = sessionDao.getSession() ?: return Result.failure<String>(Exception("No session")).also {
             ProtonLogger.e(TAG, "Certificate refresh failed: No active session found in database")
         }
@@ -484,6 +509,7 @@ class AmneziaVpnManager @Inject constructor(
             return
         }
         refreshJob = applicationScope.launch {
+            var firstRun = force
             var currentRetryDelay = 60000L // Start retrying after 1 minute
             while (isActive) {
                 val session = sessionDao.getSession() ?: break
@@ -499,12 +525,13 @@ class AmneziaVpnManager @Inject constructor(
                 }
 
                 // If VPN is inactive, we only refresh certificate when connecting or already connected.
-                if (!isConnected && !_isConnecting.value) {
+                if (!firstRun && !isConnected && !_isConnecting.value) {
                     ProtonLogger.d(TAG, "Proactive refresh: VPN inactive. Skipping background periodic refresh.")
                     delay(PERIODIC_REFRESH_MS.milliseconds)
                     continue
                 }
 
+                firstRun = false
                 ProtonLogger.d(TAG, "Proactive refresh starting (cert state: ${_certState.value})")
                 val result = performCertificateRefresh(force = false)
                 
