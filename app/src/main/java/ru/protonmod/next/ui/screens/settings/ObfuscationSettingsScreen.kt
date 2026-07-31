@@ -1008,11 +1008,11 @@ fun InfoCard(
     modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
-        Box(
-            modifier = modifier
-                .fillMaxWidth()
-                .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.3f, shadowElevation = 0.dp)
-        ) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.3f, shadowElevation = 0.dp)
+    ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
