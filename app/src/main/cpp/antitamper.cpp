@@ -595,7 +595,7 @@ bool AntiTamper::checkStringIntegrity(JNIEnv* env, jobject context) {
     std::vector<std::string> keys = {
         XOR_STR("app_name"),
         XOR_STR("url_github"),
-        XOR_STR("url_codeberg"),
+        XOR_STR("url_gitlab"),
         XOR_STR("url_telegram"),
         XOR_STR("url_crowdin")
     };
