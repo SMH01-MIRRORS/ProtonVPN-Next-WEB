@@ -57,14 +57,24 @@ def generate_changelog(history):
         print("Error: CHANGELOG_PROMPT is not set.")
         return f"AI Generation Failed: CHANGELOG_PROMPT missing. Raw history:\n\n{history}"[:1000]
 
-    # Replace placeholder [TAG_NAME] if it exists in the custom prompt
-    full_prompt = prompt_template.replace('[TAG_NAME]', TAG_NAME)
+    # Replace placeholders if they exist in the custom prompt
+    full_prompt = prompt_template
+    for placeholder in ['[TAG_NAME]', '[VERSION]', '[VERSION_NAME]', '[TAG]']:
+        full_prompt = full_prompt.replace(placeholder, TAG_NAME)
+
+    # Add length constraint to the prompt
+    full_prompt += "\n\nIMPORTANT: The generated release notes must be concise and strictly no more than 1000 characters in total."
+
     # Append history
     full_prompt += f"\n\nInput commit history:\n{history}"
 
     try:
         response = model.generate_content(full_prompt)
         text = response.text.strip()
+
+        # Final safety replacement in the generated text if Gemini kept placeholders
+        for placeholder in ['[TAG_NAME]', '[VERSION]', '[VERSION_NAME]', '[TAG]']:
+            text = text.replace(placeholder, TAG_NAME)
 
         # Enforce 1000 character limit and truncation for Telegram compatibility
         if len(text) > 1000:
