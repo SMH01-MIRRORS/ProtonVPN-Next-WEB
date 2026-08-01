@@ -319,15 +319,15 @@
     <string name="obfuscation_category_magic">Packet Sizes (Magic)</string>
     <string name="obfuscation_category_headers">Headers</string>
     <string name="obfuscation_category_advanced">Advanced</string>
-    <string name="obfuscation_category_mimicry">Mimicry &amp; Protection</string>
-    <string name="obfuscation_category_timings">Timings (Ranges)</string>
+    <string name="obfuscation_category_mimicry" translatable="false">Mimicry &amp; Protection</string>
+    <string name="obfuscation_category_timings" translatable="false">Timings (Ranges)</string>
     <string name="custom_config">Custom Config</string>
 
     <!-- About App Screen -->
     <string name="about_community">Community</string>
     <string name="about_github" translatable="false">GitHub</string>
     <string name="about_telegram" translatable="false">Telegram</string>
-    <string name="about_codeberg" translatable="false">Codeberg</string>
+    <string name="about_gitlab" translatable="false">GitLab</string>
     <string name="about_crowdin">Help with Translation</string>
     <string name="about_website">Official Website</string>
 
@@ -335,7 +335,7 @@
     <string name="url_sentry" translatable="false">https://sentry.io/</string>
 
     <string name="url_github" translatable="false">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
-    <string name="url_codeberg" translatable="false">https://codeberg.org/SMH01/ProtonVPN-Next</string>
+    <string name="url_gitlab" translatable="false">https://gitlab.com/vpn-next-group/proton-vpn-next</string>
     <string name="url_telegram" translatable="false">https://t.me/ProtonVPN_MOD</string>
     <string name="url_crowdin" translatable="false">https://crowdin.com/project/protonvpn-next</string>
 

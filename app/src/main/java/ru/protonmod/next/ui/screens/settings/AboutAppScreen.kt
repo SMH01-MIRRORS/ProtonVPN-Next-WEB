@@ -61,7 +61,7 @@ fun AboutAppScreen(
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
     val githubUrl = stringResource(R.string.url_github)
-    val codebergUrl = stringResource(R.string.url_codeberg)
+    val gitlabUrl = stringResource(R.string.url_gitlab)
     val telegramUrl = stringResource(R.string.url_telegram)
     val crowdinUrl = stringResource(R.string.url_crowdin)
 
@@ -187,10 +187,10 @@ fun AboutAppScreen(
                             )
 
                             AboutLinkCard(
-                                title = stringResource(id = R.string.about_codeberg),
-                                iconResId = R.drawable.ic_codeberg,
+                                title = stringResource(id = R.string.about_gitlab),
+                                iconResId = R.drawable.ic_gitlab,
                                 onClick = {
-                                    val intent = Intent(Intent.ACTION_VIEW, codebergUrl.toUri())
+                                    val intent = Intent(Intent.ACTION_VIEW, gitlabUrl.toUri())
                                     context.startActivity(intent)
                                 },
                                 modifier = Modifier

@@ -11,7 +11,7 @@
 > [!IMPORTANT]
 > **PROJECT TRANSFER NOTICE**
 > This project is moving from Codeberg to **GitLab**.
-> **New Repository:** [https://gitlab.com/SMH01/proton-vpn-next](https://gitlab.com/SMH01/proton-vpn-next)
+> **New Repository:** [https://gitlab.com/vpn-next-group/proton-vpn-next](https://gitlab.com/vpn-next-group/proton-vpn-next)
 > **Reason:** Disagreement with Codeberg's new restrictive policies regarding AI-generated and AI-maintained projects. As this project is heavily AI-driven, GitLab provides a more suitable environment for its development.
 
 **Proton VPN-Next** is a modern, high-performance **unofficial** Android client for Proton VPN. Built with a focus on privacy, speed, and a sleek Material 3 interface, it uses an AWGBox core built on sing-box with AmneziaWG/AWG2 and advanced bypass strategies to ensure stable connectivity in restrictive environments.

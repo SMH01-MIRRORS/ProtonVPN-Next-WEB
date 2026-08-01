@@ -852,7 +852,7 @@ bool AntiTamper::check(JNIEnv* env, jobject context) {
 
 std::string AntiTamper::getProtectedString(const std::string& locale, const std::string& key) {
     if (key == XOR_STR("url_github")) return XOR_STR("https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR");
-    if (key == XOR_STR("url_codeberg")) return XOR_STR("https://codeberg.org/SMH01/ProtonVPN-Next");
+    if (key == XOR_STR("url_gitlab")) return XOR_STR("https://gitlab.com/vpn-next-group/proton-vpn-next");
     if (key == XOR_STR("url_telegram")) return XOR_STR("https://t.me/ProtonVPN_MOD");
     if (key == XOR_STR("url_website")) return XOR_STR("https://home.protonnext.qzz.io/");
     if (key == XOR_STR("url_crowdin")) return XOR_STR("https://crowdin.com/project/protonvpn-next");
@@ -936,7 +936,7 @@ std::string AntiTamper::getProtectedString(const std::string& locale, const std:
     }
 
     if (key == XOR_STR("url_github")) return XOR_STR("https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR");
-    if (key == XOR_STR("url_codeberg")) return XOR_STR("https://codeberg.org/SMH01/ProtonVPN-Next");
+    if (key == XOR_STR("url_gitlab")) return XOR_STR("https://gitlab.com/vpn-next-group/proton-vpn-next");
     if (key == XOR_STR("url_telegram")) return XOR_STR("https://t.me/ProtonVPN_MOD");
     if (key == XOR_STR("url_website")) return XOR_STR("https://home.protonnext.qzz.io/");
     if (key == XOR_STR("url_crowdin")) return XOR_STR("https://crowdin.com/project/protonvpn-next");
@@ -1080,7 +1080,7 @@ void AntiTamper::verifyCriticalIntegrity(JNIEnv* env) {
 
     std::vector<StringVerify> criticalStrings = {
         {XOR_STR("url_github"), XOR_STR("https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR")},
-        {XOR_STR("url_codeberg"), XOR_STR("https://codeberg.org/SMH01/ProtonVPN-Next")},
+        {XOR_STR("url_gitlab"), XOR_STR("https://gitlab.com/vpn-next-group/proton-vpn-next")},
         {XOR_STR("url_telegram"), XOR_STR("https://t.me/ProtonVPN_MOD")}
     };
 
@@ -1578,7 +1578,7 @@ void AntiTamper::renderLoop() {
 
             linkButton(XOR_STR("GitHub").c_str(), getProtectedString(g_current_locale, XOR_STR("url_github")));
             ImGui::Spacing();
-            linkButton(XOR_STR("Codeberg").c_str(), getProtectedString(g_current_locale, XOR_STR("url_codeberg")));
+            linkButton(XOR_STR("GitLab").c_str(), getProtectedString(g_current_locale, XOR_STR("url_gitlab")));
             ImGui::Spacing();
             linkButton(XOR_STR("Telegram").c_str(), getProtectedString(g_current_locale, XOR_STR("url_telegram")));
             ImGui::Spacing();

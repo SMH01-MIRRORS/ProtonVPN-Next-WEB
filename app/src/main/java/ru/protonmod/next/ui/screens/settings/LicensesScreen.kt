@@ -71,7 +71,7 @@ fun LicensesScreen(
             LicenseItem(R.string.license_bcrypt_title, R.string.license_apache_2, "https://github.com/patrickfav/bcrypt"),
             LicenseItem(R.string.license_leakcanary_title, R.string.license_apache_2, "https://square.github.io/leakcanary/"),
             LicenseItem(R.string.license_android_svg_title, R.string.license_apache_2, "https://bigbadaboom.github.io/androidsvg/"),
-            LicenseItem(R.string.license_amneziawg_title, R.string.license_apache_2, "https://codeberg.org/SMH01/amneziawg-android")
+            LicenseItem(R.string.license_amneziawg_title, R.string.license_apache_2, "https://gitlab.com/vpn-next-group/amneziawg-android")
         )
     }
 
