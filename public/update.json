@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160298,
-      "versionName": "12.0.0-alpha2st2-35-g09c1250-nightly",
+      "versionCode": 605160304,
+      "versionName": "12.0.0-alpha2st2-41-g695c163-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "ci: fix OTA metadata publishing on GitLab\n\nThe website branch stopped receiving commits because the job pushed with CI_JOB_TOKEN, which GitLab always rejects on push, and the failure was ignored: the local commit was then force-pushed to the GitHub mirror, so the mirror stayed exactly one commit ahead and every run rebuilt update.json from the stale GitLab state, dropping the stable channel.\n\nRequires a write-enabled token, pushes to GitLab first and fails the job when that push is rejected, mirrors only afterwards, and merges the newest metadata of both remotes so no channel is lost. The clone is no longer shallow (GIT_DEPTH 0 plus tags), which had made the published versionCode go backwards from 605160171 to 605159535 and the versionName lose its tag; the script now refuses to publish a lower versionCode. Pre-flight also verifies the push and mirror tokens.",
+      "changelog": "feat: add IconGenerator utility to render high-resolution Proton VPN-Next icon",
       "force": false
     },
     "release": {
-      "versionCode": 605160298,
-      "versionName": "12.0.0-alpha2st2-35-g09c1250-nightly",
+      "versionCode": 605160304,
+      "versionName": "12.0.0-alpha2st2-41-g695c163-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "ci: fix OTA metadata publishing on GitLab\n\nThe website branch stopped receiving commits because the job pushed with CI_JOB_TOKEN, which GitLab always rejects on push, and the failure was ignored: the local commit was then force-pushed to the GitHub mirror, so the mirror stayed exactly one commit ahead and every run rebuilt update.json from the stale GitLab state, dropping the stable channel.\n\nRequires a write-enabled token, pushes to GitLab first and fails the job when that push is rejected, mirrors only afterwards, and merges the newest metadata of both remotes so no channel is lost. The clone is no longer shallow (GIT_DEPTH 0 plus tags), which had made the published versionCode go backwards from 605160171 to 605159535 and the versionName lose its tag; the script now refuses to publish a lower versionCode. Pre-flight also verifies the push and mirror tokens.",
+      "changelog": "feat: add IconGenerator utility to render high-resolution Proton VPN-Next icon",
       "force": false
     }
   },
