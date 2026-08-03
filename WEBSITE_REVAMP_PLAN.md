@@ -19,7 +19,7 @@ Branch: `website-revamp` (from `origin/website`), worktree at
   through a proxy.
 - The user does not want Cloudflare for API traffic (Proton treats it poorly).
   Deno Deploy is the only proxy the site uses:
-  - Deno: `https://protonvpn-next-mirror-yq0w6dbkxg4j.smh01-mirrors.deno.net`
+  - Deno: `https://protonvpn-next-mirror.smh01-mirrors.deno.net`
 - Netlify was dropped: it is not reachable from Russia, where most of the users
   are, and the GitHub account its site was linked to has been banned, so it
   cannot be redeployed from the repository either.

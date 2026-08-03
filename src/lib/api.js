@@ -15,7 +15,7 @@ import { baseHeaders } from "./spoof.js"
 // to the repository and, unlike Netlify, is reachable from Russia, where most
 // of the users are.
 export const API_ENDPOINTS = [
-	{ id: "deno", url: "https://protonvpn-next-mirror-yq0w6dbkxg4j.smh01-mirrors.deno.net" },
+	{ id: "deno", url: "https://protonvpn-next-mirror.smh01-mirrors.deno.net" },
 ]
 
 /** Proton API codes that mean "prove you are human". */
