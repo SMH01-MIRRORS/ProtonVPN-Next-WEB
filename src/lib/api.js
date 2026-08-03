@@ -19,7 +19,7 @@ import { baseHeaders } from "./spoof.js"
 // already handles as a proxy failure.
 export const API_ENDPOINTS = [
 	{ id: "same-origin", url: "/api" },
-	{ id: "deno", url: "https://protonvpn-next-mirror.smh01-mirrors.deno.net" },
+	{ id: "deno", url: "https://protonvpn-next-web--main.smh01-mirrors.deno.net/api" },
 ]
 
 /** Proton API codes that mean "prove you are human". */

@@ -88,12 +88,16 @@ privacy rows of the matrix render as "not published" instead of breaking.
 4. Run the app pipeline once so `update.json` gains the privacy entries. The CI
    job in the app repository pushes OTA metadata here, not into the app repo.
 
-The standalone proxy project (entrypoint `proxy/deno/main.ts`) stays deployed
-for the Android client and the CLI, which call an absolute URL and are not
-subject to CORS.
+There is deliberately only one Deno project. The Android client and the CLI
+call this deployment too, at the same `/api` prefix the browser uses; a second
+project would spend the same free-plan quota only to spell the URL without the
+prefix. `proxy/deno/main.ts` stays in the tree as a standalone entrypoint in
+case the proxy ever has to move away from the site, but nothing deploys it.
 
-The proxy URL in the Android client and the CLI still points at the current
-deployment and is updated separately, before a stable release.
+Native clients ignore CORS, so for them the prefix is the only difference. It
+survives because Retrofit endpoints and the CLI both append relative paths; a
+Retrofit endpoint written with a leading slash would drop the base path and
+silently talk to the wrong host. Pinning matches the `*.deno.net` suffix.
 
 ## Tests
 

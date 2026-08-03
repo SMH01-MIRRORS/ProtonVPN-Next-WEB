@@ -4,9 +4,18 @@ The config generator runs entirely in the browser, but `vpn-api.proton.me`
 sends no CORS headers and rejects preflight, so a page can never read its
 responses. This proxy forwards the request and adds the missing headers.
 
-Cloudflare is intentionally **not** used for Proton API traffic: Proton
-throttles it far more aggressively than the alternatives. The Cloudflare worker
-on the `proxy` branch stays in place for other purposes only.
+## One codebase, three entrypoints
+
+`core.ts` holds the whole proxy and uses Web APIs only, so the same code runs
+unmodified on every host. `routing.ts` holds the path split, so a request lands
+on the same handler everywhere:
+
+- `../server.ts` - Deno Deploy: the site and the proxy in one deployment
+- `../worker/index.ts` - Cloudflare Worker: the same pair, independently
+- `deno/main.ts` - the proxy alone, for a deployment that serves no site
+
+Splitting routing per host would let the generator work on one deployment and
+fail on another for reasons that are invisible from the page.
 
 ## What the proxies do
 
@@ -15,25 +24,19 @@ on the `proxy` branch stays in place for other purposes only.
 - strip `content-security-policy` and `x-frame-options` from Proton's response
 - drop `set-cookie`, so no Proton session cookie is ever handed to the page
 - route by path prefix:
-  - `/verify-api*` → `verify-api.proton.me`
-  - `/verify*` → `verify.proton.me`
-  - everything else → `vpn-api.proton.me`
+  - `/verify-api*` -> `verify-api.proton.me`
+  - `/verify*` -> `verify.proton.me`
+  - everything else -> `vpn-api.proton.me`
 
 Only a fixed allowlist of request headers is forwarded (`authorization`,
-`x-pm-uid`, `x-pm-appversion`, …), so a misconfigured client cannot smuggle
+`x-pm-uid`, `x-pm-appversion`, ...), so a misconfigured client cannot smuggle
 extra headers upstream.
-
-These sources live on `protonvpn-next-dev`, the default branch, on purpose:
-Deno Deploy builds the default branch of a linked repository and offers no
-branch picker, so keeping the proxy on a feature branch would make it
-undeployable. The Android client uses the same proxy, so this is also the
-branch that owns it.
 
 ## Allowed origins
 
-Origins are matched by pattern, not by a fixed list, because the site is
-served from several hosts (`home.protonnext.qzz.io` today) and because a
-missing entry fails in a way that looks like a broken proxy:
+Origins are matched by pattern, not by a fixed list, because the site is served
+from several hosts and because a missing entry fails in a way that looks like a
+broken proxy:
 
 - `https://` + any subdomain of `protonnext.qzz.io`
 - `https://<name>.workers.dev` and `https://<name>.pages.dev` previews
@@ -43,63 +46,61 @@ An origin outside the patterns gets no `Access-Control-Allow-Origin` at all.
 The proxy never answers with a substituted origin: doing so made browsers
 report that the header "does not match", which hides the real cause.
 
-Changing a proxy URL means updating every consumer:
+Native clients ignore CORS entirely, so the allowlist never affects them.
 
-- `src/lib/api.js` (`API_ENDPOINTS`) on the `website` branch
+## Deployments
+
+The site deployment serves the proxy under `/api` on its own origin. There is
+deliberately only one Deno project: a second one would spend the same free-plan
+quota just to spell the URL without the `/api` prefix.
+
+| Host | URL | Used by |
+| --- | --- | --- |
+| Deno Deploy | `https://protonvpn-next-web--main.smh01-mirrors.deno.net/api` | website, Android, CLI |
+| Cloudflare | `<worker-url>/api` | website only, when Deno is unreachable |
+| Netlify | `https://shimmering-stroopwafel-51675e.netlify.app` | Android and CLI only |
+
+The browser reaches its own origin first (`/api` in `API_ENDPOINTS`), so the
+absolute Deno URL is only a fallback for a copy of the site served elsewhere.
+
+Proton throttles Cloudflare egress harder than the alternatives, so that path
+hits human verification sooner. It exists so the two hosts do not depend on
+each other, not as an equal route: keep Deno primary.
+
+Netlify is kept for the native clients, where it is a working bypass for users
+in Iran. It is deliberately not used by the website: Netlify is unreachable from
+Russia, and the GitHub account it is linked to has been banned, so the live
+deployment is frozen on a build that predates CORS support and answers browser
+requests without `Access-Control-Allow-Origin`. Native clients do not enforce
+CORS, so that stale build keeps working for them.
+
+## Changing the proxy URL
+
+Every consumer hardcodes it:
+
+- `src/lib/api.js` (`API_ENDPOINTS`)
 - `app/src/main/java/ru/protonmod/next/di/NetworkModule.kt`
-  (`PROTON_PROXY_DENO_URL`; `PROTON_PROXY_NETLIFY_URL` still exists as an app
-  bypass strategy, but no Netlify deployment backs it any more)
+  (`PROTON_PROXY_DENO_URL`, `PROTON_PROXY_NETLIFY_URL`)
 - `app/src/main/java/ru/protonmod/next/data/network/TokenAuthenticator.kt`
 - `app/src/main/java/ru/protonmod/next/data/network/DohFallbackInterceptor.kt`
 - `app/src/main/java/ru/protonmod/next/ui/screens/CaptchaScreen.kt`
+- CLI: `pvpn_cli/auth.py`, `pvpn_cli/vpn.py`, `pvpn_cli/captcha.py`,
+  `pvpn_cli/cli/commands/{connection,settings}.py`
 
-Host suffix checks (`*.deno.net`) keep working on their own.
+The `/api` suffix belongs in those constants. Retrofit endpoints and the CLI
+both append relative paths, so the prefix survives; a Retrofit endpoint written
+with a leading slash would silently drop it. Certificate pinning matches on the
+host suffix (`*.deno.net`), so it keeps working across renames.
 
-## Netlify (app only)
-
-Current deployment: `https://shimmering-stroopwafel-51675e.netlify.app`
-
-Kept for the Android and CLI clients, where it is a working bypass route for
-users in Iran. It is deliberately **not** used by the website:
-
-- Netlify is not reachable from Russia, where most of the website's users are.
-- The GitHub account this site is linked to has been banned, so the deployment
-  can no longer be updated from a repository. It still serves a build that
-  predates the CORS support and answers browser requests without
-  `Access-Control-Allow-Origin`.
-
-Native clients do not enforce CORS, so the stale build keeps working for them.
-The source here stays in sync for the day the site can be redeployed; until
-then, treat the live deployment as frozen and do not point a browser at it.
-
-## Deno Deploy
-
-Current deployment: `https://protonvpn-next-mirror.smh01-mirrors.deno.net`
-
-With the CLI:
+## Verifying a deployment
 
 ```sh
-cd proxy/deno
-deployctl deploy --project=protonvpn-next-mirror main.ts
-```
-
-Without the CLI, link the project to the repository in the Deno Deploy
-dashboard and set the entrypoint to `proxy/deno/main.ts` on branch `website`.
-No build step and no environment variables are required.
-
-## After deploying
-
-Both URLs are listed in `src/lib/api.js` (`API_ENDPOINTS`) and are tried in
-order; the second one is used when the first is unreachable or blocked. When an
-origin changes, update `ALLOWED_ORIGINS` in **both** proxies.
-
-Verify CORS is live:
-
-```sh
+curl -s -H 'Origin: https://protonnext.qzz.io' <site-url>/__proxy/health
 curl -i -X OPTIONS \
   -H 'Origin: https://protonnext.qzz.io' \
   -H 'Access-Control-Request-Method: POST' \
-  <proxy-url>/vpn/v2/logicals
+  <site-url>/api/vpn/v2/logicals
 ```
 
-The response must contain `access-control-allow-origin`.
+The health endpoint reports the running build and whether the origin was
+accepted; the preflight must answer `204` with `access-control-allow-origin`.
