@@ -1,17 +1,17 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160304,
-      "versionName": "12.0.0-alpha2st2-41-g695c163-nightly",
+      "versionCode": 605160308,
+      "versionName": "12.0.0-alpha2st2-45-gfe2b345-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "feat: add IconGenerator utility to render high-resolution Proton VPN-Next icon",
+      "changelog": "fix: stop reporting expected connection and AI provider failures\n\n- refresh the server cache once before giving up on a profile connection\n  and log the remaining empty-list case as a warning\n- log unsuccessful AI provider responses (quota, balance, bad key) as\n  warnings instead of errors\n\nFixes ANDROID-1ZV\nFixes ANDROID-234",
       "force": false
     },
     "release": {
-      "versionCode": 605160304,
-      "versionName": "12.0.0-alpha2st2-41-g695c163-nightly",
+      "versionCode": 605160308,
+      "versionName": "12.0.0-alpha2st2-45-gfe2b345-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "feat: add IconGenerator utility to render high-resolution Proton VPN-Next icon",
+      "changelog": "fix: stop reporting expected connection and AI provider failures\n\n- refresh the server cache once before giving up on a profile connection\n  and log the remaining empty-list case as a warning\n- log unsuccessful AI provider responses (quota, balance, bad key) as\n  warnings instead of errors\n\nFixes ANDROID-1ZV\nFixes ANDROID-234",
       "force": false
     }
   },
