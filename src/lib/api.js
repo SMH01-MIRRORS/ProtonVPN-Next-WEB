@@ -13,7 +13,7 @@ import { baseHeaders } from "./spoof.js"
 
 export const API_ENDPOINTS = [
 	{ id: "netlify", url: "https://shimmering-stroopwafel-51675e.netlify.app" },
-	{ id: "deno", url: "https://quick-bluejay-8760.smh01-mirrors.deno.net" },
+	{ id: "deno", url: "https://protonvpn-next-mirror-yq0w6dbkxg4j.smh01-mirrors.deno.net" },
 ]
 
 /** Proton API codes that mean "prove you are human". */

@@ -20,7 +20,7 @@ Branch: `website-revamp` (from `origin/website`), worktree at
 - The user does not want Cloudflare for API traffic (Proton treats it poorly).
   The CLI already knows two alternatives, so the site uses the same ones:
   - Netlify: `https://shimmering-stroopwafel-51675e.netlify.app`
-  - Deno: `https://quick-bluejay-8760.smh01-mirrors.deno.net`
+  - Deno: `https://protonvpn-next-mirror-yq0w6dbkxg4j.smh01-mirrors.deno.net`
 - Neither of those proxies currently returns `Access-Control-Allow-Origin`, and
   they do not answer CORS preflight, so browser calls fail today. CORS-enabled
   sources for both platforms live under `proxy/` on the `protonvpn-next-dev`

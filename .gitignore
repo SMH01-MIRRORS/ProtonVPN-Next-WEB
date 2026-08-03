@@ -6,3 +6,6 @@ node_modules/
 
 # dist/ is intentionally committed: wrangler serves it as the static asset
 # directory, so the deployed branch must carry the built site.
+
+# JetBrains IDE settings
+.idea/
