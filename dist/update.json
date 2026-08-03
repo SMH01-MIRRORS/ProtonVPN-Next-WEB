@@ -1,17 +1,31 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160309,
-      "versionName": "12.0.0-alpha2st2-46-gc279c20-nightly",
+      "versionCode": 605160312,
+      "versionName": "12.0.0-alpha2st2-49-gded1e50-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "fix: make the version code identical in Android Studio, terminal and CI\n\nThe version code was computed at configuration time with a raw ProcessBuilder\ncall, which the configuration cache cannot see as a build input. Every\nenvironment keeps its own cache entry, so Android Studio kept reusing the value\ncaptured when its entry was created and drifted ~40 commits behind ./gradlew\nand CI builds. The native anti-tamper header then expected a different version\ncode than the installed APK reported, which blocked Run/Debug from the IDE.\n\nGit output now goes through providers.exec so it is tracked as a configuration\ninput and recomputed whenever HEAD changes, and the version code/name are\ncomputed once and reused by defaultConfig, the CMake flags and\ngenerateSecurityMetadata. The native version code and version name checks are\nalso downgraded to log-only for debuggable builds so an incremental build can\nnever block debugging again.",
+      "changelog": "chore: ignore stray Android Studio build output next to the module",
       "force": false
     },
     "release": {
-      "versionCode": 605160309,
-      "versionName": "12.0.0-alpha2st2-46-gc279c20-nightly",
+      "versionCode": 605160312,
+      "versionName": "12.0.0-alpha2st2-49-gded1e50-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "fix: make the version code identical in Android Studio, terminal and CI\n\nThe version code was computed at configuration time with a raw ProcessBuilder\ncall, which the configuration cache cannot see as a build input. Every\nenvironment keeps its own cache entry, so Android Studio kept reusing the value\ncaptured when its entry was created and drifted ~40 commits behind ./gradlew\nand CI builds. The native anti-tamper header then expected a different version\ncode than the installed APK reported, which blocked Run/Debug from the IDE.\n\nGit output now goes through providers.exec so it is tracked as a configuration\ninput and recomputed whenever HEAD changes, and the version code/name are\ncomputed once and reused by defaultConfig, the CMake flags and\ngenerateSecurityMetadata. The native version code and version name checks are\nalso downgraded to log-only for debuggable builds so an incremental build can\nnever block debugging again.",
+      "changelog": "chore: ignore stray Android Studio build output next to the module",
+      "force": false
+    },
+    "privacyDebug": {
+      "versionCode": 605160312,
+      "versionName": "12.0.0-alpha2st2-49-gded1e50-nightly",
+      "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-privacy-debug.apk",
+      "changelog": "chore: ignore stray Android Studio build output next to the module",
+      "force": false
+    },
+    "privacyRelease": {
+      "versionCode": 605160312,
+      "versionName": "12.0.0-alpha2st2-49-gded1e50-nightly",
+      "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-privacy-release.apk",
+      "changelog": "chore: ignore stray Android Studio build output next to the module",
       "force": false
     }
   },
