@@ -126,3 +126,15 @@ export function averageLoad(servers) {
 	if (reported.length === 0) return null
 	return Math.round(reported.reduce((sum, load) => sum + load, 0) / reported.length)
 }
+
+/**
+ * City names present in a prepared list, sorted alphabetically.
+ *
+ * Proton leaves `City` empty on a few servers; those cannot be offered as a
+ * choice, so they are skipped rather than shown as a blank entry.
+ */
+export function citiesOf(servers) {
+	return [...new Set(servers.map((server) => server.city).filter(Boolean))].sort((first, second) =>
+		first.localeCompare(second),
+	)
+}

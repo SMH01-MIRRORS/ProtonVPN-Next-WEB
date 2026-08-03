@@ -14,7 +14,7 @@
 import { t } from "../i18n/index.js"
 import { ADVANCED_GROUPS, OBFUSCATION_PRESETS, presetById } from "../lib/awg.js"
 import { FASTEST_FLAG, flagImage } from "../lib/flags.js"
-import { AVAILABLE_PORTS, DNS_PROFILES } from "../lib/conf.js"
+import { ALLOWED_IPS_PRESETS, AVAILABLE_PORTS, DNS_PROFILES, allowedIpsPresetId } from "../lib/conf.js"
 import { serversByCountry } from "../lib/servers.js"
 
 /** Sentinel for "every country", kept out of the country codes themselves. */
@@ -284,7 +284,7 @@ function i1Tools({ busy, domain, handlers }) {
 	return tools
 }
 
-export function networkCard({ dnsId, customDns, port, mtu, allowedIps, extendedCert, handlers }) {
+export function networkCard({ dnsId, customDns, port, mtu, allowedIps, ipv6, extendedCert, handlers }) {
 	const card = element("div", "card space-y-5")
 	card.append(element("h3", "text-sm font-semibold text-white", t("gen_network_title")))
 
@@ -330,30 +330,61 @@ export function networkCard({ dnsId, customDns, port, mtu, allowedIps, extendedC
 	mtuInput.value = mtu
 	mtuInput.addEventListener("input", (event) => handlers.setMtu(event.target.value))
 
-	const allowedInput = document.createElement("input")
-	allowedInput.className = "field"
-	allowedInput.type = "text"
+	const allowedInput = document.createElement("textarea")
+	allowedInput.className = "field field-mono"
+	allowedInput.rows = 3
 	allowedInput.value = allowedIps
+	// No re-render on input: the LAN list is long and the caret must stay put.
 	allowedInput.addEventListener("input", (event) => handlers.setAllowedIps(event.target.value))
 
 	const grid = element("div", "grid gap-4 sm:grid-cols-2")
-	grid.append(labelledField("gen_mtu", mtuInput), labelledField("gen_allowed_ips", allowedInput))
+	grid.append(labelledField("gen_mtu", mtuInput), toggleRow("gen_ipv6", "gen_ipv6_desc", ipv6, handlers.setIpv6))
 	card.append(grid)
 
+	// The presets are the reason this field exists: routing everything is the
+	// default, and skipping the local network is the option people ask for by
+	// name. Anything else can still be typed in by hand.
+	const presets = element("div", "flex flex-wrap gap-2")
+	const activePreset = allowedIpsPresetId(allowedIps)
+	for (const preset of ALLOWED_IPS_PRESETS) {
+		const active = preset.id === activePreset
+		presets.append(
+			button(`chip ${active ? "chip-active" : ""}`, t(preset.labelKey), () => handlers.setAllowedIpsPreset(preset.id), {
+				pressed: active,
+			}),
+		)
+	}
+
+	const allowedBlock = element("div")
+	allowedBlock.append(
+		element("span", "field-label", t("gen_allowed_ips")),
+		presets,
+		element("p", "mt-2 text-xs text-slate-500", t("gen_allowed_preset_nolan_desc")),
+		allowedInput,
+	)
+	card.append(allowedBlock)
+
+	card.append(toggleRow("gen_extended_cert", "gen_extended_cert_desc", extendedCert, handlers.setExtendedCert))
+
+	return card
+}
+
+/** Checkbox with a title and an explanation, as used across the settings step. */
+export function toggleRow(labelKey, descKey, checked, onChange) {
 	const toggle = element("label", "flex items-start gap-3")
+
 	const checkbox = document.createElement("input")
 	checkbox.type = "checkbox"
 	checkbox.className = "mt-1 size-4 accent-[var(--color-brand)]"
-	checkbox.checked = extendedCert
-	checkbox.addEventListener("change", (event) => handlers.setExtendedCert(event.target.checked))
+	checkbox.checked = checked
+	checkbox.addEventListener("change", (event) => onChange(event.target.checked))
 
 	const text = element("span")
 	text.append(
-		element("span", "block text-sm text-white", t("gen_extended_cert")),
-		element("span", "block text-xs text-slate-500", t("gen_extended_cert_desc")),
+		element("span", "block text-sm text-white", t(labelKey)),
+		element("span", "block text-xs text-slate-500", t(descKey)),
 	)
-	toggle.append(checkbox, text)
-	card.append(toggle)
 
-	return card
+	toggle.append(checkbox, text)
+	return toggle
 }

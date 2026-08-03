@@ -2,17 +2,21 @@
  * Config generator wizard: state and flow.
  *
  * Guest session -> server picked from the flag cards -> obfuscation and network
- * settings -> registered certificate -> downloadable `.conf`. Every call goes
- * through the CORS proxy served next to the site under `/api`; the private key
- * never leaves the tab.
+ * settings -> registered certificate -> downloadable configuration. Every call
+ * goes through the CORS proxy served next to the site under `/api`; the private
+ * key never leaves the tab.
  *
  * The session, the server list and the tier are cached for a day
  * (`lib/session.js`), so the usual flow is to log in once and then produce as
- * many configurations as wanted. Each configuration still gets its own fresh
- * key pair and its own certificate; only the login and the server list are
- * reused.
+ * many configurations as wanted. Each single configuration still gets its own
+ * fresh key pair and its own certificate; only the login and the server list
+ * are reused.
  *
- * Rendering lives in `generator-view.js`.
+ * A bulk export is the exception: every file in one archive shares a key pair
+ * and a certificate, because Proton issues a certificate for a public key, not
+ * for a server, and asking for a hundred of them would only earn a rate limit.
+ *
+ * Rendering lives in `generator-view.js` and `generator-export.js`.
  */
 
 import { t, onLanguageChange } from "../i18n/index.js"
@@ -22,7 +26,17 @@ import { Ed25519UnsupportedError, generateVpnKeys } from "../lib/crypto.js"
 import { registerCertificate } from "../lib/cert.js"
 import { advancedFromPreset, generateHeaderProtectionKey, nextI1, presetById } from "../lib/awg.js"
 import { DomainI1UnsupportedError, generateI1FromDomain } from "../lib/quic.js"
-import { DEFAULT_MTU, DEFAULT_PORT, buildConfig, configFileName, downloadConfig } from "../lib/conf.js"
+import {
+	ALLOWED_IPS_ALL,
+	ALLOWED_IPS_PRESETS,
+	DEFAULT_MTU,
+	DEFAULT_PORT,
+	configFileName,
+	downloadBlob,
+	downloadConfig,
+} from "../lib/conf.js"
+import { formatById, randomSni, renderConfig } from "../lib/formats.js"
+import { buildBundle, scopeServers } from "../lib/bulk.js"
 import {
 	FASTEST_ID,
 	TIER_FREE,
@@ -51,6 +65,7 @@ import {
 	serverPicker,
 	stepBar,
 } from "./generator-view.js"
+import { ALL_CITIES, bulkCard, cityPicker, formatCard } from "./generator-export.js"
 
 const STEPS = [
 	{ id: "login", labelKey: "gen_step_login" },
@@ -66,6 +81,7 @@ const PROGRESS_KEYS = {
 	keys: "gen_progress_keys",
 	cert: "gen_progress_cert",
 	i1: "gen_progress_i1",
+	bundle: "gen_progress_bundle",
 }
 
 function errorKeyFor(error) {
@@ -97,7 +113,13 @@ export function mountGenerator(root) {
 		servers: [],
 		cache: null,
 		country: ALL_COUNTRIES,
+		city: ALL_CITIES,
 		serverId: FASTEST_ID,
+		format: "amneziawg",
+		sniDomain: randomSni(),
+		sniProtocol: "quic",
+		sniBrowser: "curl",
+		bulkScope: "all",
 		presetId: "vpn-next-default",
 		advanced: false,
 		advancedParams: advancedFromPreset("vpn-next-default"),
@@ -106,10 +128,12 @@ export function mountGenerator(root) {
 		customDns: "",
 		mtu: DEFAULT_MTU,
 		port: DEFAULT_PORT,
-		allowedIps: "0.0.0.0/0",
+		allowedIps: ALLOWED_IPS_ALL,
+		ipv6: true,
 		extendedCert: true,
 		configText: "",
 		configServer: null,
+		configFormat: "amneziawg",
 		certExpiry: null,
 		copied: false,
 		generatedCount: 0,
@@ -229,10 +253,17 @@ export function mountGenerator(root) {
 
 	/* ---------- selection ---------- */
 
-	function visibleServers() {
+	/** Servers matching the country filter, before the city narrows it down. */
+	function countryServers() {
 		return state.country === ALL_COUNTRIES
 			? state.servers
 			: state.servers.filter((server) => server.exitCountry === state.country)
+	}
+
+	function visibleServers() {
+		const candidates = countryServers()
+		if (state.city === ALL_CITIES) return candidates
+		return candidates.filter((server) => server.city === state.city)
 	}
 
 	/** Resolves the picker selection, including the "fastest" pseudo-entry. */
@@ -244,6 +275,33 @@ export function mountGenerator(root) {
 
 	function obfuscationParams() {
 		return state.advanced ? { ...state.advancedParams } : presetById(state.presetId).params()
+	}
+
+	/** Everything a configuration needs except the server and the private key. */
+	function configSettings() {
+		return {
+			awgParams: obfuscationParams(),
+			dnsId: state.dnsId,
+			customDns: state.customDns,
+			mtu: state.mtu,
+			port: state.port,
+			allowedIps: state.allowedIps,
+			ipv6: state.ipv6,
+			sniDomain: state.sniDomain,
+			sniProtocol: state.sniProtocol,
+			sniBrowser: state.sniBrowser,
+		}
+	}
+
+	/** The servers the bulk export currently covers. */
+	function bulkServers() {
+		return scopeServers({
+			servers: state.servers,
+			scope: state.bulkScope,
+			server: selectedServer(),
+			country: state.country,
+			city: state.city,
+		})
 	}
 
 	const handlers = {
@@ -296,6 +354,25 @@ export function mountGenerator(root) {
 				fail(error)
 			}
 		},
+		setFormat(id) {
+			state.format = id
+			render()
+		},
+		setSniDomain(value) {
+			state.sniDomain = value
+		},
+		randomiseSni() {
+			state.sniDomain = randomSni()
+			render()
+		},
+		setSniProtocol(id) {
+			state.sniProtocol = id
+			render()
+		},
+		setSniBrowser(id) {
+			state.sniBrowser = id
+			render()
+		},
 		setDns(id) {
 			state.dnsId = id
 			render()
@@ -313,12 +390,49 @@ export function mountGenerator(root) {
 		setAllowedIps(value) {
 			state.allowedIps = value
 		},
+		setAllowedIpsPreset(id) {
+			const preset = ALLOWED_IPS_PRESETS.find((entry) => entry.id === id)
+			if (!preset) return
+			state.allowedIps = preset.value
+			render()
+		},
+		setIpv6(value) {
+			state.ipv6 = value
+			render()
+		},
 		setExtendedCert(value) {
 			state.extendedCert = value
+		},
+		setBulkScope(id) {
+			state.bulkScope = id
+			render()
+		},
+		downloadBundle() {
+			return downloadBundle()
 		},
 	}
 
 	/* ---------- generation ---------- */
+
+	/** One key pair plus the certificate that authorises it. */
+	async function issueKeys() {
+		state.progressKey = PROGRESS_KEYS.keys
+		render()
+
+		const keys = await generateVpnKeys()
+
+		state.progressKey = PROGRESS_KEYS.cert
+		render()
+
+		const certificate = await registerCertificate({
+			profile: state.profile,
+			session: state.session,
+			publicKeyPem: keys.publicKeyPem,
+			extended: state.extendedCert,
+		})
+
+		return { keys, certificate }
+	}
 
 	async function generate() {
 		const server = selectedServer()
@@ -326,37 +440,62 @@ export function mountGenerator(root) {
 
 		state.busy = true
 		state.errorKey = null
-		state.progressKey = PROGRESS_KEYS.keys
 		render()
 
 		try {
-			const keys = await generateVpnKeys()
+			const { keys, certificate } = await issueKeys()
 
-			state.progressKey = PROGRESS_KEYS.cert
-			render()
-
-			const certificate = await registerCertificate({
-				profile: state.profile,
-				session: state.session,
-				publicKeyPem: keys.publicKeyPem,
-				extended: state.extendedCert,
-			})
-
-			state.configText = buildConfig({
+			state.configText = renderConfig({
+				...configSettings(),
+				format: state.format,
 				server,
 				privateKey: keys.wireGuardPrivateKey,
-				awgParams: obfuscationParams(),
-				dnsId: state.dnsId,
-				customDns: state.customDns,
-				mtu: state.mtu,
-				port: state.port,
-				allowedIps: state.allowedIps,
 			})
 			state.certExpiry = certificate.expirationTime
 			state.configServer = server
+			state.configFormat = state.format
 			state.generatedCount += 1
 			state.copied = false
 			state.step = "config"
+			state.busy = false
+			state.progressKey = null
+			render()
+		} catch (error) {
+			fail(error)
+		}
+	}
+
+	/**
+	 * Builds every configuration in the chosen scope and hands over one file:
+	 * an archive for the per-server formats, a single document for Clash.
+	 */
+	async function downloadBundle() {
+		const servers = bulkServers()
+		if (servers.length === 0) return
+
+		state.busy = true
+		state.errorKey = null
+		render()
+
+		try {
+			const { keys } = await issueKeys()
+
+			state.progressKey = PROGRESS_KEYS.bundle
+			render()
+
+			const bundle = buildBundle({
+				servers,
+				format: state.format,
+				scope: state.bulkScope,
+				country: state.country === ALL_COUNTRIES ? null : state.country,
+				city: state.city === ALL_CITIES ? null : state.city,
+				settings: { ...configSettings(), privateKey: keys.wireGuardPrivateKey },
+			})
+
+			const payload = bundle.kind === "zip" ? bundle.bytes : bundle.text
+			downloadBlob(new Blob([payload], { type: bundle.mime }), bundle.fileName)
+
+			state.generatedCount += bundle.count
 			state.busy = false
 			state.progressKey = null
 			render()
@@ -455,10 +594,25 @@ export function mountGenerator(root) {
 				selected: state.country,
 				onSelect: (country) => {
 					state.country = country
+					state.city = ALL_CITIES
 					state.serverId = FASTEST_ID
 					render()
 				},
 			}),
+		)
+
+		const cities = cityPicker({
+			servers: countryServers(),
+			city: state.city,
+			onSelect: (city) => {
+				state.city = city
+				state.serverId = FASTEST_ID
+				render()
+			},
+		})
+		if (cities) wrapper.append(cities)
+
+		wrapper.append(
 			serverPicker({
 				servers: candidates,
 				fastest: fastestServer(candidates),
@@ -468,6 +622,13 @@ export function mountGenerator(root) {
 					state.serverId = id
 					render()
 				},
+			}),
+			formatCard({
+				format: state.format,
+				sniDomain: state.sniDomain,
+				sniProtocol: state.sniProtocol,
+				sniBrowser: state.sniBrowser,
+				handlers,
 			}),
 			obfuscationCard({
 				advanced: state.advanced,
@@ -483,7 +644,18 @@ export function mountGenerator(root) {
 				port: state.port,
 				mtu: state.mtu,
 				allowedIps: state.allowedIps,
+				ipv6: state.ipv6,
 				extendedCert: state.extendedCert,
+				handlers,
+			}),
+			bulkCard({
+				scope: state.bulkScope,
+				count: bulkServers().length,
+				busy: state.busy,
+				disabledScopes: [
+					...(state.country === ALL_COUNTRIES ? ["country"] : []),
+					...(state.city === ALL_CITIES ? ["city"] : []),
+				],
 				handlers,
 			}),
 		)
@@ -500,7 +672,7 @@ export function mountGenerator(root) {
 		return wrapper
 	}
 
-	function renderConfig() {
+	function renderConfigStep() {
 		const card = element("div", "card")
 		card.append(element("h3", "text-sm font-semibold text-white", t("gen_result_title")))
 
@@ -516,10 +688,11 @@ export function mountGenerator(root) {
 		code.append(element("code", "", state.configText))
 		card.append(code)
 
+		const extension = formatById(state.configFormat).extension
 		const actions = element("div", "mt-5 flex flex-wrap gap-3")
 		actions.append(
 			button("btn-primary", t("gen_download_conf"), () => {
-				downloadConfig(state.configText, configFileName(state.configServer))
+				downloadConfig(state.configText, configFileName(state.configServer, extension))
 			}),
 			button("btn-ghost", state.copied ? t("gen_copied") : t("gen_copy"), async () => {
 				await navigator.clipboard.writeText(state.configText)
@@ -547,7 +720,7 @@ export function mountGenerator(root) {
 
 		if (state.step === "login") section.append(renderLogin())
 		else if (state.step === "settings") section.append(renderSettings())
-		else section.append(renderConfig())
+		else section.append(renderConfigStep())
 
 		root.append(section)
 	}
