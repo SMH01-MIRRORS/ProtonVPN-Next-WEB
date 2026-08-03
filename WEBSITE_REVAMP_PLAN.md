@@ -1,7 +1,14 @@
 # Website revamp + config generator — implementation plan
 
-Branch: `website-revamp` (from `origin/website`), worktree at
-`/home/smh01/Studio canaryProjects/ProtonVPN-Next-Website`.
+Repository: `ProtonVPN-Next-WEB`, branch `main`, checkout at
+`/home/smh01/Studio canaryProjects/ProtonVPN-Next-WEB`.
+
+The site used to be the `website` branch of the app repository. It moved to a
+repository of its own because Deno Deploy builds *every* branch of a linked
+repository, not just the default one, so a site sharing a repository with the
+Android client could not be deployed cleanly. The same repository is deployed
+twice: to Deno Deploy and to Cloudflare. History was preserved, so the OTA
+metadata commits and the old landing page are still in the log.
 
 ## Goals
 
@@ -23,10 +30,9 @@ Branch: `website-revamp` (from `origin/website`), worktree at
 - Netlify was dropped: it is not reachable from Russia, where most of the users
   are, and the GitHub account its site was linked to has been banned, so it
   cannot be redeployed from the repository either.
-- Neither of those proxies currently returns `Access-Control-Allow-Origin`, and
-  they do not answer CORS preflight, so browser calls fail today. CORS-enabled
-  sources for both platforms live under `proxy/` on the `protonvpn-next-dev`
-  branch; they must be deployed for the generator to work.
+- The proxy sources live under `proxy/` in this repository and are deployed as
+  a separate Deno project. The live deployment answers CORS preflight and
+  echoes the caller's origin; `proxy/README.md` documents how to verify it.
 - Captcha (API code 9001) is not solved with an iframe. Instead the client keeps
   several Android device profiles and transparently retries the flow with a
   different profile, the way a different device would look to the API.
@@ -64,10 +70,17 @@ privacy rows of the matrix render as "not published" instead of breaking.
 
 ## Deployment order
 
-1. Deploy the two proxies from `proxy/` (see `proxy/README.md`). Until then the
-   generator stops at the login step with the "proxy unreachable" message.
-2. Run the app pipeline once so `update.json` gains the privacy entries.
-3. Merge `website-revamp` into `website`.
+1. Push `main` to both remotes (`origin` on GitLab, `mirror` on GitHub).
+2. Deno Deploy: one project for the site, one for the proxy. They share this
+   repository and differ only by entrypoint, so the proxy project must point at
+   `proxy/deno/main.ts` while the site project builds with `npm run build` and
+   serves `dist/`.
+3. Cloudflare: same repository, `wrangler.jsonc` already serves `dist/`.
+4. Run the app pipeline once so `update.json` gains the privacy entries. The CI
+   job in the app repository pushes OTA metadata here, not into the app repo.
+
+The proxy URL in the Android client and the CLI still points at the current
+deployment and is updated separately, before a stable release.
 
 ## Tests
 
