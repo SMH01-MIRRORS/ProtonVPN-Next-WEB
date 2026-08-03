@@ -18,9 +18,11 @@ Branch: `website-revamp` (from `origin/website`), worktree at
 - Proton API cannot be called directly from a browser (CORS). Requests must go
   through a proxy.
 - The user does not want Cloudflare for API traffic (Proton treats it poorly).
-  The CLI already knows two alternatives, so the site uses the same ones:
-  - Netlify: `https://shimmering-stroopwafel-51675e.netlify.app`
+  Deno Deploy is the only proxy the site uses:
   - Deno: `https://protonvpn-next-mirror-yq0w6dbkxg4j.smh01-mirrors.deno.net`
+- Netlify was dropped: it is not reachable from Russia, where most of the users
+  are, and the GitHub account its site was linked to has been banned, so it
+  cannot be redeployed from the repository either.
 - Neither of those proxies currently returns `Access-Control-Allow-Origin`, and
   they do not answer CORS preflight, so browser calls fail today. CORS-enabled
   sources for both platforms live under `proxy/` on the `protonvpn-next-dev`
@@ -52,7 +54,7 @@ Branch: `website-revamp` (from `origin/website`), worktree at
 - [x] 3. Rebuild the landing page: hero, features, download matrix, generator, about.
 - [x] 4. Move every user-facing string into `src/i18n/*.json` (en, ru, uk, be, fa, zh).
 - [x] 5. Implement the generator libraries listed in the table above.
-- [x] 6. Add CORS-enabled Netlify + Deno proxies (now on `protonvpn-next-dev`).
+- [x] 6. Add a CORS-enabled Deno proxy (source on `protonvpn-next-dev`).
 - [x] 7. Update CI so `update.json` carries all eight build variants.
 - [x] 8. Build, verify, commit.
 

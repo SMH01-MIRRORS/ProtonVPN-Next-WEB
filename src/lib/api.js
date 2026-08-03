@@ -11,8 +11,10 @@
 
 import { baseHeaders } from "./spoof.js"
 
+// Tried in order until one answers. Deno Deploy is the only entry: it is wired
+// to the repository and, unlike Netlify, is reachable from Russia, where most
+// of the users are.
 export const API_ENDPOINTS = [
-	{ id: "netlify", url: "https://shimmering-stroopwafel-51675e.netlify.app" },
 	{ id: "deno", url: "https://protonvpn-next-mirror-yq0w6dbkxg4j.smh01-mirrors.deno.net" },
 ]
 
