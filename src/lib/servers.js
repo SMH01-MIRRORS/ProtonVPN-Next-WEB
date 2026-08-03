@@ -74,3 +74,55 @@ export function prepareServers(logicals, loads, maxTier) {
 export function countriesOf(servers) {
 	return [...new Set(servers.map((server) => server.exitCountry))].sort()
 }
+
+/** The id the picker uses for the "fastest server" entry. */
+export const FASTEST_ID = "__fastest__"
+
+/**
+ * Picks the server the app would connect to for "fastest", which is the lowest
+ * Proton score rather than the lowest load: the score already folds in latency
+ * and capacity, and load alone would happily pick an idle server on the far
+ * side of the planet. Load breaks ties so the choice is stable.
+ */
+export function fastestServer(servers) {
+	if (servers.length === 0) return null
+
+	return servers.reduce((best, candidate) => {
+		const bestScore = best.score ?? Number.POSITIVE_INFINITY
+		const candidateScore = candidate.score ?? Number.POSITIVE_INFINITY
+		if (candidateScore !== bestScore) return candidateScore < bestScore ? candidate : best
+		return (candidate.load ?? 100) < (best.load ?? 100) ? candidate : best
+	})
+}
+
+/**
+ * Groups servers by country for the picker, ordered the way the app orders its
+ * country list: the country whose fastest server is best comes first.
+ */
+export function serversByCountry(servers) {
+	const groups = new Map()
+	for (const server of servers) {
+		const existing = groups.get(server.exitCountry)
+		if (existing) existing.push(server)
+		else groups.set(server.exitCountry, [server])
+	}
+
+	return [...groups.entries()]
+		.map(([country, list]) => ({
+			country,
+			servers: list,
+			fastest: fastestServer(list),
+			load: averageLoad(list),
+		}))
+		.sort((first, second) => {
+			const byScore = (first.fastest?.score ?? Number.POSITIVE_INFINITY) - (second.fastest?.score ?? Number.POSITIVE_INFINITY)
+			return byScore !== 0 ? byScore : first.country.localeCompare(second.country)
+		})
+}
+
+/** Mean load across a country's servers, or null when nothing reported one. */
+export function averageLoad(servers) {
+	const reported = servers.map((server) => server.load).filter((load) => typeof load === "number")
+	if (reported.length === 0) return null
+	return Math.round(reported.reduce((sum, load) => sum + load, 0) / reported.length)
+}

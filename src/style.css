@@ -131,4 +131,101 @@
 		direction: ltr;
 		text-align: left;
 	}
+
+	.field-mono {
+		@apply font-mono text-xs;
+		direction: ltr;
+		text-align: left;
+	}
+
+	/*
+	 * Flags come from the Android drawables and are drawn the way `FlagIcon`
+	 * draws them: a fixed 30x20 rounded rectangle with the artwork
+	 * centre-cropped, so every flag lines up regardless of its own ratio.
+	 */
+	.flag {
+		@apply h-5 w-[30px] shrink-0 rounded object-cover;
+		box-shadow: inset 0 0 0 1px rgb(255 255 255 / 12%);
+	}
+
+	.flag-lg {
+		@apply h-8 w-12 rounded-md;
+	}
+
+	/* Country tiles, laid out like the profile cards in the app. */
+	.picker-grid {
+		@apply grid gap-3;
+		grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+	}
+
+	.picker-tile {
+		@apply flex flex-col items-start gap-2 rounded-xl border border-white/10
+			bg-white/5 p-3 text-left transition-colors hover:bg-white/10;
+	}
+
+	.picker-tile-active {
+		@apply border-brand-light bg-brand/20;
+	}
+
+	.picker-title {
+		@apply block w-full truncate text-sm font-medium text-white;
+	}
+
+	.picker-meta {
+		@apply block text-xs text-slate-400;
+	}
+
+	/* The server list scrolls on its own so the page stays navigable. */
+	.server-list {
+		@apply flex max-h-96 flex-col gap-2 overflow-y-auto pr-1;
+	}
+
+	.server-row {
+		@apply flex w-full items-center gap-3 rounded-xl border border-white/10
+			bg-white/5 px-3 py-2.5 text-left transition-colors hover:bg-white/10;
+	}
+
+	.server-row-active {
+		@apply border-brand-light bg-brand/20;
+	}
+
+	.server-text {
+		@apply flex min-w-0 flex-1 flex-col;
+	}
+
+	.server-name {
+		@apply truncate text-sm font-medium text-white;
+	}
+
+	.server-meta {
+		@apply truncate text-xs text-slate-400;
+	}
+
+	.load {
+		@apply flex shrink-0 items-center gap-2;
+	}
+
+	.load-track {
+		@apply block h-1.5 w-16 overflow-hidden rounded-full bg-white/10;
+	}
+
+	.load-fill {
+		@apply block h-full rounded-full bg-emerald-400 transition-[width];
+	}
+
+	.load-fill[data-level="medium"] {
+		@apply bg-amber-400;
+	}
+
+	.load-fill[data-level="high"] {
+		@apply bg-red-400;
+	}
+
+	.load-fill[data-level="unknown"] {
+		@apply bg-slate-600;
+	}
+
+	.load-value {
+		@apply w-9 text-right text-xs tabular-nums text-slate-400;
+	}
 }

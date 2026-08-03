@@ -1,16 +1,104 @@
 /**
- * AmneziaWG obfuscation parameters, ported from `pvpn_cli/awg.py`.
+ * AmneziaWG obfuscation parameters, ported from `pvpn_cli/awg.py` and the
+ * Android obfuscation screen (`ObfuscationSettingsScreen.kt`).
  *
- * `DEFAULT_I1` is copied verbatim from the Android client
- * (`SettingsManager.DEFAULT_I1`); it is the fake QUIC initial packet that makes
- * the handshake look like ordinary HTTP/3 traffic to a DPI box.
+ * Two levels are exposed, exactly as in the app: presets for people who just
+ * want a working file, and an advanced mode where every field can be typed in.
  */
 
-export const DEFAULT_I1 =
-	"<b 0xce000000010897a297ecc34cd6dd000044d0ec2e2e1ea2991f467ace4222129b5a098823784694b4897b9986ae0b7280135fa85e196d9ad980b150122129ce2a9379531b0fd3e871ca5fdb883c369832f730e272d7b8b74f393f9f0fa43f11e510ecb2219a52984410c204cf875585340c62238e14ad04dff382f2c200e0ee22fe743b9c6b8b043121c5710ec289f471c91ee414fca8b8be8419ae8ce7ffc53837f6ade262891895f3f4cecd31bc93ac5599e18e4f01b472362b8056c3172b513051f8322d1062997ef4a383b01706598d08d48c221d30e74c7ce000cdad36b706b1bf9b0607c32ec4b3203a4ee21ab64df336212b9758280803fcab14933b0e7ee1e04a7becce3e2633f4852585c567894a5f9efe9706a151b615856647e8b7dba69ab357b3982f554549bef9256111b2d67afde0b496f16962d4957ff654232aa9e845b61463908309cfd9de0a6abf5f425f577d7e5f6440652aa8da5f73588e82e9470f3b21b27b28c649506ae1a7f5f15b876f56abc4615f49911549b9bb39dd804fde182bd2dcec0c33bad9b138ca07d4a4a1650a2c2686acea05727e2a78962a840ae428f55627516e73c83dd8893b02358e81b524b4d99fda6df52b3a8d7a5291326e7ac9d773c5b43b8444554ef5aea104a738ed650aa979674bbed38da58ac29d87c29d387d80b526065baeb073ce65f075ccb56e47533aef357dceaa8293a523c5f6f790be90e4731123d3c6152a70576e90b4ab5bc5ead01576c68ab633ff7d36dcde2a0b2c68897e1acfc4d6483aaaeb635dd63c96b2b6a7a2bfe042f6aed82e5363aa850aace12ee3b1a93f30d8ab9537df483152a5527faca21efc9981b304f11fc95336f5b9637b174c5a0659e2b22e159a9fed4b8e93047371175b1d6d9cc8ab745f3b2281537d1c75fb9451871864efa5d184c38c185fd203de206751b92620f7c369e031d2041e152040920ac2c5ab5340bfc9d0561176abf10a147287ea90758575ac6a9f5ac9f390d0d5b23ee12af583383d994e22c0cf42383834bcd3ada1b3825a0664d8f3fb678261d57601ddf94a8a68a7c273a18c08aa99c7ad8c6c42eab67718843597ec9930457359dfdfbce024afc2dcf9348579a57d8d3490b2fa99f278f1c37d87dad9b221acd575192ffae1784f8e60ec7cee4068b6b988f0433d96d6a1b1865f4e155e9fe020279f434f3bf1bd117b717b92f6cd1cc9bea7d45978bcc3f24bda631a36910110a6ec06da35f8966c9279d130347594f13e9e07514fa370754d1424c0a1545c5070ef9fb2acd14233e8a50bfc5978b5bdf8bc1714731f798d21e2004117c61f2989dd44f0cf027b27d4019e81ed4b5c31db347c4a3a4d85048d7093cf16753d7b0d15e078f5c7a5205dc2f87e330a1f716738dce1c6180e9d02869b5546f1c4d2748f8c90d9693cba4e0079297d22fd61402dea32ff0eb69ebd65a5d0b687d87e3a8b2c42b648aa723c7c7daf37abcc4bb85caea2ee8f55bec20e913b3324ab8f5c3304f820d42ad1b9f2ffc1a3af9927136b4419e1e579ab4c2ae3c776d293d397d575df181e6cae0a4ada5d67ecea171cca3288d57c7bbdaee3befe745fb7d634f70386d873b90c4d6c6596bb65af68f9e5121e67ebf0d89d3c909ceedfb32ce9575a7758ff080724e1ab5d5f43074ecb53a479af21ed03d7b6899c36631c0166f9d47e5e1d4528a5d3d3f744029c4b1c190cbfbad06f5f83f7ad0429fa9a2719c56ffe3783460e166de2d8>"
+import { DEFAULT_I1, I1_PRESETS, nextI1 } from "./i1.js"
+
+export { DEFAULT_I1, I1_PRESETS, nextI1 }
 
 /** The parameter order used when the values are written into a `.conf`. */
 export const AWG_KEY_ORDER = ["Jc", "Jmin", "Jmax", "S1", "S2", "S3", "S4", "H1", "H2", "H3", "H4", "I1", "I2", "I3", "I4", "I5"]
+
+/**
+ * The AmneziaWG 2.0 fields the Android engine accepts
+ * (`.artifacts/amnezia-box/option/awg.go`). They are written in `.conf` spelling
+ * here, following the WireGuard convention where an ini key such as
+ * `PersistentKeepalive` maps to the `persistent_keepalive_interval` the engine
+ * reads. Older clients ignore keys they do not know, and every one of these is
+ * omitted unless the user fills it in, so a default file stays compatible.
+ */
+export const ADVANCED_KEY_ORDER = [
+	"HeaderProtectionKey",
+	"ContentPaddingAddition",
+	"RekeyAfterTime",
+	"RekeyTimeout",
+	"RejectAfterTime",
+	"KeepaliveTimeout",
+	"MaxHandshakeAttempts",
+]
+
+/**
+ * Field descriptors that drive the advanced editor, so the form and the file
+ * writer can never drift apart. `labelKey` and `hintKey` resolve through the
+ * translation files.
+ */
+export const ADVANCED_GROUPS = [
+	{
+		id: "junk",
+		titleKey: "gen_adv_group_junk",
+		fields: [
+			{ key: "Jc", labelKey: "gen_adv_jc", type: "number" },
+			{ key: "Jmin", labelKey: "gen_adv_jmin", type: "number" },
+			{ key: "Jmax", labelKey: "gen_adv_jmax", type: "number" },
+		],
+	},
+	{
+		id: "magic",
+		titleKey: "gen_adv_group_magic",
+		fields: [
+			{ key: "S1", labelKey: "gen_adv_s1", type: "number" },
+			{ key: "S2", labelKey: "gen_adv_s2", type: "number" },
+			{ key: "S3", labelKey: "gen_adv_s3", type: "number" },
+			{ key: "S4", labelKey: "gen_adv_s4", type: "number" },
+		],
+	},
+	{
+		id: "headers",
+		titleKey: "gen_adv_group_headers",
+		fields: [
+			{ key: "H1", labelKey: "gen_adv_h1", type: "number" },
+			{ key: "H2", labelKey: "gen_adv_h2", type: "number" },
+			{ key: "H3", labelKey: "gen_adv_h3", type: "number" },
+			{ key: "H4", labelKey: "gen_adv_h4", type: "number" },
+		],
+	},
+	{
+		id: "signatures",
+		titleKey: "gen_adv_group_signatures",
+		fields: [
+			{ key: "I1", labelKey: "gen_adv_i1", type: "long-text" },
+			{ key: "I2", labelKey: "gen_adv_i2", type: "long-text" },
+			{ key: "I3", labelKey: "gen_adv_i3", type: "long-text" },
+			{ key: "I4", labelKey: "gen_adv_i4", type: "long-text" },
+			{ key: "I5", labelKey: "gen_adv_i5", type: "long-text" },
+		],
+	},
+	{
+		id: "mimicry",
+		titleKey: "gen_adv_group_mimicry",
+		hintKey: "gen_adv_mimicry_hint",
+		fields: [
+			{ key: "HeaderProtectionKey", labelKey: "gen_adv_hpk", type: "text", hintKey: "gen_adv_hpk_desc", generator: "hpk" },
+			{ key: "ContentPaddingAddition", labelKey: "gen_adv_cpa", type: "text", hintKey: "gen_adv_cpa_desc" },
+		],
+	},
+	{
+		id: "timings",
+		titleKey: "gen_adv_group_timings",
+		hintKey: "gen_adv_timings_hint",
+		fields: [
+			{ key: "RekeyAfterTime", labelKey: "gen_adv_rekey_after", type: "text" },
+			{ key: "RekeyTimeout", labelKey: "gen_adv_rekey_timeout", type: "text" },
+			{ key: "RejectAfterTime", labelKey: "gen_adv_reject_after", type: "text" },
+			{ key: "KeepaliveTimeout", labelKey: "gen_adv_keepalive_timeout", type: "text" },
+			{ key: "MaxHandshakeAttempts", labelKey: "gen_adv_max_handshake", type: "text" },
+		],
+	},
+]
 
 export function vpnNextDefault() {
 	return {
@@ -35,7 +123,8 @@ export function vpnNextDefault() {
 
 /**
  * Presets offered in the UI. `labelKey` points at the translation entry, so no
- * user-facing text lives here.
+ * user-facing text lives here. The junk figures match `applyJunkPreset` in the
+ * Android view model.
  */
 export const OBFUSCATION_PRESETS = [
 	{ id: "none", labelKey: "gen_obf_none", descriptionKey: "gen_obf_none_desc", params: () => ({}) },
@@ -69,6 +158,33 @@ export function presetById(id) {
 	return OBFUSCATION_PRESETS.find((preset) => preset.id === id) ?? OBFUSCATION_PRESETS[0]
 }
 
+/** Every field the advanced editor can write, in file order. */
+export function advancedFieldKeys() {
+	return ADVANCED_GROUPS.flatMap((group) => group.fields.map((field) => field.key))
+}
+
+/**
+ * Starting point for the advanced editor: the chosen preset's values, with the
+ * AmneziaWG 2.0 fields left blank so nothing unexpected lands in the file.
+ */
+export function advancedFromPreset(presetId) {
+	const base = presetById(presetId).params()
+	const params = { ...vpnNextDefault(), ...base }
+	for (const key of ADVANCED_KEY_ORDER) params[key] = ""
+	return params
+}
+
+/**
+ * A base64 32-byte key for header protection, matching
+ * `generateHeaderProtectionKey` in the Android view model.
+ */
+export function generateHeaderProtectionKey(randomSource = (buffer) => globalThis.crypto.getRandomValues(buffer)) {
+	const bytes = randomSource(new Uint8Array(32))
+	let binary = ""
+	for (const byte of bytes) binary += String.fromCharCode(byte)
+	return btoa(binary)
+}
+
 /** Parses `"jc=1, jmax=10"` or a preset name, mirroring `parse_awg_string`. */
 export function parseAwgString(value) {
 	const trimmed = (value ?? "").trim()
@@ -92,13 +208,15 @@ export function parseAwgString(value) {
 /** Drops empty values and returns the parameters in `.conf` order. */
 export function orderedAwgEntries(params) {
 	const entries = []
-	for (const key of AWG_KEY_ORDER) {
+	const ordered = [...AWG_KEY_ORDER, ...ADVANCED_KEY_ORDER]
+
+	for (const key of ordered) {
 		const value = params[key]
 		if (value === undefined || value === null || value === "") continue
 		entries.push([key, String(value)])
 	}
 	for (const [key, value] of Object.entries(params)) {
-		if (AWG_KEY_ORDER.includes(key)) continue
+		if (ordered.includes(key)) continue
 		if (value === undefined || value === null || value === "") continue
 		entries.push([key, String(value)])
 	}

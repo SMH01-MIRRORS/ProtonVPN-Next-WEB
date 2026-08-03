@@ -1,0 +1,129 @@
+import assert from "node:assert/strict"
+import { afterEach, beforeEach, test } from "node:test"
+
+/** Minimal localStorage stand-in; the module only needs these four methods. */
+function memoryStorage() {
+	const entries = new Map()
+	return {
+		getItem: (key) => (entries.has(key) ? entries.get(key) : null),
+		setItem: (key, value) => entries.set(key, String(value)),
+		removeItem: (key) => entries.delete(key),
+		clear: () => entries.clear(),
+		get size() {
+			return entries.size
+		},
+	}
+}
+
+let storage
+
+beforeEach(() => {
+	storage = memoryStorage()
+	globalThis.localStorage = storage
+})
+
+afterEach(() => {
+	delete globalThis.localStorage
+})
+
+const { STORAGE_KEY } = (await import("../src/lib/session.js")).__testing
+const {
+	clearCachedSession,
+	hoursRemaining,
+	loadCachedSession,
+	loadsAreStale,
+	saveCachedSession,
+	updateCachedServers,
+} = await import("../src/lib/session.js")
+
+const SAMPLE = {
+	session: { accessToken: "token", uid: "uid" },
+	profile: { id: "pixel8", model: "Pixel 8" },
+	maxTier: 0,
+	servers: [{ id: "a", name: "NL-FREE#1", exitCountry: "NL", load: 12 }],
+}
+
+const DAY = 24 * 60 * 60 * 1000
+
+test("a saved session comes back with everything needed to skip the login", () => {
+	saveCachedSession(SAMPLE, 1_000)
+	const cache = loadCachedSession(1_000)
+
+	assert.equal(cache.session.accessToken, "token")
+	assert.equal(cache.profile.id, "pixel8")
+	assert.equal(cache.maxTier, 0)
+	assert.equal(cache.servers.length, 1)
+})
+
+test("the cache survives right up to the day mark and not past it", () => {
+	saveCachedSession(SAMPLE, 0)
+
+	assert.ok(loadCachedSession(DAY - 1_000), "still valid just before a day")
+	assert.equal(loadCachedSession(DAY + 1_000), null, "expired after a day")
+})
+
+test("an expired entry is dropped instead of being left behind", () => {
+	saveCachedSession(SAMPLE, 0)
+	loadCachedSession(DAY + 1_000)
+
+	assert.equal(storage.getItem(STORAGE_KEY), null)
+})
+
+test("a corrupted or half-written entry is treated as no cache at all", () => {
+	storage.setItem(STORAGE_KEY, "{not json")
+	assert.equal(loadCachedSession(1_000), null)
+
+	storage.setItem(STORAGE_KEY, JSON.stringify({ session: { accessToken: "", uid: "" }, createdAt: 1 }))
+	assert.equal(loadCachedSession(1_000), null)
+})
+
+test("refreshed servers do not extend the day the session was granted", () => {
+	saveCachedSession(SAMPLE, 0)
+
+	const refreshed = [...SAMPLE.servers, { id: "b", name: "DE-FREE#2", exitCountry: "DE", load: 40 }]
+	const updated = updateCachedServers(refreshed, DAY / 2)
+
+	assert.equal(updated.servers.length, 2)
+	assert.equal(loadCachedSession(DAY + 1_000), null, "still expires a day after login")
+})
+
+test("load figures go stale long before the session does", () => {
+	saveCachedSession(SAMPLE, 0)
+	const cache = loadCachedSession(0)
+
+	assert.equal(loadsAreStale(cache, 60_000), false)
+	assert.equal(loadsAreStale(cache, 30 * 60_000), true)
+})
+
+test("the remaining time is reported in whole hours", () => {
+	saveCachedSession(SAMPLE, 0)
+	const cache = loadCachedSession(0)
+
+	assert.equal(hoursRemaining(cache, 0), 24)
+	assert.equal(hoursRemaining(cache, DAY - 1), 0)
+})
+
+test("clearing removes the entry so the next visit starts clean", () => {
+	saveCachedSession(SAMPLE, 0)
+	clearCachedSession()
+
+	assert.equal(loadCachedSession(1_000), null)
+})
+
+test("a browser that refuses storage does not break the generator", () => {
+	globalThis.localStorage = {
+		getItem() {
+			throw new Error("denied")
+		},
+		setItem() {
+			throw new Error("quota")
+		},
+		removeItem() {
+			throw new Error("denied")
+		},
+	}
+
+	assert.doesNotThrow(() => saveCachedSession(SAMPLE, 0))
+	assert.equal(loadCachedSession(0), null)
+	assert.doesNotThrow(() => clearCachedSession())
+})

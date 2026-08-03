@@ -1,39 +1,59 @@
 /**
- * Config generator wizard.
+ * Config generator wizard: state and flow.
  *
- * Guest session → server list with live load → obfuscation and network settings
- * → registered certificate → downloadable `.conf`. Everything happens in the
- * browser; the API calls go through the CORS proxies whose sources live in
- * `proxy/` on the `protonvpn-next-dev` branch.
+ * Guest session -> server picked from the flag cards -> obfuscation and network
+ * settings -> registered certificate -> downloadable `.conf`. Every call goes
+ * through the CORS proxy served next to the site under `/api`; the private key
+ * never leaves the tab.
+ *
+ * The session, the server list and the tier are cached for a day
+ * (`lib/session.js`), so the usual flow is to log in once and then produce as
+ * many configurations as wanted. Each configuration still gets its own fresh
+ * key pair and its own certificate; only the login and the server list are
+ * reused.
+ *
+ * Rendering lives in `generator-view.js`.
  */
 
 import { t, onLanguageChange } from "../i18n/index.js"
-import { ProxyUnreachableError } from "../lib/api.js"
+import { ApiError, ProxyUnreachableError } from "../lib/api.js"
 import { loginAsGuest, VerificationExhaustedError } from "../lib/auth.js"
 import { Ed25519UnsupportedError, generateVpnKeys } from "../lib/crypto.js"
 import { registerCertificate } from "../lib/cert.js"
-import { OBFUSCATION_PRESETS, presetById } from "../lib/awg.js"
+import { advancedFromPreset, generateHeaderProtectionKey, nextI1, presetById } from "../lib/awg.js"
+import { DomainI1UnsupportedError, generateI1FromDomain } from "../lib/quic.js"
+import { DEFAULT_MTU, DEFAULT_PORT, buildConfig, configFileName, downloadConfig } from "../lib/conf.js"
 import {
-	AVAILABLE_PORTS,
-	DEFAULT_MTU,
-	DEFAULT_PORT,
-	DNS_PROFILES,
-	buildConfig,
-	configFileName,
-	downloadConfig,
-} from "../lib/conf.js"
-import {
+	FASTEST_ID,
 	TIER_FREE,
-	countriesOf,
+	fastestServer,
 	fetchLoads,
 	fetchMaxTier,
 	fetchServers,
 	prepareServers,
 } from "../lib/servers.js"
+import {
+	clearCachedSession,
+	hoursRemaining,
+	loadCachedSession,
+	loadsAreStale,
+	saveCachedSession,
+	updateCachedServers,
+} from "../lib/session.js"
+import {
+	ALL_COUNTRIES,
+	button,
+	countryPicker,
+	element,
+	networkCard,
+	notices,
+	obfuscationCard,
+	serverPicker,
+	stepBar,
+} from "./generator-view.js"
 
 const STEPS = [
 	{ id: "login", labelKey: "gen_step_login" },
-	{ id: "servers", labelKey: "gen_step_servers" },
 	{ id: "settings", labelKey: "gen_step_settings" },
 	{ id: "config", labelKey: "gen_step_config" },
 ]
@@ -45,45 +65,24 @@ const PROGRESS_KEYS = {
 	servers: "gen_progress_servers",
 	keys: "gen_progress_keys",
 	cert: "gen_progress_cert",
+	i1: "gen_progress_i1",
 }
 
 function errorKeyFor(error) {
 	if (error instanceof ProxyUnreachableError) return "gen_error_proxy"
 	if (error instanceof VerificationExhaustedError) return "gen_error_verification"
 	if (error instanceof Ed25519UnsupportedError) return "gen_error_crypto"
+	if (error instanceof DomainI1UnsupportedError) return "gen_error_domain"
 	return "gen_error_generic"
 }
 
-function countryName(code) {
-	try {
-		const display = new Intl.DisplayNames([document.documentElement.lang], {
-			type: "region",
-		})
-		return display.of(code) ?? code
-	} catch {
-		return code
-	}
-}
-
-function element(tag, className, text) {
-	const node = document.createElement(tag)
-	if (className) node.className = className
-	if (text !== undefined) node.textContent = text
-	return node
-}
-
-function labelledField(labelKey, control) {
-	const wrapper = element("label", "block")
-	wrapper.append(element("span", "field-label", t(labelKey)), control)
-	return wrapper
-}
-
-function option(value, text, selected) {
-	const node = document.createElement("option")
-	node.value = String(value)
-	node.textContent = text
-	node.selected = selected
-	return node
+/**
+ * A cached session eventually stops being accepted, either because it expired
+ * early or because Proton dropped it. That is not a real failure: the cache is
+ * cleared and the visitor is sent back to the login step.
+ */
+function isSessionRejected(error) {
+	return error instanceof ApiError && (error.status === 401 || error.code === 401)
 }
 
 export function mountGenerator(root) {
@@ -96,9 +95,13 @@ export function mountGenerator(root) {
 		profile: null,
 		maxTier: TIER_FREE,
 		servers: [],
-		country: "all",
-		serverId: null,
+		cache: null,
+		country: ALL_COUNTRIES,
+		serverId: FASTEST_ID,
 		presetId: "vpn-next-default",
+		advanced: false,
+		advancedParams: advancedFromPreset("vpn-next-default"),
+		domain: "",
 		dnsId: "cloudflare",
 		customDns: "",
 		mtu: DEFAULT_MTU,
@@ -106,28 +109,50 @@ export function mountGenerator(root) {
 		allowedIps: "0.0.0.0/0",
 		extendedCert: true,
 		configText: "",
+		configServer: null,
 		certExpiry: null,
 		copied: false,
+		generatedCount: 0,
 	}
 
-	function visibleServers() {
-		return state.country === "all"
-			? state.servers
-			: state.servers.filter((server) => server.exitCountry === state.country)
+	/* ---------- session ---------- */
+
+	function restoreCachedSession() {
+		const cache = loadCachedSession()
+		if (!cache) return
+
+		state.cache = cache
+		state.session = cache.session
+		state.profile = cache.profile
+		state.maxTier = cache.maxTier
+		state.servers = cache.servers
+		state.step = "settings"
+
+		// Load figures age far faster than the session, so a returning visitor
+		// quietly gets fresh numbers instead of yesterday's.
+		if (loadsAreStale(cache)) refreshServers({ quiet: true })
 	}
 
-	function selectedServer() {
-		const candidates = visibleServers()
-		return (
-			candidates.find((server) => server.id === state.serverId) ??
-			candidates[0] ??
-			null
-		)
+	function dropSession() {
+		clearCachedSession()
+		state.cache = null
+		state.session = null
+		state.profile = null
+		state.servers = []
+		state.maxTier = TIER_FREE
+		state.step = "login"
 	}
 
 	function fail(error) {
 		if (error?.name === "AbortError") return
-		state.errorKey = errorKeyFor(error)
+
+		if (isSessionRejected(error)) {
+			dropSession()
+			state.errorKey = "gen_error_session_expired"
+		} else {
+			state.errorKey = errorKeyFor(error)
+		}
+
 		state.busy = false
 		state.progressKey = null
 		render()
@@ -141,16 +166,14 @@ export function mountGenerator(root) {
 		try {
 			const session = await loginAsGuest({
 				onProgress: ({ stage }) => {
-					if (PROGRESS_KEYS[stage]) {
-						state.progressKey = PROGRESS_KEYS[stage]
-						render()
-					}
+					if (!PROGRESS_KEYS[stage]) return
+					state.progressKey = PROGRESS_KEYS[stage]
+					render()
 				},
 			})
 
 			state.session = { accessToken: session.accessToken, uid: session.uid }
 			state.profile = session.profile
-
 			state.progressKey = PROGRESS_KEYS.servers
 			render()
 
@@ -163,7 +186,13 @@ export function mountGenerator(root) {
 
 			state.maxTier = maxTier
 			state.servers = prepareServers(logicals, loads, maxTier)
-			state.serverId = state.servers[0]?.id ?? null
+			state.cache = saveCachedSession({
+				session: state.session,
+				profile: state.profile,
+				maxTier: state.maxTier,
+				servers: state.servers,
+			})
+
 			state.step = "settings"
 			state.busy = false
 			state.progressKey = null
@@ -173,26 +202,123 @@ export function mountGenerator(root) {
 		}
 	}
 
-	async function refreshLoads() {
+	async function refreshServers({ quiet = false } = {}) {
 		if (!state.session) return
-		state.busy = true
-		state.progressKey = PROGRESS_KEYS.servers
-		render()
+
+		if (!quiet) {
+			state.busy = true
+			state.progressKey = PROGRESS_KEYS.servers
+			render()
+		}
 
 		try {
 			const context = { profile: state.profile, session: state.session }
-			const [logicals, loads] = await Promise.all([
-				fetchServers(context),
-				fetchLoads(context),
-			])
+			const [logicals, loads] = await Promise.all([fetchServers(context), fetchLoads(context)])
+
 			state.servers = prepareServers(logicals, loads, state.maxTier)
+			state.cache = updateCachedServers(state.servers) ?? state.cache
 			state.busy = false
 			state.progressKey = null
 			render()
 		} catch (error) {
+			// A background refresh must never throw away a usable cached list.
+			if (quiet && !isSessionRejected(error)) return
 			fail(error)
 		}
 	}
+
+	/* ---------- selection ---------- */
+
+	function visibleServers() {
+		return state.country === ALL_COUNTRIES
+			? state.servers
+			: state.servers.filter((server) => server.exitCountry === state.country)
+	}
+
+	/** Resolves the picker selection, including the "fastest" pseudo-entry. */
+	function selectedServer() {
+		const candidates = visibleServers()
+		if (state.serverId === FASTEST_ID) return fastestServer(candidates)
+		return candidates.find((server) => server.id === state.serverId) ?? fastestServer(candidates)
+	}
+
+	function obfuscationParams() {
+		return state.advanced ? { ...state.advancedParams } : presetById(state.presetId).params()
+	}
+
+	const handlers = {
+		setAdvanced(value) {
+			// Opening the editor should show what the preset was doing, not a
+			// blank form.
+			if (value && !state.advanced) state.advancedParams = advancedFromPreset(state.presetId)
+			state.advanced = value
+			render()
+		},
+		setPreset(id) {
+			state.presetId = id
+			render()
+		},
+		setParam(key, value) {
+			// Deliberately no re-render: the caret must stay where it is.
+			state.advancedParams = { ...state.advancedParams, [key]: value }
+		},
+		resetAdvanced() {
+			state.advancedParams = advancedFromPreset(state.presetId)
+			render()
+		},
+		generateHeaderKey() {
+			state.advancedParams = { ...state.advancedParams, HeaderProtectionKey: generateHeaderProtectionKey() }
+			render()
+		},
+		rotateI1() {
+			state.advancedParams = { ...state.advancedParams, I1: nextI1(state.advancedParams.I1) }
+			render()
+		},
+		setDomain(value) {
+			state.domain = value
+		},
+		async applyDomainI1() {
+			const domain = state.domain.trim()
+			if (!domain) return
+
+			state.busy = true
+			state.errorKey = null
+			state.progressKey = PROGRESS_KEYS.i1
+			render()
+
+			try {
+				const i1 = await generateI1FromDomain(domain)
+				state.advancedParams = { ...state.advancedParams, I1: i1 }
+				state.busy = false
+				state.progressKey = null
+				render()
+			} catch (error) {
+				fail(error)
+			}
+		},
+		setDns(id) {
+			state.dnsId = id
+			render()
+		},
+		setCustomDns(value) {
+			state.customDns = value
+		},
+		setPort(value) {
+			state.port = value
+			render()
+		},
+		setMtu(value) {
+			state.mtu = value
+		},
+		setAllowedIps(value) {
+			state.allowedIps = value
+		},
+		setExtendedCert(value) {
+			state.extendedCert = value
+		},
+	}
+
+	/* ---------- generation ---------- */
 
 	async function generate() {
 		const server = selectedServer()
@@ -219,7 +345,7 @@ export function mountGenerator(root) {
 			state.configText = buildConfig({
 				server,
 				privateKey: keys.wireGuardPrivateKey,
-				awgParams: presetById(state.presetId).params(),
+				awgParams: obfuscationParams(),
 				dnsId: state.dnsId,
 				customDns: state.customDns,
 				mtu: state.mtu,
@@ -227,7 +353,9 @@ export function mountGenerator(root) {
 				allowedIps: state.allowedIps,
 			})
 			state.certExpiry = certificate.expirationTime
-			state.serverId = server.id
+			state.configServer = server
+			state.generatedCount += 1
+			state.copied = false
 			state.step = "config"
 			state.busy = false
 			state.progressKey = null
@@ -237,112 +365,65 @@ export function mountGenerator(root) {
 		}
 	}
 
-	function reset() {
-		state.step = "login"
-		state.session = null
-		state.profile = null
-		state.servers = []
-		state.serverId = null
+	/** Back to the settings step with the session intact, for the next config. */
+	function generateAnother() {
+		state.step = "settings"
 		state.configText = ""
 		state.certExpiry = null
-		state.errorKey = null
+		state.configServer = null
 		state.copied = false
+		state.errorKey = null
 		render()
 	}
 
-	/* ---------- rendering ---------- */
-
-	function renderSteps() {
-		const list = element("ol", "mb-8 flex flex-wrap gap-2 text-xs")
-		const activeIndex = STEPS.findIndex((step) => step.id === state.step)
-
-		STEPS.forEach((step, index) => {
-			const item = element(
-				"li",
-				`rounded-lg px-3 py-1.5 ${
-					index <= activeIndex
-						? "bg-brand/25 text-white"
-						: "bg-white/5 text-slate-500"
-				}`,
-				`${index + 1}. ${t(step.labelKey)}`,
-			)
-			if (index === activeIndex) item.setAttribute("aria-current", "step")
-			list.append(item)
-		})
-
-		return list
+	function startOver() {
+		dropSession()
+		state.configText = ""
+		state.certExpiry = null
+		state.configServer = null
+		state.errorKey = null
+		state.copied = false
+		state.generatedCount = 0
+		render()
 	}
 
-	function renderNotices() {
-		const fragment = document.createDocumentFragment()
-
-		if (state.progressKey && state.busy) {
-			fragment.append(
-				element(
-					"p",
-					"mt-4 text-sm text-brand-light",
-					t(state.progressKey),
-				),
-			)
-		}
-		if (state.errorKey) {
-			const alert = element(
-				"p",
-				"mt-4 rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200",
-				t(state.errorKey),
-			)
-			alert.setAttribute("role", "alert")
-			fragment.append(alert)
-		}
-
-		return fragment
-	}
+	/* ---------- steps ---------- */
 
 	function renderLogin() {
 		const card = element("div", "card")
 
-		const warning = element(
-			"div",
-			"rounded-xl border border-brand-light/30 bg-brand/10 p-4",
-		)
+		const warning = element("div", "rounded-xl border border-brand-light/30 bg-brand/10 p-4")
 		warning.append(
-			element(
-				"p",
-				"text-sm font-semibold text-brand-light",
-				t("gen_warning_title"),
-			),
+			element("p", "text-sm font-semibold text-brand-light", t("gen_warning_title")),
 			element("p", "mt-2 text-sm text-slate-300", t("gen_warning_text")),
 		)
 
-		const start = element("button", "btn-primary mt-6", t("gen_start"))
-		start.type = "button"
-		start.disabled = state.busy
-		start.addEventListener("click", startSession)
-
-		card.append(warning, start, renderNotices())
+		card.append(
+			warning,
+			element("p", "mt-4 text-xs text-slate-500", t("gen_cache_explainer")),
+			button("btn-primary mt-6", t("gen_start"), startSession, { disabled: state.busy }),
+			notices(state),
+		)
 		return card
 	}
 
 	function renderSessionSummary() {
 		const card = element("div", "card")
-		card.append(
-			element(
-				"p",
-				"text-sm font-semibold text-white",
-				t("gen_session_ready"),
-			),
-		)
 
-		const list = element("dl", "mt-4 grid gap-4 sm:grid-cols-3")
+		const header = element("div", "flex flex-wrap items-start justify-between gap-3")
+		header.append(element("p", "text-sm font-semibold text-white", t("gen_session_ready")))
+		if (state.cache) {
+			header.append(element("span", "badge", `${t("gen_cached")} \u00b7 ${hoursRemaining(state.cache)} ${t("gen_cache_hours")}`))
+		}
+		card.append(header)
+
+		const list = element("dl", "mt-4 grid gap-4 sm:grid-cols-4")
 		const rows = [
 			[t("gen_device_profile"), state.profile?.model ?? state.profile?.id ?? "\u2014"],
-			[
-				t("gen_tier"),
-				state.maxTier === TIER_FREE ? t("gen_tier_free") : String(state.maxTier),
-			],
+			[t("gen_tier"), state.maxTier === TIER_FREE ? t("gen_tier_free") : String(state.maxTier)],
 			[t("gen_servers_count"), String(state.servers.length)],
+			[t("gen_generated_count"), String(state.generatedCount)],
 		]
-
 		for (const [term, value] of rows) {
 			const cell = element("div")
 			cell.append(
@@ -351,282 +432,127 @@ export function mountGenerator(root) {
 			)
 			list.append(cell)
 		}
-
 		card.append(list)
-		return card
-	}
 
-	function renderServerPicker() {
-		const card = element("div", "card space-y-5")
-
-		const countrySelect = document.createElement("select")
-		countrySelect.className = "field"
-		countrySelect.append(
-			option("all", t("gen_country_all"), state.country === "all"),
+		const actions = element("div", "mt-5 flex flex-wrap gap-3")
+		actions.append(
+			button("btn-ghost btn-sm", t("gen_refresh"), () => refreshServers(), { disabled: state.busy }),
+			button("btn-ghost btn-sm", t("gen_new_session"), startOver, { disabled: state.busy }),
 		)
-		for (const code of countriesOf(state.servers)) {
-			countrySelect.append(
-				option(code, countryName(code), state.country === code),
-			)
-		}
-		countrySelect.addEventListener("change", (event) => {
-			state.country = event.target.value
-			state.serverId = null
-			render()
-		})
-
-		const current = selectedServer()
-		const serverSelect = document.createElement("select")
-		serverSelect.className = "field"
-		for (const server of visibleServers()) {
-			const load = server.load === null ? "\u2014" : `${server.load}%`
-			serverSelect.append(
-				option(
-					server.id,
-					`${server.name} \u00b7 ${t("gen_load")} ${load}`,
-					current?.id === server.id,
-				),
-			)
-		}
-		serverSelect.addEventListener("change", (event) => {
-			state.serverId = event.target.value
-			render()
-		})
-
-		const refresh = element("button", "btn-ghost btn-sm", t("gen_refresh"))
-		refresh.type = "button"
-		refresh.disabled = state.busy
-		refresh.addEventListener("click", refreshLoads)
-
-		card.append(
-			labelledField("gen_country", countrySelect),
-			labelledField("gen_server", serverSelect),
-			refresh,
-		)
-		return card
-	}
-
-	function renderObfuscation() {
-		const card = element("div", "card")
-		card.append(
-			element("h3", "text-sm font-semibold text-white", t("gen_obf_title")),
-		)
-
-		const group = element("div", "mt-4 flex flex-wrap gap-2")
-		for (const preset of OBFUSCATION_PRESETS) {
-			const button = element(
-				"button",
-				`chip ${preset.id === state.presetId ? "chip-active" : ""}`,
-				t(preset.labelKey),
-			)
-			button.type = "button"
-			button.setAttribute("aria-pressed", String(preset.id === state.presetId))
-			button.addEventListener("click", () => {
-				state.presetId = preset.id
-				render()
-			})
-			group.append(button)
-		}
-
-		card.append(
-			group,
-			element(
-				"p",
-				"mt-3 text-xs text-slate-500",
-				t(presetById(state.presetId).descriptionKey),
-			),
-		)
-		return card
-	}
-
-	function renderNetwork() {
-		const card = element("div", "card space-y-5")
-		card.append(
-			element("h3", "text-sm font-semibold text-white", t("gen_network_title")),
-		)
-
-		const dnsSelect = document.createElement("select")
-		dnsSelect.className = "field"
-		for (const profile of DNS_PROFILES) {
-			dnsSelect.append(
-				option(profile.id, t(profile.labelKey), state.dnsId === profile.id),
-			)
-		}
-		dnsSelect.append(
-			option("custom", t("gen_dns_custom"), state.dnsId === "custom"),
-		)
-		dnsSelect.addEventListener("change", (event) => {
-			state.dnsId = event.target.value
-			render()
-		})
-		card.append(labelledField("gen_dns_title", dnsSelect))
-
-		if (state.dnsId === "custom") {
-			const customInput = document.createElement("input")
-			customInput.className = "field"
-			customInput.type = "text"
-			customInput.value = state.customDns
-			customInput.placeholder = t("gen_dns_custom_placeholder")
-			customInput.addEventListener("input", (event) => {
-				state.customDns = event.target.value
-			})
-			card.append(labelledField("gen_dns_custom", customInput))
-		}
-
-		const mtuInput = document.createElement("input")
-		mtuInput.className = "field"
-		mtuInput.type = "number"
-		mtuInput.min = "1280"
-		mtuInput.max = "1500"
-		mtuInput.value = state.mtu
-		mtuInput.addEventListener("input", (event) => {
-			state.mtu = event.target.value
-		})
-
-		const portSelect = document.createElement("select")
-		portSelect.className = "field"
-		for (const port of AVAILABLE_PORTS) {
-			portSelect.append(option(port, String(port), Number(state.port) === port))
-		}
-		portSelect.addEventListener("change", (event) => {
-			state.port = Number(event.target.value)
-		})
-
-		const allowedInput = document.createElement("input")
-		allowedInput.className = "field"
-		allowedInput.type = "text"
-		allowedInput.value = state.allowedIps
-		allowedInput.addEventListener("input", (event) => {
-			state.allowedIps = event.target.value
-		})
-
-		const grid = element("div", "grid gap-4 sm:grid-cols-3")
-		grid.append(
-			labelledField("gen_mtu", mtuInput),
-			labelledField("gen_port", portSelect),
-			labelledField("gen_allowed_ips", allowedInput),
-		)
-		card.append(grid)
-
-		const certToggle = element("label", "flex items-start gap-3")
-		const checkbox = document.createElement("input")
-		checkbox.type = "checkbox"
-		checkbox.className = "mt-1 size-4 accent-[var(--color-brand)]"
-		checkbox.checked = state.extendedCert
-		checkbox.addEventListener("change", (event) => {
-			state.extendedCert = event.target.checked
-		})
-
-		const certText = element("span")
-		certText.append(
-			element("span", "block text-sm text-white", t("gen_extended_cert")),
-			element(
-				"span",
-				"block text-xs text-slate-500",
-				t("gen_extended_cert_desc"),
-			),
-		)
-		certToggle.append(checkbox, certText)
-		card.append(certToggle)
+		card.append(actions)
 
 		return card
 	}
 
 	function renderSettings() {
-		const wrapper = element("div", "space-y-5")
+		const wrapper = element("div", "space-y-6")
+		const candidates = visibleServers()
+
 		wrapper.append(
 			renderSessionSummary(),
-			renderServerPicker(),
-			renderObfuscation(),
-			renderNetwork(),
+			countryPicker({
+				servers: state.servers,
+				selected: state.country,
+				onSelect: (country) => {
+					state.country = country
+					state.serverId = FASTEST_ID
+					render()
+				},
+			}),
+			serverPicker({
+				servers: candidates,
+				fastest: fastestServer(candidates),
+				fastestId: FASTEST_ID,
+				selectedId: state.serverId,
+				onSelect: (id) => {
+					state.serverId = id
+					render()
+				},
+			}),
+			obfuscationCard({
+				advanced: state.advanced,
+				presetId: state.presetId,
+				params: state.advancedParams,
+				busy: state.busy,
+				domain: state.domain,
+				handlers,
+			}),
+			networkCard({
+				dnsId: state.dnsId,
+				customDns: state.customDns,
+				port: state.port,
+				mtu: state.mtu,
+				allowedIps: state.allowedIps,
+				extendedCert: state.extendedCert,
+				handlers,
+			}),
 		)
 
-		const actions = element("div", "flex flex-wrap gap-3")
-		const generateButton = element(
-			"button",
-			"btn-primary",
-			state.busy ? t("gen_generating") : t("gen_generate"),
+		const footer = element("div")
+		footer.append(
+			button("btn-primary", state.busy ? t("gen_generating") : t("gen_generate"), generate, {
+				disabled: state.busy || candidates.length === 0,
+			}),
+			notices(state),
 		)
-		generateButton.type = "button"
-		generateButton.disabled = state.busy || !selectedServer()
-		generateButton.addEventListener("click", generate)
+		wrapper.append(footer)
 
-		const restart = element("button", "btn-ghost", t("gen_restart"))
-		restart.type = "button"
-		restart.addEventListener("click", reset)
-
-		actions.append(generateButton, restart)
-		wrapper.append(actions, renderNotices())
 		return wrapper
 	}
 
 	function renderConfig() {
-		const wrapper = element("div", "space-y-5")
 		const card = element("div", "card")
+		card.append(element("h3", "text-sm font-semibold text-white", t("gen_result_title")))
 
-		card.append(
-			element("h3", "text-sm font-semibold text-white", t("gen_result_title")),
-		)
-
+		if (state.configServer) {
+			card.append(element("p", "mt-1 text-xs text-slate-500", state.configServer.name))
+		}
 		if (state.certExpiry) {
-			const expires = new Date(state.certExpiry * 1000)
-			card.append(
-				element(
-					"p",
-					"mt-1 text-xs text-slate-500",
-					`${t("gen_cert_expires")}: ${expires.toLocaleString()}`,
-				),
-			)
+			const expires = new Date(state.certExpiry * 1000).toLocaleString(document.documentElement.lang)
+			card.append(element("p", "mt-1 text-xs text-slate-500", `${t("gen_cert_expires")}: ${expires}`))
 		}
 
-		const pre = element("pre", "code-block mt-4", state.configText)
-		card.append(pre)
+		const code = element("pre", "code-block mt-4")
+		code.append(element("code", "", state.configText))
+		card.append(code)
 
 		const actions = element("div", "mt-5 flex flex-wrap gap-3")
-
-		const download = element("button", "btn-primary", t("gen_download_conf"))
-		download.type = "button"
-		download.addEventListener("click", () => {
-			const server = selectedServer()
-			if (server) downloadConfig(state.configText, configFileName(server))
-		})
-
-		const copy = element(
-			"button",
-			"btn-ghost",
-			state.copied ? t("gen_copied") : t("gen_copy"),
-		)
-		copy.type = "button"
-		copy.addEventListener("click", async () => {
-			try {
+		actions.append(
+			button("btn-primary", t("gen_download_conf"), () => {
+				downloadConfig(state.configText, configFileName(state.configServer))
+			}),
+			button("btn-ghost", state.copied ? t("gen_copied") : t("gen_copy"), async () => {
 				await navigator.clipboard.writeText(state.configText)
 				state.copied = true
 				render()
-			} catch {
-				/* clipboard may be blocked; the text is selectable in the page */
-			}
-		})
+			}),
+			// The session is still good, so another config is one click away.
+			button("btn-ghost", t("gen_another"), generateAnother),
+			button("btn-ghost", t("gen_restart"), startOver),
+		)
+		card.append(actions, notices(state))
 
-		const restart = element("button", "btn-ghost", t("gen_restart"))
-		restart.type = "button"
-		restart.addEventListener("click", reset)
-
-		actions.append(download, copy, restart)
-		card.append(actions)
-
-		wrapper.append(card, renderNotices())
-		return wrapper
+		return card
 	}
 
 	function render() {
 		root.replaceChildren()
-		root.append(renderSteps())
 
-		if (state.step === "login") root.append(renderLogin())
-		else if (state.step === "config") root.append(renderConfig())
-		else root.append(renderSettings())
+		const section = element("div", "container-page")
+		section.append(
+			element("h2", "section-title", t("gen_title")),
+			element("p", "section-subtitle", t("gen_subtitle")),
+			stepBar(STEPS, state.step),
+		)
+
+		if (state.step === "login") section.append(renderLogin())
+		else if (state.step === "settings") section.append(renderSettings())
+		else section.append(renderConfig())
+
+		root.append(section)
 	}
 
-	onLanguageChange(render)
+	restoreCachedSession()
 	render()
+	onLanguageChange(render)
 }
