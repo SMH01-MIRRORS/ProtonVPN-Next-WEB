@@ -71,13 +71,20 @@ privacy rows of the matrix render as "not published" instead of breaking.
 ## Deployment order
 
 1. Push `main` to both remotes (`origin` on GitLab, `mirror` on GitHub).
-2. Deno Deploy: one project for the site, one for the proxy. They share this
-   repository and differ only by entrypoint, so the proxy project must point at
-   `proxy/deno/main.ts` while the site project builds with `npm run build` and
-   serves `dist/`.
-3. Cloudflare: same repository, `wrangler.jsonc` already serves `dist/`.
+2. **Deno Deploy — site and proxy in one project.** Entrypoint `server.ts`,
+   install `npm install`, build `npm run build`. It serves `dist/` and mounts
+   the proxy under `/api`, so the generator calls its own origin and CORS never
+   enters the picture. Verify with `/__proxy/health`, which stays at the root.
+3. **Cloudflare — static site only.** Same repository, build `npm run build`,
+   output `dist/`; `wrangler.jsonc` is already set up for it. There is no proxy
+   here, so the generator falls back to the absolute Deno URL in
+   `src/lib/api.js`, and that origin must stay in `ALLOWED_ORIGIN_PATTERNS`.
 4. Run the app pipeline once so `update.json` gains the privacy entries. The CI
    job in the app repository pushes OTA metadata here, not into the app repo.
+
+The standalone proxy project (entrypoint `proxy/deno/main.ts`) stays deployed
+for the Android client and the CLI, which call an absolute URL and are not
+subject to CORS.
 
 The proxy URL in the Android client and the CLI still points at the current
 deployment and is updated separately, before a stable release.

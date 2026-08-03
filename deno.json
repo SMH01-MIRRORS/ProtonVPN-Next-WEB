@@ -1,0 +1,10 @@
+{
+  "tasks": {
+    "start": "deno run --allow-net --allow-read server.ts",
+    "proxy": "deno run --allow-net proxy/deno/main.ts"
+  },
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

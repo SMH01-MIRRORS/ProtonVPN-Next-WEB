@@ -4,7 +4,12 @@
  * This is the only proxy: the Netlify one was removed because it is blocked in
  * Russia and its deployment can no longer be updated.
  *
- * Deploy: `deployctl deploy --project=<project> main.ts` from `proxy/deno`.
+ * Two deployments use this file:
+ *   - the site's own Deno project, which mounts `handleProxyRequest` under
+ *     `/api` through `server.ts`, so the generator calls a same-origin path and
+ *     no CORS is involved at all;
+ *   - a standalone proxy project running this file directly, kept because the
+ *     Android client and the CLI point at an absolute proxy URL.
  */
 
 /**
@@ -91,7 +96,17 @@ function resolveUpstream(pathname: string): string {
 	return `${DEFAULT_UPSTREAM}${pathname}`
 }
 
-Deno.serve(async (request: Request): Promise<Response> => {
+/**
+ * Handles one proxied request.
+ *
+ * @param pathnameOverride Path to forward upstream, used when the proxy is
+ *   mounted under a prefix by `server.ts`. Without it the request path is taken
+ *   as-is, which is what the standalone deployment needs.
+ */
+export async function handleProxyRequest(
+	request: Request,
+	pathnameOverride?: string,
+): Promise<Response> {
 	const origin = request.headers.get("origin") ?? ""
 	const cors = corsHeaders(origin)
 
@@ -100,16 +115,17 @@ Deno.serve(async (request: Request): Promise<Response> => {
 	}
 
 	const incoming = new URL(request.url)
+	const pathname = pathnameOverride ?? incoming.pathname
 
 	// Tells which build is actually live and whether this caller's origin would
 	// be accepted, without having to trigger a real CORS failure to find out.
-	if (incoming.pathname === "/__proxy/health") {
+	if (pathname === "/__proxy/health") {
 		return new Response(
 			JSON.stringify({ build: PROXY_BUILD, origin, originAllowed: isAllowedOrigin(origin) }),
 			{ status: 200, headers: { ...cors, "content-type": "application/json" } },
 		)
 	}
-	const target = `${resolveUpstream(incoming.pathname)}${incoming.search}`
+	const target = `${resolveUpstream(pathname)}${incoming.search}`
 
 	const headers = new Headers()
 	for (const name of FORWARDED_REQUEST_HEADERS) {
@@ -146,4 +162,10 @@ Deno.serve(async (request: Request): Promise<Response> => {
 		status: upstreamResponse.status,
 		headers: responseHeaders,
 	})
-})
+}
+
+// Only when this file is the deployment entrypoint. Importing it from
+// `server.ts` must not start a second listener.
+if (import.meta.main) {
+	Deno.serve(handleProxyRequest)
+}

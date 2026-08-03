@@ -2,19 +2,22 @@
  * Proton API access for the browser.
  *
  * The API cannot be called directly from a page (no CORS headers on
- * vpn-api.proton.me), so every request goes through one of the proxies the CLI
- * already uses. Cloudflare is deliberately not in this list: Proton throttles it
- * much more aggressively than the other two. Deployable sources for both proxies
- * live in `proxy/` on the `protonvpn-next-dev` branch, which is also where the
- * Android client's copy of these URLs lives; they must answer CORS preflight.
+ * vpn-api.proton.me), so every request goes through the proxy in `proxy/deno`.
+ * Cloudflare is deliberately not proxying anything here: Proton throttles it far
+ * more aggressively.
  */
 
 import { baseHeaders } from "./spoof.js"
 
-// Tried in order until one answers. Deno Deploy is the only entry: it is wired
-// to the repository and, unlike Netlify, is reachable from Russia, where most
-// of the users are.
+// Tried in order until one answers.
+//
+// The Deno deployment serves this site and the proxy from one origin, so there
+// the first entry is a same-origin path: no preflight, no allow-list, and a
+// stale proxy deployment cannot break a fresh site. On Cloudflare, which hosts
+// the static build only, `/api` is not a proxy and the response fails to parse,
+// which drops through to the absolute Deno URL below.
 export const API_ENDPOINTS = [
+	{ id: "same-origin", url: "/api" },
 	{ id: "deno", url: "https://protonvpn-next-mirror.smh01-mirrors.deno.net" },
 ]
 
