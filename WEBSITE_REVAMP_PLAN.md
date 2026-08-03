@@ -53,12 +53,19 @@ Branch: `website-revamp` (from `origin/website`), worktree at
 - [x] 4. Move every user-facing string into `src/i18n/*.json` (en, ru, uk, be, fa, zh).
 - [x] 5. Implement the generator libraries listed in the table above.
 - [x] 6. Add CORS-enabled Netlify + Deno proxies under `proxy/`.
-- [ ] 7. Update CI so `update.json` carries all eight build variants.
+- [x] 7. Update CI so `update.json` carries all eight build variants.
 - [x] 8. Build, verify, commit.
 
-Step 7 lives in the app repo (`scripts/publish_ota.py` on `protonvpn-next-dev`),
-so it is committed separately. Until it runs, the privacy rows of the matrix
-render as "not published" instead of breaking.
+Step 7 lives in the app repo (`scripts/publish_ota.py` on `protonvpn-next-dev`,
+commit `d07f6ad`), so it is committed separately. Until that pipeline runs, the
+privacy rows of the matrix render as "not published" instead of breaking.
+
+## Deployment order
+
+1. Deploy the two proxies from `proxy/` (see `proxy/README.md`). Until then the
+   generator stops at the login step with the "proxy unreachable" message.
+2. Run the app pipeline once so `update.json` gains the privacy entries.
+3. Merge `website-revamp` into `website`.
 
 ## Tests
 
