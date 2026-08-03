@@ -1,0 +1,15 @@
+# Netlify configuration for the Proton API CORS proxy.
+# Everything is served by the single catch-all function; there is no static site.
+
+[build]
+  functions = "netlify/functions"
+  publish = "public"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/proxy/:splat"
+  status = 200
+  force = true

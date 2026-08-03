@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+@theme {
+	--color-ink: #0c0c14;
+	--color-ink-soft: #14141f;
+	--color-ink-card: #191926;
+	--color-brand: #6d4aff;
+	--color-brand-deep: #372580;
+	--color-brand-light: #8a6eff;
+	--font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+		Roboto, "Helvetica Neue", Arial, sans-serif;
+	--font-mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", Menlo,
+		Consolas, monospace;
+}
+
+@layer base {
+	:root {
+		color-scheme: dark;
+	}
+
+	html {
+		scroll-behavior: smooth;
+	}
+
+	body {
+		@apply bg-ink text-slate-200 font-sans antialiased;
+		background-image:
+			radial-gradient(
+				60rem 40rem at 15% -10%,
+				color-mix(in oklab, var(--color-brand) 22%, transparent),
+				transparent
+			),
+			radial-gradient(
+				50rem 35rem at 100% 0%,
+				color-mix(in oklab, var(--color-brand-deep) 30%, transparent),
+				transparent
+			);
+		background-attachment: fixed;
+	}
+
+	:focus-visible {
+		@apply outline-2 outline-offset-2 outline-brand-light;
+	}
+
+	/* Persian uses a taller line box than Latin at the same size. */
+	body.lang-fa {
+		line-height: 1.9;
+	}
+
+	[dir="rtl"] .rtl-flip {
+		transform: scaleX(-1);
+	}
+}
+
+/*
+ * Tailwind v4 only lets `@apply` reference real utilities, so the shared button
+ * base is registered as one; the variants below then build on top of it.
+ */
+@utility btn {
+	@apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3
+		text-sm font-medium transition-colors duration-150
+		disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@layer components {
+	.container-page {
+		@apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+	}
+
+	.section {
+		@apply scroll-mt-24 py-20 sm:py-28;
+	}
+
+	.section-title {
+		@apply text-3xl font-semibold tracking-tight text-white sm:text-4xl;
+	}
+
+	.section-subtitle {
+		@apply mt-3 max-w-2xl text-base text-slate-400;
+	}
+
+	.card {
+		@apply rounded-2xl border border-white/10 bg-ink-card/80 p-6 backdrop-blur;
+	}
+
+	.btn {
+		@apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3
+			text-sm font-medium transition-colors duration-150
+			disabled:cursor-not-allowed disabled:opacity-50;
+	}
+
+	.btn-primary {
+		@apply btn bg-brand text-white hover:bg-brand-light;
+	}
+
+	.btn-ghost {
+		@apply btn border border-white/15 bg-white/5 text-slate-100 hover:bg-white/10;
+	}
+
+	.btn-sm {
+		@apply rounded-lg px-3 py-2 text-xs;
+	}
+
+	.chip {
+		@apply rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm
+			text-slate-300 transition-colors hover:bg-white/10;
+	}
+
+	.chip-active {
+		@apply border-brand-light bg-brand/25 text-white;
+	}
+
+	.field-label {
+		@apply mb-2 block text-xs font-medium uppercase tracking-wide text-slate-400;
+	}
+
+	.field {
+		@apply w-full rounded-lg border border-white/10 bg-ink-soft px-3 py-2.5
+			text-sm text-slate-100 placeholder:text-slate-500
+			focus:border-brand-light focus:outline-none;
+	}
+
+	.badge {
+		@apply inline-flex items-center rounded-full border border-brand-light/40
+			bg-brand/15 px-3 py-1 text-xs font-medium text-brand-light;
+	}
+
+	.code-block {
+		@apply max-h-96 overflow-auto rounded-xl border border-white/10
+			bg-black/60 p-4 font-mono text-xs leading-relaxed text-slate-300;
+		direction: ltr;
+		text-align: left;
+	}
+}

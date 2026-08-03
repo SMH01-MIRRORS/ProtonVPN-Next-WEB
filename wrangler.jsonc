@@ -5,8 +5,9 @@
   "observability": {
     "enabled": true
   },
+  // Vite writes the built site to `dist`; `public/` is copied into it untouched.
   "assets": {
-    "directory": "public"
+    "directory": "dist"
   },
   "compatibility_flags": [
     "nodejs_compat"

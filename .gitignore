@@ -1,26 +1,8 @@
-*.iml
-.gradle
-./.artifacts
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+node_modules/
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
+*.log
+.wrangler/
+.netlify/
 
-# Sentry Config File
-sentry.properties
-
-# wrangler files
-.wrangler
-.dev.vars*
-!.dev.vars.example
-.env*
-!.env.example
+# dist/ is intentionally committed: wrangler serves it as the static asset
+# directory, so the deployed branch must carry the built site.
