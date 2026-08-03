@@ -3,7 +3,8 @@
  *
  * Guest session → server list with live load → obfuscation and network settings
  * → registered certificate → downloadable `.conf`. Everything happens in the
- * browser; the API calls go through the CORS proxies in `proxy/`.
+ * browser; the API calls go through the CORS proxies whose sources live in
+ * `proxy/` on the `protonvpn-next-dev` branch.
  */
 
 import { t, onLanguageChange } from "../i18n/index.js"

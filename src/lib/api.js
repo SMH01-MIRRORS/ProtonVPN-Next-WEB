@@ -5,7 +5,8 @@
  * vpn-api.proton.me), so every request goes through one of the proxies the CLI
  * already uses. Cloudflare is deliberately not in this list: Proton throttles it
  * much more aggressively than the other two. Deployable sources for both proxies
- * live in `proxy/` and must answer CORS preflight.
+ * live in `proxy/` on the `protonvpn-next-dev` branch, which is also where the
+ * Android client's copy of these URLs lives; they must answer CORS preflight.
  */
 
 import { baseHeaders } from "./spoof.js"

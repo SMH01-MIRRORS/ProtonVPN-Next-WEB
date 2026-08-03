@@ -22,9 +22,9 @@ Branch: `website-revamp` (from `origin/website`), worktree at
   - Netlify: `https://shimmering-stroopwafel-51675e.netlify.app`
   - Deno: `https://quick-bluejay-8760.smh01-mirrors.deno.net`
 - Neither of those proxies currently returns `Access-Control-Allow-Origin`, and
-  they do not answer CORS preflight, so browser calls fail today. This repo now
-  ships CORS-enabled proxy sources for both platforms under `proxy/`; they must
-  be deployed for the generator to work.
+  they do not answer CORS preflight, so browser calls fail today. CORS-enabled
+  sources for both platforms live under `proxy/` on the `protonvpn-next-dev`
+  branch; they must be deployed for the generator to work.
 - Captcha (API code 9001) is not solved with an iframe. Instead the client keeps
   several Android device profiles and transparently retries the flow with a
   different profile, the way a different device would look to the API.
@@ -52,7 +52,7 @@ Branch: `website-revamp` (from `origin/website`), worktree at
 - [x] 3. Rebuild the landing page: hero, features, download matrix, generator, about.
 - [x] 4. Move every user-facing string into `src/i18n/*.json` (en, ru, uk, be, fa, zh).
 - [x] 5. Implement the generator libraries listed in the table above.
-- [x] 6. Add CORS-enabled Netlify + Deno proxies under `proxy/`.
+- [x] 6. Add CORS-enabled Netlify + Deno proxies (now on `protonvpn-next-dev`).
 - [x] 7. Update CI so `update.json` carries all eight build variants.
 - [x] 8. Build, verify, commit.
 
