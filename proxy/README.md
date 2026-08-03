@@ -23,23 +23,47 @@ Only a fixed allowlist of request headers is forwarded (`authorization`,
 `x-pm-uid`, `x-pm-appversion`, …), so a misconfigured client cannot smuggle
 extra headers upstream.
 
+Both proxies must keep their existing URLs, otherwise `API_ENDPOINTS` in
+`src/lib/api.js` has to be updated as well.
+
 ## Netlify
+
+Current deployment: `https://shimmering-stroopwafel-51675e.netlify.app`
+
+With the CLI:
 
 ```sh
 cd proxy/netlify
 netlify deploy --prod
 ```
 
-Current deployment: `https://shimmering-stroopwafel-51675e.netlify.app`
+Without the CLI, connect the existing site to this repository in the Netlify
+UI (Site configuration → Build & deploy):
+
+- repository: the website repository, branch `website`
+- base directory: `proxy/netlify`
+- build command: leave empty
+- publish directory: `proxy/netlify/public`
+- functions directory: `proxy/netlify/netlify/functions`
+
+The base directory is what makes Netlify read `proxy/netlify/netlify.toml`;
+without it the proxy is never bundled and every request returns the old
+response.
 
 ## Deno Deploy
+
+Current deployment: `https://quick-bluejay-8760.smh01-mirrors.deno.net`
+
+With the CLI:
 
 ```sh
 cd proxy/deno
 deployctl deploy --project=quick-bluejay-8760 main.ts
 ```
 
-Current deployment: `https://quick-bluejay-8760.smh01-mirrors.deno.net`
+Without the CLI, link the project to the repository in the Deno Deploy
+dashboard and set the entrypoint to `proxy/deno/main.ts` on branch `website`.
+No build step and no environment variables are required.
 
 ## After deploying
 
