@@ -5,9 +5,16 @@
   "observability": {
     "enabled": true
   },
+  // The Worker owns routing: it answers /api itself and hands everything else
+  // to the static assets, so the Cloudflare deployment needs no proxy elsewhere.
+  "main": "worker/index.ts",
   // Vite writes the built site to `dist`; `public/` is copied into it untouched.
+  // `run_worker_first` is required, otherwise assets are matched before the
+  // Worker runs and /api would 404 as a missing file.
   "assets": {
-    "directory": "dist"
+    "directory": "dist",
+    "binding": "ASSETS",
+    "run_worker_first": true
   },
   "compatibility_flags": [
     "nodejs_compat"

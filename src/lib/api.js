@@ -2,20 +2,21 @@
  * Proton API access for the browser.
  *
  * The API cannot be called directly from a page (no CORS headers on
- * vpn-api.proton.me), so every request goes through the proxy in `proxy/deno`.
- * Cloudflare is deliberately not proxying anything here: Proton throttles it far
- * more aggressively.
+ * vpn-api.proton.me), so every request goes through the proxy in `proxy/core.ts`.
+ * Both hosts run their own copy of it under `/api`, so the site always has a
+ * proxy on its own origin and neither deployment burns the other's quota.
  */
 
 import { baseHeaders } from "./spoof.js"
 
 // Tried in order until one answers.
 //
-// The Deno deployment serves this site and the proxy from one origin, so there
-// the first entry is a same-origin path: no preflight, no allow-list, and a
-// stale proxy deployment cannot break a fresh site. On Cloudflare, which hosts
-// the static build only, `/api` is not a proxy and the response fails to parse,
-// which drops through to the absolute Deno URL below.
+// Same-origin first: both deployments mount the proxy under `/api`, so the
+// normal path involves no preflight, no allow-list and no cross-host quota.
+// The absolute URL stays as a last resort for the case where the site is served
+// from somewhere without a proxy of its own, such as a local `vite preview` or
+// a static copy; it is subject to CORS and may be unreachable, which the caller
+// already handles as a proxy failure.
 export const API_ENDPOINTS = [
 	{ id: "same-origin", url: "/api" },
 	{ id: "deno", url: "https://protonvpn-next-mirror.smh01-mirrors.deno.net" },

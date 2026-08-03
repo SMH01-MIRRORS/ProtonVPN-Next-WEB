@@ -75,10 +75,16 @@ privacy rows of the matrix render as "not published" instead of breaking.
    install `npm install`, build `npm run build`. It serves `dist/` and mounts
    the proxy under `/api`, so the generator calls its own origin and CORS never
    enters the picture. Verify with `/__proxy/health`, which stays at the root.
-3. **Cloudflare — static site only.** Same repository, build `npm run build`,
-   output `dist/`; `wrangler.jsonc` is already set up for it. There is no proxy
-   here, so the generator falls back to the absolute Deno URL in
-   `src/lib/api.js`, and that origin must stay in `ALLOWED_ORIGIN_PATTERNS`.
+3. **Cloudflare — site and proxy too.** Same repository, build `npm run build`,
+   output `dist/`, Worker entry `worker/index.ts` (all in `wrangler.jsonc`).
+   It mounts the same proxy under `/api`, so the two hosts share no runtime
+   dependency and neither spends the other's free-plan quota. `run_worker_first`
+   must stay enabled, otherwise static assets are matched first and `/api`
+   returns a 404 instead of reaching the Worker.
+
+   Tradeoff: Proton rate-limits Cloudflare egress harder than other providers,
+   so this path hits human verification sooner. Deno stays the primary host and
+   the spoof profile rotation absorbs the rest.
 4. Run the app pipeline once so `update.json` gains the privacy entries. The CI
    job in the app repository pushes OTA metadata here, not into the app repo.
 
