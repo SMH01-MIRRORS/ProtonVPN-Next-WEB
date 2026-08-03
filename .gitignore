@@ -9,3 +9,6 @@ node_modules/
 
 # JetBrains IDE settings
 .idea/
+
+# Working document, kept out of the repository on purpose.
+WEBSITE_REVAMP_PLAN.md
