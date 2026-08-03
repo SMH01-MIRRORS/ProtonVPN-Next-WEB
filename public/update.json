@@ -1,31 +1,31 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160313,
-      "versionName": "12.0.0-alpha2st2-50-g6f9dd24-nightly",
+      "versionCode": 605160320,
+      "versionName": "12.0.0-alpha2st2-57-gef6ae72-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "fix: point the app at the new Deno proxy\n\nThe previous Deno endpoint was a playground project and is being removed,\nbecause a playground cannot be linked to a Git repository. The replacement app\ndeploys proxy/deno/main.ts from this branch.\n\nCertificate pinning needs no change: the new host is served by the same\n*.smh01-mirrors.deno.net wildcard certificate, and the pin list is applied to\nthe *.deno.net suffix rather than to a specific subdomain.",
+      "changelog": "fix: keep the proxy path prefix when rewriting API requests\n\nThe Deno deployment serves the website at the root and mounts the Proton\nproxy under /api, but the rewriting interceptor only replaced the scheme,\nhost and port of each request. The /api prefix from the base URL was\ndropped, so a session refresh went to /auth/v4/refresh on the website\nitself and came back as 405 Method Not Allowed, which surfaced as an\nendless refresh failure in SessionManager.\n\nThe prefix from the configured proxy URL is now prepended to the rewritten\npath, ahead of the verify-api/verify prefixes that were already handled.\nProxies that live at the root, such as the Netlify one the native clients\nuse, are unaffected because their base URL has no path segments.",
       "force": false
     },
     "release": {
-      "versionCode": 605160313,
-      "versionName": "12.0.0-alpha2st2-50-g6f9dd24-nightly",
+      "versionCode": 605160320,
+      "versionName": "12.0.0-alpha2st2-57-gef6ae72-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "fix: point the app at the new Deno proxy\n\nThe previous Deno endpoint was a playground project and is being removed,\nbecause a playground cannot be linked to a Git repository. The replacement app\ndeploys proxy/deno/main.ts from this branch.\n\nCertificate pinning needs no change: the new host is served by the same\n*.smh01-mirrors.deno.net wildcard certificate, and the pin list is applied to\nthe *.deno.net suffix rather than to a specific subdomain.",
+      "changelog": "fix: keep the proxy path prefix when rewriting API requests\n\nThe Deno deployment serves the website at the root and mounts the Proton\nproxy under /api, but the rewriting interceptor only replaced the scheme,\nhost and port of each request. The /api prefix from the base URL was\ndropped, so a session refresh went to /auth/v4/refresh on the website\nitself and came back as 405 Method Not Allowed, which surfaced as an\nendless refresh failure in SessionManager.\n\nThe prefix from the configured proxy URL is now prepended to the rewritten\npath, ahead of the verify-api/verify prefixes that were already handled.\nProxies that live at the root, such as the Netlify one the native clients\nuse, are unaffected because their base URL has no path segments.",
       "force": false
     },
     "privacyDebug": {
-      "versionCode": 605160313,
-      "versionName": "12.0.0-alpha2st2-50-g6f9dd24-nightly",
+      "versionCode": 605160320,
+      "versionName": "12.0.0-alpha2st2-57-gef6ae72-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-privacy-debug.apk",
-      "changelog": "fix: point the app at the new Deno proxy\n\nThe previous Deno endpoint was a playground project and is being removed,\nbecause a playground cannot be linked to a Git repository. The replacement app\ndeploys proxy/deno/main.ts from this branch.\n\nCertificate pinning needs no change: the new host is served by the same\n*.smh01-mirrors.deno.net wildcard certificate, and the pin list is applied to\nthe *.deno.net suffix rather than to a specific subdomain.",
+      "changelog": "fix: keep the proxy path prefix when rewriting API requests\n\nThe Deno deployment serves the website at the root and mounts the Proton\nproxy under /api, but the rewriting interceptor only replaced the scheme,\nhost and port of each request. The /api prefix from the base URL was\ndropped, so a session refresh went to /auth/v4/refresh on the website\nitself and came back as 405 Method Not Allowed, which surfaced as an\nendless refresh failure in SessionManager.\n\nThe prefix from the configured proxy URL is now prepended to the rewritten\npath, ahead of the verify-api/verify prefixes that were already handled.\nProxies that live at the root, such as the Netlify one the native clients\nuse, are unaffected because their base URL has no path segments.",
       "force": false
     },
     "privacyRelease": {
-      "versionCode": 605160313,
-      "versionName": "12.0.0-alpha2st2-50-g6f9dd24-nightly",
+      "versionCode": 605160320,
+      "versionName": "12.0.0-alpha2st2-57-gef6ae72-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-privacy-release.apk",
-      "changelog": "fix: point the app at the new Deno proxy\n\nThe previous Deno endpoint was a playground project and is being removed,\nbecause a playground cannot be linked to a Git repository. The replacement app\ndeploys proxy/deno/main.ts from this branch.\n\nCertificate pinning needs no change: the new host is served by the same\n*.smh01-mirrors.deno.net wildcard certificate, and the pin list is applied to\nthe *.deno.net suffix rather than to a specific subdomain.",
+      "changelog": "fix: keep the proxy path prefix when rewriting API requests\n\nThe Deno deployment serves the website at the root and mounts the Proton\nproxy under /api, but the rewriting interceptor only replaced the scheme,\nhost and port of each request. The /api prefix from the base URL was\ndropped, so a session refresh went to /auth/v4/refresh on the website\nitself and came back as 405 Method Not Allowed, which surfaced as an\nendless refresh failure in SessionManager.\n\nThe prefix from the configured proxy URL is now prepended to the rewritten\npath, ahead of the verify-api/verify prefixes that were already handled.\nProxies that live at the root, such as the Netlify one the native clients\nuse, are unaffected because their base URL has no path segments.",
       "force": false
     }
   },
