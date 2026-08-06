@@ -43,7 +43,8 @@ const SAMPLE = {
 	servers: [{ id: "a", name: "NL-FREE#1", exitCountry: "NL", load: 12 }],
 }
 
-const DAY = 24 * 60 * 60 * 1000
+const HOUR = 60 * 60 * 1000
+const DAY = 24 * HOUR
 
 test("a saved session comes back with everything needed to skip the login", () => {
 	saveCachedSession(SAMPLE, 1_000)
@@ -108,6 +109,42 @@ test("clearing removes the entry so the next visit starts clean", () => {
 	clearCachedSession()
 
 	assert.equal(loadCachedSession(1_000), null)
+})
+
+test("the certificate is kept, so a download does not order a new one", () => {
+	const credentials = {
+		wireGuardPrivateKey: "private",
+		publicKeyPem: "-----BEGIN PUBLIC KEY-----",
+		certificate: "-----BEGIN CERTIFICATE-----",
+		expirationTime: 1_700_000_000,
+		extended: true,
+	}
+
+	saveCachedSession({ ...SAMPLE, credentials }, 0)
+
+	const cache = loadCachedSession(HOUR)
+	assert.equal(cache.credentials.certificate, credentials.certificate)
+	assert.equal(cache.credentials.wireGuardPrivateKey, "private", "the key the certificate was issued for")
+	assert.equal(cache.credentials.extended, true)
+})
+
+test("refreshing the server list leaves the certificate alone", () => {
+	const credentials = {
+		wireGuardPrivateKey: "private",
+		publicKeyPem: "pem",
+		certificate: "cert",
+	}
+	saveCachedSession({ ...SAMPLE, credentials }, 0)
+
+	updateCachedServers([...SAMPLE.servers], HOUR)
+
+	assert.equal(loadCachedSession(HOUR).credentials.certificate, "cert")
+})
+
+test("a half-written certificate is dropped rather than half-used", () => {
+	saveCachedSession({ ...SAMPLE, credentials: { wireGuardPrivateKey: "private", certificate: "" } }, 0)
+
+	assert.equal(loadCachedSession(HOUR).credentials, null, "a new one will be ordered instead")
 })
 
 test("a browser that refuses storage does not break the generator", () => {

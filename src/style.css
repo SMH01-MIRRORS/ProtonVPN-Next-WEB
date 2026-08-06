@@ -83,6 +83,77 @@
 		@apply rounded-2xl border border-white/10 bg-ink-card/80 p-6 backdrop-blur;
 	}
 
+	/*
+	 * A card that has given up its frame because an accordion already provides
+	 * one. The pickers are written as standalone cards; this is what lets them
+	 * be nested without drawing a box inside a box.
+	 */
+	.card-plain {
+		@apply border-0 bg-transparent p-0 backdrop-blur-none;
+	}
+
+	.card-accordion {
+		@apply p-0;
+	}
+
+	.card-accordion-summary {
+		@apply flex cursor-pointer list-none flex-wrap items-baseline gap-x-3
+			gap-y-1 rounded-2xl px-5 py-4 transition-colors hover:bg-white/5;
+	}
+
+	/* The default disclosure triangle is replaced by the marker below. */
+	.card-accordion-summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.card-accordion-summary::after {
+		@apply ms-auto text-xs text-slate-500 transition-transform duration-150;
+		content: "\25be";
+	}
+
+	.card-accordion[open] > .card-accordion-summary::after {
+		transform: rotate(180deg);
+	}
+
+	.card-accordion-title {
+		@apply text-sm font-semibold text-white;
+	}
+
+	/* The read-back of the current choice, truncated rather than wrapped. */
+	.card-accordion-meta {
+		@apply min-w-0 flex-1 truncate text-xs text-slate-400;
+	}
+
+	.card-accordion-body {
+		@apply space-y-6 border-t border-white/10 px-5 py-5;
+	}
+
+	/* The session read-out: one line of facts plus the refresh action. */
+	.summary-strip {
+		@apply flex flex-wrap items-center justify-between gap-x-4 gap-y-3
+			rounded-2xl border border-white/10 bg-ink-card/60 px-5 py-3;
+	}
+
+	.summary-facts {
+		@apply flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2;
+	}
+
+	.summary-status {
+		@apply text-sm font-semibold text-white;
+	}
+
+	.summary-fact {
+		@apply flex items-baseline gap-1.5 text-xs;
+	}
+
+	.summary-term {
+		@apply uppercase tracking-wide text-slate-500;
+	}
+
+	.summary-value {
+		@apply text-slate-200;
+	}
+
 	.btn {
 		@apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3
 			text-sm font-medium transition-colors duration-150

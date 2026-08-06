@@ -14,16 +14,33 @@
 import { serveDir } from "jsr:@std/http@^1.0.0/file-server"
 import { handleProxyRequest } from "./proxy/core.ts"
 import { proxyPathname, wantsAppShell } from "./proxy/routing.ts"
+import { createDenoStore } from "./proxy/store.js"
 
 /** Vite's build output, committed so a deployment never depends on a build step. */
 const STATIC_ROOT = "dist"
 
-Deno.serve(async (request: Request): Promise<Response> => {
+/**
+ * Quota storage, opened once at start-up.
+ *
+ * Deno KV is consistent across isolates and regions, so the per-day guest
+ * session limit means the same thing everywhere. When the runtime has no KV the
+ * store falls back to memory, which still limits a single instance.
+ */
+const quotaStore = await createDenoStore()
+const quotaSecret = Deno.env.get("PVPN_QUOTA_SECRET") ?? ""
+
+Deno.serve(async (request: Request, info?: Deno.ServeHandlerInfo): Promise<Response> => {
 	const url = new URL(request.url)
 
 	const proxied = proxyPathname(url.pathname)
 	if (proxied !== null) {
-		return await handleProxyRequest(request, proxied)
+		return await handleProxyRequest(request, proxied, {
+			store: quotaStore,
+			secret: quotaSecret,
+			// Behind Deno Deploy the address arrives in a header; locally it does
+			// not, and the connection info is the only way to tell callers apart.
+			address: (info?.remoteAddr as Deno.NetAddr | undefined)?.hostname ?? "",
+		})
 	}
 
 	const response = await serveDir(request, { fsRoot: STATIC_ROOT, quiet: true })

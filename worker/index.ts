@@ -14,10 +14,19 @@
 
 import { handleProxyRequest } from "../proxy/core.ts"
 import { proxyPathname, wantsAppShell } from "../proxy/routing.ts"
+import { createWorkerStore } from "../proxy/store.js"
 
 interface Env {
 	/** Binding for the built site in `dist/`, configured in `wrangler.jsonc`. */
 	ASSETS: { fetch: (request: Request) => Promise<Response> }
+	/**
+	 * Optional KV namespace for the API quotas. Without it the Worker falls back
+	 * to the Cache API, which is per-colo: good enough to stop button spamming,
+	 * looser than the Deno deployment. See `proxy/store.js`.
+	 */
+	QUOTA?: KVNamespace
+	/** Signing secret for the quota cookie and the hashed addresses. */
+	PVPN_QUOTA_SECRET?: string
 }
 
 export default {
@@ -26,7 +35,10 @@ export default {
 
 		const proxied = proxyPathname(url.pathname)
 		if (proxied !== null) {
-			return await handleProxyRequest(request, proxied)
+			return await handleProxyRequest(request, proxied, {
+				store: createWorkerStore(env),
+				secret: env.PVPN_QUOTA_SECRET ?? "",
+			})
 		}
 
 		const response = await env.ASSETS.fetch(request)

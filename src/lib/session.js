@@ -1,7 +1,15 @@
 /**
- * Keeps a guest session, its server list and the account tier in the browser
- * for a day so that generating a second configuration does not mean sitting
- * through another anonymous login and another server fetch.
+ * Keeps a guest session, its server list, the account tier and the VPN
+ * credentials in the browser for a day, so that generating a second
+ * configuration does not mean another anonymous login, another server fetch or
+ * another certificate.
+ *
+ * The credentials are the reason this cache holds anything sensitive. Proton
+ * issues a certificate for a public key rather than for a server, so reusing
+ * one means reusing the key pair it was issued for; the pair is generated in
+ * the tab, stored here and never sent anywhere. That is the same exposure as
+ * the `.conf` file the visitor downloads, and it is what keeps the site from
+ * asking Proton for a fresh certificate on every single download.
  *
  * Everything lives in `localStorage` under one key and is rewritten as a whole,
  * so a partially written or hand-edited entry is discarded rather than merged.
@@ -10,7 +18,9 @@
  * as soon as Proton rejects it.
  */
 
-const STORAGE_KEY = "pvpn-next.generator.session.v1"
+// Bumped from v1: entries now carry the key pair and certificate, and an older
+// entry has no way to supply them.
+const STORAGE_KEY = "pvpn-next.generator.session.v2"
 
 /** Proton guest sessions outlive this comfortably; a day is the product choice. */
 export const CACHE_TTL_MS = 24 * 60 * 60 * 1000
@@ -34,6 +44,23 @@ function isSession(value) {
 		value.accessToken.length > 0 &&
 		typeof value?.uid === "string" &&
 		value.uid.length > 0
+	)
+}
+
+/**
+ * The VPN credentials are only usable as a set: the private key belongs to the
+ * public key the certificate was issued for. A half-written entry has to be
+ * treated as no credentials at all, or generation would emit a `.conf` whose
+ * key and certificate do not match.
+ */
+function isCredentials(value) {
+	return (
+		typeof value?.wireGuardPrivateKey === "string" &&
+		value.wireGuardPrivateKey.length > 0 &&
+		typeof value?.publicKeyPem === "string" &&
+		value.publicKeyPem.length > 0 &&
+		typeof value?.certificate === "string" &&
+		value.certificate.length > 0
 	)
 }
 
@@ -69,6 +96,7 @@ export function loadCachedSession(now = Date.now()) {
 		profile: parsed.profile ?? null,
 		maxTier: typeof parsed.maxTier === "number" ? parsed.maxTier : 0,
 		servers: parsed.servers,
+		credentials: isCredentials(parsed.credentials) ? parsed.credentials : null,
 		createdAt: parsed.createdAt,
 		loadsUpdatedAt: typeof parsed.loadsUpdatedAt === "number" ? parsed.loadsUpdatedAt : parsed.createdAt,
 		expiresAt: parsed.createdAt + CACHE_TTL_MS,
@@ -76,7 +104,7 @@ export function loadCachedSession(now = Date.now()) {
 }
 
 /** Writes a freshly established session; resets the one-day clock. */
-export function saveCachedSession({ session, profile, maxTier, servers }, now = Date.now()) {
+export function saveCachedSession({ session, profile, maxTier, servers, credentials }, now = Date.now()) {
 	const store = storage()
 	if (!store || !isSession(session)) return null
 
@@ -85,6 +113,7 @@ export function saveCachedSession({ session, profile, maxTier, servers }, now = 
 		profile: profile ?? null,
 		maxTier: maxTier ?? 0,
 		servers: servers ?? [],
+		credentials: isCredentials(credentials) ? credentials : null,
 		createdAt: now,
 		loadsUpdatedAt: now,
 	}
@@ -113,6 +142,7 @@ export function updateCachedServers(servers, now = Date.now()) {
 		profile: existing.profile,
 		maxTier: existing.maxTier,
 		servers,
+		credentials: existing.credentials,
 		createdAt: existing.createdAt,
 		loadsUpdatedAt: now,
 	}

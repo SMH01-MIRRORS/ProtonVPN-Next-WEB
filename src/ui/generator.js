@@ -6,15 +6,15 @@
  * goes through the CORS proxy served next to the site under `/api`; the private
  * key never leaves the tab.
  *
- * The session, the server list and the tier are cached for a day
- * (`lib/session.js`), so the usual flow is to log in once and then produce as
- * many configurations as wanted. Each single configuration still gets its own
- * fresh key pair and its own certificate; only the login and the server list
- * are reused.
+ * The session, the server list, the tier and the VPN credentials are cached for
+ * a day (`lib/session.js`), so the usual flow is to log in once and then produce
+ * as many configurations as wanted without another call to Proton.
  *
- * A bulk export is the exception: every file in one archive shares a key pair
- * and a certificate, because Proton issues a certificate for a public key, not
- * for a server, and asking for a hundred of them would only earn a rate limit.
+ * The certificate is issued once, right after the guest session is upgraded,
+ * and reused by every configuration afterwards. That is not a shortcut: Proton
+ * issues a certificate for a public key rather than for a server, so one
+ * certificate covers every server, and asking for a new one per download only
+ * burned the account's rate limit for no benefit.
  *
  * Rendering lives in `generator-view.js` and `generator-export.js`.
  */
@@ -31,6 +31,7 @@ import {
 	ALLOWED_IPS_PRESETS,
 	DEFAULT_MTU,
 	DEFAULT_PORT,
+	DNS_PROFILES,
 	configFileName,
 	downloadBlob,
 	downloadConfig,
@@ -56,7 +57,9 @@ import {
 } from "../lib/session.js"
 import {
 	ALL_COUNTRIES,
+	accordion,
 	button,
+	countryName,
 	countryPicker,
 	element,
 	networkCard,
@@ -64,6 +67,7 @@ import {
 	obfuscationCard,
 	serverPicker,
 	stepBar,
+	unwrapCard,
 } from "./generator-view.js"
 import { ALL_CITIES, bulkCard, cityPicker, formatCard } from "./generator-export.js"
 
@@ -112,6 +116,9 @@ export function mountGenerator(root) {
 		maxTier: TIER_FREE,
 		servers: [],
 		cache: null,
+		// Key pair plus the certificate issued for it, shared by every config in
+		// this session and restored from the cache on a return visit.
+		credentials: null,
 		country: ALL_COUNTRIES,
 		city: ALL_CITIES,
 		serverId: FASTEST_ID,
@@ -150,6 +157,7 @@ export function mountGenerator(root) {
 		state.profile = cache.profile
 		state.maxTier = cache.maxTier
 		state.servers = cache.servers
+		state.credentials = cache.credentials
 		state.step = "settings"
 
 		// Load figures age far faster than the session, so a returning visitor
@@ -163,6 +171,7 @@ export function mountGenerator(root) {
 		state.session = null
 		state.profile = null
 		state.servers = []
+		state.credentials = null
 		state.maxTier = TIER_FREE
 		state.step = "login"
 	}
@@ -210,11 +219,17 @@ export function mountGenerator(root) {
 
 			state.maxTier = maxTier
 			state.servers = prepareServers(logicals, loads, maxTier)
+
+			// The certificate is part of the login, not of a download: issuing it
+			// here means the whole day's worth of configurations costs Proton one
+			// certificate call instead of one per file.
+			state.credentials = await issueCredentials()
 			state.cache = saveCachedSession({
 				session: state.session,
 				profile: state.profile,
 				maxTier: state.maxTier,
 				servers: state.servers,
+				credentials: state.credentials,
 			})
 
 			state.step = "settings"
@@ -414,8 +429,15 @@ export function mountGenerator(root) {
 
 	/* ---------- generation ---------- */
 
-	/** One key pair plus the certificate that authorises it. */
-	async function issueKeys() {
+	/**
+	 * Issues one key pair and the certificate that authorises it.
+	 *
+	 * Called once per session, from the login flow, and kept in the day-long
+	 * cache afterwards. The certificate is bound to the public key rather than
+	 * to a server, so the same pair serves every configuration the visitor
+	 * generates.
+	 */
+	async function issueCredentials() {
 		state.progressKey = PROGRESS_KEYS.keys
 		render()
 
@@ -431,7 +453,37 @@ export function mountGenerator(root) {
 			extended: state.extendedCert,
 		})
 
-		return { keys, certificate }
+		return {
+			wireGuardPrivateKey: keys.wireGuardPrivateKey,
+			publicKeyPem: keys.publicKeyPem,
+			certificate: certificate.certificate ?? certificate.Certificate ?? "",
+			expirationTime: certificate.expirationTime ?? null,
+			extended: state.extendedCert,
+		}
+	}
+
+	/**
+	 * The credentials for this session, issuing them only when there are none.
+	 *
+	 * A cached pair is reused as-is. The one case that forces a new certificate
+	 * is the visitor flipping the extended-lifetime switch after the fact, since
+	 * that property is baked into the certificate and cannot be changed locally.
+	 */
+	async function ensureCredentials() {
+		if (state.credentials && state.credentials.extended === state.extendedCert) {
+			return state.credentials
+		}
+
+		const credentials = await issueCredentials()
+		state.credentials = credentials
+		state.cache = saveCachedSession({
+			session: state.session,
+			profile: state.profile,
+			maxTier: state.maxTier,
+			servers: state.servers,
+			credentials,
+		}) ?? state.cache
+		return credentials
 	}
 
 	async function generate() {
@@ -443,15 +495,15 @@ export function mountGenerator(root) {
 		render()
 
 		try {
-			const { keys, certificate } = await issueKeys()
+			const credentials = await ensureCredentials()
 
 			state.configText = renderConfig({
 				...configSettings(),
 				format: state.format,
 				server,
-				privateKey: keys.wireGuardPrivateKey,
+				privateKey: credentials.wireGuardPrivateKey,
 			})
-			state.certExpiry = certificate.expirationTime
+			state.certExpiry = credentials.expirationTime
 			state.configServer = server
 			state.configFormat = state.format
 			state.generatedCount += 1
@@ -478,7 +530,7 @@ export function mountGenerator(root) {
 		render()
 
 		try {
-			const { keys } = await issueKeys()
+			const credentials = await ensureCredentials()
 
 			state.progressKey = PROGRESS_KEYS.bundle
 			render()
@@ -489,7 +541,7 @@ export function mountGenerator(root) {
 				scope: state.bulkScope,
 				country: state.country === ALL_COUNTRIES ? null : state.country,
 				city: state.city === ALL_CITIES ? null : state.city,
-				settings: { ...configSettings(), privateKey: keys.wireGuardPrivateKey },
+				settings: { ...configSettings(), privateKey: credentials.wireGuardPrivateKey },
 			})
 
 			const payload = bundle.kind === "zip" ? bundle.bytes : bundle.text
@@ -515,16 +567,12 @@ export function mountGenerator(root) {
 		render()
 	}
 
-	function startOver() {
-		dropSession()
-		state.configText = ""
-		state.certExpiry = null
-		state.configServer = null
-		state.errorKey = null
-		state.copied = false
-		state.generatedCount = 0
-		render()
-	}
+	// There is deliberately no "start over" action. Dropping a working guest
+	// session only meant asking Proton for a new one, and the server-side quota
+	// allows one of those per day: a visitor who pressed it twice locked
+	// themselves out of a session they already had. The session is dropped
+	// automatically when Proton stops accepting it, which is the only case that
+	// ever needed it.
 
 	/* ---------- steps ---------- */
 
@@ -546,60 +594,78 @@ export function mountGenerator(root) {
 		return card
 	}
 
+	/**
+	 * The session read-out, as one strip rather than a card.
+	 *
+	 * It carries the same figures as before — tier, server count, configurations
+	 * generated, device profile — but inline, because none of them is something
+	 * the visitor acts on; they are there to confirm the session is alive. The
+	 * only action left is the server refresh.
+	 */
 	function renderSessionSummary() {
-		const card = element("div", "card")
+		const strip = element("div", "summary-strip")
 
-		const header = element("div", "flex flex-wrap items-start justify-between gap-3")
-		header.append(element("p", "text-sm font-semibold text-white", t("gen_session_ready")))
+		const facts = element("div", "summary-facts")
+		facts.append(element("span", "summary-status", t("gen_session_ready")))
 		if (state.cache) {
-			header.append(element("span", "badge", `${t("gen_cached")} \u00b7 ${hoursRemaining(state.cache)} ${t("gen_cache_hours")}`))
+			facts.append(
+				element("span", "badge", `${t("gen_cached")} \u00b7 ${hoursRemaining(state.cache)} ${t("gen_cache_hours")}`),
+			)
 		}
-		card.append(header)
 
-		const list = element("dl", "mt-4 grid gap-4 sm:grid-cols-4")
-		const rows = [
-			[t("gen_device_profile"), state.profile?.model ?? state.profile?.id ?? "\u2014"],
+		const figures = [
 			[t("gen_tier"), state.maxTier === TIER_FREE ? t("gen_tier_free") : String(state.maxTier)],
 			[t("gen_servers_count"), String(state.servers.length)],
 			[t("gen_generated_count"), String(state.generatedCount)],
+			[t("gen_device_profile"), state.profile?.model ?? state.profile?.id ?? "\u2014"],
 		]
-		for (const [term, value] of rows) {
-			const cell = element("div")
-			cell.append(
-				element("dt", "text-xs uppercase tracking-wide text-slate-500", term),
-				element("dd", "mt-1 text-sm text-white", value),
-			)
-			list.append(cell)
+		for (const [term, value] of figures) {
+			const fact = element("span", "summary-fact")
+			fact.append(element("span", "summary-term", term), element("span", "summary-value", value))
+			facts.append(fact)
 		}
-		card.append(list)
 
-		const actions = element("div", "mt-5 flex flex-wrap gap-3")
-		actions.append(
-			button("btn-ghost btn-sm", t("gen_refresh"), () => refreshServers(), { disabled: state.busy }),
-			button("btn-ghost btn-sm", t("gen_new_session"), startOver, { disabled: state.busy }),
-		)
-		card.append(actions)
-
-		return card
+		strip.append(facts, button("btn-ghost btn-sm", t("gen_refresh"), () => refreshServers(), { disabled: state.busy }))
+		return strip
 	}
 
-	function renderSettings() {
-		const wrapper = element("div", "space-y-6")
-		const candidates = visibleServers()
+	/** Reads back the chosen server, for the closed "server" section header. */
+	function locationSummary() {
+		const server = selectedServer()
+		if (!server) return t("gen_no_servers")
 
-		wrapper.append(
-			renderSessionSummary(),
-			countryPicker({
-				servers: state.servers,
-				selected: state.country,
-				onSelect: (country) => {
-					state.country = country
-					state.city = ALL_CITIES
-					state.serverId = FASTEST_ID
-					render()
-				},
-			}),
-		)
+		const place = [countryName(server.exitCountry), server.city].filter(Boolean).join(" \u00b7 ")
+		const prefix = state.serverId === FASTEST_ID ? `${t("gen_fastest")}: ` : ""
+		return `${prefix}${server.name} \u00b7 ${place}`
+	}
+
+	/** Reads back the export choice, for the closed "export" section header. */
+	function exportSummary() {
+		const format = t(formatById(state.format).labelKey)
+		return `${format} \u00b7 ${bulkServers().length} ${t("gen_bulk_count")}`
+	}
+
+	/** Reads back the tunnel tweaks, for the closed "advanced" section header. */
+	function advancedSummary() {
+		const obfuscation = state.advanced ? t("gen_obf_mode_advanced") : t(presetById(state.presetId).labelKey)
+		const dns = DNS_PROFILES.find((profile) => profile.id === state.dnsId)
+		const dnsLabel = dns ? t(dns.labelKey) : t("gen_dns_custom")
+		return `${obfuscation} \u00b7 ${dnsLabel} \u00b7 ${t("gen_port")} ${state.port}`
+	}
+
+	/**
+	 * The settings step, as three collapsible sections instead of eight cards.
+	 *
+	 * Everything that was on the page is still on it; what changed is that only
+	 * the part being worked on is unfolded, and each closed header reads back
+	 * the current choice, so the page can be taken in at a glance. Picking a
+	 * server is open by default because it is the one choice nobody skips, while
+	 * obfuscation and network settings have working defaults and are opened by
+	 * the people who came for them.
+	 */
+	function renderSettings() {
+		const wrapper = element("div", "space-y-4")
+		const candidates = visibleServers()
 
 		const cities = cityPicker({
 			servers: countryServers(),
@@ -610,53 +676,95 @@ export function mountGenerator(root) {
 				render()
 			},
 		})
-		if (cities) wrapper.append(cities)
 
 		wrapper.append(
-			serverPicker({
-				servers: candidates,
-				fastest: fastestServer(candidates),
-				fastestId: FASTEST_ID,
-				selectedId: state.serverId,
-				onSelect: (id) => {
-					state.serverId = id
-					render()
-				},
-			}),
-			formatCard({
-				format: state.format,
-				sniDomain: state.sniDomain,
-				sniProtocol: state.sniProtocol,
-				sniBrowser: state.sniBrowser,
-				handlers,
-			}),
-			obfuscationCard({
-				advanced: state.advanced,
-				presetId: state.presetId,
-				params: state.advancedParams,
-				busy: state.busy,
-				domain: state.domain,
-				handlers,
-			}),
-			networkCard({
-				dnsId: state.dnsId,
-				customDns: state.customDns,
-				port: state.port,
-				mtu: state.mtu,
-				allowedIps: state.allowedIps,
-				ipv6: state.ipv6,
-				extendedCert: state.extendedCert,
-				handlers,
-			}),
-			bulkCard({
-				scope: state.bulkScope,
-				count: bulkServers().length,
-				busy: state.busy,
-				disabledScopes: [
-					...(state.country === ALL_COUNTRIES ? ["country"] : []),
-					...(state.city === ALL_CITIES ? ["city"] : []),
+			renderSessionSummary(),
+			accordion({
+				titleKey: "gen_section_location",
+				summaryText: locationSummary(),
+				open: true,
+				children: [
+					unwrapCard(
+						countryPicker({
+							servers: state.servers,
+							selected: state.country,
+							onSelect: (country) => {
+								state.country = country
+								state.city = ALL_CITIES
+								state.serverId = FASTEST_ID
+								render()
+							},
+						}),
+					),
+					unwrapCard(cities),
+					unwrapCard(
+						serverPicker({
+							servers: candidates,
+							fastest: fastestServer(candidates),
+							fastestId: FASTEST_ID,
+							selectedId: state.serverId,
+							onSelect: (id) => {
+								state.serverId = id
+								render()
+							},
+						}),
+					),
 				],
-				handlers,
+			}),
+			accordion({
+				titleKey: "gen_section_export",
+				summaryText: exportSummary(),
+				children: [
+					unwrapCard(
+						formatCard({
+							format: state.format,
+							sniDomain: state.sniDomain,
+							sniProtocol: state.sniProtocol,
+							sniBrowser: state.sniBrowser,
+							handlers,
+						}),
+					),
+					unwrapCard(
+						bulkCard({
+							scope: state.bulkScope,
+							count: bulkServers().length,
+							busy: state.busy,
+							disabledScopes: [
+								...(state.country === ALL_COUNTRIES ? ["country"] : []),
+								...(state.city === ALL_CITIES ? ["city"] : []),
+							],
+							handlers,
+						}),
+					),
+				],
+			}),
+			accordion({
+				titleKey: "gen_section_advanced",
+				summaryText: advancedSummary(),
+				children: [
+					unwrapCard(
+						obfuscationCard({
+							advanced: state.advanced,
+							presetId: state.presetId,
+							params: state.advancedParams,
+							busy: state.busy,
+							domain: state.domain,
+							handlers,
+						}),
+					),
+					unwrapCard(
+						networkCard({
+							dnsId: state.dnsId,
+							customDns: state.customDns,
+							port: state.port,
+							mtu: state.mtu,
+							allowedIps: state.allowedIps,
+							ipv6: state.ipv6,
+							extendedCert: state.extendedCert,
+							handlers,
+						}),
+					),
+				],
 			}),
 		)
 
@@ -701,7 +809,6 @@ export function mountGenerator(root) {
 			}),
 			// The session is still good, so another config is one click away.
 			button("btn-ghost", t("gen_another"), generateAnother),
-			button("btn-ghost", t("gen_restart"), startOver),
 		)
 		card.append(actions, notices(state))
 

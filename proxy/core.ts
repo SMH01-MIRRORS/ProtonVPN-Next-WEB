@@ -14,7 +14,37 @@
  * deployment does not run, and without a marker the only symptom is a CORS
  * error that looks identical to a code bug.
  */
-const PROXY_BUILD = "2026-08-03-origin-patterns"
+const PROXY_BUILD = "2026-08-04-server-side-quotas"
+
+import { openQuotaGate } from "./quota.js"
+
+/** Best-effort JSON store; see `store.js` for the backends behind it. */
+export interface QuotaStore {
+	id: string
+	get: (key: string) => Promise<unknown>
+	put: (key: string, value: unknown, ttlMs: number) => Promise<void>
+	delete: (key: string) => Promise<void>
+}
+
+/** Per-deployment wiring for the quota gate. */
+export interface ProxyContext {
+	store?: QuotaStore | null
+	secret?: string
+	/** Caller address for runtimes that do not put it in a header. */
+	address?: string
+}
+
+/**
+ * Fallback signing secret.
+ *
+ * The secret only has to be unguessable and stable for one deployment: it signs
+ * the quota cookie and hashes addresses, and rotating it costs nothing worse
+ * than a fresh set of counters. Setting `PVPN_QUOTA_SECRET` is still the right
+ * thing to do, because a secret compiled into a public repository lets someone
+ * mint their own cookie — which only ever buys them a new cookie-scoped
+ * counter, since the address-scoped one applies regardless.
+ */
+const FALLBACK_SECRET = "pvpn-next-quota-fallback-secret"
 
 /**
  * Origins allowed to read proxied responses.
@@ -40,6 +70,20 @@ const UPSTREAMS: Array<{ prefix: string; host: string }> = [
 	{ prefix: "/verify", host: "https://verify.proton.me" },
 ]
 const DEFAULT_UPSTREAM = "https://vpn-api.proton.me"
+
+/**
+ * Headers the browser must be allowed to read, on top of the safelisted ones.
+ *
+ * The quota headers are informational — the page shows how many refreshes are
+ * left rather than guessing — and are never trusted as input on the way back in.
+ */
+const EXPOSED_RESPONSE_HEADERS = [
+	"x-pvpn-quota",
+	"x-pvpn-quota-limit",
+	"x-pvpn-quota-remaining",
+	"x-pvpn-quota-reset",
+	"x-pvpn-quota-state",
+]
 
 const STRIPPED_RESPONSE_HEADERS = new Set([
 	"content-security-policy",
@@ -98,13 +142,24 @@ function resolveUpstream(pathname: string): string {
  * @param pathnameOverride Path to forward upstream, used when the proxy is
  *   mounted under a prefix by `server.ts`. Without it the request path is taken
  *   as-is, which is what the standalone deployment needs.
+ * @param context Quota storage and the signing secret for this deployment.
+ *   Omitting it disables the quotas, which is what the standalone proxy used by
+ *   the desktop and Android clients wants: those hold their own session and are
+ *   not the button-spamming case this guards against.
  */
 export async function handleProxyRequest(
 	request: Request,
 	pathnameOverride?: string,
+	context?: ProxyContext,
 ): Promise<Response> {
 	const origin = request.headers.get("origin") ?? ""
 	const cors = corsHeaders(origin)
+	cors["access-control-expose-headers"] = EXPOSED_RESPONSE_HEADERS.join(", ")
+	// The quota cookie only travels on same-origin calls, where credentials are
+	// sent by default; the header lets the cross-origin fallback work too.
+	if (cors["access-control-allow-origin"]) {
+		cors["access-control-allow-credentials"] = "true"
+	}
 
 	if (request.method === "OPTIONS") {
 		return new Response(null, { status: 204, headers: cors })
@@ -121,6 +176,27 @@ export async function handleProxyRequest(
 			{ status: 200, headers: { ...cors, "content-type": "application/json" } },
 		)
 	}
+	// Everything below this point may be rate limited. The gate decides before
+	// the call goes anywhere, so a caller over quota never touches Proton.
+	const gate = await openQuotaGate(request, pathname, {
+		store: context?.store ?? null,
+		secret: context?.secret || FALLBACK_SECRET,
+		address: context?.address ?? "",
+	})
+
+	const withGateHeaders = (headers: Headers): Headers => {
+		for (const [name, value] of Object.entries(gate.headers)) headers.set(name, value)
+		if (gate.setCookie) headers.append("set-cookie", gate.setCookie)
+		return headers
+	}
+
+	if (gate.blocked) {
+		return new Response(gate.blocked.body, {
+			status: gate.blocked.status,
+			headers: withGateHeaders(new Headers({ ...cors, "content-type": "application/json" })),
+		})
+	}
+
 	const target = `${resolveUpstream(pathname)}${incoming.search}`
 
 	const headers = new Headers()
@@ -138,9 +214,12 @@ export async function handleProxyRequest(
 			redirect: "follow",
 		})
 	} catch (error) {
+		// A failed call still counts as an attempt, so an unreachable upstream
+		// cannot be used as an unmetered retry loop.
+		await gate.commit(502, "")
 		return new Response(JSON.stringify({ Code: 0, Error: `Upstream unreachable: ${error}` }), {
 			status: 502,
-			headers: { ...cors, "content-type": "application/json" },
+			headers: withGateHeaders(new Headers({ ...cors, "content-type": "application/json" })),
 		})
 	}
 
@@ -154,8 +233,14 @@ export async function handleProxyRequest(
 		responseHeaders.set(name, value)
 	}
 
-	return new Response(await upstreamResponse.arrayBuffer(), {
+	// Read as text rather than bytes: the quota gate has to look inside the
+	// payload to tell a real answer from a captcha challenge, and Proton always
+	// speaks JSON here.
+	const body = await upstreamResponse.text()
+	await gate.commit(upstreamResponse.status, body)
+
+	return new Response(body, {
 		status: upstreamResponse.status,
-		headers: responseHeaders,
+		headers: withGateHeaders(responseHeaders),
 	})
 }

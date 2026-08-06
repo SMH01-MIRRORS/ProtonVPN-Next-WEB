@@ -19,4 +19,16 @@
   "compatibility_flags": [
     "nodejs_compat"
   ]
+  // Quota storage. Without this binding the proxy falls back to the Cache API,
+  // which is shared inside one colo but not between them, so a visitor could
+  // win one extra guest session per region they reach. Creating a namespace
+  // (`wrangler kv namespace create QUOTA`) and uncommenting the block below
+  // makes the counters global:
+  //
+  // ,"kv_namespaces": [
+  //   { "binding": "QUOTA", "id": "<namespace id>" }
+  // ]
+  //
+  // The cookie signing secret is a plain secret, not a binding:
+  // `wrangler secret put PVPN_QUOTA_SECRET`.
 }

@@ -369,6 +369,50 @@ export function networkCard({ dnsId, customDns, port, mtu, allowedIps, ipv6, ext
 	return card
 }
 
+/**
+ * Strips the card chrome off one of the pickers above.
+ *
+ * The pickers are written as standalone cards because they are also usable on
+ * their own, but stacking eight bordered boxes down the settings step made the
+ * page look like a form nobody wants to fill in. Inside an accordion the panel
+ * already provides the frame, so the card only has to give up its border and
+ * padding — not its markup, and not its behaviour.
+ */
+export function unwrapCard(node) {
+	if (!node) return node
+	node.classList.remove("card")
+	node.classList.add("card-plain")
+	return node
+}
+
+/**
+ * One collapsible section of the settings step.
+ *
+ * Built on `<details>` rather than on a click handler and a state flag: it
+ * keeps its open state across the wizard's re-renders on its own, is operable
+ * from the keyboard, and stays usable if the styles fail to load.
+ *
+ * @param summaryText Short read-out of the current choice, shown on the closed
+ *   header so that nothing has to be opened just to see what is set.
+ */
+export function accordion({ titleKey, summaryText = "", open = false, children = [] }) {
+	const details = element("details", "card card-accordion")
+	details.open = open
+
+	const summary = element("summary", "card-accordion-summary")
+	summary.append(element("span", "card-accordion-title", t(titleKey)))
+	if (summaryText) summary.append(element("span", "card-accordion-meta", summaryText))
+	details.append(summary)
+
+	const body = element("div", "card-accordion-body")
+	for (const child of children) {
+		if (child) body.append(child)
+	}
+	details.append(body)
+
+	return details
+}
+
 /** Checkbox with a title and an explanation, as used across the settings step. */
 export function toggleRow(labelKey, descKey, checked, onChange) {
 	const toggle = element("label", "flex items-start gap-3")

@@ -78,7 +78,10 @@ export async function apiRequest(path, { method = "GET", profile, session = null
 				headers,
 				body: body === null ? undefined : JSON.stringify(body),
 				signal,
-				credentials: "omit",
+				// The proxy counts refreshes against a cookie it signs itself, so
+				// the cookie has to ride along; nothing Proton sets is ever kept,
+				// because the proxy strips upstream `Set-Cookie` headers.
+				credentials: endpoint.id === "same-origin" ? "same-origin" : "include",
 				mode: "cors",
 			})
 		} catch (error) {
