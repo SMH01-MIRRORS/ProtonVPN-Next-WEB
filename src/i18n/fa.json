@@ -12,7 +12,8 @@
   "hero_subtitle": "کلاینت Proton VPN برای اندروید با مبهم‌سازی AmneziaWG، به‌روزرسانی درون‌ساخت و بدون تله‌متری در نسخهٔ privacy.",
   "hero_cta_download": "دانلود برنامه",
   "hero_cta_generator": "ساخت پیکربندی",
-  "hero_cta_source": "کد منبع",
+  "link_gitlab": "GitLab — کد منبع",
+  "link_github": "GitHub — آینه",
   "hero_stat_channels": "کانال‌های انتشار",
   "hero_stat_flavors": "نسخه‌های ساخت",
   "hero_stat_languages": "زبان‌های رابط کاربری",
@@ -210,7 +211,6 @@
   "disclaimer_note": "سلب مسئولیت",
   "disclaimer_text": "این پروژه وابسته به Proton AG نیست و از سوی آن پشتیبانی نمی‌شود. Proton و Proton VPN علائم تجاری Proton AG هستند.",
   "sponsors_title": "ابزارهایی که به کار می‌بریم",
-  "footer_source": "کد منبع",
   "footer_telegram": "Telegram",
   "footer_lite": "نسخهٔ سبک",
   "footer_license": "منتشرشده تحت پروانهٔ GNU GPL v3."

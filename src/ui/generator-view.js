@@ -42,13 +42,28 @@ export function labelledField(labelKey, control) {
 	return wrapper
 }
 
-/** Localised country name, falling back to the raw code for odd territories. */
+/**
+ * Localised country name, kept as short as the language allows.
+ *
+ * The short form is asked for first because the full one runs to "Соединённые
+ * Штаты" in Russian and similar mouthfuls elsewhere, which overflowed the
+ * country tiles and the server rows into an ellipsis. Where a language has no
+ * short form the two are identical, so this costs nothing; the raw code is the
+ * last resort for territories the browser does not know.
+ */
 export function countryName(code) {
-	try {
-		return new Intl.DisplayNames([document.documentElement.lang], { type: "region" }).of(code) ?? code
-	} catch {
-		return code
+	const lang = document.documentElement.lang
+
+	for (const style of ["short", "long"]) {
+		try {
+			const name = new Intl.DisplayNames([lang], { type: "region", style }).of(code)
+			if (name) return name
+		} catch {
+			// An unsupported style or locale simply falls through to the next one.
+		}
 	}
+
+	return code
 }
 
 /** Load bar that reads at a glance, as in the app's server list. */

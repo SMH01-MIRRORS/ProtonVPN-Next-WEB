@@ -172,6 +172,23 @@
 		@apply rounded-lg px-3 py-2 text-xs;
 	}
 
+	/*
+	 * A link that is only a logo. The name lives in `title` and `aria-label`
+	 * rather than in visible text, so the icon has to stay large enough to be a
+	 * comfortable target on a phone.
+	 */
+	.icon-link {
+		@apply inline-flex items-center justify-center;
+	}
+
+	.icon-link svg {
+		@apply h-5 w-5;
+	}
+
+	.btn-ghost.icon-link {
+		@apply px-4;
+	}
+
 	.chip {
 		@apply rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm
 			text-slate-300 transition-colors hover:bg-white/10;

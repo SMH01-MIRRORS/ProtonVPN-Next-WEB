@@ -12,7 +12,8 @@
   "hero_subtitle": "Клиент Proton VPN для Android с обфускацией AmneziaWG, встроенным апдейтером и без телеметрии в privacy-сборке.",
   "hero_cta_download": "Скачать приложение",
   "hero_cta_generator": "Сгенерировать конфиг",
-  "hero_cta_source": "Исходный код",
+  "link_gitlab": "GitLab — исходный код",
+  "link_github": "GitHub — зеркало",
   "hero_stat_channels": "Канала обновлений",
   "hero_stat_flavors": "Варианта сборки",
   "hero_stat_languages": "Языков интерфейса",
@@ -210,7 +211,6 @@
   "disclaimer_note": "Дисклеймер",
   "disclaimer_text": "Проект не аффилирован с Proton AG и не поддерживается ею. Proton и Proton VPN — товарные знаки Proton AG.",
   "sponsors_title": "Инструменты, которыми мы пользуемся",
-  "footer_source": "Исходный код",
   "footer_telegram": "Telegram",
   "footer_lite": "Облегчённая версия",
   "footer_license": "Распространяется по лицензии GNU GPL v3."

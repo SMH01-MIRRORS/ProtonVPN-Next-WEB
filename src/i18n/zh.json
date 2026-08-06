@@ -12,7 +12,8 @@
   "hero_subtitle": "支持 AmneziaWG 混淆的 Proton VPN 安卓客户端，内置更新器，privacy 版本不含任何遥测。",
   "hero_cta_download": "下载应用",
   "hero_cta_generator": "生成配置",
-  "hero_cta_source": "源代码",
+  "link_gitlab": "GitLab — 源代码",
+  "link_github": "GitHub — 镜像",
   "hero_stat_channels": "发布通道",
   "hero_stat_flavors": "构建版本",
   "hero_stat_languages": "界面语言",
@@ -210,7 +211,6 @@
   "disclaimer_note": "免责声明",
   "disclaimer_text": "本项目与 Proton AG 无关联，也未获其认可或支持。Proton 和 Proton VPN 是 Proton AG 的商标。",
   "sponsors_title": "我们使用的工具",
-  "footer_source": "源代码",
   "footer_telegram": "Telegram",
   "footer_lite": "精简版",
   "footer_license": "基于 GNU GPL v3 发布。"

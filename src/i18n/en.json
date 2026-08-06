@@ -12,7 +12,8 @@
   "hero_subtitle": "An Android client for Proton VPN with AmneziaWG obfuscation, a built-in updater and no telemetry in the privacy flavour.",
   "hero_cta_download": "Download the app",
   "hero_cta_generator": "Generate a config",
-  "hero_cta_source": "Source code",
+  "link_gitlab": "GitLab — source code",
+  "link_github": "GitHub — mirror",
   "hero_stat_channels": "Release channels",
   "hero_stat_flavors": "Build flavours",
   "hero_stat_languages": "Interface languages",
@@ -210,7 +211,6 @@
   "disclaimer_note": "Disclaimer",
   "disclaimer_text": "This project is not affiliated with, endorsed by or supported by Proton AG. Proton and Proton VPN are trademarks of Proton AG.",
   "sponsors_title": "Tools we rely on",
-  "footer_source": "Source code",
   "footer_telegram": "Telegram",
   "footer_lite": "Lite version",
   "footer_license": "Released under the GNU GPL v3."
