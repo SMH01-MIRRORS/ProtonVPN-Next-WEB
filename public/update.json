@@ -1,31 +1,31 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160320,
-      "versionName": "12.0.0-alpha2st2-57-gef6ae72-nightly",
+      "versionCode": 605160321,
+      "versionName": "12.0.0-alpha2st2-58-gffdf8fc-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "fix: keep the proxy path prefix when rewriting API requests\n\nThe Deno deployment serves the website at the root and mounts the Proton\nproxy under /api, but the rewriting interceptor only replaced the scheme,\nhost and port of each request. The /api prefix from the base URL was\ndropped, so a session refresh went to /auth/v4/refresh on the website\nitself and came back as 405 Method Not Allowed, which surfaced as an\nendless refresh failure in SessionManager.\n\nThe prefix from the configured proxy URL is now prepended to the rewritten\npath, ahead of the verify-api/verify prefixes that were already handled.\nProxies that live at the root, such as the Netlify one the native clients\nuse, are unaffected because their base URL has no path segments.",
+      "changelog": "chore: point the GitHub links at the new account\n\nThe SMH01-MIRRORS account is gone, so every link through it is dead: the\nin-app \"source code\" link, the copy of it baked into the tamper check, and the\nrepository the OTA job pushes metadata to. All of them now name\nSMH01-MOD-NEXT/ProtonVPN-Next.\n\nThe tamper check carries the URL twice on purpose -- once as the answer and\nonce in the table it is verified against -- so both had to move together, or\nthe check would have failed against itself.\n\nThe Deno Deploy URLs are deliberately untouched: smh01-mirrors there is a Deno\nproject name, not a GitHub account, and it kept working when the account went\naway.",
       "force": false
     },
     "release": {
-      "versionCode": 605160320,
-      "versionName": "12.0.0-alpha2st2-57-gef6ae72-nightly",
+      "versionCode": 605160321,
+      "versionName": "12.0.0-alpha2st2-58-gffdf8fc-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "fix: keep the proxy path prefix when rewriting API requests\n\nThe Deno deployment serves the website at the root and mounts the Proton\nproxy under /api, but the rewriting interceptor only replaced the scheme,\nhost and port of each request. The /api prefix from the base URL was\ndropped, so a session refresh went to /auth/v4/refresh on the website\nitself and came back as 405 Method Not Allowed, which surfaced as an\nendless refresh failure in SessionManager.\n\nThe prefix from the configured proxy URL is now prepended to the rewritten\npath, ahead of the verify-api/verify prefixes that were already handled.\nProxies that live at the root, such as the Netlify one the native clients\nuse, are unaffected because their base URL has no path segments.",
+      "changelog": "chore: point the GitHub links at the new account\n\nThe SMH01-MIRRORS account is gone, so every link through it is dead: the\nin-app \"source code\" link, the copy of it baked into the tamper check, and the\nrepository the OTA job pushes metadata to. All of them now name\nSMH01-MOD-NEXT/ProtonVPN-Next.\n\nThe tamper check carries the URL twice on purpose -- once as the answer and\nonce in the table it is verified against -- so both had to move together, or\nthe check would have failed against itself.\n\nThe Deno Deploy URLs are deliberately untouched: smh01-mirrors there is a Deno\nproject name, not a GitHub account, and it kept working when the account went\naway.",
       "force": false
     },
     "privacyDebug": {
-      "versionCode": 605160320,
-      "versionName": "12.0.0-alpha2st2-57-gef6ae72-nightly",
+      "versionCode": 605160321,
+      "versionName": "12.0.0-alpha2st2-58-gffdf8fc-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-privacy-debug.apk",
-      "changelog": "fix: keep the proxy path prefix when rewriting API requests\n\nThe Deno deployment serves the website at the root and mounts the Proton\nproxy under /api, but the rewriting interceptor only replaced the scheme,\nhost and port of each request. The /api prefix from the base URL was\ndropped, so a session refresh went to /auth/v4/refresh on the website\nitself and came back as 405 Method Not Allowed, which surfaced as an\nendless refresh failure in SessionManager.\n\nThe prefix from the configured proxy URL is now prepended to the rewritten\npath, ahead of the verify-api/verify prefixes that were already handled.\nProxies that live at the root, such as the Netlify one the native clients\nuse, are unaffected because their base URL has no path segments.",
+      "changelog": "chore: point the GitHub links at the new account\n\nThe SMH01-MIRRORS account is gone, so every link through it is dead: the\nin-app \"source code\" link, the copy of it baked into the tamper check, and the\nrepository the OTA job pushes metadata to. All of them now name\nSMH01-MOD-NEXT/ProtonVPN-Next.\n\nThe tamper check carries the URL twice on purpose -- once as the answer and\nonce in the table it is verified against -- so both had to move together, or\nthe check would have failed against itself.\n\nThe Deno Deploy URLs are deliberately untouched: smh01-mirrors there is a Deno\nproject name, not a GitHub account, and it kept working when the account went\naway.",
       "force": false
     },
     "privacyRelease": {
-      "versionCode": 605160320,
-      "versionName": "12.0.0-alpha2st2-57-gef6ae72-nightly",
+      "versionCode": 605160321,
+      "versionName": "12.0.0-alpha2st2-58-gffdf8fc-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-privacy-release.apk",
-      "changelog": "fix: keep the proxy path prefix when rewriting API requests\n\nThe Deno deployment serves the website at the root and mounts the Proton\nproxy under /api, but the rewriting interceptor only replaced the scheme,\nhost and port of each request. The /api prefix from the base URL was\ndropped, so a session refresh went to /auth/v4/refresh on the website\nitself and came back as 405 Method Not Allowed, which surfaced as an\nendless refresh failure in SessionManager.\n\nThe prefix from the configured proxy URL is now prepended to the rewritten\npath, ahead of the verify-api/verify prefixes that were already handled.\nProxies that live at the root, such as the Netlify one the native clients\nuse, are unaffected because their base URL has no path segments.",
+      "changelog": "chore: point the GitHub links at the new account\n\nThe SMH01-MIRRORS account is gone, so every link through it is dead: the\nin-app \"source code\" link, the copy of it baked into the tamper check, and the\nrepository the OTA job pushes metadata to. All of them now name\nSMH01-MOD-NEXT/ProtonVPN-Next.\n\nThe tamper check carries the URL twice on purpose -- once as the answer and\nonce in the table it is verified against -- so both had to move together, or\nthe check would have failed against itself.\n\nThe Deno Deploy URLs are deliberately untouched: smh01-mirrors there is a Deno\nproject name, not a GitHub account, and it kept working when the account went\naway.",
       "force": false
     }
   },
