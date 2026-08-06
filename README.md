@@ -1,0 +1,88 @@
+# Proton VPN-Next — website
+
+The site for [Proton VPN-Next](https://gitlab.com/vpn-next-group/proton-vpn-next): a landing page,
+the download picker for every build channel and flavour, and a config generator that produces
+AmneziaWG, WireSock and Clash configuration files for Proton's free servers, in the browser.
+
+The generator is the reason this repository is not just a static page. It opens a guest session
+against the Proton API, fetches the server list, issues a WireGuard key pair and a certificate, and
+writes the configuration locally. The private key never leaves the browser, and there is no account,
+no database and no analytics anywhere in the stack.
+
+**Not affiliated with Proton AG.** This is an unofficial client and an unofficial site.
+
+## What is here
+
+```
+index.html            the landing page; the generator mounts into #generator-root
+src/lib/              everything that is not the DOM: API, crypto, config writers, bulk export
+src/ui/               rendering; pure functions returning detached DOM
+src/i18n/             six languages, en/ru/uk/be/fa/zh, with RTL for Persian
+proxy/                the Proton API proxy and its quota layer, shared by both hosts
+server.ts             Deno Deploy entrypoint: static site plus the proxy on one origin
+worker/index.ts       the Cloudflare mirror of the same
+public/lite/          a no-CSS, no-JavaScript page for very old or very locked-down browsers
+tests/                node:test suites, no browser required
+```
+
+The browser cannot call the Proton API directly — it sets no CORS headers — so every request goes
+through the proxy in `proxy/`, served from the same origin as the page. `proxy/README.md` covers the
+standalone deployment used by the desktop and Android clients.
+
+## Running it
+
+```sh
+npm install
+npm run dev        # vite, with the /api proxy wired up
+npm test           # node --test, no browser needed
+npm run build      # writes dist/
+```
+
+`dist/` is committed on purpose, so a deployment never depends on a build step succeeding on someone
+else's machine. Run `npm run build` and commit the result whenever the front end changes, or the
+next deploy will ship the previous interface.
+
+## Deploying
+
+**Deno Deploy** — entrypoint `server.ts`; no install or build command. It serves `dist/` and answers
+`/api` itself. Locally the same thing is `deno task start`.
+
+**Cloudflare Workers** — `npm run deploy` (`wrangler deploy`), with `worker/index.ts` as the entry
+and `dist/` as the asset directory.
+
+Both hosts run the same proxy and are independent of each other; the page falls back from one to the
+other if its own origin cannot be reached.
+
+### Configuration
+
+| Setting | Where | Purpose |
+| --- | --- | --- |
+| `PVPN_QUOTA_SECRET` | environment variable / `wrangler secret put` | Signs the quota cookie and hashes caller addresses. Optional but recommended; without it a built-in fallback is used. |
+| `QUOTA` | Cloudflare KV binding, see `wrangler.jsonc` | Quota storage. Without it the Cache API is used, which is per-colo rather than global. Deno Deploy uses Deno KV automatically. |
+
+## Rate limits
+
+The site is a public page in front of somebody else's API, so the proxy — never the browser — counts
+requests: one guest session and one session upgrade per day, one server list and three load
+refreshes every two hours, three certificates per day. Callers are identified by a signed `HttpOnly`
+cookie and by a hashed IP address at the same time, so clearing cookies does not reset a counter and
+no raw address is stored.
+
+Going over a limit is not an error: the proxy replays that caller's own last successful response, so
+a held-down button shows the same data instead of failing. Quotas are spent on success only, because
+Proton answers logins with a captcha often enough that counting attempts would lock people out of a
+session they never received. The rules live in `proxy/limits.js` and are covered by `tests/`.
+
+## Contributing
+
+Code is developed on [GitLab](https://gitlab.com/vpn-next-group/proton-vpn-next); the
+[GitHub repository](https://github.com/SMH01-MOD-NEXT/ProtonVPN-Next) is a mirror. Issues and merge
+requests are welcome on GitLab.
+
+Two house rules worth knowing before a first patch: comments explain *why* something is the way it
+is rather than restating the code, and translations are updated for all six languages in the same
+change, so no interface ever falls back to English mid-page.
+
+## License
+
+GNU General Public License v3.0 or later. See [LICENSE](LICENSE).
