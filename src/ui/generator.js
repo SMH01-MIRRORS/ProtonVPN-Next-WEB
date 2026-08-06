@@ -815,7 +815,20 @@ export function mountGenerator(root) {
 		return card
 	}
 
+	/**
+	 * Panes that scroll inside the page, remembered across a re-render.
+	 *
+	 * The wizard redraws itself completely on every choice, which threw away the
+	 * scroll position of the server list: picking a server from further down the
+	 * list jumped it back to the top, right after the row that was clicked
+	 * disappeared from view. The panes are identified by class rather than by a
+	 * key, so a new scrollable section is covered by adding it to this list.
+	 */
+	const SCROLLABLE_PANES = [".server-list"]
+
 	function render() {
+		const scrollPositions = SCROLLABLE_PANES.map((selector) => root.querySelector(selector)?.scrollTop ?? 0)
+
 		root.replaceChildren()
 
 		const section = element("div", "container-page")
@@ -830,6 +843,12 @@ export function mountGenerator(root) {
 		else section.append(renderConfigStep())
 
 		root.append(section)
+
+		// After the append, so the pane has its height and the position sticks.
+		SCROLLABLE_PANES.forEach((selector, index) => {
+			const pane = root.querySelector(selector)
+			if (pane && scrollPositions[index]) pane.scrollTop = scrollPositions[index]
+		})
 	}
 
 	restoreCachedSession()
