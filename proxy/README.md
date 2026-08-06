@@ -14,6 +14,11 @@ on the same handler everywhere:
 - `../worker/index.ts` - Cloudflare Worker: the same pair, independently
 - `deno/main.ts` - the proxy alone, for a deployment that serves no site
 
+Northflank adds no entrypoint at all: `northflank/Dockerfile` runs `server.ts`
+in a container, so that host cannot drift from the Deno one. See
+`northflank/README.md` for what a container changes about the quotas, and for
+what it costs.
+
 Splitting routing per host would let the generator work on one deployment and
 fail on another for reasons that are invisible from the page.
 
@@ -40,6 +45,7 @@ broken proxy:
 
 - `https://` + any subdomain of `protonnext.qzz.io`
 - `https://<name>.workers.dev` and `https://<name>.pages.dev` previews
+- `https://<service>--<project>--<team>.code.run`, the Northflank hostname
 - `http://localhost` and `http://127.0.0.1` on any port
 
 An origin outside the patterns gets no `Access-Control-Allow-Origin` at all.
@@ -59,6 +65,7 @@ quota just to spell the URL without the `/api` prefix.
 | Deno Deploy | `https://protonvpn-next-web--main.smh01-mirrors.deno.net/api` | website, Android, CLI |
 | Cloudflare | `<worker-url>/api` | website only, when Deno is unreachable |
 | Netlify | `https://shimmering-stroopwafel-51675e.netlify.app` | Android and CLI only |
+| Northflank | `<service>--<project>--<team>.code.run/api` | spare host, metered |
 
 The browser reaches its own origin first (`/api` in `API_ENDPOINTS`), so the
 absolute Deno URL is only a fallback for a copy of the site served elsewhere.

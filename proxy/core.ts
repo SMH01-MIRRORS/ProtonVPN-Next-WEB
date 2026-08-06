@@ -58,6 +58,10 @@ const ALLOWED_ORIGIN_PATTERNS: RegExp[] = [
 	/^https:\/\/([a-z0-9-]+\.)*protonnext\.qzz\.io$/,
 	/^https:\/\/[a-z0-9-]+\.workers\.dev$/,
 	/^https:\/\/[a-z0-9-]+\.pages\.dev$/,
+	// Northflank names a service `<service>--<project>--<team>.code.run`, so the
+	// mirror there is matched by shape rather than by a name that changes with
+	// the project it lives in.
+	/^https:\/\/[a-z0-9-]+(--[a-z0-9-]+)+\.code\.run$/,
 	/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
 ]
 

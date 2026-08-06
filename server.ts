@@ -29,7 +29,17 @@ const STATIC_ROOT = "dist"
 const quotaStore = await createDenoStore()
 const quotaSecret = Deno.env.get("PVPN_QUOTA_SECRET") ?? ""
 
-Deno.serve(async (request: Request, info?: Deno.ServeHandlerInfo): Promise<Response> => {
+/**
+ * Listening port.
+ *
+ * Deno Deploy assigns one itself and ignores this, but a container host does
+ * not: Northflank hands the port over in `PORT` and routes to nothing if the
+ * process picks its own. Falling back to Deno's usual 8000 keeps `deno task
+ * start` behaving exactly as before for local runs.
+ */
+const port = Number(Deno.env.get("PORT")) || 8000
+
+Deno.serve({ port }, async (request: Request, info?: Deno.ServeHandlerInfo): Promise<Response> => {
 	const url = new URL(request.url)
 
 	const proxied = proxyPathname(url.pathname)
