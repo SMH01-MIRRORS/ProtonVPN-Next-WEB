@@ -10,5 +10,6 @@ node_modules/
 # JetBrains IDE settings
 .idea/
 
-# Working document, kept out of the repository on purpose.
+# Working documents, kept out of the repository on purpose.
 WEBSITE_REVAMP_PLAN.md
+CHOREO_DEPLOY_PLAN.md

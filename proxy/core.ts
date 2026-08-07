@@ -14,7 +14,7 @@
  * deployment does not run, and without a marker the only symptom is a CORS
  * error that looks identical to a code bug.
  */
-const PROXY_BUILD = "2026-08-04-server-side-quotas"
+const PROXY_BUILD = "2026-08-07-choreo-origin"
 
 import { openQuotaGate } from "./quota.js"
 
@@ -62,6 +62,10 @@ const ALLOWED_ORIGIN_PATTERNS: RegExp[] = [
 	// mirror there is matched by shape rather than by a name that changes with
 	// the project it lives in.
 	/^https:\/\/[a-z0-9-]+(--[a-z0-9-]+)+\.code\.run$/,
+	// Choreo serves every deployment from a `choreoapps.dev` subdomain whose
+	// labels vary with the organization, project and environment, so the mirror
+	// there is matched by shape like the others.
+	/^https:\/\/([a-z0-9-]+\.)+choreoapps\.dev$/,
 	/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
 ]
 

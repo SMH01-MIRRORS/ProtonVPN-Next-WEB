@@ -50,7 +50,11 @@ next deploy will ship the previous interface.
 **Cloudflare Workers** — `npm run deploy` (`wrangler deploy`), with `worker/index.ts` as the entry
 and `dist/` as the asset directory.
 
-Both hosts run the same proxy and are independent of each other; the page falls back from one to the
+**Container hosts** — `proxy/northflank/Dockerfile` builds the same site and proxy as one image;
+`proxy/northflank/README.md` covers Northflank and `proxy/choreo/README.md` covers Choreo. Keep it
+at one replica unless the quota store is made shared first, or every replica gets its own counters.
+
+All hosts run the same proxy and are independent of each other; the page falls back from one to the
 other if its own origin cannot be reached.
 
 ### Configuration

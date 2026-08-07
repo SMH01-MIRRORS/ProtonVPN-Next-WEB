@@ -1,9 +1,9 @@
-# Container image for the Northflank deployment: the same site and proxy the
-# Deno Deploy project serves, run as an ordinary long-lived process.
+# Container image for the Northflank and Choreo deployments: the same site and
+# proxy the Deno Deploy project serves, run as an ordinary long-lived process.
 #
-# Northflank is not an edge platform, and that is the point. There is no adapter
-# here and no second implementation to keep in step: `server.ts` runs unchanged,
-# so a change to the proxy reaches this deployment by rebuilding, not by being
+# Neither is an edge platform, and that is the point. There is no adapter here
+# and no second implementation to keep in step: `server.ts` runs unchanged, so a
+# change to the proxy reaches these deployments by rebuilding, not by being
 # ported.
 #
 # Build context is the repository root, not this directory:
@@ -33,7 +33,14 @@ RUN deno cache server.ts
 # build step succeeding twice in two different places.
 COPY dist ./dist
 
-# Northflank injects its own PORT; this is the default for a plain `docker run`.
+# Choreo refuses to run a container as root and requires a UID in 10000-20000;
+# Northflank accepts any user. The module cache and the local KV database live
+# in DENO_DIR, so the runtime user has to own it.
+RUN adduser -D -u 10014 choreo && chown -R 10014:10014 /deno-dir
+USER 10014
+
+# Northflank injects its own PORT; a Choreo endpoint is configured with this
+# port. The value here is also the default for a plain `docker run`.
 ENV PORT=8080
 EXPOSE 8080
 
