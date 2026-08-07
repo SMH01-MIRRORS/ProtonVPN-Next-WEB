@@ -22,6 +22,72 @@ export const BUILD_TYPES = [
 	{ id: "debug", labelKey: "dl_build_debug", descriptionKey: "dl_build_debug_desc" },
 ]
 
+/**
+ * Platforms the download section advertises.
+ *
+ * Only Android is published today; Windows and Linux are listed so the section
+ * already has its final shape and later needs only `available: true` plus a
+ * metadata source. `surfaces` lists the interfaces a platform ships — Android
+ * has a single graphical app, so its interface selector stays hidden.
+ */
+export const PLATFORMS = [
+	{
+		id: "android",
+		labelKey: "dl_platform_android",
+		descriptionKey: "dl_platform_android_desc",
+		hintKey: "dl_hint",
+		available: true,
+		surfaces: ["gui"],
+	},
+	{
+		id: "windows",
+		labelKey: "dl_platform_windows",
+		descriptionKey: "dl_platform_windows_desc",
+		hintKey: "dl_hint_desktop",
+		available: false,
+		surfaces: ["gui", "cli"],
+	},
+	{
+		id: "linux",
+		labelKey: "dl_platform_linux",
+		descriptionKey: "dl_platform_linux_desc",
+		hintKey: "dl_hint_desktop",
+		available: false,
+		surfaces: ["gui", "cli"],
+	},
+]
+
+export const SURFACES = [
+	{ id: "gui", labelKey: "dl_surface_gui", descriptionKey: "dl_surface_gui_desc" },
+	{ id: "cli", labelKey: "dl_surface_cli", descriptionKey: "dl_surface_cli_desc" },
+]
+
+export const DEFAULT_PLATFORM = "android"
+export const DEFAULT_SURFACE = "gui"
+
+/** Platform descriptor for an id, falling back to the first platform. */
+export function platformOf(id) {
+	return PLATFORMS.find((platform) => platform.id === id) ?? PLATFORMS[0]
+}
+
+/** True when the platform already has builds behind it. */
+export function isPlatformAvailable(id) {
+	return platformOf(id).available === true
+}
+
+/** Interfaces a platform offers, in selector order. */
+export function surfacesFor(id) {
+	const { surfaces } = platformOf(id)
+	return SURFACES.filter((surface) => surfaces.includes(surface.id))
+}
+
+/** Keeps an interface selection valid after the platform changes. */
+export function resolveSurface(platformId, surfaceId) {
+	const surfaces = surfacesFor(platformId)
+	if (surfaces.some((surface) => surface.id === surfaceId)) return surfaceId
+	return surfaces[0]?.id ?? DEFAULT_SURFACE
+}
+
 /** Key inside a channel object for a given flavour and build type. */
 export function metadataKey(flavor, buildType) {
 	if (flavor === "standard") return buildType

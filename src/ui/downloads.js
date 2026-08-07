@@ -1,6 +1,10 @@
 /**
- * Download matrix UI: channel × flavour × build type, driven by
- * `public/update.json`.
+ * Download section UI.
+ *
+ * A platform selector comes first. Android renders the published matrix
+ * (channel × flavour × build type) driven by `public/update.json`; Windows and
+ * Linux render their interface selector (GUI / CLI) with a "coming soon" card,
+ * because nothing is published for them yet.
  */
 
 import { t, onLanguageChange } from "../i18n/index.js"
@@ -8,9 +12,16 @@ import {
 	CHANNELS,
 	FLAVORS,
 	BUILD_TYPES,
+	DEFAULT_PLATFORM,
+	DEFAULT_SURFACE,
+	PLATFORMS,
 	allBuilds,
 	buildFor,
 	fetchUpdateMetadata,
+	isPlatformAvailable,
+	platformOf,
+	resolveSurface,
+	surfacesFor,
 } from "../lib/downloads.js"
 
 function publishedCount(metadata) {
@@ -40,13 +51,30 @@ function descriptionFor(items, id) {
 	return item ? t(item.descriptionKey) : ""
 }
 
+function groupLabel(labelKey) {
+	const label = document.createElement("p")
+	label.className = "text-xs uppercase tracking-wide text-slate-500"
+	label.dataset.t = labelKey
+	label.textContent = t(labelKey)
+	return label
+}
+
+function groupHint(text) {
+	const hint = document.createElement("p")
+	hint.className = "mt-2 text-xs text-slate-500"
+	hint.textContent = text
+	return hint
+}
+
 /**
- * Renders the matrix into `root`.
+ * Renders the section into `root`.
  * Selection state lives here; the section re-renders on every change and on
  * every language switch.
  */
 export function mountDownloads(root) {
 	const state = {
+		platform: DEFAULT_PLATFORM,
+		surface: resolveSurface(DEFAULT_PLATFORM, DEFAULT_SURFACE),
 		channel: "stable",
 		flavor: "standard",
 		buildType: "release",
@@ -56,6 +84,10 @@ export function mountDownloads(root) {
 
 	function select(key, value) {
 		state[key] = value
+		// A platform may not offer the interface that was selected before it.
+		if (key === "platform") {
+			state.surface = resolveSurface(value, state.surface)
+		}
 		render()
 	}
 
@@ -64,6 +96,25 @@ export function mountDownloads(root) {
 		card.className = "card text-sm text-slate-400"
 		card.dataset.t = messageKey
 		card.textContent = t(messageKey)
+		return card
+	}
+
+	function renderPlatformChooser() {
+		const card = document.createElement("div")
+		card.className = "card"
+
+		const group = selectorGroup({
+			items: PLATFORMS,
+			selected: state.platform,
+			onSelect: (value) => select("platform", value),
+		})
+		group.classList.add("mt-2")
+
+		card.append(
+			groupLabel("dl_platform"),
+			group,
+			groupHint(descriptionFor(PLATFORMS, state.platform)),
+		)
 		return card
 	}
 
@@ -146,17 +197,10 @@ export function mountDownloads(root) {
 		return card
 	}
 
-	function render() {
-		root.replaceChildren()
-
-		if (state.status === "loading") {
-			root.append(renderStatusCard("dl_loading"))
-			return
-		}
-		if (state.status === "error") {
-			root.append(renderStatusCard("dl_error"))
-			return
-		}
+	/** Android: the published matrix, or the loading / error placeholder. */
+	function renderMatrix() {
+		if (state.status === "loading") return renderStatusCard("dl_loading")
+		if (state.status === "error") return renderStatusCard("dl_error")
 
 		const grid = document.createElement("div")
 		grid.className = "grid gap-5 lg:grid-cols-[1fr_1.1fr]"
@@ -177,11 +221,7 @@ export function mountDownloads(root) {
 				onSelect: (value) => select(key, value),
 			})
 
-			const hint = document.createElement("p")
-			hint.className = "mt-2 text-xs text-slate-500"
-			hint.textContent = descriptionFor(items, state[key])
-
-			block.append(group, hint)
+			block.append(group, groupHint(descriptionFor(items, state[key])))
 			chooser.append(block)
 		}
 
@@ -193,7 +233,64 @@ export function mountDownloads(root) {
 		chooser.append(summary)
 
 		grid.append(chooser, renderBuildCard())
-		root.append(grid)
+		return grid
+	}
+
+	/** Windows / Linux: interface selector plus the "coming soon" notice. */
+	function renderComingSoon() {
+		const card = document.createElement("div")
+		card.className = "card"
+
+		const surfaces = surfacesFor(state.platform)
+		if (surfaces.length > 1) {
+			const group = selectorGroup({
+				items: surfaces,
+				selected: state.surface,
+				onSelect: (value) => select("surface", value),
+			})
+			group.classList.add("mt-2")
+
+			card.append(
+				groupLabel("dl_surface"),
+				group,
+				groupHint(descriptionFor(surfaces, state.surface)),
+			)
+		}
+
+		const notice = document.createElement("div")
+		notice.className = "mt-6"
+
+		const badge = document.createElement("span")
+		badge.className = "badge"
+		badge.dataset.t = "dl_coming_soon"
+		badge.textContent = t("dl_coming_soon")
+
+		const text = document.createElement("p")
+		text.className = "mt-3 text-sm text-slate-400"
+		text.dataset.t = "dl_coming_soon_desc"
+		text.textContent = t("dl_coming_soon_desc")
+
+		notice.append(badge, text)
+		card.append(notice)
+
+		return card
+	}
+
+	function render() {
+		root.replaceChildren()
+
+		const layout = document.createElement("div")
+		layout.className = "space-y-5"
+		layout.append(
+			renderPlatformChooser(),
+			isPlatformAvailable(state.platform) ? renderMatrix() : renderComingSoon(),
+		)
+
+		const hint = document.createElement("p")
+		hint.className = "mt-6 text-xs text-slate-500"
+		hint.textContent = t(platformOf(state.platform).hintKey)
+
+		root.append(layout, hint)
 	}
 
 	onLanguageChange(render)
