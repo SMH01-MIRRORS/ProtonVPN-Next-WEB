@@ -39,6 +39,35 @@ test("ids are unique so the app can tell the bypasses apart", () => {
 	assert.equal(new Set(ids).size, ids.length, "duplicate id in events")
 })
 
+test("an expiry date is either forever or dd-mm-yyyy", () => {
+	// The date is typed by hand, and the app shows it verbatim to the user, so a
+	// swapped day and month or a stray format would quietly mislead rather than
+	// fail loudly. An empty value is allowed and means "nobody knows yet".
+	for (const event of config.events) {
+		if (event.expiresAt === undefined || event.expiresAt === "") {
+			continue
+		}
+
+		assert.equal(typeof event.expiresAt, "string")
+
+		if (event.expiresAt.toLowerCase() === "forever") {
+			continue
+		}
+
+		const match = /^(\d{2})-(\d{2})-(\d{4})$/.exec(event.expiresAt)
+		assert.ok(match, `${event.id}: expiresAt must be dd-mm-yyyy or "forever"`)
+
+		const [, day, month, year] = match.map(Number)
+		const date = new Date(Date.UTC(year, month - 1, day))
+		assert.ok(
+			date.getUTCFullYear() === year &&
+				date.getUTCMonth() === month - 1 &&
+				date.getUTCDate() === day,
+			`${event.id}: ${event.expiresAt} is not a real date`,
+		)
+	}
+})
+
 test("an enabled bypass points at an https endpoint ending with a slash", () => {
 	for (const event of config.events) {
 		if (!event.enabled) {
