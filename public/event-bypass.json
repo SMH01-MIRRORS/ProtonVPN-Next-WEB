@@ -1,10 +1,12 @@
 {
-	"version": 1,
-	"updatedAt": "2026-08-07T11:30:00Z",
-	"event": {
-		"id": "choreo",
-		"name": "Choreo",
-		"url": "",
-		"enabled": false
-	}
+	"version": 2,
+	"updatedAt": "2026-08-07T14:45:00Z",
+	"events": [
+		{
+			"id": "choreo",
+			"name": "Choreo",
+			"url": "https://a1a33634-3d1f-4eff-9e6f-e79a9b7e0015.e1-us-east-azure.choreoapps.dev/api/",
+			"enabled": true
+		}
+	]
 }

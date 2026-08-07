@@ -9,30 +9,49 @@ const config = JSON.parse(
 	readFileSync(new URL("../public/event-bypass.json", import.meta.url), "utf8"),
 )
 
+// The app refuses configs newer than this, so bumping the file without shipping
+// an app that understands it would disable the bypass instead of breaking it.
+const SUPPORTED_VERSION = 2
+
 test("event-bypass.json carries a supported version and a timestamp", () => {
-	assert.equal(config.version, 1)
+	assert.ok(
+		config.version <= SUPPORTED_VERSION,
+		`version ${config.version} is newer than the app supports (${SUPPORTED_VERSION})`,
+	)
 	assert.ok(!Number.isNaN(Date.parse(config.updatedAt)), "updatedAt must be ISO-8601")
 })
 
-test("event-bypass.json describes exactly one event bypass", () => {
-	assert.equal(typeof config.event, "object")
-	assert.ok(config.event, "event must not be null")
-	assert.ok(config.event.id.length > 0, "id must not be empty")
-	assert.ok(config.event.name.length > 0, "name is shown in the app UI")
-	assert.equal(typeof config.event.enabled, "boolean")
-	assert.equal(typeof config.event.url, "string")
+test("event-bypass.json publishes a list of bypasses", () => {
+	assert.ok(Array.isArray(config.events), "events must be an array")
+	assert.ok(config.events.length > 0, "publish at least one bypass, or the app has nothing to offer")
+
+	for (const event of config.events) {
+		assert.equal(typeof event, "object")
+		assert.ok(event.id.length > 0, "id must not be empty: it is how the app remembers the choice")
+		assert.ok(event.name.length > 0, "name is shown in the app UI")
+		assert.equal(typeof event.enabled, "boolean")
+		assert.equal(typeof event.url, "string")
+	}
 })
 
-test("an enabled event bypass points at an https endpoint", () => {
-	if (!config.event.enabled) {
-		assert.equal(config.event.url, "", "a disabled bypass must not ship a URL")
-		return
-	}
+test("ids are unique so the app can tell the bypasses apart", () => {
+	const ids = config.events.map((event) => event.id)
+	assert.equal(new Set(ids).size, ids.length, "duplicate id in events")
+})
 
-	const url = new URL(config.event.url)
-	assert.equal(url.protocol, "https:", "the app refuses plaintext endpoints")
-	assert.ok(
-		config.event.url.endsWith("/"),
-		"the app treats the URL as a Retrofit base URL, so it must end with /",
-	)
+test("an enabled bypass points at an https endpoint ending with a slash", () => {
+	for (const event of config.events) {
+		if (!event.enabled) {
+			// A disabled entry may keep its URL: that is how a bypass is parked
+			// without losing its address. The app skips it either way.
+			continue
+		}
+
+		const url = new URL(event.url)
+		assert.equal(url.protocol, "https:", `${event.id}: the app refuses plaintext endpoints`)
+		assert.ok(
+			event.url.endsWith("/"),
+			`${event.id}: the app treats the URL as a Retrofit base URL, so it must end with /`,
+		)
+	}
 })
