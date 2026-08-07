@@ -1,31 +1,31 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160321,
-      "versionName": "12.0.0-alpha2st2-58-gffdf8fc-nightly",
+      "versionCode": 605160325,
+      "versionName": "12.0.0-alpha2st2-62-g2a2b496-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "chore: point the GitHub links at the new account\n\nThe SMH01-MIRRORS account is gone, so every link through it is dead: the\nin-app \"source code\" link, the copy of it baked into the tamper check, and the\nrepository the OTA job pushes metadata to. All of them now name\nSMH01-MOD-NEXT/ProtonVPN-Next.\n\nThe tamper check carries the URL twice on purpose -- once as the answer and\nonce in the table it is verified against -- so both had to move together, or\nthe check would have failed against itself.\n\nThe Deno Deploy URLs are deliberately untouched: smh01-mirrors there is a Deno\nproject name, not a GitHub account, and it kept working when the account went\naway.",
+      "changelog": "feat: let the user pick between published event bypasses",
       "force": false
     },
     "release": {
-      "versionCode": 605160321,
-      "versionName": "12.0.0-alpha2st2-58-gffdf8fc-nightly",
+      "versionCode": 605160325,
+      "versionName": "12.0.0-alpha2st2-62-g2a2b496-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "chore: point the GitHub links at the new account\n\nThe SMH01-MIRRORS account is gone, so every link through it is dead: the\nin-app \"source code\" link, the copy of it baked into the tamper check, and the\nrepository the OTA job pushes metadata to. All of them now name\nSMH01-MOD-NEXT/ProtonVPN-Next.\n\nThe tamper check carries the URL twice on purpose -- once as the answer and\nonce in the table it is verified against -- so both had to move together, or\nthe check would have failed against itself.\n\nThe Deno Deploy URLs are deliberately untouched: smh01-mirrors there is a Deno\nproject name, not a GitHub account, and it kept working when the account went\naway.",
+      "changelog": "feat: let the user pick between published event bypasses",
       "force": false
     },
     "privacyDebug": {
-      "versionCode": 605160321,
-      "versionName": "12.0.0-alpha2st2-58-gffdf8fc-nightly",
+      "versionCode": 605160325,
+      "versionName": "12.0.0-alpha2st2-62-g2a2b496-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-privacy-debug.apk",
-      "changelog": "chore: point the GitHub links at the new account\n\nThe SMH01-MIRRORS account is gone, so every link through it is dead: the\nin-app \"source code\" link, the copy of it baked into the tamper check, and the\nrepository the OTA job pushes metadata to. All of them now name\nSMH01-MOD-NEXT/ProtonVPN-Next.\n\nThe tamper check carries the URL twice on purpose -- once as the answer and\nonce in the table it is verified against -- so both had to move together, or\nthe check would have failed against itself.\n\nThe Deno Deploy URLs are deliberately untouched: smh01-mirrors there is a Deno\nproject name, not a GitHub account, and it kept working when the account went\naway.",
+      "changelog": "feat: let the user pick between published event bypasses",
       "force": false
     },
     "privacyRelease": {
-      "versionCode": 605160321,
-      "versionName": "12.0.0-alpha2st2-58-gffdf8fc-nightly",
+      "versionCode": 605160325,
+      "versionName": "12.0.0-alpha2st2-62-g2a2b496-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-privacy-release.apk",
-      "changelog": "chore: point the GitHub links at the new account\n\nThe SMH01-MIRRORS account is gone, so every link through it is dead: the\nin-app \"source code\" link, the copy of it baked into the tamper check, and the\nrepository the OTA job pushes metadata to. All of them now name\nSMH01-MOD-NEXT/ProtonVPN-Next.\n\nThe tamper check carries the URL twice on purpose -- once as the answer and\nonce in the table it is verified against -- so both had to move together, or\nthe check would have failed against itself.\n\nThe Deno Deploy URLs are deliberately untouched: smh01-mirrors there is a Deno\nproject name, not a GitHub account, and it kept working when the account went\naway.",
+      "changelog": "feat: let the user pick between published event bypasses",
       "force": false
     }
   },
