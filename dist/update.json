@@ -1,31 +1,31 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160325,
-      "versionName": "12.0.0-alpha2st2-62-g2a2b496-nightly",
+      "versionCode": 605160327,
+      "versionName": "12.0.0-alpha2st2-64-ga405500-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "feat: let the user pick between published event bypasses",
+      "changelog": "feat: show when the event config was published and when a bypass expires",
       "force": false
     },
     "release": {
-      "versionCode": 605160325,
-      "versionName": "12.0.0-alpha2st2-62-g2a2b496-nightly",
+      "versionCode": 605160327,
+      "versionName": "12.0.0-alpha2st2-64-ga405500-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "feat: let the user pick between published event bypasses",
+      "changelog": "feat: show when the event config was published and when a bypass expires",
       "force": false
     },
     "privacyDebug": {
-      "versionCode": 605160325,
-      "versionName": "12.0.0-alpha2st2-62-g2a2b496-nightly",
+      "versionCode": 605160327,
+      "versionName": "12.0.0-alpha2st2-64-ga405500-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-privacy-debug.apk",
-      "changelog": "feat: let the user pick between published event bypasses",
+      "changelog": "feat: show when the event config was published and when a bypass expires",
       "force": false
     },
     "privacyRelease": {
-      "versionCode": 605160325,
-      "versionName": "12.0.0-alpha2st2-62-g2a2b496-nightly",
+      "versionCode": 605160327,
+      "versionName": "12.0.0-alpha2st2-64-ga405500-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-privacy-release.apk",
-      "changelog": "feat: let the user pick between published event bypasses",
+      "changelog": "feat: show when the event config was published and when a bypass expires",
       "force": false
     }
   },
