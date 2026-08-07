@@ -1,0 +1,10 @@
+{
+	"version": 1,
+	"updatedAt": "2026-08-07T11:30:00Z",
+	"event": {
+		"id": "choreo",
+		"name": "Choreo",
+		"url": "",
+		"enabled": false
+	}
+}
