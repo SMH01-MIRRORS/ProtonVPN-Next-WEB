@@ -1,31 +1,31 @@
 {
   "nightly": {
     "debug": {
-      "versionCode": 605160329,
-      "versionName": "12.0.0-alpha2st2-66-gdaa989b-nightly",
+      "versionCode": 605160330,
+      "versionName": "12.0.0-alpha2st2-67-gd6e3e5e-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-debug.apk",
-      "changelog": "fix: give LiquidGlassBottomBar a single top-level content emitter\n\nThe IDE's Multiple Content Emitters inspection counted the LaunchedEffect\nalongside the root Box and does not honor @SuppressLint. Move the\nintro-glow state and the LaunchedEffect into the Box content lambda so\nthe composable body has one top-level emitter; behavior is unchanged.",
+      "changelog": "fix: prevent background ANR during Libbox initialization",
       "force": false
     },
     "release": {
-      "versionCode": 605160329,
-      "versionName": "12.0.0-alpha2st2-66-gdaa989b-nightly",
+      "versionCode": 605160330,
+      "versionName": "12.0.0-alpha2st2-67-gd6e3e5e-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-standard-release.apk",
-      "changelog": "fix: give LiquidGlassBottomBar a single top-level content emitter\n\nThe IDE's Multiple Content Emitters inspection counted the LaunchedEffect\nalongside the root Box and does not honor @SuppressLint. Move the\nintro-glow state and the LaunchedEffect into the Box content lambda so\nthe composable body has one top-level emitter; behavior is unchanged.",
+      "changelog": "fix: prevent background ANR during Libbox initialization",
       "force": false
     },
     "privacyDebug": {
-      "versionCode": 605160329,
-      "versionName": "12.0.0-alpha2st2-66-gdaa989b-nightly",
+      "versionCode": 605160330,
+      "versionName": "12.0.0-alpha2st2-67-gd6e3e5e-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-privacy-debug.apk",
-      "changelog": "fix: give LiquidGlassBottomBar a single top-level content emitter\n\nThe IDE's Multiple Content Emitters inspection counted the LaunchedEffect\nalongside the root Box and does not honor @SuppressLint. Move the\nintro-glow state and the LaunchedEffect into the Box content lambda so\nthe composable body has one top-level emitter; behavior is unchanged.",
+      "changelog": "fix: prevent background ANR during Libbox initialization",
       "force": false
     },
     "privacyRelease": {
-      "versionCode": 605160329,
-      "versionName": "12.0.0-alpha2st2-66-gdaa989b-nightly",
+      "versionCode": 605160330,
+      "versionName": "12.0.0-alpha2st2-67-gd6e3e5e-nightly",
       "url": "https://r2.protonnext.qzz.io/VPN-Next-TEST/app-nightly-privacy-release.apk",
-      "changelog": "fix: give LiquidGlassBottomBar a single top-level content emitter\n\nThe IDE's Multiple Content Emitters inspection counted the LaunchedEffect\nalongside the root Box and does not honor @SuppressLint. Move the\nintro-glow state and the LaunchedEffect into the Box content lambda so\nthe composable body has one top-level emitter; behavior is unchanged.",
+      "changelog": "fix: prevent background ANR during Libbox initialization",
       "force": false
     }
   },
